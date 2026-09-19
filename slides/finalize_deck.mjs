@@ -30,7 +30,7 @@ const result = await finalizePresentation({
   ],
   fontPolicy: { basis: "design", families: ["Helvetica Neue"] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "sdd-2026-yapa-final-v2.validation.json"),
+  receiptPath: path.join(stagingDir, "sdd-2026-yapa-final.validation.json"),
 });
 
 console.log(JSON.stringify(result, null, 2));

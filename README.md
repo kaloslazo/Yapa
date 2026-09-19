@@ -22,6 +22,7 @@ Quedan fuera de este repositorio SDD: actualización del catálogo, consolidaci�
 - `docs/05-resultados-sdd-yapa.md`: evaluación honesta de lo que funcionó.
 - `docs/06-guion-presentacion-20min.md`: guion de la exposición.
 - `docs/07-trazabilidad-defensa.md`: respuestas para defender requisito, regla, diseño, código y validación.
+- `docs/sdd/09-prompt-para-siguiente-iteracion.md`: resumen completo y prompt para continuar iterando con SDD.
 - `slides/sdd-2026-yapa-final.pptx`: presentación editable de 12 diapositivas.
 
 ## Ejecutar el ejemplo
