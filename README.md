@@ -13,7 +13,8 @@ Material en español para una presentación de **20 minutos como máximo** sobre
 - `docs/05-resultados-experimento.md`: qué funcionó, qué no y qué no se debe concluir.
 - `src/focuslist/`: aplicación de ejemplo, una CLI de lista de tareas persistida en JSON.
 - `tests/`: pruebas de aceptación y regresión.
-- `slides/sdd-2026-exposicion-final.pptx`: presentación editable, preparada para 20 minutos.
+- `slides/sdd-2026-exposicion-final-v2.pptx`: presentación editable de 12 diapositivas, preparada para 20 minutos.
+- `docs/07-sdd-tdd-aplicacion.md`: cómo aplicarías SDD y TDD en un trabajo real.
 - `docs/06-guion-presentacion-20min.md`: guion del orador con tiempos.
 
 ## Tesis de la presentación

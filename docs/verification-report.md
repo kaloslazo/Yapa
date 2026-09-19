@@ -18,11 +18,10 @@ Se comprobó crear una tarea, listar, completarla, repetir `done` y filtrar por 
 
 ## Presentación
 
-- 11 diapositivas.
+- 12 diapositivas.
 - Formato 16:9.
 - Texto editable y notas del orador con fuentes.
 - Validación estructural del paquete: correcta.
 - Validación de geometría y ajuste de encabezados: sin hallazgos.
 - Importación con Artifact Tool: correcta.
-- Revisión visual: se renderizaron las 11 diapositivas; se corrigió la dirección de los conectores del flujo antes de generar el archivo final.
-
+- Revisión visual: se renderizaron las 12 diapositivas; se corrigió la dirección de los conectores del flujo antes de generar el archivo final.

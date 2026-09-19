@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 const workspaceDir = "/Users/kalosroots/Documents/ChatGPT/Thoughts/sdd-2026-exposicion";
 const skillDir = "/Users/kalosroots/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations";
 const candidatePath = path.join(workspaceDir, "slides/.build/sdd-2026-draft.pptx");
-const finalPath = path.join(workspaceDir, "slides/sdd-2026-exposicion-final.pptx");
+const finalPath = path.join(workspaceDir, "slides/sdd-2026-exposicion-final-v2.pptx");
 const stagingDir = path.join(workspaceDir, ".codex-finalizer");
 await fs.mkdir(stagingDir, { recursive: true });
 
@@ -14,7 +14,7 @@ const { finalizePresentation } = await import(
 );
 
 const result = await finalizePresentation({
-  explicitTotalSlideCount: 11,
+  explicitTotalSlideCount: 12,
   requiredNativeTableOwnerSlides: [],
   requiredNativeChartOwnerSlides: [],
   workspaceDir,
@@ -30,7 +30,7 @@ const result = await finalizePresentation({
   ],
   fontPolicy: { basis: "design", families: ["Helvetica Neue"] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "sdd-2026-exposicion-final.validation.json"),
+  receiptPath: path.join(stagingDir, "sdd-2026-exposicion-final-v2.validation.json"),
 });
 
 console.log(JSON.stringify(result, null, 2));

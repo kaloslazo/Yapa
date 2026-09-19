@@ -192,7 +192,21 @@ function baseSlide(bg = C.cream) {
   notes(slide, "No todo cambio necesita la cadena completa. GitHub Spec Kit señala que specify antes de plan es el requisito mínimo; clarify, checklist y analyze son gates de calidad para trabajo ambiguo o de mayor riesgo.\n\nFuente: https://github.github.com/spec-kit/reference/agentic-sdd.html\nTiempo: 2:00.");
 }
 
-// 6. Tools
+// 6. Applying SDD + TDD
+{
+  const slide = baseSlide();
+  addTitle(slide, "Aplicación", "Cómo trabajaría con SDD + TDD", "SDD fija el comportamiento; TDD guía cada cambio pequeño.");
+  addBox(slide, "SDD\nAntes de programar\n\nSpec · plan · tareas\ncriterios de aceptación", 120, 220, 360, 196, { fill: C.coralSoft, line: C.coral, fontSize: 23, bold: true, alignment: "center" });
+  addBox(slide, "TDD\nDurante la tarea\n\nTest rojo · código mínimo\ntest verde · refactor", 800, 220, 360, 196, { fill: C.tealSoft, line: C.teal, fontSize: 23, bold: true, alignment: "center" });
+  const sdd = addBox(slide, "Qué debe cumplirse", 330, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
+  const tdd = addBox(slide, "Qué evidencia lo", 730, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
+  slide.shapes.connect(sdd, tdd, { kind: "straight", fromSide: "right", toSide: "left", line: { style: "solid", fill: C.coral, width: 2 }, tail: { type: "triangle", width: "sm", length: "sm" } });
+  addText(slide, "En mi trabajo, la IA puede proponer los artefactos y el código; yo reviso la intención, el riesgo y la evidencia.", 145, 620, 990, 30, { fontSize: 20, color: C.gray, alignment: "center" });
+  addFooter(slide, 6);
+  notes(slide, "Respuesta directa a la pregunta del profesor: aplicaría SDD para convertir la necesidad en requisitos, plan y tareas. Aplicaría TDD dentro de cada tarea: escribir una prueba que falla, implementar lo mínimo, hacerla pasar y refactorizar. SDD y TDD se complementan porque uno ordena la intención y el otro acorta el ciclo de feedback.\n\nFuente local: docs/07-sdd-tdd-aplicacion.md\nTiempo: 1:45.");
+}
+
+// 7. Tools
 {
   const slide = baseSlide();
   addTitle(slide, "Ecosistema", "Herramientas 2026: método, agente y evidencia", "La metodología puede ser portable aunque cambie la interfaz.");
@@ -202,11 +216,11 @@ function baseSlide(bg = C.cream) {
   addBox(slide, "Evidencia\npytest / unittest\nCI · diff · seguridad", 956, 238, 236, 168, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 22, bold: true, alignment: "center" });
   addText(slide, "Recomendación para empezar: Markdown versionado + tests + Git. Automatizar después.", 120, 508, 1040, 44, { fontSize: 27, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "Elegir por integración, persistencia, privacidad, calidad y fricción de mantenimiento.", 180, 570, 920, 34, { fontSize: 20, color: C.gray, alignment: "center" });
-  addFooter(slide, 6);
+  addFooter(slide, 7);
   notes(slide, "Presentar las herramientas como capas. Spec Kit estructura el flujo. Kiro ofrece una experiencia guiada con requisitos, diseño y tareas. Tessl añade specs vinculadas a tests y contexto versionado de librerías. Los agentes ejecutan el proceso. Los tests, CI y revisión prueban el resultado.\n\nFuentes: https://github.github.com/spec-kit/\nhttps://kiro.dev/docs/specs/best-practices/\nhttps://tessl.io/registry/tessl-labs/spec-driven-development/2.0.1/files/docs/index.md\nTiempo: 2:00.");
 }
 
-// 7. Example
+// 8. Example
 {
   const slide = baseSlide(C.ink);
   addText(slide, "EJEMPLO", 72, 42, 520, 24, { fontSize: 14, bold: true, color: C.coral });
@@ -216,11 +230,11 @@ function baseSlide(bg = C.cream) {
   addBox(slide, "Resultado\nCLI + 7 tests\ncomandos reproducibles\nlimitaciones explícitas", 790, 230, 330, 150, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
   addText(slide, "Archivos: spec → plan → tasks → src/ + tests/ → log", 180, 510, 920, 34, { fontSize: 26, bold: true, color: C.cream, alignment: "center" });
   addText(slide, "El documento no describe “una app bonita”; define comportamiento que se puede probar.", 190, 574, 900, 32, { fontSize: 20, color: "#C3D0DC", alignment: "center" });
-  addFooter(slide, 7);
+  addFooter(slide, 8);
   notes(slide, "Explicar que el ejemplo es deliberadamente pequeño y portable. Los archivos están en docs/specs. La IA recibe primero la constitución, luego la spec, el plan y las tareas. El objetivo es mostrar el método, no presumir complejidad técnica.\n\nFuente local del repositorio: docs/specs/01-focuslist-spec.md\nTiempo: 2:00.");
 }
 
-// 8. Iteration
+// 9. Iteration + code
 {
   const slide = baseSlide();
   addTitle(slide, "Iteración", "El cambio de requisito deja rastro", "Petición nueva: filtrar por estado y hacer idempotente `done`.");
@@ -237,14 +251,15 @@ function baseSlide(bg = C.cream) {
     addText(slide, body, 345, y + 10, 700, 34, { fontSize: 23, bold: label === "Tests", color: C.ink });
     y += 78;
   }
-  addBox(slide, "Orden de actualización", 860, 220, 270, 54, { fill: C.coral, line: C.coral, color: C.white, fontSize: 18, bold: true, alignment: "center" });
-  addText(slide, "1  especificar\n2  planificar\n3  implementar\n4  verificar", 900, 300, 210, 150, { fontSize: 23, bold: true, color: C.ink });
+  addBox(slide, "Pequeño ejemplo TDD", 830, 220, 330, 54, { fill: C.coral, line: C.coral, color: C.white, fontSize: 18, bold: true, alignment: "center" });
+  addBox(slide, "# AC-03.2\nif task.done:\n    return task, False\ntask.done = True\nsave_tasks(...)\nreturn task, True", 830, 300, 330, 198, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 18, bold: false, alignment: "left" });
+  addText(slide, "La spec decide que repetir `done` es seguro; el test lo demuestra.", 830, 530, 330, 56, { fontSize: 17, color: C.gray, alignment: "center" });
   addText(slide, "La iteración es útil cuando reduce una incertidumbre y añade evidencia.", 185, 630, 900, 30, { fontSize: 20, color: C.gray, alignment: "center" });
-  addFooter(slide, 8);
+  addFooter(slide, 9);
   notes(slide, "Este es el punto central de la demo. La petición nueva no se añade solo al código. Primero se actualizan los criterios de aceptación; luego plan y tareas; finalmente código y pruebas. La spec se convierte en memoria del cambio.\n\nFuente local: docs/iteration-log.md\nTiempo: 2:30.");
 }
 
-// 9. Evidence
+// 10. Evidence
 {
   const slide = baseSlide();
   addTitle(slide, "Resultado", "Funcionó en el alcance que definimos", "La evidencia es suficiente para un piloto, no para prometer producción.");
@@ -258,11 +273,11 @@ function baseSlide(bg = C.cream) {
   addText(slide, "demo reproducible", 905, 405, 230, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "Conclusión defendible: SDD redujo ambigüedad y facilitó revisión.", 150, 545, 980, 38, { fontSize: 27, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "No medimos productividad comparativa ni calidad de producción.", 230, 602, 820, 28, { fontSize: 20, color: C.gray, alignment: "center" });
-  addFooter(slide, 9);
+  addFooter(slide, 10);
   notes(slide, "Aclarar la diferencia entre evidencia local y generalización. Pasar tests confirma esos comportamientos. No confirma rendimiento, seguridad, operación ni valor de negocio. Thoughtworks clasifica Spec Kit como Assess y reporta beneficios junto con problemas como instruction bloat y context rot.\n\nFuentes: docs/05-resultados-experimento.md\nhttps://www.thoughtworks.com/content/dam/thoughtworks/documents/radar/2026/04/tr_technology_radar_vol_34_en.pdf\nTiempo: 2:00.");
 }
 
-// 10. Limits
+// 11. Limits
 {
   const slide = baseSlide(C.ink);
   addText(slide, "LÍMITES", 72, 42, 500, 24, { fontSize: 14, bold: true, color: C.coral });
@@ -272,11 +287,11 @@ function baseSlide(bg = C.cream) {
   addBox(slide, "Burocracia\nSi no decide ni se prueba, sobra.", 860, 220, 320, 142, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
   addText(slide, "La persona responsable sigue aprobando alcance, arquitectura, riesgos y aceptación.", 145, 505, 990, 46, { fontSize: 27, bold: true, color: C.cream, alignment: "center" });
   addText(slide, "La IA puede producir artefactos. El equipo decide si esos artefactos describen el producto correcto.", 185, 580, 910, 34, { fontSize: 20, color: "#C3D0DC", alignment: "center" });
-  addFooter(slide, 10);
+  addFooter(slide, 11);
   notes(slide, "Thoughtworks reporta instruction bloat, context rot, validaciones defensivas innecesarias y Markdown verboso. La respuesta no es abandonar SDD sino simplificar plantillas, cargar contexto bajo demanda y revisar con experiencia de arquitectura.\n\nFuente: Thoughtworks Technology Radar Vol. 34, entrada GitHub Spec Kit, abril 2026.\nTiempo: 1:45.");
 }
 
-// 11. Close
+// 12. Close
 {
   const slide = baseSlide();
   addTitle(slide, "Cierre", "Empezar pequeño, medir y mantener la cadena", "SDD es una forma de hacer explícita la colaboración entre producto, ingeniería e IA.");
@@ -285,7 +300,7 @@ function baseSlide(bg = C.cream) {
   addBox(slide, "3\nTests y diff\ncomo evidencia", 870, 250, 250, 160, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 24, bold: true, alignment: "center" });
   addText(slide, "La velocidad de la IA vale más cuando el equipo puede explicar qué construyó y por qué.", 150, 535, 980, 52, { fontSize: 30, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "Fuentes y material completo: docs/ · código: src/ · pruebas: tests/", 220, 620, 840, 28, { fontSize: 18, color: C.gray, alignment: "center" });
-  addFooter(slide, 11);
+  addFooter(slide, 12);
   notes(slide, "Cierre: invitar a probar el flujo con una funcionalidad acotada y medir retrabajo, defectos y coste de mantenimiento de las specs.\n\nFuentes completas: docs/sources.md\nTiempo: 1:00 + preguntas.");
 }
 

@@ -73,6 +73,19 @@ En el ejemplo de este repositorio, sí funcionó para el objetivo acotado: una C
 
 Eso no prueba que SDD haga automáticamente software listo para producción. El experimento no cubre concurrencia, usuarios múltiples, autenticación, migraciones, rendimiento, observabilidad ni seguridad. El resultado defendible es más modesto: **SDD redujo la ambigüedad y facilitó la revisión en este alcance pequeño; no reemplazó el juicio de ingeniería**.
 
+## Cómo aplicaría SDD y TDD en mi trabajo
+
+Aplicaría **SDD para ordenar la intención** y **TDD para construir cada tarea con feedback rápido**:
+
+1. Convertiría la necesidad del usuario en una spec con escenarios y criterios de aceptación.
+2. Revisaría la spec con el equipo antes de diseñar.
+3. Dividiría cada historia en tareas pequeñas.
+4. Para cada tarea escribiría primero una prueba que represente el criterio pendiente.
+5. Implementaría el cambio mínimo para pasarla y después refactorizaría sin alterar el comportamiento.
+6. Ejecutaría la suite completa y actualizaría la spec si aparece una decisión nueva.
+
+Así, SDD responde “qué debe cumplirse” y TDD mantiene el ciclo de construcción corto: prueba que falla, implementación mínima, prueba que pasa y refactor.
+
 ## Cuándo usarlo
 
 Usarlo cuando la funcionalidad tiene reglas, varios casos límite, más de una persona o agente, requisitos de cumplimiento, una base de código grande o riesgo de regresión.
@@ -82,4 +95,3 @@ Usar un flujo más ligero cuando el cambio es una corrección trivial, un experi
 ## Mensaje final
 
 La IA escribe más rápido cuando recibe contexto claro. SDD convierte ese contexto en un activo del repositorio. El beneficio no viene de escribir más Markdown, sino de mantener una relación verificable entre intención, decisión, tarea, código y prueba.
-
