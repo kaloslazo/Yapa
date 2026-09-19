@@ -23,7 +23,7 @@ Quedan fuera de este repositorio SDD: actualización del catálogo, consolidaci�
 - `docs/06-guion-presentacion-20min.md`: guion de la exposición.
 - `docs/07-trazabilidad-defensa.md`: respuestas para defender requisito, regla, diseño, código y validación.
 - `docs/sdd/09-prompt-para-siguiente-iteracion.md`: resumen completo y prompt para continuar iterando con SDD.
-- `slides/sdd-2026-yapa-final.pptx`: presentación editable de 12 diapositivas.
+- `slides/sdd-2026-yapa-apple-final-v4.pptx`: presentación editable de 12 diapositivas, en estilo minimalista blanco y negro.
 
 ## Ejecutar el ejemplo
 
