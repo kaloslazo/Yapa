@@ -3,11 +3,10 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "focuslist-sdd-demo"
+name = "yapa-sdd-vertical"
 version = "0.1.0"
-description = "Ejemplo pequeno de Spec-Driven Development con una CLI de tareas"
+description = "Vertical SDD de Yapa para registrar pedidos semanales"
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-

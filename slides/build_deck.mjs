@@ -103,7 +103,7 @@ function baseSlide(bg = C.cream) {
   const slide = baseSlide(C.ink);
   addText(slide, "SPEC-DRIVEN DEVELOPMENT", 72, 74, 700, 30, { fontSize: 16, bold: true, color: C.coral });
   addText(slide, "De la intención\na código verificable", 72, 138, 800, 170, { fontSize: 58, bold: true, color: C.cream });
-  addText(slide, "Metodología, herramientas y un experimento pequeño con IA de código", 78, 354, 760, 56, { fontSize: 22, color: "#D3DCE5" });
+  addText(slide, "Metodología, herramientas y una vertical real de Yapa", 78, 354, 760, 56, { fontSize: 22, color: "#D3DCE5" });
   addBox(slide, "Corte de información\n19 septiembre 2026", 850, 128, 290, 118, { fill: C.coral, line: C.coral, color: C.white, fontSize: 22, bold: true });
   addBox(slide, "spec → plan → tasks → code → evidence", 850, 316, 330, 76, { fill: C.ink2, line: "#52657A", color: C.cream, fontSize: 18, bold: true });
   addText(slide, "Presentación ≤ 20 min", 78, 612, 300, 28, { fontSize: 16, color: "#AEBCC9" });
@@ -113,13 +113,12 @@ function baseSlide(bg = C.cream) {
 // 2. Why now
 {
   const slide = baseSlide();
-  addTitle(slide, "Contexto", "El cuello de botella cambió", "El agente escribe; el equipo debe orientar, revisar y demostrar.");
-  addBox(slide, "Prompt corto\n“Haz una app de tareas”", 80, 246, 300, 124, { fill: C.pale, line: C.line, fontSize: 24, bold: true });
-  addBox(slide, "Supuestos ocultos\nID · persistencia · errores · límites", 490, 246, 300, 124, { fill: C.coralSoft, line: C.coral, color: C.ink, fontSize: 22, bold: true });
-  addBox(slide, "Código que compila\npero quizá no cumple", 900, 246, 300, 124, { fill: C.tealSoft, line: C.teal, fontSize: 22, bold: true });
-  // Thin visual dividers keep the narrative linear without adding copy.
-  addText(slide, "La práctica SDD hace persistentes las decisiones que normalmente se pierden en el chat.", 110, 470, 1050, 50, { fontSize: 28, bold: true, color: C.ink, alignment: "center" });
-  addText(slide, "La unidad de trabajo deja de ser solo el prompt: pasa a ser un conjunto revisable de artefactos.", 170, 540, 930, 36, { fontSize: 20, color: C.gray, alignment: "center" });
+  addTitle(slide, "Contexto Yapa", "El problema exige reglas, no solo código", "Yapa consolida compras mayoristas por zona y ciclo semanal en Lima.");
+  addBox(slide, "Cliente\ncompra caro en retail", 80, 246, 300, 124, { fill: C.pale, line: C.line, fontSize: 24, bold: true });
+  addBox(slide, "Mayorista\nahorra, pero exige coordinación", 490, 246, 300, 124, { fill: C.coralSoft, line: C.coral, color: C.ink, fontSize: 22, bold: true });
+  addBox(slide, "Yapa\nconsolida por zona y sábado", 900, 246, 300, 124, { fill: C.tealSoft, line: C.teal, fontSize: 22, bold: true });
+  addText(slide, "Una orden depende de cobertura, ciclo, subtotal, ventana, precio vigente y pago.", 110, 470, 1050, 50, { fontSize: 28, bold: true, color: C.ink, alignment: "center" });
+  addText(slide, "SDD vuelve esas decisiones visibles antes de prometer una implementación completa.", 170, 540, 930, 36, { fontSize: 20, color: C.gray, alignment: "center" });
   addFooter(slide, 2);
   notes(slide, "Mensaje: el riesgo no es solo que el agente cometa un error de sintaxis. Es que complete silenciosamente decisiones de producto o arquitectura. SDD hace esas decisiones visibles.\n\nFuente: GitHub Spec Kit, What is SDD? https://github.com/github/spec-kit/blob/main/docs/concepts/sdd.md\nFuente: Kiro, What is spec-driven development? https://kiro.dev/\nTiempo: 1:30.");
 }
@@ -192,18 +191,18 @@ function baseSlide(bg = C.cream) {
   notes(slide, "No todo cambio necesita la cadena completa. GitHub Spec Kit señala que specify antes de plan es el requisito mínimo; clarify, checklist y analyze son gates de calidad para trabajo ambiguo o de mayor riesgo.\n\nFuente: https://github.github.com/spec-kit/reference/agentic-sdd.html\nTiempo: 2:00.");
 }
 
-// 6. Applying SDD + TDD
+// 6. Applying SDD to Yapa
 {
   const slide = baseSlide();
-  addTitle(slide, "Aplicación", "Cómo trabajaría con SDD + TDD", "SDD fija el comportamiento; TDD guía cada cambio pequeño.");
-  addBox(slide, "SDD\nAntes de programar\n\nSpec · plan · tareas\ncriterios de aceptación", 120, 220, 360, 196, { fill: C.coralSoft, line: C.coral, fontSize: 23, bold: true, alignment: "center" });
-  addBox(slide, "TDD\nDurante la tarea\n\nTest rojo · código mínimo\ntest verde · refactor", 800, 220, 360, 196, { fill: C.tealSoft, line: C.teal, fontSize: 23, bold: true, alignment: "center" });
-  const sdd = addBox(slide, "Qué debe cumplirse", 330, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
-  const tdd = addBox(slide, "Qué evidencia lo", 730, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
-  slide.shapes.connect(sdd, tdd, { kind: "straight", fromSide: "right", toSide: "left", line: { style: "solid", fill: C.coral, width: 2 }, tail: { type: "triangle", width: "sm", length: "sm" } });
-  addText(slide, "En mi trabajo, la IA puede proponer los artefactos y el código; yo reviso la intención, el riesgo y la evidencia.", 145, 620, 990, 30, { fontSize: 20, color: C.gray, alignment: "center" });
+  addTitle(slide, "Aplicación", "Qué entra en esta entrega", "Una vertical acotada permite demostrar trazabilidad sin fingir tener todo el sistema.");
+  addBox(slide, "INCLUIMOS\nCUN-02 Registrar pedido semanal\n\n+ límite mínimo de CUN-03", 120, 220, 460, 196, { fill: C.coralSoft, line: C.coral, fontSize: 23, bold: true, alignment: "center" });
+  addBox(slide, "DIFERIMOS\nCUN-01, CUN-04…CUN-08\n\nintegraciones y operación", 700, 220, 460, 196, { fill: C.tealSoft, line: C.teal, fontSize: 23, bold: true, alignment: "center" });
+  const included = addBox(slide, "Reglas del PDF", 330, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
+  const deferred = addBox(slide, "Roadmap general", 730, 500, 220, 68, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 20, bold: true, alignment: "center" });
+  slide.shapes.connect(included, deferred, { kind: "straight", fromSide: "right", toSide: "left", line: { style: "solid", fill: C.coral, width: 2 }, tail: { type: "triangle", width: "sm", length: "sm" } });
+  addText(slide, "La spec controla una vertical; el repositorio general conserva el mapa completo.", 145, 620, 990, 30, { fontSize: 20, color: C.gray, alignment: "center" });
   addFooter(slide, 6);
-  notes(slide, "Respuesta directa a la pregunta del profesor: aplicaría SDD para convertir la necesidad en requisitos, plan y tareas. Aplicaría TDD dentro de cada tarea: escribir una prueba que falla, implementar lo mínimo, hacerla pasar y refactorizar. SDD y TDD se complementan porque uno ordena la intención y el otro acorta el ciclo de feedback.\n\nFuente local: docs/07-sdd-tdd-aplicacion.md\nTiempo: 1:45.");
+  notes(slide, "Respuesta directa a la pregunta del profesor: aplicaría SDD para convertir el problema de Yapa en requisitos, reglas, plan, tareas y evidencia. En esta entrega se implementa solo CUN-02 y se declara qué módulos quedan para el repositorio general. La IA puede proponer artefactos y código; la persona responsable aprueba intención, alcance y evidencia.\n\nFuente local: docs/sdd/01-alcance.md y docs/sdd/06-trazabilidad.md\nTiempo: 1:45.");
 }
 
 // 7. Tools
@@ -224,26 +223,26 @@ function baseSlide(bg = C.cream) {
 {
   const slide = baseSlide(C.ink);
   addText(slide, "EJEMPLO", 72, 42, 520, 24, { fontSize: 14, bold: true, color: C.coral });
-  addText(slide, "FocusList: una app pequeña, con reglas reales", 72, 76, 1120, 60, { fontSize: 39, bold: true, color: C.cream });
-  addBox(slide, "Entrada a la IA\n“Gestiona tareas desde la terminal”", 84, 230, 330, 150, { fill: C.coral, line: C.coral, color: C.white, fontSize: 23, bold: true, alignment: "center" });
-  addBox(slide, "Spec\nID incremental\nJSON local\n80 caracteres\nopen / done", 475, 210, 250, 190, { fill: C.cream, line: C.cream, color: C.ink, fontSize: 22, bold: true, alignment: "center" });
-  addBox(slide, "Resultado\nCLI + 7 tests\ncomandos reproducibles\nlimitaciones explícitas", 790, 230, 330, 150, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
-  addText(slide, "Archivos: spec → plan → tasks → src/ + tests/ → log", 180, 510, 920, 34, { fontSize: 26, bold: true, color: C.cream, alignment: "center" });
-  addText(slide, "El documento no describe “una app bonita”; define comportamiento que se puede probar.", 190, 574, 900, 32, { fontSize: 20, color: "#C3D0DC", alignment: "center" });
+  addText(slide, "Yapa: registrar pedido semanal con reglas reales", 72, 76, 1120, 60, { fontSize: 39, bold: true, color: C.cream });
+  addBox(slide, "Entrada a la IA\n“Registra una canasta de un cliente”", 84, 230, 330, 150, { fill: C.coral, line: C.coral, color: C.white, fontSize: 23, bold: true, alignment: "center" });
+  addBox(slide, "Spec\nCUN-02\nzona · ciclo · subtotal\nventana · pago", 475, 210, 250, 190, { fill: C.cream, line: C.cream, color: C.ink, fontSize: 22, bold: true, alignment: "center" });
+  addBox(slide, "Resultado\npedido REGISTRADO\ncriterios verificables\nmódulos pendientes declarados", 790, 230, 330, 150, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
+  addText(slide, "CUN-02 → reglas → criterios → código → evidencia", 180, 510, 920, 34, { fontSize: 26, bold: true, color: C.cream, alignment: "center" });
+  addText(slide, "La spec no describe “una app bonita”; define comportamiento que se puede revisar.", 190, 574, 900, 32, { fontSize: 20, color: "#C3D0DC", alignment: "center" });
   addFooter(slide, 8);
-  notes(slide, "Explicar que el ejemplo es deliberadamente pequeño y portable. Los archivos están en docs/specs. La IA recibe primero la constitución, luego la spec, el plan y las tareas. El objetivo es mostrar el método, no presumir complejidad técnica.\n\nFuente local del repositorio: docs/specs/01-focuslist-spec.md\nTiempo: 2:00.");
+  notes(slide, "Explicar que el ejemplo es deliberadamente pequeño y conectado con el proyecto real. La IA recibe primero el contexto de Yapa, luego la especificación de CUN-02, el plan, las tareas y los criterios. El objetivo es mostrar cómo una regla del negocio termina en código y evidencia.\n\nFuente local del repositorio: docs/sdd/00-contexto-yapa.md, docs/sdd/02-especificacion-cun-02.md y docs/sdd/05-criterios-aceptacion.md\nTiempo: 2:00.");
 }
 
-// 9. Iteration + code
+// 9. Rule to code
 {
   const slide = baseSlide();
-  addTitle(slide, "Iteración", "El cambio de requisito deja rastro", "Petición nueva: filtrar por estado y hacer idempotente `done`.");
+  addTitle(slide, "Código", "Una regla de negocio se vuelve validación", "RN-04: delivery S/ 7.90 y gratis desde S/ 120.");
   const rows = [
-    ["Spec", "AC-02.3 / AC-02.4 + AC-03.2", C.coralSoft],
-    ["Plan", "filtro explícito + retorno de cambio", C.tealSoft],
-    ["Tasks", "T4 / T5 / T7", C.pale],
-    ["Código", "list_tasks + complete_task", C.ink],
-    ["Tests", "filtro + doble done", C.amber],
+    ["Spec", "RN-04 / AC-04 / AC-05", C.coralSoft],
+    ["Plan", "constante + función pura", C.tealSoft],
+    ["Tarea", "T-05 calcular delivery", C.pale],
+    ["Código", "calculate_delivery_fee", C.ink],
+    ["Prueba", "S/ 60 cobra · S/ 120 exonera", C.amber],
   ];
   let y = 220;
   for (const [label, body, fill] of rows) {
@@ -251,30 +250,30 @@ function baseSlide(bg = C.cream) {
     addText(slide, body, 345, y + 10, 700, 34, { fontSize: 23, bold: label === "Tests", color: C.ink });
     y += 78;
   }
-  addBox(slide, "Pequeño ejemplo TDD", 830, 220, 330, 54, { fill: C.coral, line: C.coral, color: C.white, fontSize: 18, bold: true, alignment: "center" });
-  addBox(slide, "# AC-03.2\nif task.done:\n    return task, False\ntask.done = True\nsave_tasks(...)\nreturn task, True", 830, 300, 330, 198, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 18, bold: false, alignment: "left" });
-  addText(slide, "La spec decide que repetir `done` es seguro; el test lo demuestra.", 830, 530, 330, 56, { fontSize: 17, color: C.gray, alignment: "center" });
-  addText(slide, "La iteración es útil cuando reduce una incertidumbre y añade evidencia.", 185, 630, 900, 30, { fontSize: 20, color: C.gray, alignment: "center" });
+  addBox(slide, "RN-04 → código", 830, 220, 330, 54, { fill: C.coral, line: C.coral, color: C.white, fontSize: 18, bold: true, alignment: "center" });
+  addBox(slide, "def calculate_delivery_fee(subtotal):\n    if subtotal >= Decimal(\"120.00\"):\n        return Decimal(\"0.00\")\n    return Decimal(\"7.90\")", 830, 300, 330, 198, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 18, bold: false, alignment: "left" });
+  addText(slide, "La spec decide el umbral; la prueba demuestra ambos lados.", 830, 530, 330, 56, { fontSize: 17, color: C.gray, alignment: "center" });
+  addText(slide, "La iteración SDD actualiza artefactos y conserva el porqué del cambio.", 185, 630, 900, 30, { fontSize: 20, color: C.gray, alignment: "center" });
   addFooter(slide, 9);
-  notes(slide, "Este es el punto central de la demo. La petición nueva no se añade solo al código. Primero se actualizan los criterios de aceptación; luego plan y tareas; finalmente código y pruebas. La spec se convierte en memoria del cambio.\n\nFuente local: docs/iteration-log.md\nTiempo: 2:30.");
+  notes(slide, "Este es el punto central de la demo. Una regla del PDF no se queda como prosa: se relaciona con un criterio, una tarea, una función pequeña y una prueba. Si el umbral cambia, la modificación debe tocar la spec y dejar evidencia en el registro de iteraciones.\n\nFuente local: docs/sdd/02-especificacion-cun-02.md, docs/sdd/04-tareas.md y docs/sdd/08-registro-iteraciones.md\nTiempo: 2:30.");
 }
 
 // 10. Evidence
 {
   const slide = baseSlide();
-  addTitle(slide, "Resultado", "Funcionó en el alcance que definimos", "La evidencia es suficiente para un piloto, no para prometer producción.");
-  addBox(slide, "7", 120, 240, 180, 145, { fill: C.teal, line: C.teal, color: C.white, fontSize: 64, bold: true, alignment: "center" });
-  addText(slide, "pruebas pasan", 115, 405, 190, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
-  addBox(slide, "0", 390, 240, 180, 145, { fill: C.coral, line: C.coral, color: C.white, fontSize: 64, bold: true, alignment: "center" });
-  addText(slide, "dependencias runtime", 365, 405, 230, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
-  addBox(slide, "1", 660, 240, 180, 145, { fill: C.amber, line: C.amber, color: C.ink, fontSize: 64, bold: true, alignment: "center" });
-  addText(slide, "cambio trazable", 645, 405, 210, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
+  addTitle(slide, "Resultado", "Funcionó en el alcance que definimos", "Evidencia suficiente para una vertical, no para prometer el sistema completo.");
+  addBox(slide, "8", 120, 240, 180, 145, { fill: C.teal, line: C.teal, color: C.white, fontSize: 64, bold: true, alignment: "center" });
+  addText(slide, "reglas cubiertas", 115, 405, 190, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
+  addBox(slide, "6", 390, 240, 180, 145, { fill: C.coral, line: C.coral, color: C.white, fontSize: 64, bold: true, alignment: "center" });
+  addText(slide, "criterios de aceptación", 365, 405, 230, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
+  addBox(slide, "0", 660, 240, 180, 145, { fill: C.amber, line: C.amber, color: C.ink, fontSize: 64, bold: true, alignment: "center" });
+  addText(slide, "módulos fuera de alcance\nimplementados", 645, 405, 210, 42, { fontSize: 18, bold: true, color: C.ink, alignment: "center" });
   addBox(slide, "Sí", 930, 240, 180, 145, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 54, bold: true, alignment: "center" });
-  addText(slide, "demo reproducible", 905, 405, 230, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
-  addText(slide, "Conclusión defendible: SDD redujo ambigüedad y facilitó revisión.", 150, 545, 980, 38, { fontSize: 27, bold: true, color: C.ink, alignment: "center" });
+  addText(slide, "vertical reproducible", 905, 405, 230, 30, { fontSize: 20, bold: true, color: C.ink, alignment: "center" });
+  addText(slide, "Conclusión defendible: SDD redujo ambigüedad y dejó trazabilidad.", 150, 545, 980, 38, { fontSize: 27, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "No medimos productividad comparativa ni calidad de producción.", 230, 602, 820, 28, { fontSize: 20, color: C.gray, alignment: "center" });
   addFooter(slide, 10);
-  notes(slide, "Aclarar la diferencia entre evidencia local y generalización. Pasar tests confirma esos comportamientos. No confirma rendimiento, seguridad, operación ni valor de negocio. Thoughtworks clasifica Spec Kit como Assess y reporta beneficios junto con problemas como instruction bloat y context rot.\n\nFuentes: docs/05-resultados-experimento.md\nhttps://www.thoughtworks.com/content/dam/thoughtworks/documents/radar/2026/04/tr_technology_radar_vol_34_en.pdf\nTiempo: 2:00.");
+  notes(slide, "Aclarar la diferencia entre evidencia local y generalización. Las pruebas confirman las reglas implementadas. No confirman rendimiento, seguridad, operación, integraciones ni valor de negocio del sistema completo.\n\nFuentes: docs/05-resultados-sdd-yapa.md\nhttps://www.thoughtworks.com/content/dam/thoughtworks/documents/radar/2026/04/tr_technology_radar_vol_34_en.pdf\nTiempo: 2:00.");
 }
 
 // 11. Limits
@@ -284,7 +283,7 @@ function baseSlide(bg = C.cream) {
   addText(slide, "Dónde SDD todavía necesita criterio", 72, 76, 1120, 60, { fontSize: 39, bold: true, color: C.cream });
   addBox(slide, "Context rot\nMás instrucciones no siempre ayudan.", 100, 220, 320, 142, { fill: C.coral, line: C.coral, color: C.white, fontSize: 23, bold: true, alignment: "center" });
   addBox(slide, "Falsa precisión\nUna spec incorrecta sigue siendo incorrecta.", 480, 220, 320, 142, { fill: C.amber, line: C.amber, color: C.ink, fontSize: 23, bold: true, alignment: "center" });
-  addBox(slide, "Burocracia\nSi no decide ni se prueba, sobra.", 860, 220, 320, 142, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
+  addBox(slide, "Alcance inflado\nSi no se puede revisar, se difiere.", 860, 220, 320, 142, { fill: C.teal, line: C.teal, color: C.white, fontSize: 23, bold: true, alignment: "center" });
   addText(slide, "La persona responsable sigue aprobando alcance, arquitectura, riesgos y aceptación.", 145, 505, 990, 46, { fontSize: 27, bold: true, color: C.cream, alignment: "center" });
   addText(slide, "La IA puede producir artefactos. El equipo decide si esos artefactos describen el producto correcto.", 185, 580, 910, 34, { fontSize: 20, color: "#C3D0DC", alignment: "center" });
   addFooter(slide, 11);
@@ -294,10 +293,10 @@ function baseSlide(bg = C.cream) {
 // 12. Close
 {
   const slide = baseSlide();
-  addTitle(slide, "Cierre", "Empezar pequeño, medir y mantener la cadena", "SDD es una forma de hacer explícita la colaboración entre producto, ingeniería e IA.");
-  addBox(slide, "1\nUna funcionalidad\ncon reglas reales", 160, 250, 250, 160, { fill: C.coralSoft, line: C.coral, fontSize: 24, bold: true, alignment: "center" });
+  addTitle(slide, "Cierre", "Empezar por una vertical y mantener la cadena", "SDD hace explícita la colaboración entre negocio, ingeniería e IA.");
+  addBox(slide, "1\nCUN-02\ncon reglas reales", 160, 250, 250, 160, { fill: C.coralSoft, line: C.coral, fontSize: 24, bold: true, alignment: "center" });
   addBox(slide, "2\nSpec versionada\ncon aceptación", 515, 250, 250, 160, { fill: C.tealSoft, line: C.teal, fontSize: 24, bold: true, alignment: "center" });
-  addBox(slide, "3\nTests y diff\ncomo evidencia", 870, 250, 250, 160, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 24, bold: true, alignment: "center" });
+  addBox(slide, "3\nCódigo + evidencia\npara continuar", 870, 250, 250, 160, { fill: C.ink, line: C.ink, color: C.cream, fontSize: 24, bold: true, alignment: "center" });
   addText(slide, "La velocidad de la IA vale más cuando el equipo puede explicar qué construyó y por qué.", 150, 535, 980, 52, { fontSize: 30, bold: true, color: C.ink, alignment: "center" });
   addText(slide, "Fuentes y material completo: docs/ · código: src/ · pruebas: tests/", 220, 620, 840, 28, { fontSize: 18, color: C.gray, alignment: "center" });
   addFooter(slide, 12);

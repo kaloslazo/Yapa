@@ -1,25 +1,28 @@
-# Spec-Driven Development en 2026
+# Yapa · Aplicación de SDD
 
-Material en español para una presentación de **20 minutos como máximo** sobre Spec-Driven Development (SDD), con un ejemplo pequeño, un experimento reproducible y un flujo listo para pasarle a una IA de código.
+Repositorio académico para demostrar **Specification-Driven Development (SDD)** sobre una vertical acotada del proyecto Yapa.
+
+## Alcance de esta entrega
+
+Esta entrega trabaja únicamente:
+
+- `CUN-02 Registrar pedido semanal`.
+- El contrato mínimo de `CUN-03 Procesar pago`, porque CUN-02 necesita registrar el medio de pago.
+
+Quedan fuera de este repositorio SDD: actualización del catálogo, consolidación semanal, abastecimiento mayorista, preparación de pedidos, ruteo, entregas e incidencias. Esos módulos aparecen en el repositorio general del proyecto como roadmap, pero no se presentan como implementados.
 
 ## Qué contiene
 
-- `docs/01-resumen-ejecutivo.md`: resumen completo para estudiar o reutilizar como briefing.
-- `docs/02-metodologia-sdd.md`: teoría, conceptos, flujo, ventajas y límites.
-- `docs/03-herramientas-2026.md`: mapa actualizado de herramientas y cómo escogerlas.
-- `docs/specs/`: constitución, especificación, plan, tareas y checklist del ejemplo.
-- `docs/prompts/`: prompts para iniciar la iteración con una IA y pedir convergencia.
-- `docs/iteration-log.md`: registro de las iteraciones realizadas y de las decisiones.
-- `docs/05-resultados-experimento.md`: qué funcionó, qué no y qué no se debe concluir.
-- `src/focuslist/`: aplicación de ejemplo, una CLI de lista de tareas persistida en JSON.
-- `tests/`: pruebas de aceptación y regresión.
-- `slides/sdd-2026-exposicion-final-v2.pptx`: presentación editable de 12 diapositivas, preparada para 20 minutos.
-- `docs/07-sdd-tdd-aplicacion.md`: cómo aplicarías SDD y TDD en un trabajo real.
-- `docs/06-guion-presentacion-20min.md`: guion del orador con tiempos.
-
-## Tesis de la presentación
-
-SDD convierte la intención del producto en artefactos versionados que la IA puede interpretar, refinar y verificar. La IA acelera la implementación, pero la calidad depende de que una persona revise la especificación, las decisiones de diseño y la evidencia de prueba.
+- `docs/sdd/`: contexto, alcance, especificación, plan, tareas, trazabilidad, checklist y registro de iteraciones.
+- `src/yapa_sdd/`: ejemplo ejecutable de validación y registro de un pedido semanal.
+- `tests/`: pruebas de los criterios de aceptación del alcance SDD.
+- `docs/01-resumen-sdd-yapa.md`: resumen listo para estudiar o exponer.
+- `docs/02-metodologia-sdd.md`: teoría SDD aplicada a Yapa.
+- `docs/03-herramientas-2026.md`: herramientas actuales para trabajar con specs y agentes.
+- `docs/05-resultados-sdd-yapa.md`: evaluación honesta de lo que funcionó.
+- `docs/06-guion-presentacion-20min.md`: guion de la exposición.
+- `docs/07-trazabilidad-defensa.md`: respuestas para defender requisito, regla, diseño, código y validación.
+- `slides/sdd-2026-yapa-final.pptx`: presentación editable de 12 diapositivas.
 
 ## Ejecutar el ejemplo
 
@@ -27,32 +30,30 @@ Requiere Python 3.11 o superior.
 
 ```bash
 cd sdd-2026-exposicion
-PYTHONPATH=src python -m focuslist.cli --store /tmp/focuslist-demo.json add "Preparar la presentación"
-PYTHONPATH=src python -m focuslist.cli --store /tmp/focuslist-demo.json list
-PYTHONPATH=src python -m focuslist.cli --store /tmp/focuslist-demo.json done 1
-PYTHONPATH=src python -m focuslist.cli --store /tmp/focuslist-demo.json list --status done
-```
-
-Ejecutar las pruebas:
-
-```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-## Flujo SDD de este repositorio
+El código demuestra reglas de Yapa como zona piloto, ciclo activo, subtotal mínimo, tarifa de entrega, productos activos, ventana con capacidad y medios de pago permitidos.
 
-1. Leer `docs/specs/01-focuslist-spec.md`.
-2. Revisar o ajustar `docs/specs/02-focuslist-plan.md`.
-3. Trabajar por orden en `docs/specs/03-focuslist-tasks.md`.
-4. Ejecutar la implementación y las pruebas.
-5. Completar `docs/specs/04-focuslist-checklist.md`.
-6. Registrar cambios en `docs/iteration-log.md`.
-7. Si cambia una regla, actualizar primero la especificación, después el plan, las tareas, el código y las pruebas.
+## Evidencia SDD
 
-## Fuentes y corte temporal
+La trazabilidad que se debe mostrar en la exposición es:
 
-La investigación se actualizó el **19 de septiembre de 2026**. Las fuentes primarias y el criterio de lectura están en [`docs/sources.md`](docs/sources.md).
+```text
+requerimiento CUN-02
+  → reglas RN-01, RN-02, RN-03, RN-04, RN-05, RN-07, RN-09 y RN-10
+  → criterios de aceptación
+  → diseño de dominio
+  → src/yapa_sdd/order_registration.py
+  → tests/test_order_registration.py
+```
 
-## Nota de alcance
+## Fuente funcional
 
-El experimento demuestra trazabilidad y convergencia en una aplicación pequeña. No demuestra que SDD produzca automáticamente software listo para producción ni sustituye revisión humana, pruebas de seguridad, observabilidad o diseño operativo.
+El alcance se deriva de `Entregable01_ModeladoNegocio_Yapa.pdf`, compartido para esta tarea, y de las instrucciones académicas de `trabajo_sdd_tdd_diseno_software.md`. Las instrucciones del documento distinguen SDD de TDD; como este grupo tiene asignado SDD, el repositorio no desarrolla ni presenta TDD.
+
+## Repositorio general
+
+El mapa completo del proyecto Yapa se mantiene en un repositorio separado:
+
+<https://github.com/kaloslazo/yapa-proyecto-completo>

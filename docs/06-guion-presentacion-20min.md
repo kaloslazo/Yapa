@@ -1,36 +1,36 @@
-# Guion para una presentación de 20 minutos
+# Guion de exposición SDD sobre Yapa
 
-La presentación tiene 12 diapositivas. El ritmo objetivo es de 17 a 19 minutos, dejando margen para una pregunta.
+La presentación tiene 12 diapositivas y un ritmo objetivo de 17 a 19 minutos.
 
 | Tiempo | Diapositiva | Mensaje |
 | ---: | --- | --- |
-| 0:45 | 1. Portada | SDD organiza la colaboración con una IA alrededor de intención y evidencia |
-| 1:30 | 2. Por qué aparece ahora | Los agentes pueden escribir código, pero pierden contexto y supuestos |
-| 2:00 | 3. Qué es SDD | La spec es un artefacto vivo, versionado y verificable |
-| 2:00 | 4. Cadena de artefactos | Constitución, spec, plan, tareas, código, pruebas, convergencia |
-| 2:00 | 5. Flujo de trabajo | Aclarar antes de planificar; revisar después de implementar |
-| 1:45 | 6. Aplicación SDD + TDD | Cómo lo usaría en mi trabajo |
-| 1:45 | 7. Herramientas 2026 | Spec Kit, Kiro, Tessl y agentes de código |
-| 1:45 | 8. Ejemplo FocusList | Qué se pidió y qué documentos recibió la IA |
-| 2:30 | 9. Iteración + código | La nueva regla actualiza spec, plan, tareas, código y tests |
-| 1:45 | 10. Evidencia | 7 pruebas, ejecución reproducible, límites explícitos |
-| 1:30 | 11. Dónde falla | Context rot, burocracia, falsa precisión y revisión pendiente |
-| 0:45 | 12. Cierre | Empezar pequeño, medir y mantener la cadena de trazabilidad |
+| 0:45 | 1. Portada | SDD aplicado a una vertical real de Yapa |
+| 1:15 | 2. Problema | El ciclo semanal necesita reglas y trazabilidad |
+| 1:30 | 3. Definición | La spec dirige diseño, código y validación |
+| 1:30 | 4. Cadena | Requisito, regla, criterio, diseño, código y resultado |
+| 1:30 | 5. Flujo | Aclarar, especificar, diseñar, implementar y validar |
+| 1:30 | 6. Aplicación a Yapa | Qué se incluye y qué se excluye |
+| 1:30 | 7. Herramientas | Markdown, Git, agentes y verificación |
+| 1:30 | 8. Caso CUN-02 | Registrar pedido semanal |
+| 2:30 | 9. Código | Mostrar una validación y su criterio |
+| 1:30 | 10. Evidencia | Pruebas y trazabilidad |
+| 1:30 | 11. Límites | No confundir vertical demostrada con sistema completo |
+| 0:45 | 12. Cierre | SDD deja una base segura para los siguientes módulos |
 
-## Apertura sugerida
+## Apertura
 
-“En 2026 el problema ya no es solo cuánto código puede escribir un agente. El problema es si entiende qué debía construir, qué decisiones puede tomar y cómo sabemos que terminó. SDD responde con artefactos persistentes.”
+“Yapa no necesita solo una pantalla de pedidos. Tiene zonas, cierres de ciclo, montos mínimos, ventanas de entrega y medios de pago. SDD nos ayuda a convertir esas reglas del negocio en una implementación que podemos defender.”
 
-## Demo verbal
+## Demo
 
-Mostrar la relación:
+1. Abrir `docs/sdd/02-especificacion-cun-02.md`.
+2. Mostrar RN-01, RN-03 y RN-04.
+3. Abrir `src/yapa_sdd/order_registration.py`.
+4. Ejecutar la suite de pruebas.
+5. Mostrar un caso válido y un caso rechazado por subtotal o zona.
+6. Explicar qué módulos todavía no se implementan.
 
-```text
-spec.md → plan.md → tasks.md → src/ + tests/ → converge
-```
+## Cierre
 
-Explicar que `focuslist` empezó con reglas pequeñas. La IA no recibió un “haz una app” sin contexto: recibió comportamiento, límites, errores y criterios. Después se agregó un cambio real: filtrar por estado y hacer idempotente la acción `done`. Mostrar el test de doble `done` como el ejemplo TDD.
+“La evidencia no dice que Yapa esté terminado. Dice algo más preciso: esta vertical cumple los criterios que especificamos y deja trazado qué debe construirse después.”
 
-## Cierre sugerido
-
-“El resultado no es magia ni automatización total. SDD funciona cuando mantiene sincronizados intención, decisión, implementación y prueba. Si el equipo no revisa la spec o la deja crecer sin control, el proceso solo documenta los errores más rápido.”
