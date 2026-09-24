@@ -38,10 +38,10 @@ class RegisterOrderSpecTests(unittest.TestCase):
     def setUp(self):
         self.store = pilot_store()
 
-    def assertRule(self, code, **kwargs):
+    def assertRule(self, expected, **kwargs):
         with self.assertRaises(BusinessRuleError) as raised:
             register(self.store, **kwargs)
-        self.assertEqual(raised.exception.code, code)
+        self.assertEqual(raised.exception.code, expected)
         return raised.exception
 
     # CA-01
