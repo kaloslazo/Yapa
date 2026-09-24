@@ -65,7 +65,10 @@ Cada caso de abajo se **ejecutó** contra `register_weekly_order` (el script de 
 
 ## Script de verificación
 
+Aplica al código de la iteración 1 (commit `bd48598`):
+
 ```bash
-cd sdd-2026-exposicion
-PYTHONPATH=src python docs/analisis/probe_edge_cases.py
+git worktree add ../iter1 bd48598
+cd ../iter1
+PYTHONPATH=src python ../sdd-2026-exposicion/docs/analisis/probe_edge_cases.py
 ```

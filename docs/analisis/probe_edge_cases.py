@@ -1,6 +1,8 @@
 """Casos borde de register_weekly_order (repo sdd-2026-exposicion).
 
-Uso: cd sdd-2026-exposicion && PYTHONPATH=src python docs/analisis/probe_edge_cases.py
+Aplica al codigo de la iteracion 1 (commit bd48598). Para reproducirlo:
+    git worktree add ../iter1 bd48598
+    cd ../iter1 && PYTHONPATH=src python ../sdd-2026-exposicion/docs/analisis/probe_edge_cases.py
 """
 from datetime import datetime
 from decimal import Decimal as D
