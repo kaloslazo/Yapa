@@ -13,6 +13,9 @@ Este archivo es el resumen operativo que se puede entregar a otra IA para contin
 7. `docs/sdd/06-trazabilidad.md`
 8. `docs/sdd/07-checklist-convergencia.md`
 9. `docs/sdd/08-registro-iteraciones.md`
+10. `docs/sdd/10-clarificaciones-v2.md` (decisiones y supuestos vigentes)
+11. `docs/sdd/11-especificacion-liquidacion.md`
+12. `docs/sdd/12-diseno.md`
 
 ## Resumen que la IA debe conservar
 
@@ -49,6 +52,10 @@ los artefactos SDD y luego src/ y tests/. Ejecuta la suite, revisa el diff y
 termina con: cambios realizados, evidencia, riesgos, pendientes y módulos que
 siguen fuera de alcance.
 ```
+
+## Estado tras la iteración 2
+
+Registro de pedido v2 y liquidación implementados (45 pruebas). Los valores de la sección anterior que cambiaron (envío, medios de pago, ventana) se reemplazan por `10-clarificaciones-v2.md`.
 
 ## Siguiente incremento recomendado
 

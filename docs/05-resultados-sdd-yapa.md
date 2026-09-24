@@ -1,5 +1,7 @@
 # Resultado de aplicar SDD a Yapa
 
+> **Documento de la iteración 1 (19/09/2026).** La versión vigente del alcance, las reglas y la evidencia está en `README.md`, `docs/sdd/10-clarificaciones-v2.md` y `docs/verification-report.md`.
+
 ## Pregunta
 
 ¿Podemos tomar una funcionalidad real del modelo de negocio de Yapa y llevarla desde una especificación hasta código verificable sin fingir que todo el proyecto está implementado?

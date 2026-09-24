@@ -1,5 +1,7 @@
 # SDD aplicado a Yapa
 
+> **Documento de la iteración 1 (19/09/2026).** La versión vigente del alcance, las reglas y la evidencia está en `README.md`, `docs/sdd/10-clarificaciones-v2.md` y `docs/verification-report.md`.
+
 ## Idea principal
 
 Yapa es una plataforma web para consolidar compras mayoristas por zona. El cliente arma su pedido durante la semana, el negocio cierra el ciclo el miércoles a las 20:00, compra al por mayor y entrega el sábado.

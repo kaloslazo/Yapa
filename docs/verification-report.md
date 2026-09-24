@@ -1,41 +1,35 @@
 # Informe de verificación SDD Yapa
 
-Fecha: 19 de septiembre de 2026.
+## Iteración 2 (24/09/2026)
 
-## Código
+### Pruebas
 
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-Resultado esperado: suite de validaciones de CUN-02 correcta.
+| Momento | Resultado | Evidencia |
+|---|---|---|
+| Pruebas escritas, sin código | 2 módulos de prueba fallan al importar (el código no existe) | `docs/evidencia/01-pruebas-en-rojo.txt` |
+| Registro implementado | Registro en verde, liquidación en rojo | `docs/evidencia/02-registro-verde-liquidacion-rojo.txt` |
+| Final | **45 pruebas, OK** | `docs/evidencia/03-pruebas-en-verde.txt` |
 
-## Presentación
+### Demo
 
-- 12 diapositivas.
-- Alcance centrado en SDD y Yapa.
-- Estilo visual minimalista en blanco, negro y grises, con tipografía Helvetica Neue.
-- Texto editable y notas del orador con fuentes.
-- Validación estructural del paquete correcta.
-- Render de las 12 diapositivas revisado.
+`docs/evidencia/04-demo-consola.txt`: cotización, registro válido, tres rechazos (ciclo cerrado, bajo el mínimo, zona fuera del piloto) y un ciclo completo liquidado.
 
-## Comparación con el markdown del curso
+### Especificación frente a resultado implementado
 
-| Requisito de la sección SDD | Evidencia en la entrega |
-|---|---|
-| Explicar qué es SDD y su objetivo | `docs/02-metodologia-sdd.md` y diapositivas 2–4 |
-| Explicar el problema que busca resolver | Ambigüedad, cambios, documentación desactualizada y comunicación entre roles |
-| Requisitos y especificaciones | `docs/sdd/02-especificacion-cun-02.md` y diapositiva 6 |
-| Reglas de negocio | RN-01, RN-02, RN-03, RN-04, RN-05, RN-07, RN-09 y RN-10 |
-| Criterios de aceptación | `docs/sdd/05-criterios-aceptacion.md` y diapositiva 7 |
-| Contrato de entrada y salida | Entrada y salida de CUN-02 en la diapositiva 6 |
-| Modelo o diagrama de diseño | Modelo mínimo de dominio en la diapositiva 8 |
-| Ventajas y limitaciones | Diapositiva 11 y `docs/05-resultados-sdd-yapa.md` |
-| Herramientas | Markdown, GitHub, Python, unittest y agentes de IA en la diapositiva 9 |
-| Aplicación sobre un proyecto real | Yapa, CUN-02 Registrar pedido semanal |
-| Código funcional y demostración | `src/yapa_sdd/order_registration.py` y ejecución de la suite |
-| Validación contra la especificación | 8 tests correctos y matriz en `docs/sdd/06-trazabilidad.md` |
+| Criterio | Esperado según la spec | Obtenido |
+|---|---|---|
+| CA-01 | Total S/ 59.51, subtotal S/ 54.518 | Igual (demo `registrar`, `test_ca01_*`) |
+| CA-04 | Miércoles 20:00:00 → `CYCLE_CLOSED` | Igual (demo `pedido_fuera_de_hora`, `test_ca04_rejects_exactly_at_close`) |
+| CA-11 | S/ 49.99568 rechazado, "faltan S/ 0.01" | Igual (`test_ca11_minimum_uses_exact_subtotal`) |
+| CL-02 | Grupo con 7 pedidos → `NO_ATENDIDO`, 100 % al medio de pago | Igual (demo `ciclo`: Lince 5 + 2 → reembolso S/ 58.28 c/u) |
+| CL-04 | 100 kg de papa amarilla → S/ 3.7856 | Igual (demo `ciclo` y `test_cl04_*`) |
+| CL-07 | 1 kg de limón faltante → vuelve S/ 2.35 | Igual (demo: pedido 19 vs 20, 6.58 vs 4.23) |
+| CL-08 | Saldo ≥ 0 y final + saldo = pagado | Igual en todos los pedidos liquidados |
 
-## Alcance y límite
+## Iteración 1 (19/09/2026)
 
-La entrega cumple la parte SDD asignada al Grupo 1 y 3. El material de TDD del documento académico no se presenta porque pertenece a los Grupos 2 y 4. La demostración es un módulo de dominio ejecutable, no una aplicación web completa; persistencia, interfaz, pagos externos, mapas y CUN-03 completo quedan en el roadmap general de Yapa.
+Vertical inicial de CUN-02 con 8 reglas y 8 pruebas, y presentación de 12 diapositivas. Ver el historial de Git hasta el commit `bd48598`.

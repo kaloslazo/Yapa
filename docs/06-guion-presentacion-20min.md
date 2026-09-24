@@ -1,5 +1,7 @@
 # Guion de exposición SDD sobre Yapa
 
+> **Documento de la iteración 1 (19/09/2026).** La versión vigente del alcance, las reglas y la evidencia está en `README.md`, `docs/sdd/10-clarificaciones-v2.md` y `docs/verification-report.md`.
+
 La presentación tiene 12 diapositivas y un ritmo objetivo de 17 a 19 minutos.
 
 | Tiempo | Diapositiva | Mensaje |

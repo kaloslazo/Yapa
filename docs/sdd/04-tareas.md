@@ -10,12 +10,12 @@
 - [x] Reescribir la spec de CUN-02 (`02`) y crear la spec de liquidación (`11`).
 - [x] Criterios de aceptación CA-01..CA-14 y CL-01..CL-09 (`05`).
 - [x] Plan y diseño (`03`, `12`).
-- [ ] Escribir las pruebas de aceptación **antes** del código y guardar la ejecución en rojo (`docs/evidencia/`).
-- [ ] `domain.py`, `cycle.py` y `store.py`.
-- [ ] `order_registration.py`: RP-01..RP-15.
-- [ ] `settlement.py`: LQ-01..LQ-09.
-- [ ] `seed.py` y `cli.py` para la demo en vivo.
-- [ ] Ejecutar la suite, guardar la ejecución en verde y actualizar la trazabilidad (`06`).
+- [x] Escribir las pruebas de aceptación **antes** del código y guardar la ejecución en rojo (`docs/evidencia/`).
+- [x] `domain.py`, `cycle.py` y `store.py`.
+- [x] `order_registration.py`: RP-01..RP-15.
+- [x] `settlement.py`: LQ-01..LQ-09.
+- [x] `seed.py` y `cli.py` para la demo en vivo.
+- [x] Ejecutar la suite, guardar la ejecución en verde y actualizar la trazabilidad (`06`).
 
 ## Pendientes del proyecto general
 
