@@ -115,6 +115,11 @@ class RegisterOrderSpecTests(unittest.TestCase):
             with self.subTest(line=bad):
                 self.assertRule("INVALID_QUANTITY", lines=[bad, ("DETERGENTE-LIQUIDO-GALON", "4")], amount=Decimal("60"))
 
+    def test_ca09_rejects_non_numeric_quantities(self):
+        for bad in ("NaN", "Infinity", "abc"):
+            with self.subTest(quantity=bad):
+                self.assertRule("INVALID_QUANTITY", lines=[("PAPA-AMARILLA", bad)], amount=Decimal("60"))
+
     def test_ca09_accepts_garlic_in_quarter_kilos(self):
         lines = [("AJO", "0.25"), ("LIMPIATODO-GALON", "6")]
         order = register(self.store, lines=lines)
@@ -156,6 +161,9 @@ class RegisterOrderSpecTests(unittest.TestCase):
 
     def test_ca12_rejects_amount_different_from_total(self):
         self.assertRule("PAYMENT_AMOUNT_MISMATCH", amount=Decimal("59.52"))
+
+    def test_ca12_rejects_non_numeric_amount(self):
+        self.assertRule("PAYMENT_AMOUNT_MISMATCH", amount="abc")
 
     def test_plin_is_allowed(self):
         order = register(self.store, method="PLIN")

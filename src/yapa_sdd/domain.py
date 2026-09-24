@@ -59,6 +59,8 @@ class Product:
     def tier_for(self, total_quantity: Decimal) -> PriceTier:
         """LQ-04: el mayor tramo alcanzado por la cantidad total."""
         reached = [tier for tier in self.tiers if tier.min_quantity <= total_quantity]
+        if not reached:
+            return self.tiers[0]
         return max(reached, key=lambda tier: tier.min_quantity)
 
 

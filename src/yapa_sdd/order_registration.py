@@ -61,9 +61,12 @@ def _check_cycle(now: datetime) -> None:
 
 def _to_quantity(value) -> Decimal:
     try:
-        return Decimal(str(value))
+        quantity = Decimal(str(value))
     except InvalidOperation:
+        quantity = None
+    if quantity is None or not quantity.is_finite():
         raise BusinessRuleError("INVALID_QUANTITY", f"Cantidad no válida: {value}.")
+    return quantity
 
 
 def _merge_lines(lines: Iterable) -> list[tuple[str, Decimal]]:
@@ -128,7 +131,11 @@ def _check_payment(store: InMemoryStore, method: str, operation_code: str, amoun
         raise BusinessRuleError("PAYMENT_CODE_REQUIRED", "Ingresa el código de operación de tu pago.")
     if code in store.used_codes:
         raise BusinessRuleError("PAYMENT_CODE_ALREADY_USED", "Ese código de operación ya fue usado en otro pedido.")
-    if Decimal(str(amount)) != total:  # RP-14
+    try:
+        paid = Decimal(str(amount))
+    except InvalidOperation:
+        paid = None
+    if paid != total:  # RP-14
         raise BusinessRuleError("PAYMENT_AMOUNT_MISMATCH", f"El monto pagado debe ser S/ {total}.")
     return code
 
