@@ -48,6 +48,10 @@ Si todo es válido:
 2. Se marca el código de operación como usado.
 3. Se crea el pedido en estado `REGISTRADO` con pago `POR_VERIFICAR`.
 
+## Cotización
+
+Antes de pagar, el cliente pide una **cotización** con sus líneas. Se aplican las mismas reglas de producto, cantidad, stock y cálculo (RP-05..RP-11), y el sistema devuelve el total exacto que debe yapear. La cotización no reserva stock ni crea el pedido.
+
 ## Verificación del pago (administrador)
 
 | Regla | Comportamiento | Error |

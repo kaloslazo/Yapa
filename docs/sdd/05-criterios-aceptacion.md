@@ -51,10 +51,11 @@ DADO que la papa amarilla tiene un máximo de 400 kg y ya hay 395 kg reservados,
 CUANDO alguien pide 6 kg, ENTONCES se rechaza con `PRODUCT_SOLD_OUT`;
 CUANDO pide 5 kg, ENTONCES se acepta. → RP-08
 
-**CA-11 · Mínimo individual.**
-DADO un subtotal exacto de S/ 49.99,
-ENTONCES se rechaza con `SUBTOTAL_BELOW_MINIMUM` y el error informa que faltan S/ 0.01.
-Un subtotal exacto de S/ 50.00 sí se acepta. → RP-10
+**CA-11 · Mínimo individual sin redondeo.**
+DADO un subtotal exacto de S/ 49.99568, que redondeado daría S/ 50.00,
+ENTONCES se rechaza con `SUBTOTAL_BELOW_MINIMUM` y el error informa que faltan S/ 0.01 (el faltante se redondea hacia arriba).
+Un subtotal de S/ 50.008 sí se acepta.
+Nota: con 12 % de comisión y precios en céntimos, un subtotal de exactamente S/ 50.00 no se puede formar. → RP-10
 
 **CA-12 · Pago.**
 DADO un pedido válido:
@@ -67,6 +68,11 @@ DADO un pedido válido:
 **CA-13 · Precio del sistema.**
 DADO cualquier pedido,
 ENTONCES el precio por unidad sale del catálogo (primer tramo × (1 + comisión)). El cliente no puede enviarlo. → RP-09
+
+**CA-15 · Cotización.**
+DADO las líneas del pedido del CA-01,
+CUANDO el cliente pide una cotización,
+ENTONCES recibe un total de S/ 59.51, sin que se reserve stock ni se cree un pedido. → RP-05..RP-11
 
 **CA-14 · Verificación del pago.**
 DADO un pedido registrado,
