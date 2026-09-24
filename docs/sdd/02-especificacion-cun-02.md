@@ -1,56 +1,84 @@
-# Especificación SDD · CUN-02 Registrar pedido semanal
+# Especificación SDD · CUN-02 Registrar pedido semanal (v2)
 
 ## Requisito
 
-Como cliente de una zona atendida, quiero registrar una canasta durante el ciclo semanal para reservar una entrega del sábado con un total claro y un medio de pago elegido.
+Como vecino de una zona Yapa, quiero registrar mi pedido de la semana y pagarlo por adelantado, sabiendo que **nunca pagaré más de lo que veo**, para recibirlo el sábado en el punto de recepción de mi zona.
 
 ## Entrada
 
 ```json
 {
-  "customerId": 100,
-  "district": "Lince",
-  "addressValidated": true,
+  "customerId": 101,
   "lines": [
-    {"productId": 10, "name": "Arroz", "quantity": 2, "unitPrice": "30.00", "unit": "kg"}
+    {"productId": "PAPA-AMARILLA", "quantity": "5"},
+    {"productId": "CEBOLLA-ROJA", "quantity": "3"},
+    {"productId": "LIMON", "quantity": "2"},
+    {"productId": "AJO", "quantity": "1"},
+    {"productId": "LIMPIATODO-GALON", "quantity": "2"}
   ],
-  "deliveryWindow": "SAT_09_12",
-  "paymentMethod": "TRANSFERENCIA"
+  "payment": {"method": "YAPE", "operationCode": "04512873", "amount": "59.51"},
+  "requestedAt": "2026-09-16T10:00:00-05:00"
 }
 ```
 
-## Reglas y comportamiento
+El cliente **no envía** el precio, la zona ni la validación de su dirección: el sistema los obtiene del catálogo del ciclo y del registro del cliente.
 
-1. La dirección debe pertenecer a una zona piloto y estar validada.
-2. La fecha actual debe estar dentro del ciclo: lunes 00:00 hasta miércoles 20:00.
-3. El pedido debe tener al menos un producto activo y una cantidad mayor que cero.
-4. Cada precio debe tener unidad y estar vigente en el momento del pedido.
-5. El subtotal debe ser igual o mayor a S/ 50.
-6. La tarifa es S/ 7.90 cuando el subtotal es menor a S/ 120; desde S/ 120 es S/ 0.
-7. La ventana debe ser una de las tres ventanas del sábado y tener capacidad disponible.
-8. El medio de pago debe ser transferencia, billetera digital o contraentrega.
+## Reglas (en orden de validación, S-11)
+
+| Regla | Comportamiento | Error |
+|---|---|---|
+| RP-01 | El cliente debe existir y no estar suspendido. | `CUSTOMER_NOT_FOUND`, `CUSTOMER_SUSPENDED` |
+| RP-02 | La zona del cliente debe estar activa (punto de recepción aceptado) y ubicada en un distrito piloto. | `ZONE_NOT_AVAILABLE` |
+| RP-03 | El ciclo recibe pedidos desde el lunes 00:00 hasta **antes** del miércoles 20:00, hora de Lima. | `CYCLE_CLOSED` |
+| RP-04 | Un solo pedido por cliente por ciclo. | `ORDER_ALREADY_EXISTS` |
+| RP-05 | El pedido tiene al menos una línea. Si un producto aparece en varias líneas, se suma. | `EMPTY_ORDER` |
+| RP-06 | Cada producto existe en el catálogo del ciclo y está activo. | `PRODUCT_NOT_AVAILABLE` |
+| RP-07 | Cada cantidad es mayor que cero, múltiplo del paso del producto y no supera el tope por línea (10 kg o 6 unidades). | `INVALID_QUANTITY` |
+| RP-08 | Lo ya reservado más lo pedido no supera la cantidad máxima que declaró el proveedor. | `PRODUCT_SOLD_OUT` |
+| RP-09 | Precio máximo por unidad = precio del primer tramo del proveedor × (1 + comisión de la categoría). Lo calcula el sistema. | — |
+| RP-10 | El subtotal exacto (sin redondear) debe ser ≥ S/ 50.00. El error informa cuánto falta. | `SUBTOTAL_BELOW_MINIMUM` |
+| RP-11 | El envío que se cobra es el tope, S/ 5.00. Total = subtotal + envío, redondeado al céntimo **hacia abajo** (a favor del cliente). | — |
+| RP-12 | El medio de pago es `YAPE` o `PLIN`. | `PAYMENT_METHOD_NOT_ALLOWED` |
+| RP-13 | El código de operación es obligatorio y no puede haberse usado en otro pedido. | `PAYMENT_CODE_REQUIRED`, `PAYMENT_CODE_ALREADY_USED` |
+| RP-14 | El monto pagado es igual al total. | `PAYMENT_AMOUNT_MISMATCH` |
+
+Si todo es válido:
+
+1. Se reserva la cantidad pedida contra el stock máximo del proveedor.
+2. Se marca el código de operación como usado.
+3. Se crea el pedido en estado `REGISTRADO` con pago `POR_VERIFICAR`.
+
+## Verificación del pago (administrador)
+
+| Regla | Comportamiento | Error |
+|---|---|---|
+| RP-15 | El administrador verifica el pago de un pedido existente **antes del cierre**. El pago pasa a `VERIFICADO`. | `ORDER_NOT_FOUND`, `CYCLE_CLOSED` |
 
 ## Salida válida
 
 ```json
 {
-  "orderId": 1200,
+  "orderId": 1,
+  "cycle": "2026-W38",
   "status": "REGISTRADO",
-  "subtotal": "60.00",
-  "deliveryFee": "7.90",
-  "total": "67.90",
-  "deliveryWindow": "SAT_09_12",
-  "paymentMethod": "TRANSFERENCIA"
+  "paymentStatus": "POR_VERIFICAR",
+  "lines": [
+    {"productId": "PAPA-AMARILLA", "quantity": "5", "maxUnitPrice": "4.032", "maxLineTotal": "20.160"},
+    {"productId": "CEBOLLA-ROJA", "quantity": "3", "maxUnitPrice": "2.352", "maxLineTotal": "7.056"},
+    {"productId": "LIMON", "quantity": "2", "maxUnitPrice": "2.352", "maxLineTotal": "4.704"},
+    {"productId": "AJO", "quantity": "1", "maxUnitPrice": "5.376", "maxLineTotal": "5.376"},
+    {"productId": "LIMPIATODO-GALON", "quantity": "2", "maxUnitPrice": "8.611", "maxLineTotal": "17.222"}
+  ],
+  "subtotal": "54.518",
+  "deliveryFee": "5.00",
+  "total": "59.51"
 }
 ```
 
+Los importes intermedios se guardan exactos, sin redondear. El total, que es lo que se paga, va redondeado al céntimo a favor del cliente.
+
 ## Errores observables
 
-- `ADDRESS_OUTSIDE_COVERAGE`
-- `CYCLE_CLOSED`
-- `SUBTOTAL_BELOW_MINIMUM`
-- `PRODUCT_NOT_ACTIVE`
-- `PRICE_NOT_VALID`
-- `DELIVERY_WINDOW_FULL`
-- `PAYMENT_METHOD_NOT_ALLOWED`
+`CUSTOMER_NOT_FOUND`, `CUSTOMER_SUSPENDED`, `ZONE_NOT_AVAILABLE`, `CYCLE_CLOSED`, `ORDER_ALREADY_EXISTS`, `EMPTY_ORDER`, `PRODUCT_NOT_AVAILABLE`, `INVALID_QUANTITY`, `PRODUCT_SOLD_OUT`, `SUBTOTAL_BELOW_MINIMUM`, `PAYMENT_METHOD_NOT_ALLOWED`, `PAYMENT_CODE_REQUIRED`, `PAYMENT_CODE_ALREADY_USED`, `PAYMENT_AMOUNT_MISMATCH`, `ORDER_NOT_FOUND`.
 
+Cada error tiene un **código** (el contrato que se prueba) y un mensaje en español para el cliente.

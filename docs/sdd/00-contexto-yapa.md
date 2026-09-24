@@ -27,3 +27,12 @@ Administrador, encargado de compras, preparador de pedidos, repartidor y persona
 
 Este contexto resume el `Entregable01_ModeladoNegocio_Yapa.pdf`. El repositorio general contiene el mapa completo; este repositorio solo implementa CUN-02 y el límite mínimo de CUN-03.
 
+
+## Cambios del modelo en la iteración 2
+
+Después de revisar los antecedentes (Favo, Muni, Merqueo) y los precios reales, el equipo ajustó el modelo (detalle en `10-clarificaciones-v2.md`):
+
+- **La zona es un punto de recepción** (portería o encargado) creado por un vecino admin. El camión hace una sola parada por zona.
+- **Se paga por adelantado** con Yape o Plin el precio máximo. No hay contraentrega.
+- **"Te devolvemos"**: después de la entrega, el ahorro por volumen, el envío compartido y los faltantes vuelven como saldo a favor.
+- **Catálogo piloto**: frescos resistentes y limpieza de marcas emergentes, que es donde hay margen real.

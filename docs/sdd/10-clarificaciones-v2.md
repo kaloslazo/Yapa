@@ -49,6 +49,8 @@ Son valores concretos que la spec necesita para ser verificable. Si cambian, se 
 | S-08 | Cantidades | Productos por kg en múltiplos de su paso (1 kg; ajo 0.25 kg). Productos por unidad en enteros. Tope por línea: 10 kg o 6 unidades. |
 | S-09 | Redondeo | Los cálculos son exactos. El monto final se redondea al céntimo **a favor del cliente** (Ley 29571, art. 44). |
 | S-10 | Ventana de entrega | La asigna Yapa a cada zona. El cliente no la elige, porque recibe la portería. |
+| S-11 | Varios errores a la vez | Se devuelve el primero según un orden fijo: cliente → zona → ciclo → pedido existente → líneas → subtotal → pago. Algunas validaciones dependen de las anteriores (por ejemplo, el subtotal necesita líneas válidas). |
+| S-12 | Precios del catálogo piloto | Son de ejemplo, derivados de los precios mayoristas reales del 23–24/09/2026 (`docs/analisis/08_validacion_economica.md`). Se reemplazan por la lista real del proveedor aliado. |
 
 ## Fuera de alcance de esta iteración (con motivo)
 
