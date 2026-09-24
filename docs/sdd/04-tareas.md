@@ -1,22 +1,25 @@
 # Tareas derivadas de la spec
 
-- [x] Definir el límite de CUN-02 y el contrato mínimo de CUN-03.
-- [x] Crear tipos de dominio para producto, dirección, ventana, línea y pedido.
-- [x] Implementar validación de zona y dirección según RN-01.
-- [x] Implementar ventana temporal según RN-02.
-- [x] Implementar subtotal mínimo y tarifa según RN-03 y RN-04.
-- [x] Implementar unidad y vigencia de precio según RN-05.
-- [x] Implementar producto activo, ventana disponible y ventanas del sábado según RN-07 y RN-09.
-- [x] Implementar medios de pago permitidos según RN-10.
-- [x] Agregar pruebas para aceptación y errores.
-- [x] Ejecutar la suite y comparar resultados con la spec.
+## Iteración 1 (cerrada)
+
+- [x] Vertical inicial de CUN-02 con 8 reglas y 8 tests (ver historial de Git).
+
+## Iteración 2
+
+- [x] Registrar hallazgos, decisiones y supuestos (`10-clarificaciones-v2.md`).
+- [x] Reescribir la spec de CUN-02 (`02`) y crear la spec de liquidación (`11`).
+- [x] Criterios de aceptación CA-01..CA-14 y CL-01..CL-09 (`05`).
+- [x] Plan y diseño (`03`, `12`).
+- [ ] Escribir las pruebas de aceptación **antes** del código y guardar la ejecución en rojo (`docs/evidencia/`).
+- [ ] `domain.py`, `cycle.py` y `store.py`.
+- [ ] `order_registration.py`: RP-01..RP-15.
+- [ ] `settlement.py`: LQ-01..LQ-09.
+- [ ] `seed.py` y `cli.py` para la demo en vivo.
+- [ ] Ejecutar la suite, guardar la ejecución en verde y actualizar la trazabilidad (`06`).
 
 ## Pendientes del proyecto general
 
-- [ ] Implementar conciliación real de CUN-03.
-- [ ] Implementar consolidación CUN-04.
-- [ ] Implementar abastecimiento CUN-05.
-- [ ] Implementar preparación CUN-06.
-- [ ] Implementar entrega CUN-07.
-- [ ] Implementar incidencias CUN-08.
-
+- [ ] Cancelación y edición de pedidos antes del cierre.
+- [ ] Crear y unir zonas (mapa, radio, aceptación de la portería).
+- [ ] Compra al proveedor, armado con foto por bolsa, ruteo y entrega con evidencia.
+- [ ] Devolución del saldo al medio de pago a pedido del cliente.

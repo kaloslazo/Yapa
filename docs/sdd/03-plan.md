@@ -1,27 +1,25 @@
-# Plan técnico
+# Plan técnico · iteración 2
 
 ## Decisión
 
-Implementar primero una función de dominio pura en Python 3.11, sin framework web ni persistencia. La entrega demuestra las reglas sin introducir infraestructura que no forma parte de la pregunta SDD.
+Se mantiene Python 3.11 sin dependencias externas (decisión del equipo) y se separa en capas para que cada regla tenga un solo lugar:
 
-## Modelo mínimo
+| Módulo | Responsabilidad | Reglas |
+|---|---|---|
+| `domain.py` | Datos del negocio (producto con tramos, zona, cliente, pedido), constantes del piloto, error de negocio, redondeo a favor del cliente | S-04..S-09 |
+| `cycle.py` | Hora de Lima, identificador del ciclo y si el ciclo está abierto | RP-03 |
+| `store.py` | Repositorio en memoria: clientes, zonas, catálogo, pedidos, stock reservado y códigos de operación usados | RP-04, RP-08, RP-13 |
+| `order_registration.py` | Registrar pedido y verificar pago (CUN-02 + límite CUN-03) | RP-01..RP-15 |
+| `settlement.py` | Liquidar el ciclo | LQ-01..LQ-09 |
+| `seed.py` | Catálogo piloto, zonas y clientes de ejemplo (S-12) | — |
+| `cli.py` | Adaptador de consola para la demo en vivo | — |
 
-- `CatalogItem`: producto, unidad, precio referencial, vigencia y estado.
-- `CustomerAddress`: distrito y validación.
-- `DeliveryWindow`: código, capacidad y reservas.
-- `OrderLine`: producto y cantidad.
-- `RegisteredOrder`: salida con importes y estado.
+**Por qué así:** las reglas no dependen de la consola ni del repositorio. Si mañana se cambia la CLI por una API web, o la memoria por PostgreSQL, `order_registration.py` y `settlement.py` no cambian.
 
-## Flujo
+## Qué no se decide todavía
 
-1. Validar zona y dirección.
-2. Validar ciclo.
-3. Validar líneas y vigencia de precios.
-4. Calcular subtotal y delivery.
-5. Validar ventana y medio de pago.
-6. Construir pedido `REGISTRADO`.
+Base de datos, framework web, autenticación e integración con Yape o Plin. Ver `10-clarificaciones-v2.md`.
 
-## No decisión todavía
+## Diagramas
 
-No se decide base de datos, proveedor de pagos, framework HTTP, autenticación ni servicio de mapas. Son decisiones de los módulos posteriores.
-
+Ver `12-diseno.md`.
