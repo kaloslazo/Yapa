@@ -30,7 +30,7 @@ Como Yapa, quiero que esa liquidación **nunca me haga perder** porque alguien s
 | LQ-03 | La cantidad total de cada producto es la suma de lo **pedido** en los pedidos atendidos. El tramo se decide sobre lo pedido, porque el proveedor aliado se compromete a respetarlo (C-12). | — |
 | LQ-04 | Precio final por unidad = precio del **mayor tramo alcanzado** × (1 + comisión). Nunca puede superar el precio máximo que se cobró. | — |
 | LQ-05 | Envío real por pedido = costo de la parada de la zona ÷ pedidos atendidos de esa zona, con tope de S/ 5.00. | — |
-| LQ-06 | La cantidad faltante de un artículo no se cobra. No puede ser mayor que lo pedido ni referirse a un producto que no está en el pedido. | `INVALID_MISSING_ITEM` |
+| LQ-06 | La cantidad faltante de un artículo no se cobra. Debe ser mayor que cero, no puede superar lo pedido, no puede referirse a un producto que no está en el pedido y solo aplica a pedidos que se entregaron (atendidos). | `INVALID_MISSING_ITEM` |
 | LQ-07 | Monto final = Σ (precio final × cantidad entregada) + envío real, redondeado al céntimo **hacia abajo**. | — |
 | LQ-08 | Saldo a favor = monto pagado − monto final. **Nunca es negativo.** Se abona como `SALDO` y el pedido queda `LIQUIDADO`. | — |
 | LQ-09 | El resumen del ciclo muestra el tramo alcanzado y el precio final de cada producto (transparencia), el total devuelto como saldo y el total reembolsado. | — |
