@@ -1,169 +1,182 @@
-"""Dominio mínimo de CUN-02: registrar pedido semanal de Yapa."""
+"""CUN-02 Registrar pedido semanal y límite de CUN-03 (iteración 2).
+
+Spec: docs/sdd/02-especificacion-cun-02.md. Cada validación indica la regla
+que implementa; el orden de las llamadas es el orden de S-11.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation
 from typing import Iterable
 
-
-MIN_SUBTOTAL = Decimal("50.00")
-FREE_DELIVERY_FROM = Decimal("120.00")
-DELIVERY_FEE = Decimal("7.90")
-PILOT_DISTRICTS = frozenset({"Lince", "Jesús María", "La Victoria"})
-PAYMENT_METHODS = frozenset({"TRANSFERENCIA", "BILLETERA_DIGITAL", "CONTRAENTREGA"})
-DELIVERY_WINDOWS = frozenset({"SAT_09_12", "SAT_12_15", "SAT_15_18"})
-
-
-class OrderRegistrationError(ValueError):
-    """Error observable que corresponde a una regla de negocio."""
-
-    def __init__(self, code: str, message: str) -> None:
-        super().__init__(message)
-        self.code = code
-
-
-@dataclass(frozen=True)
-class CatalogItem:
-    product_id: int
-    name: str
-    unit: str
-    unit_price: Decimal
-    active: bool
-    valid_from: datetime
-    valid_until: datetime
+from . import cycle
+from .domain import (
+    MAX_DELIVERY_FEE,
+    MAX_QUANTITY,
+    MIN_SUBTOTAL,
+    PAYMENT_METHODS,
+    PILOT_DISTRICTS,
+    BusinessRuleError,
+    Customer,
+    Order,
+    OrderLine,
+    Product,
+    Zone,
+    ceil_cents,
+    floor_cents,
+)
+from .store import InMemoryStore
 
 
 @dataclass(frozen=True)
-class CustomerAddress:
-    district: str
-    validated: bool
-
-
-@dataclass(frozen=True)
-class DeliveryWindow:
-    code: str
-    capacity: int
-    reserved: int
-
-
-@dataclass(frozen=True)
-class OrderLine:
-    item: CatalogItem
-    quantity: Decimal
-
-
-@dataclass(frozen=True)
-class RegisteredOrder:
-    order_id: int
-    status: str
+class Quote:
+    lines: list[OrderLine]
     subtotal: Decimal
     delivery_fee: Decimal
     total: Decimal
-    delivery_window: str
-    payment_method: str
 
 
-def _money(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+def _customer(store: InMemoryStore, customer_id: int) -> Customer:
+    customer = store.customers.get(customer_id)
+    if customer is None:
+        raise BusinessRuleError("CUSTOMER_NOT_FOUND", "El cliente no está registrado.")
+    if customer.suspended:
+        raise BusinessRuleError("CUSTOMER_SUSPENDED", "El cliente está suspendido y no puede hacer pedidos.")
+    return customer
 
 
-def calculate_delivery_fee(subtotal: Decimal) -> Decimal:
-    """RN-04: cobra delivery bajo S/ 120 y exonera desde ese monto."""
-    return Decimal("0.00") if subtotal >= FREE_DELIVERY_FROM else DELIVERY_FEE
+def _zone(store: InMemoryStore, customer: Customer) -> Zone:
+    zone = store.zones.get(customer.zone_id)
+    if zone is None or not zone.reception_accepted or zone.district not in PILOT_DISTRICTS:
+        raise BusinessRuleError("ZONE_NOT_AVAILABLE", "Tu zona todavía no está disponible para pedidos.")
+    return zone
 
 
-def _validate_address(address: CustomerAddress) -> None:
-    if not address.validated or address.district not in PILOT_DISTRICTS:
-        raise OrderRegistrationError(
-            "ADDRESS_OUTSIDE_COVERAGE",
-            "La dirección no está validada dentro de la cobertura piloto.",
+def _check_cycle(now: datetime) -> None:
+    if not cycle.is_open(now):
+        raise BusinessRuleError("CYCLE_CLOSED", "El ciclo semanal está cerrado. Vuelve el lunes.")
+
+
+def _to_quantity(value) -> Decimal:
+    try:
+        return Decimal(str(value))
+    except InvalidOperation:
+        raise BusinessRuleError("INVALID_QUANTITY", f"Cantidad no válida: {value}.")
+
+
+def _merge_lines(lines: Iterable) -> list[tuple[str, Decimal]]:
+    """RP-05: al menos una línea; un producto repetido se suma."""
+    merged: dict[str, Decimal] = {}
+    for product_id, quantity in lines:
+        merged[product_id] = merged.get(product_id, Decimal("0")) + _to_quantity(quantity)
+    if not merged:
+        raise BusinessRuleError("EMPTY_ORDER", "El pedido debe tener al menos un producto.")
+    return list(merged.items())
+
+
+def _product(store: InMemoryStore, product_id: str) -> Product:
+    """RP-06: el producto está en el catálogo del ciclo y activo."""
+    product = store.products.get(product_id)
+    if product is None or not product.active:
+        raise BusinessRuleError("PRODUCT_NOT_AVAILABLE", f"{product_id} no está disponible este ciclo.")
+    return product
+
+
+def _check_quantity(product: Product, quantity: Decimal) -> None:
+    """RP-07: mayor que cero, múltiplo del paso y dentro del tope por línea."""
+    if quantity <= 0 or quantity % product.step != 0 or quantity > MAX_QUANTITY[product.unit]:
+        raise BusinessRuleError(
+            "INVALID_QUANTITY",
+            f"{product.name}: se pide en pasos de {product.step} {product.unit}, "
+            f"hasta {MAX_QUANTITY[product.unit]} {product.unit}.",
         )
 
 
-def _validate_cycle(now: datetime, cycle_start: datetime, cycle_close: datetime) -> None:
-    if not cycle_start <= now <= cycle_close:
-        raise OrderRegistrationError(
-            "CYCLE_CLOSED",
-            "El ciclo semanal no está recibiendo pedidos.",
-        )
+def _check_stock(store: InMemoryStore, product: Product, quantity: Decimal) -> None:
+    """RP-08: nunca vender más de lo que el proveedor declaró."""
+    if store.reserved_quantity(product.product_id) + quantity > product.max_available:
+        raise BusinessRuleError("PRODUCT_SOLD_OUT", f"{product.name} está agotado este ciclo.")
 
 
-def _validate_item(line: OrderLine, now: datetime) -> None:
-    if line.quantity <= 0 or not line.item.active:
-        raise OrderRegistrationError(
-            "PRODUCT_NOT_ACTIVE",
-            "Cada línea debe tener un producto activo y una cantidad positiva.",
-        )
-    if not line.item.unit or not line.item.valid_from <= now <= line.item.valid_until:
-        raise OrderRegistrationError(
-            "PRICE_NOT_VALID",
-            "El producto debe tener unidad y un precio vigente.",
-        )
+def quote_order(store: InMemoryStore, lines: Iterable) -> Quote:
+    """Cotización: RP-05..RP-11 sin reservar stock ni crear el pedido."""
+    order_lines = []
+    for product_id, quantity in _merge_lines(lines):
+        product = _product(store, product_id)
+        _check_quantity(product, quantity)
+        _check_stock(store, product, quantity)
+        order_lines.append(OrderLine(product_id, quantity, product.max_unit_price()))  # RP-09
 
-
-def _validate_window(window: DeliveryWindow) -> None:
-    if window.code not in DELIVERY_WINDOWS or window.reserved >= window.capacity:
-        raise OrderRegistrationError(
-            "DELIVERY_WINDOW_FULL",
-            "La ventana de entrega no existe o ya no tiene capacidad.",
-        )
-
-
-def _validate_payment_method(payment_method: str) -> None:
-    if payment_method not in PAYMENT_METHODS:
-        raise OrderRegistrationError(
-            "PAYMENT_METHOD_NOT_ALLOWED",
-            "El medio de pago no está habilitado para Yapa.",
-        )
-
-
-def register_weekly_order(
-    *,
-    order_id: int,
-    address: CustomerAddress,
-    lines: Iterable[OrderLine],
-    delivery_window: DeliveryWindow,
-    payment_method: str,
-    now: datetime,
-    cycle_start: datetime,
-    cycle_close: datetime,
-) -> RegisteredOrder:
-    """Valida y construye el resultado de CUN-02.
-
-    La función no persiste ni procesa pagos externos. Esas responsabilidades
-    pertenecen a módulos posteriores del proyecto general.
-    """
-    _validate_address(address)
-    _validate_cycle(now, cycle_start, cycle_close)
-    _validate_window(delivery_window)
-    _validate_payment_method(payment_method)
-
-    validated_lines = list(lines)
-    if not validated_lines:
-        raise OrderRegistrationError(
-            "PRODUCT_NOT_ACTIVE",
-            "El pedido debe contener al menos un producto.",
-        )
-    for line in validated_lines:
-        _validate_item(line, now)
-
-    subtotal = _money(sum((line.item.unit_price * line.quantity for line in validated_lines), Decimal("0.00")))
-    if subtotal < MIN_SUBTOTAL:
-        raise OrderRegistrationError(
+    subtotal = sum((line.max_total for line in order_lines), Decimal("0"))
+    if subtotal < MIN_SUBTOTAL:  # RP-10: se compara el valor exacto
+        raise BusinessRuleError(
             "SUBTOTAL_BELOW_MINIMUM",
-            "El subtotal mínimo para confirmar un pedido es S/ 50.00.",
+            f"El pedido mínimo es S/ {MIN_SUBTOTAL}. Faltan S/ {ceil_cents(MIN_SUBTOTAL - subtotal)}.",
         )
 
-    delivery_fee = calculate_delivery_fee(subtotal)
-    return RegisteredOrder(
-        order_id=order_id,
-        status="REGISTRADO",
-        subtotal=subtotal,
-        delivery_fee=delivery_fee,
-        total=_money(subtotal + delivery_fee),
-        delivery_window=delivery_window.code,
-        payment_method=payment_method,
-    )
+    total = floor_cents(subtotal + MAX_DELIVERY_FEE)  # RP-11
+    return Quote(order_lines, subtotal, MAX_DELIVERY_FEE, total)
 
+
+def _check_payment(store: InMemoryStore, method: str, operation_code: str, amount, total: Decimal) -> str:
+    if method not in PAYMENT_METHODS:  # RP-12
+        raise BusinessRuleError("PAYMENT_METHOD_NOT_ALLOWED", "Solo se acepta Yape o Plin.")
+    code = (operation_code or "").strip()
+    if not code:  # RP-13
+        raise BusinessRuleError("PAYMENT_CODE_REQUIRED", "Ingresa el código de operación de tu pago.")
+    if code in store.used_codes:
+        raise BusinessRuleError("PAYMENT_CODE_ALREADY_USED", "Ese código de operación ya fue usado en otro pedido.")
+    if Decimal(str(amount)) != total:  # RP-14
+        raise BusinessRuleError("PAYMENT_AMOUNT_MISMATCH", f"El monto pagado debe ser S/ {total}.")
+    return code
+
+
+def register_order(
+    store: InMemoryStore,
+    *,
+    customer_id: int,
+    lines: Iterable,
+    payment_method: str,
+    operation_code: str,
+    amount,
+    now: datetime,
+) -> Order:
+    customer = _customer(store, customer_id)  # RP-01
+    zone = _zone(store, customer)  # RP-02
+    _check_cycle(now)  # RP-03
+    cycle_id = cycle.cycle_id(now)
+    if store.find_order(customer_id, cycle_id):  # RP-04
+        raise BusinessRuleError("ORDER_ALREADY_EXISTS", "Ya tienes un pedido en este ciclo.")
+
+    quote = quote_order(store, lines)
+    code = _check_payment(store, payment_method, operation_code, amount, quote.total)
+
+    for line in quote.lines:
+        store.reserve(line.product_id, line.quantity)
+    store.used_codes.add(code)
+    order = Order(
+        order_id=0,
+        cycle=cycle_id,
+        customer_id=customer.customer_id,
+        zone_id=zone.zone_id,
+        lines=quote.lines,
+        subtotal=quote.subtotal,
+        delivery_fee=quote.delivery_fee,
+        total=quote.total,
+        payment_method=payment_method,
+        operation_code=code,
+    )
+    return store.save_new_order(order)
+
+
+def verify_payment(store: InMemoryStore, order_id: int, *, now: datetime) -> Order:
+    """RP-15: el administrador confirma el código de operación antes del cierre."""
+    order = store.orders.get(order_id)
+    if order is None:
+        raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
+    if not cycle.is_open(now) or cycle.cycle_id(now) != order.cycle:
+        raise BusinessRuleError("CYCLE_CLOSED", "El ciclo ya cerró; el pago no puede verificarse.")
+    order.payment_status = "VERIFICADO"
+    return order

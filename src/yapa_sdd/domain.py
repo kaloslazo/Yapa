@@ -1,0 +1,107 @@
+"""Datos del negocio y constantes del piloto de Yapa (iteración 2)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
+
+
+PILOT_DISTRICTS = frozenset({"Lince", "Jesús María", "La Victoria"})  # S-01
+MIN_SUBTOTAL = Decimal("50.00")  # S-04
+MAX_DELIVERY_FEE = Decimal("5.00")  # S-05
+MIN_ORDERS_PER_GROUP = 8  # S-06
+COMMISSION = {"FRESCOS": Decimal("0.12"), "LIMPIEZA": Decimal("0.09")}  # S-07
+MAX_QUANTITY = {"kg": Decimal("10"), "unidad": Decimal("6")}  # S-08
+PAYMENT_METHODS = frozenset({"YAPE", "PLIN"})  # C-03
+
+
+class BusinessRuleError(ValueError):
+    """Error observable: el código es el contrato, el mensaje es para el cliente."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
+def floor_cents(value: Decimal) -> Decimal:
+    """S-09: redondea al céntimo a favor del cliente cuando es un cobro."""
+    return value.quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+
+
+def ceil_cents(value: Decimal) -> Decimal:
+    return value.quantize(Decimal("0.01"), rounding=ROUND_UP)
+
+
+@dataclass(frozen=True)
+class PriceTier:
+    min_quantity: Decimal
+    base_price: Decimal
+
+
+@dataclass(frozen=True)
+class Product:
+    product_id: str
+    name: str
+    category: str
+    unit: str
+    step: Decimal
+    max_available: Decimal
+    tiers: tuple[PriceTier, ...]
+    active: bool = True
+
+    def price_with_commission(self, base_price: Decimal) -> Decimal:
+        return base_price * (1 + COMMISSION[self.category])
+
+    def max_unit_price(self) -> Decimal:
+        """RP-09: primer tramo del proveedor más la comisión."""
+        return self.price_with_commission(self.tiers[0].base_price)
+
+    def tier_for(self, total_quantity: Decimal) -> PriceTier:
+        """LQ-04: el mayor tramo alcanzado por la cantidad total."""
+        reached = [tier for tier in self.tiers if tier.min_quantity <= total_quantity]
+        return max(reached, key=lambda tier: tier.min_quantity)
+
+
+@dataclass(frozen=True)
+class Zone:
+    zone_id: str
+    name: str
+    district: str
+    group_id: str
+    stop_cost: Decimal
+    reception_accepted: bool = True
+
+
+@dataclass(frozen=True)
+class Customer:
+    customer_id: int
+    name: str
+    zone_id: str
+    suspended: bool = False
+
+
+@dataclass(frozen=True)
+class OrderLine:
+    product_id: str
+    quantity: Decimal
+    max_unit_price: Decimal
+
+    @property
+    def max_total(self) -> Decimal:
+        return self.max_unit_price * self.quantity
+
+
+@dataclass
+class Order:
+    order_id: int
+    cycle: str
+    customer_id: int
+    zone_id: str
+    lines: list[OrderLine]
+    subtotal: Decimal
+    delivery_fee: Decimal
+    total: Decimal
+    payment_method: str
+    operation_code: str
+    status: str = "REGISTRADO"
+    payment_status: str = "POR_VERIFICAR"

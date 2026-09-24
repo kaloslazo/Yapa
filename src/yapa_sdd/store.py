@@ -1,0 +1,48 @@
+"""Repositorio en memoria del ciclo (reemplazable por una base de datos)."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+from .domain import Customer, Order, Product, Zone
+
+
+class InMemoryStore:
+    def __init__(self) -> None:
+        self.customers: dict[int, Customer] = {}
+        self.zones: dict[str, Zone] = {}
+        self.products: dict[str, Product] = {}
+        self.orders: dict[int, Order] = {}
+        self.reserved: dict[str, Decimal] = {}
+        self.used_codes: set[str] = set()
+        self._next_order_id = 1
+
+    def add_customer(self, customer: Customer) -> None:
+        self.customers[customer.customer_id] = customer
+
+    def add_zone(self, zone: Zone) -> None:
+        self.zones[zone.zone_id] = zone
+
+    def add_product(self, product: Product) -> None:
+        self.products[product.product_id] = product
+
+    def reserved_quantity(self, product_id: str) -> Decimal:
+        return self.reserved.get(product_id, Decimal("0"))
+
+    def reserve(self, product_id: str, quantity: Decimal) -> None:
+        self.reserved[product_id] = self.reserved_quantity(product_id) + quantity
+
+    def find_order(self, customer_id: int, cycle: str) -> Order | None:
+        for order in self.orders.values():
+            if order.customer_id == customer_id and order.cycle == cycle:
+                return order
+        return None
+
+    def orders_in_cycle(self, cycle: str) -> list[Order]:
+        return [order for order in self.orders.values() if order.cycle == cycle]
+
+    def save_new_order(self, order: Order) -> Order:
+        order.order_id = self._next_order_id
+        self._next_order_id += 1
+        self.orders[order.order_id] = order
+        return order
