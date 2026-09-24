@@ -10,6 +10,15 @@ Repositorio académico del curso **Diseño de Software (EL3304)**, UTEC 2026-2, 
 | **Problema seleccionado** | Registrar el pedido semanal con precio máximo garantizado y pago anticipado, y **liquidar el ciclo** devolviendo como saldo el ahorro del grupo ("te devolvemos") |
 | **Tecnologías** | Python 3.11+ (solo biblioteca estándar), `unittest`, Markdown + Mermaid, Git, GitHub Actions |
 
+## Iteraciones y autoría
+
+| Iteración | Autor | Dónde | Contenido |
+|---|---|---|---|
+| 1 (19/09/2026) | Kalos Lazo | rama `main` | Primera vertical de CUN-02 (8 reglas, 8 pruebas) y presentación de 12 diapositivas (`slides/sdd-2026-yapa-apple-final-v4.pptx`) |
+| 2 (24/09/2026) | Carlos Bravo | rama `carlos/iteracion-2-sdd` | Revisión crítica y clarificación, spec v2 del pedido, spec de liquidación, 45 pruebas, CLI de demo, trazabilidad, presentación de 20 diapositivas (`slides/iteracion-2/`) y guía de reflexión |
+
+La iteración 2 parte del trabajo de la iteración 1 y no lo borra: el historial de Git conserva ambas.
+
 ## Qué se implementó
 
 - **CUN-02 Registrar pedido semanal** (spec v2): cliente y zona válidos, ciclo abierto (lunes 00:00 hasta antes del miércoles 20:00, hora de Lima), un pedido por ciclo, cantidades en pasos fijos, stock declarado por el proveedor, precio máximo calculado por el sistema, mínimo de S/ 50, envío con tope de S/ 5 y pago Yape/Plin con código de operación único.
@@ -30,7 +39,7 @@ Solo requiere Python 3.11 o superior. No hay dependencias externas.
 ```bash
 git clone https://github.com/kaloslazo/sdd-2026-exposicion.git
 cd sdd-2026-exposicion
-git checkout sdd-v2-pedido-liquidacion
+git checkout carlos/iteracion-2-sdd
 ```
 
 ## Ejecutar las pruebas
@@ -91,6 +100,13 @@ src/yapa_sdd/
   seed.py                catálogo, zonas y clientes del piloto
   cli.py                 consola para la demo
 ```
+
+## Presentación y reflexión (iteración 2)
+
+- `slides/iteracion-2/yapa-sdd-iteracion-2.pptx`: 20 diapositivas con solo títulos e imágenes. Todo lo que se dice está en `slides/iteracion-2/guion.md` y en las notas del orador.
+- Para regenerarla: `python slides/iteracion-2/generar_imagenes.py` y `node slides/iteracion-2/construir_ppt.js` (requiere `npm install pptxgenjs`).
+- Reflexión final obligatoria (sección 21 del enunciado): `docs/08-reflexion-final-guia.md`.
+- Guía de defensa: `docs/07-trazabilidad-defensa.md`.
 
 ## Repositorio general
 
