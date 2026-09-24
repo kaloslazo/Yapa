@@ -132,6 +132,13 @@ class SettleCycleSpecTests(unittest.TestCase):
             settle_cycle(self.s.store, CYCLE, missing=[(target.order_id, "AJO", "1")])
         self.assertEqual(raised.exception.code, "INVALID_MISSING_ITEM")
 
+    def test_cl07_rejects_missing_for_order_not_delivered(self):
+        self.s.orders("Z-JM-01", 8)
+        pending = self.s.order("Z-JM-01", verified=False)
+        with self.assertRaises(BusinessRuleError) as raised:
+            settle_cycle(self.s.store, CYCLE, missing=[(pending.order_id, "CEBOLLA-ROJA", "1")])
+        self.assertEqual(raised.exception.code, "INVALID_MISSING_ITEM")
+
     # CL-08
     def test_cl08_nobody_pays_more_than_shown(self):
         self.s.orders("Z-JM-01", 12)
