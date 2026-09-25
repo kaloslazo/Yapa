@@ -62,6 +62,6 @@ Escenario base: ciclo 2026-W38 con catálogo base. Cada pedido lleva la canasta 
 ## Huecos encontrados al implementar (a decidir por el equipo)
 
 1. **Costos operativos fuera del margen.** El margen no descuenta armado, cobro (Yape Empresa cobra 2.95 %), atención ni el viaje de compra del jueves. Con los costos de `08_validacion_economica.md` (S/ 3.22 a S/ 12.69 por pedido), el margen de S/ 5.64 del escenario base podría ser negativo. Falta decidir qué costo por pedido se usa.
-2. **Ahorro frente al supermercado.** El "ahorro entregado" solo mide lo que vuelve por volumen y envío. Para decir "ahorraste X % frente a Plaza Vea" el catálogo necesitaría el precio de referencia del supermercado.
+2. *(Resuelto en la iteración 22 con S-125..S-129.)* **Ahorro frente al supermercado.** El "ahorro entregado" solo mide lo que vuelve por volumen y envío. Para decir "ahorraste X % frente a Plaza Vea" el catálogo necesitaría el precio de referencia del supermercado.
 3. **Vecino con un intento fallido.** Si alguien pidió en W37 y su zona no llegó al mínimo, su primera **compra** puede ser W38 y entra en la cohorte de W38 como nuevo. Falta decidir si la cohorte se arma por primera compra o por primer pedido.
 4. **Costo del colchón.** Lo que se guarda en el colchón (S/ 500 como máximo) es plata inmovilizada que no aparece en el margen de ningún ciclo.

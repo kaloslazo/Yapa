@@ -57,3 +57,20 @@ Canasta de prueba: 5 kg de papa amarilla, 10 kg de papa blanca y 10 kg de ceboll
 - **RF-G · Pantalla del admin.** La papa amarilla muestra el precio máximo de Yapa S/ 4.03, ahorro frente al mercado 10.4 % con el aviso "menos de 15 %" y frente al supermercado 49.5 %. → RF-07, S-128
 - **RF-I · Se guardan en la base.** Después de registrar un precio, guardar y volver a abrir la base SQLite conserva el precio con su fecha. *(Se agregó al revisar el código: la base no sabía guardar una fecha sin hora y la web fallaba al guardar.)* → PS-01 (iteración 11)
 - **RF-H · Métricas en la web.** `/admin/metricas?ciclo=2026-W38` muestra "43.9 %" y "7.8 %". → RF-08
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| RF-01..RF-04, S-125 | `reference.register_reference` · web `POST /admin/referencias` | `test_reference.test_rf_a_*`, `test_rf_c_*` |
+| RF-05, S-126 | `reference.current_references` | `test_rf_b_*`, `test_rf_d_*` |
+| RF-06, S-127 | web `/` (catálogo) → `views.home` | `test_rf_b_neighbor_catalog_*` |
+| RF-07, S-128 | web `GET /admin/referencias` → `views.references_page` | `test_rf_g_*` |
+| RF-08, S-129 | `reference.reference_savings` · web `/admin/metricas` | `test_rf_e_*`, `test_rf_f_*`, `test_rf_h_*`, `test_rf08_*` |
+| RF-I | `persistence._encode` / `_decode` (tipo fecha) | `test_rf_i_*` |
+
+## Notas
+
+- Si un producto tiene varios precios vigentes al cierre, la métrica usa el más cercano a la fecha de cierre. El catálogo, en cambio, muestra el más reciente.
+- Los precios del mercado de la prueba son inventados. Para usar esto de verdad, hay que registrar los que se junten con el kit de campo (`kit-validacion-campo.md`).
+- La comparación toma el precio **máximo** de Yapa en el catálogo y el precio **final** en la métrica. El ahorro real puede ser mayor que el que ve el vecino al pedir.

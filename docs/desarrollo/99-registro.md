@@ -160,3 +160,10 @@
 - Datos del escenario corregidos antes del código: dos pedidos no respetaban el mínimo de S/ 50 ni el máximo de 10 kg por producto.
 - Resultado: 253 pruebas en verde.
 
+## Iteración 22 · Precio de referencia y ahorro frente al mercado (25/09/2026)
+
+- Spec: `22-precio-referencia.md` (S-125..S-129). El admin registra precios del mercado de barrio y del supermercado, con fuente y fecha. El vecino los ve en el catálogo mientras estén vigentes (14 días), y las métricas muestran el ahorro real del ciclo.
+- Con los precios de ejemplo, la canasta de prueba ahorra 43.9 % frente al supermercado, pero solo **7.8 %** frente al mercado (con precios de mercado inventados). La papa amarilla queda en 10.4 %, debajo de la meta de 15 %. Coincide con lo que ya advertía el análisis económico: el competidor real es el mercado, no el supermercado.
+- Error encontrado al revisar: la base SQLite no guardaba fechas sin hora. Se agregó RF-I a la spec, luego la prueba en rojo y después la corrección.
+- Resultado: 266 pruebas en verde.
+
