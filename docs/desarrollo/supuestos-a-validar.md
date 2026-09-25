@@ -94,8 +94,8 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 |---|---|---|---|---|---|
 | 42 | ¿Cómo se guardan las fotos de la bolsa, la entrega y el reclamo? | Por ahora, como texto con la ruta o el enlace del archivo; todavía no se suben archivos (S-72). | | | |
 | 43 | ¿Quién activa la zona, la une con otra o pasa el rol? | El vecino que es admin de esa zona, desde su cuenta; el administrador de Yapa no lo hace (S-73). | | | |
-| 44 | ¿Cómo registra el vecino su ubicación para crear o unirse a una zona? | **Sin decidir.** Hoy no hay forma de hacerlo desde la web (S-74, hueco 1 de `12-web-operacion.md`). | | | |
-| 45 | ¿Qué pasa con las zonas del piloto que no tienen ubicación? | No reciben vecinos nuevos ni se unen a otras hasta que se cargue su punto de recepción (S-75). | | | |
+| 44 | ¿Cómo registra el vecino su ubicación para crear o unirse a una zona? | Desde "Mi cuenta", con latitud y longitud (S-109, iteración 18). Falta decidir si se buscará por dirección. | | | |
+| 45 | ¿Qué pasa con las zonas del piloto que no tienen ubicación? | Ya tienen coordenadas de ejemplo (S-112, iteración 18). Una zona sin ubicación sigue sin recibir vecinos (S-75). | | | |
 | 46 | ¿Qué muestra el tablero de métricas? | Margen por pedido, ahorro entregado y recompra en la semana 4, para un ciclo liquidado (S-78). | | | |
 
 ## E5. Iteraciones 11 a 18 (persistencia, dinero, entrega fallida, robustez)
