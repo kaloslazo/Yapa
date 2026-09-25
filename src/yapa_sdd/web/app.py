@@ -1,11 +1,13 @@
 """Aplicación web (WSGI, solo biblioteca estándar). Adaptador: no tiene reglas de negocio.
 
-Specs: docs/desarrollo/09-interfaz-web.md y 10-acceso.md.
+Specs: docs/desarrollo/09-interfaz-web.md, 10-acceso.md y 12-web-operacion.md.
 """
 
 from __future__ import annotations
 
 import hmac
+import math
+import re
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -13,8 +15,8 @@ from decimal import Decimal
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
-from .. import auth, cycle, wallet
-from ..domain import BusinessRuleError
+from .. import auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
+from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..settlement import settle_cycle
@@ -62,6 +64,29 @@ def _int(value: str, what: str) -> int:
         return int((value or "").strip())
     except ValueError:
         raise BusinessRuleError("INVALID_INPUT", f"{what} no válido.")
+
+
+def _float(value: str, what: str) -> float:
+    """S-76: una coordenada es un número finito."""
+    try:
+        number = float((value or "").strip())
+    except ValueError:
+        number = math.nan
+    if not math.isfinite(number):
+        raise BusinessRuleError("INVALID_INPUT", f"{what} no válida.")
+    return number
+
+
+def _money(value: str, what: str) -> Decimal:
+    """S-76: un monto son soles con hasta 2 decimales."""
+    value = (value or "").strip()
+    if not re.fullmatch(r"\d+(\.\d{1,2})?", value):
+        raise BusinessRuleError("INVALID_INPUT", f"{what} no válido.")
+    return Decimal(value)
+
+
+def _query(environ) -> dict[str, str]:
+    return {key: values[0] for key, values in parse_qs(environ.get("QUERY_STRING", "")).items()}
 
 
 def _lines(form: dict[str, str]) -> list[tuple[str, str]]:
@@ -183,6 +208,159 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
     def liquidar(environ, form, session):
         return views.settlement(settle_cycle(store, (form.get("ciclo") or "").strip(), at=clock()), session.csrf)
 
+    # --- vecino: zona, devolución y reclamos (iteración 12) ---
+
+    def zona(environ, form, session):
+        customer = store.customers[session.principal]
+        administered = [z for z in store.zones.values() if z.admin_id == session.principal]
+        admin_zone = administered[0] if administered else None
+        requests = [(merge_id, zone_id) for merge_id, (zone_id, target_id) in store.merge_requests.items()
+                    if admin_zone and target_id == admin_zone.zone_id]
+        return views.zone_page(customer, store.zones.get(customer.zone_id), list(store.zones.values()), admin_zone,
+                               requests, sorted(PILOT_DISTRICTS), session.csrf)
+
+    def zona_crear(environ, form, session):
+        zone = zones.create_zone(store, session.principal, name=form.get("nombre", "").strip(),
+                                 district=form.get("distrito", ""), lat=_float(form.get("lat"), "Latitud"),
+                                 lon=_float(form.get("lon"), "Longitud"), now=clock())
+        return views.simple("Zona creada", f"Creaste la zona {zone.name} ({zone.zone_id}). Para activarla, "
+                            "registra quién recibe los pedidos.", session.csrf, back="/zona")
+
+    def zona_unirse(environ, form, session):
+        customer = zones.join_zone(store, session.principal, form.get("zona", "").strip(), now=clock())
+        return views.simple("Te uniste", f"Ahora eres vecino de la zona {customer.zone_id}.", session.csrf,
+                            back="/zona")
+
+    def zona_activar(environ, form, session):
+        zone = zones.activate_zone(store, form.get("zona", "").strip(), session.principal,
+                                   reception_kind=form.get("tipo", ""), contact=form.get("contacto", ""))
+        return views.simple("Zona activa", f"La zona {zone.name} ya recibe pedidos.", session.csrf, back="/zona")
+
+    def zona_unir(environ, form, session):
+        merge_id = zones.request_merge(store, form.get("zona", "").strip(), form.get("destino", "").strip(),
+                                       session.principal, now=clock())
+        return views.simple("Solicitud enviada", f"Solicitud {merge_id}: falta que el admin de la otra zona acepte.",
+                            session.csrf, back="/zona")
+
+    def zona_aceptar(environ, form, session):
+        zone = zones.accept_merge(store, _int(form.get("solicitud", ""), "Número de solicitud"), session.principal,
+                                  now=clock())
+        return views.simple("Zonas unidas", f"La zona {zone.name} ahora cuenta junto con la tuya.", session.csrf,
+                            back="/zona")
+
+    def zona_separar(environ, form, session):
+        zone = zones.leave_group(store, form.get("zona", "").strip(), session.principal, now=clock())
+        return views.simple("Zona separada", f"La zona {zone.name} vuelve a contar sola.", session.csrf, back="/zona")
+
+    def zona_transferir(environ, form, session):
+        zone = zones.transfer_admin(store, form.get("zona", "").strip(), session.principal,
+                                    _int(form.get("nuevo", ""), "Número de cliente"))
+        return views.simple("Rol transferido", f"El nuevo admin de {zone.name} es el cliente {zone.admin_id}.",
+                            session.csrf, back="/zona")
+
+    def devolucion(environ, form, session):
+        refund = wallet.request_withdrawal(store, session.principal, _money(form.get("monto", ""), "Monto"), clock())
+        return views.simple("Devolución pedida", f"Te devolveremos {views.money(refund.amount)} a tu Yape o Plin "
+                            "en un plazo máximo de 30 días.", session.csrf, back="/cuenta")
+
+    def reclamos(environ, form, session):
+        delivered = {order_id for delivery in store.deliveries.values() for order_id in delivery.order_ids}
+        options = []
+        for order in store.orders.values():
+            if order.customer_id == session.principal and order.order_id in delivered:  # S-79
+                catalog = store.catalog_for(order.cycle)
+                for line in order.lines:
+                    name = catalog[line.product_id].name if line.product_id in catalog else line.product_id
+                    options.append((f"{order.order_id}:{line.product_id}", f"Pedido {order.order_id} · {name}"))
+        mine = [c for c in store.claims.values() if c.customer_id == session.principal]
+        return views.claims_page(options, mine, session.csrf)
+
+    def reclamar(environ, form, session):
+        order_id, separator, product_id = form.get("articulo", "").partition(":")
+        if not separator:
+            raise BusinessRuleError("INVALID_INPUT", "Elige el artículo a reclamar.")
+        claim = claims.file_claim(store, _int(order_id, "Número de pedido"), customer_id=session.principal,
+                                  product_id=product_id, quantity=form.get("cantidad", "").strip(),
+                                  reason=form.get("motivo", ""), photo=form.get("foto", ""), now=clock())
+        return views.simple("Reclamo registrado", f"Tu reclamo {claim.claim_id} quedó pendiente de revisión.",
+                            session.csrf, back="/reclamos")
+
+    # --- administrador: armado, entrega, reclamos, colchón y métricas (iteración 12) ---
+
+    def selected_cycle(environ) -> str:
+        """S-77: el ciclo actual, o el de ?ciclo= (S-76: con el formato AAAA-Wnn)."""
+        value = (_query(environ).get("ciclo") or "").strip()
+        if not value:
+            return cycle.cycle_id(clock())
+        try:
+            valid = re.fullmatch(r"\d{4}-W\d{2}", value) and cycle.cycle_id(cycle.opens_at(value)) == value
+        except ValueError:
+            valid = False
+        if not valid:
+            raise BusinessRuleError("INVALID_INPUT", "Ciclo no válido; usa el formato 2026-W38.")
+        return value
+
+    def armado(environ, form, session):
+        cycle_id = selected_cycle(environ)
+        attended = sorted((o for o in store.orders_in_cycle(cycle_id) if fulfillment.is_attended(store, o)),
+                          key=lambda o: o.order_id)
+        zone_ids = sorted({o.zone_id for o in attended})
+        stops = [(store.zones[z], store.deliveries.get((cycle_id, z))) for z in zone_ids]
+        return views.packing(cycle_id, attended, store.bags, stops, session.csrf)
+
+    def bolsa(environ, form, session):
+        bag = fulfillment.pack_bag(store, _int(form.get("pedido", ""), "Número de pedido"), by=session.principal,
+                                   photo=form.get("foto", ""), now=clock())
+        return views.simple("Bolsa registrada", f"Pedido {bag.order_id}: bolsa {bag.number} con su foto.",
+                            session.csrf, back="/admin/armado")
+
+    def entrega(environ, form, session):
+        delivery = fulfillment.deliver_zone(store, (form.get("ciclo") or "").strip(), form.get("zona", "").strip(),
+                                            by=session.principal, photo=form.get("foto", ""),
+                                            received_by=form.get("recibe", ""), now=clock())
+        return views.simple("Entrega registrada", f"Zona {delivery.zone_id}: {len(delivery.order_ids)} pedidos "
+                            f"recibidos por {delivery.received_by}.", session.csrf, back="/admin/armado")
+
+    def admin_reclamos(environ, form, session):
+        return views.admin_claims(list(store.claims.values()), session.csrf)
+
+    def revisar(environ, form, session):
+        decision = form.get("decision", "")
+        if decision not in ("aprobar", "rechazar"):
+            raise BusinessRuleError("INVALID_INPUT", "Elige aprobar o rechazar.")
+        claim = claims.review_claim(store, _int(form.get("reclamo", ""), "Número de reclamo"), by=session.principal,
+                                    approve=decision == "aprobar", now=clock())
+        return views.simple("Reclamo revisado", f"El reclamo {claim.claim_id} quedó {claim.status}. Devuelto como "
+                            f"saldo: {views.money(claim.refund_amount)}.", session.csrf, back="/admin/reclamos")
+
+    def colchon(environ, form, session):
+        catalog = store.catalog_for(cycle.cycle_id(clock()))
+        return views.buffer_page(list(store.buffer.values()), buffer.buffer_value(store), buffer.BUFFER_LIMIT,
+                                 [p for p in catalog.values() if p.active], session.csrf)
+
+    def colchon_agregar(environ, form, session):
+        stock = buffer.add_to_buffer(store, cycle.cycle_id(clock()), form.get("producto", ""),
+                                     form.get("cantidad", "").strip(), by=session.principal)
+        return views.simple("Colchón actualizado", f"{stock.product_id}: hay {views.qty(stock.quantity)} guardados.",
+                            session.csrf, back="/admin/colchon")
+
+    def colchon_usar(environ, form, session):
+        stock = buffer.use_buffer(store, form.get("producto", ""), form.get("cantidad", "").strip(),
+                                  by=session.principal)
+        return views.simple("Colchón actualizado", f"{stock.product_id}: hay {views.qty(stock.quantity)} guardados.",
+                            session.csrf, back="/admin/colchon")
+
+    def metricas(environ, form, session):
+        cycle_id = selected_cycle(environ)
+        margins = metrics.order_margins(store, cycle_id)  # S-78: sin liquidar, 422
+        alerts = metrics.margin_alerts(store, cycle_id)
+        savings = metrics.delivered_savings(store, cycle_id)
+        try:
+            repurchase, repurchase_error = metrics.repurchase_week4(store, cycle_id), None
+        except BusinessRuleError as error:
+            repurchase, repurchase_error = None, error
+        return views.metrics_page(cycle_id, margins, alerts, savings, repurchase, repurchase_error, session.csrf)
+
     # ruta -> método -> (función, rol requerido)
     routes = {
         "/": {"GET": (home, None)},
@@ -193,9 +371,28 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/cuenta": {"GET": (cuenta, "vecino")},
         "/cuenta/cancelar": {"POST": (cancelar, "vecino")},
         "/cuenta/pin": {"POST": (cambiar_pin, "vecino")},
+        "/cuenta/devolucion": {"POST": (devolucion, "vecino")},
+        "/zona": {"GET": (zona, "vecino")},
+        "/zona/crear": {"POST": (zona_crear, "vecino")},
+        "/zona/unirse": {"POST": (zona_unirse, "vecino")},
+        "/zona/activar": {"POST": (zona_activar, "vecino")},
+        "/zona/unir": {"POST": (zona_unir, "vecino")},
+        "/zona/aceptar": {"POST": (zona_aceptar, "vecino")},
+        "/zona/separar": {"POST": (zona_separar, "vecino")},
+        "/zona/transferir": {"POST": (zona_transferir, "vecino")},
+        "/reclamos": {"GET": (reclamos, "vecino"), "POST": (reclamar, "vecino")},
         "/admin": {"GET": (admin, "admin")},
         "/admin/verificar": {"POST": (verificar, "admin")},
         "/admin/liquidar": {"POST": (liquidar, "admin")},
+        "/admin/armado": {"GET": (armado, "admin")},
+        "/admin/bolsa": {"POST": (bolsa, "admin")},
+        "/admin/entrega": {"POST": (entrega, "admin")},
+        "/admin/reclamos": {"GET": (admin_reclamos, "admin")},
+        "/admin/reclamos/revisar": {"POST": (revisar, "admin")},
+        "/admin/colchon": {"GET": (colchon, "admin")},
+        "/admin/colchon/agregar": {"POST": (colchon_agregar, "admin")},
+        "/admin/colchon/usar": {"POST": (colchon_usar, "admin")},
+        "/admin/metricas": {"GET": (metricas, "admin")},
     }
 
     def dispatch(environ):

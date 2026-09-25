@@ -88,9 +88,19 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 40 | ¿Qué pasa si alguien falla el PIN varias veces? | Con 5 intentos fallidos se bloquea 15 minutos (S-68). | | | |
 | 41 | ¿Cuánto dura la sesión? | 8 horas (S-69). | | | |
 
+## E4. Pantallas de operación (iteración 12)
+
+| # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
+|---|---|---|---|---|---|
+| 42 | ¿Cómo se guardan las fotos de la bolsa, la entrega y el reclamo? | Por ahora, como texto con la ruta o el enlace del archivo; todavía no se suben archivos (S-72). | | | |
+| 43 | ¿Quién activa la zona, la une con otra o pasa el rol? | El vecino que es admin de esa zona, desde su cuenta; el administrador de Yapa no lo hace (S-73). | | | |
+| 44 | ¿Cómo registra el vecino su ubicación para crear o unirse a una zona? | **Sin decidir.** Hoy no hay forma de hacerlo desde la web (S-74, hueco 1 de `12-web-operacion.md`). | | | |
+| 45 | ¿Qué pasa con las zonas del piloto que no tienen ubicación? | No reciben vecinos nuevos ni se unen a otras hasta que se cargue su punto de recepción (S-75). | | | |
+| 46 | ¿Qué muestra el tablero de métricas? | Margen por pedido, ahorro entregado y recompra en la semana 4, para un ciclo liquidado (S-78). | | | |
+
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 
-S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas), S-62/S-63 (datos en memoria, hora fija para la demo), S-67 (hash del PIN), S-70/S-71 (contraseña de admin, protección de formularios), S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno).
+S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas), S-62/S-63 (datos en memoria, hora fija para la demo), S-67 (hash del PIN), S-70/S-71 (contraseña de admin, protección de formularios), S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno), S-76/S-77 (formato de los datos y ciclo en las pantallas web), S-79/S-80 (listas de reclamos del vecino y del administrador).
 
 ---
 

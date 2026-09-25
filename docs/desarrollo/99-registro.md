@@ -77,6 +77,24 @@
 - **Hallazgo al probar con el servidor real:** con una base nueva nadie podía entrar (no hay PINs). Se agregó S-94 (credenciales de demo solo si no hay ninguna).
 - Resultado: 174 pruebas en verde y prueba manual de punta a punta con HTTP real.
 
+## Iteración 12 · Pantallas web de operación (24/09/2026)
+- **Spec:** `12-web-operacion.md`, con los supuestos S-72..S-80, a validar por el equipo. Los principales:
+  - la foto es una referencia de texto y subir archivos queda fuera de alcance;
+  - las acciones de zona las hace el vecino admin de la zona;
+  - la web solo controla el formato de los datos;
+  - el tablero de métricas es por ciclo.
+- **Pruebas antes del código:** `docs/evidencia/desarrollo/12-web-operacion-rojo.txt`. Son 15 pruebas nuevas (OA-01..OA-15) contra la aplicación WSGI, con una hora del servidor que avanza del miércoles al domingo.
+- **Implementación en la web (`web/app.py` y `web/views.py`), sin reglas de negocio propias:**
+  - el vecino tiene `/zona`, `/reclamos` y la devolución de saldo en `/cuenta`;
+  - el administrador tiene `/admin/armado` (bolsas y entregas), `/admin/reclamos`, `/admin/colchon` y `/admin/metricas`;
+  - cada ruta llama al caso de uso con el actor de la sesión.
+- **Único cambio fuera de la web (S-75):** unirse a una zona sin ubicación, o unirla a un grupo, fallaba con un error interno. Ahora responde `LOCATION_REQUIRED`.
+- **Revisión:**
+  - Las fotos se muestran como texto y no como enlace, para que una referencia `javascript:` no se pueda usar para atacar.
+  - Un monto como `abc` o `0.001` hacía fallar el pedido de devolución. La web ahora lo rechaza con `INVALID_INPUT` (S-76).
+- Se anotaron nueve huecos para el equipo en la spec. El más visible: no hay cómo registrar la ubicación del vecino, así que en la demo nadie puede crear una zona.
+- **Resultado:** 182 pruebas en verde (`docs/evidencia/desarrollo/12-web-operacion-verde.txt`).
+
 ## Iteración 13 · Margen neto con costos operativos (24/09/2026)
 
 - Spec: `13-margen-neto.md` (S-95..S-97). Atiende el hallazgo urgente n.º 1: el margen de contribución de S/ 5.64 no incluía armado, cobro ni atención.

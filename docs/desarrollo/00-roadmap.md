@@ -26,12 +26,13 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 9 | **Interfaz web** (vecino y admin), responsiva y solo con biblioteca estándar | Entregable 1 §4.1 (app web responsiva) | completa, ver `09-interfaz-web.md` |
 | 10 | **Acceso con PIN, sesión y CSRF** | necesario para que el saldo (plata del cliente) esté protegido | completa, ver `10-acceso.md` |
 | 11 | **Persistencia en SQLite**: que los datos sobrevivan a reiniciar el servidor | S-62 (hoy todo vive en memoria) | completa, ver `11-persistencia.md` |
-| 12 | **Web para lo que falta**: zonas, armado y entrega con foto, reclamos, devolución de saldo, métricas | iteraciones 5, 7 y 8 ya tienen reglas y pruebas, falta la pantalla | pendiente |
-| 17 | **Pérdida de una zona fallida en el margen** | hueco de la iteración 16 | completa, ver `17-perdida-zona-fallida.md` |
-| 16 | **Entrega fallida y cierre del ciclo** (sin reintento; vuelve todo menos el envío real) | decisión urgente n.º 3, hueco 2 de la iteración 7 | completa, ver `16-entrega-fallida-cierre.md` |
-| 15 | **Parte del ahorro que retiene Yapa** (parámetro, 0 % por defecto) | decisión urgente n.º 5 (opción A) | completa, ver `15-reparto-ahorro.md` |
-| 14 | **Simulador de escenarios** (comisión, pedidos por zona, costo de parada) | decisiones urgentes 1, 2 y 5 | completa, ver `14-simulador-escenarios.md` |
+| 12 | **Web para lo que falta**: zonas, armado y entrega con foto, reclamos, devolución de saldo, métricas | iteraciones 5, 7 y 8 ya tienen reglas y pruebas, falta la pantalla | completa, ver `12-web-operacion.md` |
 | 13 | **Margen neto con costos operativos** por escenario (optimista y pesimista) | hallazgo de la iteración 8 | completa, ver `13-margen-neto.md` (falta que el equipo elija el escenario real) |
+| 14 | **Simulador de escenarios** (comisión, pedidos por zona, costo de parada) | decisiones urgentes 1, 2 y 5 | completa, ver `14-simulador-escenarios.md` |
+| 15 | **Parte del ahorro que retiene Yapa** (parámetro, 0 % por defecto) | decisión urgente n.º 5 (opción A) | completa, ver `15-reparto-ahorro.md` |
+| 16 | **Entrega fallida y cierre del ciclo** (sin reintento; vuelve todo menos el envío real) | decisión urgente n.º 3, hueco 2 de la iteración 7 | completa, ver `16-entrega-fallida-cierre.md` |
+| 17 | **Pérdida de una zona fallida en el margen** | hueco de la iteración 16 | completa, ver `17-perdida-zona-fallida.md` |
+| — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro
 
