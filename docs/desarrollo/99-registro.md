@@ -107,3 +107,8 @@
 - Nuevo `close_cycle`: el ciclo solo se liquida cuando cada zona atendida se entregó o falló. Cierra el hueco 2 de la iteración 7. `settle_cycle` sigue siendo el cálculo puro.
 - Hueco abierto: la merma de los frescos de una zona fallida todavía no aparece como pérdida en las métricas.
 - Resultado: 196 pruebas en verde.
+
+## Iteración 17 · Pérdida de una zona fallida en el margen (24/09/2026)
+
+- Spec: `17-perdida-zona-fallida.md` (S-107, S-108). Una zona fallida muestra una pérdida de −S/ 47.00 por pedido en el escenario base y los pedidos aparecen en las alertas.
+- Resultado: 199 pruebas en verde.

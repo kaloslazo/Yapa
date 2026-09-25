@@ -30,3 +30,11 @@ Escenario EF-B: 8 pedidos en Jesús María, zona fallida.
 - **MG-A · Pérdida visible.** Cada pedido: ingreso S/ 5.00, costo del proveedor **S/ 47.00** (lo mismo que en MT-A, porque se compró igual), parada S/ 5.00 → margen **−S/ 47.00**. Los 8 aparecen en las alertas. → MG-01, MG-02
 - **MG-B · Métricas sin fallas no cambian.** En el escenario MT-A (sin fallas), el margen sigue siendo S/ 5.64. → MG-01
 - **MG-C · Ahorro y recompra sin cambio.** En la zona fallida, el ahorro entregado del ciclo es S/ 0 (nadie recibió). → MG-03
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/metrics.py`) | Prueba (`tests/test_failed_zone_metrics.py`) |
+|---|---|---|
+| MG-01, S-107 | `order_margins` (incluye `NO_ENTREGADO`, costo sobre lo pedido) | `test_mg_a_*`, `test_mg_b_*` |
+| MG-02 | `margin_alerts` y `net_margins` usan `order_margins` | `test_mg_a_*` |
+| MG-03, S-108 | `delivered_savings` y `repurchase_week4` siguen usando `_liquidated` | `test_mg_c_*` |

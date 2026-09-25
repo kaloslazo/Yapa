@@ -61,7 +61,7 @@ def _liquidated(result: CycleSettlement) -> list[SettledOrder]:
 def order_margins(store: InMemoryStore, cycle: str) -> dict[int, OrderMargin]:
     """MT-02, S-49: margen de contribución de cada pedido liquidado."""
     result = _settlement(store, cycle)
-    liquidated = _liquidated(result)
+    liquidated = [o for o in result.orders.values() if o.status in ("LIQUIDADO", "NO_ENTREGADO")]  # MG-01, S-107
     orders_per_zone = Counter(store.orders[settled.order_id].zone_id for settled in liquidated)
     catalog = store.catalog_for(cycle)
     margins = {}
@@ -70,7 +70,8 @@ def order_margins(store: InMemoryStore, cycle: str) -> dict[int, OrderMargin]:
         product_cost = ZERO
         for line in settled.lines:
             total_quantity = result.products[line.product_id].total_quantity
-            product_cost += catalog[line.product_id].tier_for(total_quantity).base_price * line.delivered
+            bought = line.ordered if settled.status == "NO_ENTREGADO" else line.delivered  # S-107: se compró igual
+            product_cost += catalog[line.product_id].tier_for(total_quantity).base_price * bought
         stop_cost = store.zones[order.zone_id].stop_cost / orders_per_zone[order.zone_id]
         claims = sum((claim.refund_amount for claim in store.claims.values()
                       if claim.order_id == order.order_id and claim.status == "APROBADO"), ZERO)
