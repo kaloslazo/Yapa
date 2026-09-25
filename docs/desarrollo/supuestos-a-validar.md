@@ -98,6 +98,19 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 45 | ¿Qué pasa con las zonas del piloto que no tienen ubicación? | No reciben vecinos nuevos ni se unen a otras hasta que se cargue su punto de recepción (S-75). | | | |
 | 46 | ¿Qué muestra el tablero de métricas? | Margen por pedido, ahorro entregado y recompra en la semana 4, para un ciclo liquidado (S-78). | | | |
 
+## E5. Iteraciones 11 a 18 (persistencia, dinero, entrega fallida, robustez)
+
+| # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
+|---|---|---|---|---|---|
+| 47 | ¿Qué pasa si el servidor se reinicia? | Se guarda todo en una base SQLite después de cada operación; solo hay que volver a entrar (S-90, S-91). | | | |
+| 48 | ¿Qué costos operativos usamos para decidir? | Dos escenarios documentados: optimista (Plin 0 %, proveedor entrega) y pesimista (Yape Empresa 2.95 %, flete de compra) (S-95..S-97). **Hay que elegir cuál se parece a la realidad.** | | | |
+| 49 | ¿Yapa se queda con parte del ahorro por volumen? | Hoy 0 % (todo vuelve al cliente). El simulador muestra que con 25 % se deja de perder (S-100). **Decisión pendiente.** | | | |
+| 50 | Si la portería no recibe, ¿se reintenta? | No en el piloto (S-102). | | | |
+| 51 | Si la portería no recibe, ¿cuánto se devuelve? | Todo menos el envío real de la zona, como saldo (S-103). | | | |
+| 52 | Lo que se compró para una zona fallida, ¿cuenta para los descuentos por volumen? | Sí, porque ya se compró; los frescos son merma de Yapa (S-104, S-107). | | | |
+| 53 | ¿Un admin de zona puede mudarse a otra zona? | Solo después de pasar el rol a otro vecino (S-110). | | | |
+| 54 | ¿Se puede rechazar o retirar una solicitud para unir zonas? | Sí (S-111). | | | |
+
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 
 S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas), S-62/S-63 (datos en memoria, hora fija para la demo), S-67 (hash del PIN), S-70/S-71 (contraseña de admin, protección de formularios), S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno), S-76/S-77 (formato de los datos y ciclo en las pantallas web), S-79/S-80 (listas de reclamos del vecino y del administrador).

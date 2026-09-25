@@ -35,16 +35,17 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```
 
-## Estado al 24/09/2026 (noche)
+## Estado al 24/09/2026 (noche, 2)
 
-- Iteraciones 2 a 10 **completas y en verde** (164 pruebas): pedido, liquidación, billetera, cancelar/editar, zonas, catálogo semanal, armado/entrega/reclamos/colchón, métricas, web y acceso con PIN.
-- Numeración de supuestos: S-01..S-52 (dominio) y S-60..S-71 (web y acceso). Los nuevos van desde S-72.
-- Siguiente: iteración 11 (persistencia en SQLite) y luego la 12 (pantallas web para zonas, armado, entrega, reclamos y métricas). Ver `docs/desarrollo/00-roadmap.md`.
-- Supuestos pendientes de validar por el equipo: `docs/desarrollo/supuestos-a-validar.md`.
+- Iteraciones 2 a 18 **completas y en verde** (226 pruebas). Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-112. **El siguiente libre es S-113.**
+- **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
+- `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
 - Tarea de campo pendiente: precios del mercado de barrio (`docs/desarrollo/kit-validacion-campo.md`).
 
 ## Levantar la web de demo
 
 ```bash
-PYTHONPATH=src python -m yapa_sdd.web --ahora 2026-09-16T10:00:00-05:00
+PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --ahora 2026-09-16T10:00:00-05:00
+# credenciales de demo: se imprimen al arrancar (vecinos 101 y 105, admin admin-yapa)
 ```
