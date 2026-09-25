@@ -46,19 +46,20 @@ PILOT_PRODUCTS = [
 ]
 
 PILOT_ZONES = [
-    Zone("Z-LINCE-01", "Edificio Los Álamos", "Lince", "G-LINCE", D("40")),
-    Zone("Z-LINCE-02", "Condominio Las Palmeras", "Lince", "G-LINCE", D("40")),
-    Zone("Z-JM-01", "Residencial San Felipe", "Jesús María", "G-JM", D("40")),
-    Zone("Z-LV-01", "Edificio Balconcillo", "La Victoria", "G-LV", D("40"), reception_accepted=False),
-    Zone("Z-MIRA-01", "Edificio Larco", "Miraflores", "G-MIRA", D("40")),
+    Zone("Z-LINCE-01", "Edificio Los Álamos", "Lince", "G-LINCE", D("40"), lat=-12.0860, lon=-77.0340),
+    Zone("Z-LINCE-02", "Condominio Las Palmeras", "Lince", "G-LINCE", D("40"), lat=-12.0840, lon=-77.0335),
+    Zone("Z-JM-01", "Residencial San Felipe", "Jesús María", "G-JM", D("40"), lat=-12.0765, lon=-77.0470),
+    Zone("Z-LV-01", "Edificio Balconcillo", "La Victoria", "G-LV", D("40"), reception_accepted=False,
+         lat=-12.0690, lon=-77.0230),
+    Zone("Z-MIRA-01", "Edificio Larco", "Miraflores", "G-MIRA", D("40"), lat=-12.1210, lon=-77.0290),
 ]
 
 PILOT_CUSTOMERS = [
-    Customer(101, "Ana Torres", "Z-LINCE-01"),
-    Customer(102, "Luis Ramos", "Z-LINCE-01", suspended=True),
-    Customer(103, "Rosa Quispe", "Z-LV-01"),
-    Customer(104, "Jorge Salas", "Z-MIRA-01"),
-    Customer(105, "Carmen Díaz", "Z-LINCE-01"),
+    Customer(101, "Ana Torres", "Z-LINCE-01", lat=-12.0862, lon=-77.0342),
+    Customer(102, "Luis Ramos", "Z-LINCE-01", suspended=True, lat=-12.0861, lon=-77.0338),
+    Customer(103, "Rosa Quispe", "Z-LV-01", lat=-12.0692, lon=-77.0231),
+    Customer(104, "Jorge Salas", "Z-MIRA-01", lat=-12.1212, lon=-77.0291),
+    Customer(105, "Carmen Díaz", "Z-LINCE-01", lat=-12.0848, lon=-77.0337),
 ]
 
 

@@ -145,6 +145,7 @@ def register_failed_delivery(store: InMemoryStore, cycle: str, zone_id: str, *, 
 
 def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleSettlement:
     """EF-06, S-106: se liquida solo cuando cada zona atendida se entregó o falló."""
+    cycles.check_cycle_id(cycle)  # HR-06
     zones = {o.zone_id for o in store.orders_in_cycle(cycle) if is_attended(store, o)}
     pending = sorted(z for z in zones if (cycle, z) not in store.deliveries and (cycle, z) not in store.failed_deliveries)
     if pending:

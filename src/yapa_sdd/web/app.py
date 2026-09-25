@@ -19,7 +19,6 @@ from .. import auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
 from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
-from ..settlement import settle_cycle
 from ..store import InMemoryStore
 from . import views
 
@@ -206,7 +205,33 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
                             session.csrf)
 
     def liquidar(environ, form, session):
-        return views.settlement(settle_cycle(store, (form.get("ciclo") or "").strip(), at=clock()), session.csrf)
+        # HR-10: se usa close_cycle (EF-06), que exige todas las zonas entregadas o fallidas
+        result = fulfillment.close_cycle(store, (form.get("ciclo") or "").strip(), at=clock())
+        return views.settlement(result, session.csrf)
+
+    def ubicacion(environ, form, session):
+        zones.set_location(store, session.principal, _float(form.get("lat"), "Latitud"),
+                           _float(form.get("lon"), "Longitud"))  # HR-01
+        return views.simple("Ubicación guardada", "Ya puedes crear una zona o unirte a una cercana.", session.csrf)
+
+    def devoluciones(environ, form, session):
+        pending = [r for r in store.refunds.values() if r.status == "PENDIENTE"]
+        return views.refunds_page(pending, session.csrf)
+
+    def devolucion_pagar(environ, form, session):
+        refund = wallet.mark_refund_paid(store, _int(form.get("reembolso", ""), "Número de devolución"),
+                                         form.get("codigo", ""))  # HR-08
+        return views.simple("Devolución pagada", f"La devolución {refund.refund_id} quedó {refund.status}.",
+                            session.csrf)
+
+    def entrega_fallida(environ, form, session):
+        failure = fulfillment.register_failed_delivery(store, (form.get("ciclo") or "").strip(),
+                                                       form.get("zona", "").strip(), by=session.principal,
+                                                       photo=form.get("foto", ""), reason=form.get("motivo", ""),
+                                                       now=clock())  # HR-09
+        return views.simple("Entrega fallida registrada",
+                            f"Zona {failure.zone_id}: {len(failure.order_ids)} pedidos vuelven como saldo al liquidar.",
+                            session.csrf)
 
     # --- vecino: zona, devolución y reclamos (iteración 12) ---
 
@@ -372,6 +397,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/cuenta/cancelar": {"POST": (cancelar, "vecino")},
         "/cuenta/pin": {"POST": (cambiar_pin, "vecino")},
         "/cuenta/devolucion": {"POST": (devolucion, "vecino")},
+        "/cuenta/ubicacion": {"POST": (ubicacion, "vecino")},
         "/zona": {"GET": (zona, "vecino")},
         "/zona/crear": {"POST": (zona_crear, "vecino")},
         "/zona/unirse": {"POST": (zona_unirse, "vecino")},
@@ -393,6 +419,9 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/admin/colchon/agregar": {"POST": (colchon_agregar, "admin")},
         "/admin/colchon/usar": {"POST": (colchon_usar, "admin")},
         "/admin/metricas": {"GET": (metricas, "admin")},
+        "/admin/devoluciones": {"GET": (devoluciones, "admin")},
+        "/admin/devoluciones/pagar": {"POST": (devolucion_pagar, "admin")},
+        "/admin/entrega-fallida": {"POST": (entrega_fallida, "admin")},
     }
 
     def dispatch(environ):

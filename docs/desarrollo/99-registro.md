@@ -130,3 +130,10 @@
 
 - Spec: `17-perdida-zona-fallida.md` (S-107, S-108). Una zona fallida muestra una pérdida de −S/ 47.00 por pedido en el escenario base y los pedidos aparecen en las alertas.
 - Resultado: 199 pruebas en verde.
+
+## Iteración 18 · Cierre de huecos de robustez (24/09/2026)
+
+- Spec: `18-cierre-huecos.md` (S-109..S-112). Cierra los huecos 1 a 7 y 9 que reportó la iteración 12, y el que apareció al integrar la iteración 16 (la web liquidaba sin exigir entregas).
+- Ahora la demo sirve de punta a punta: el vecino registra su ubicación y las zonas del piloto tienen coordenadas, así que se pueden crear zonas y unirse a ellas.
+- Cambió el ejemplo de OA-03/OA-04 y el resultado esperado de WA-10. Se documentó en la spec y las pruebas se actualizaron **antes** del código.
+- Resultado: 226 pruebas en verde.

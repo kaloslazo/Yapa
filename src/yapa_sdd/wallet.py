@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from .domain import BusinessRuleError
 from .store import InMemoryStore
@@ -63,9 +63,13 @@ def add_refund(store: InMemoryStore, customer_id: int, amount: Decimal, reason: 
 
 def request_withdrawal(store: InMemoryStore, customer_id: int, amount, now: datetime) -> Refund:
     """BS-12: el cliente pide de vuelta parte o todo su saldo."""
-    amount = Decimal(str(amount))
-    if amount <= 0:
-        raise BusinessRuleError("INVALID_AMOUNT", "El monto a devolver debe ser mayor que cero.")
+    try:
+        amount = Decimal(str(amount).strip())
+    except (InvalidOperation, ValueError):
+        amount = None
+    # HR-05: número finito, mayor que 0 y con hasta 2 decimales
+    if amount is None or not amount.is_finite() or amount <= 0 or amount.as_tuple().exponent < -2:
+        raise BusinessRuleError("INVALID_AMOUNT", "El monto a devolver debe ser mayor que cero y en soles con céntimos.")
     debit(store, customer_id, amount, "DEVOLUCION_SOLICITADA", now)
     return add_refund(store, customer_id, amount, "SOLICITUD_CLIENTE", now)
 
@@ -77,8 +81,11 @@ def mark_refund_paid(store: InMemoryStore, refund_id: int, operation_code: str) 
         raise BusinessRuleError("REFUND_NOT_FOUND", "El reembolso no existe.")
     if refund.status == "PAGADO":
         raise BusinessRuleError("REFUND_ALREADY_PAID", "Ese reembolso ya fue pagado.")
+    code = (operation_code or "").strip()
+    if not code:  # HR-08: el pago se registra con su código de operación
+        raise BusinessRuleError("PAYMENT_CODE_REQUIRED", "Ingresa el código de operación de la transferencia.")
     refund.status = "PAGADO"
-    refund.operation_code = operation_code
+    refund.operation_code = code
     return refund
 
 

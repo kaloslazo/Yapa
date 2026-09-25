@@ -157,7 +157,8 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
         "<button>Verificar</button></form></td></tr>" for o in pending
     )
     body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
-            ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a></div>'
+            ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
+            ' · <a href="/admin/devoluciones">Devoluciones</a></div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
@@ -297,7 +298,16 @@ def packing(cycle_label: str, orders, bags, stops, csrf: str | None = None) -> s
                     f'<input type="hidden" name="zona" value="{escape(zone.zone_id)}">'
                     '<label>Foto de la entrega <input name="foto"></label>'
                     '<label>Nombre de quien recibe <input name="recibe"></label><button>Registrar entrega</button>'
-                    '</form>')
+                    '</form>'
+                    f'<form method="post" action="/admin/entrega-fallida">{hidden(csrf)}'
+                    f'<input type="hidden" name="ciclo" value="{escape(cycle_label)}">'
+                    f'<input type="hidden" name="zona" value="{escape(zone.zone_id)}">'
+                    '<label>Si no recibieron: motivo <select name="motivo">'
+                    '<option value="PORTERIA_CERRADA">Portería cerrada</option>'
+                    '<option value="NADIE_RECIBE">No había quién reciba</option>'
+                    '<option value="PORTERIA_RECHAZA">La portería no aceptó</option></select></label>'
+                    '<label>Foto de evidencia <input name="foto"></label>'
+                    '<button>Registrar entrega fallida</button></form>')
         deliveries.append(f'<div class="card"><strong>{escape(zone.name)} ({escape(zone.zone_id)})</strong>'
                           f'<p>{state}</p>{form}</div>')
     empty = '<div class="card muted">No hay pedidos que se atiendan en este ciclo.</div>'
@@ -371,3 +381,18 @@ def metrics_page(cycle_label: str, margins, alerts, savings, repurchase, repurch
             f'por envío: {money(savings.delivery)} · total: {money(savings.total)}</p></div>'
             f'<div class="card"><strong>Recompra en la semana 4</strong>{returning}</div>')
     return page(f"Métricas {cycle_label}", body, csrf)
+
+
+def refunds_page(pending, csrf: str | None = None) -> str:
+    """HR-08: devoluciones pendientes y registro de su pago."""
+    rows = "".join(
+        f"<tr><td>{r.refund_id}</td><td>{r.customer_id}</td><td>{money(r.amount)}</td><td>{escape(r.reason)}</td>"
+        f"<td>{escape(r.due_date.date().isoformat() if r.due_date else '-')}</td><td>"
+        f'<form method="post" action="/admin/devoluciones/pagar">{hidden(csrf)}'
+        f'<input type="hidden" name="reembolso" value="{r.refund_id}">'
+        '<input name="codigo" placeholder="Código de operación"><button>Marcar pagado</button></form></td></tr>'
+        for r in pending
+    )
+    body = ('<div class="card"><table><tr><th>N.º</th><th>Cliente</th><th>Monto</th><th>Motivo</th><th>Vence</th>'
+            f'<th></th></tr>{rows}</table></div>')
+    return page("Devoluciones pendientes", body, csrf)

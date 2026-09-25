@@ -2,12 +2,26 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, time, timedelta, timezone
 
 
 # Lima no usa horario de verano: UTC-5 todo el año.
 LIMA = timezone(timedelta(hours=-5), "America/Lima")
 CLOSE_TIME = time(20, 0)
+
+
+def check_cycle_id(cycle: str) -> None:
+    """HR-06: identificador AAAA-Wnn de una semana que existe."""
+    from .domain import BusinessRuleError
+
+    match = re.fullmatch(r"(\d{4})-W(\d{2})", cycle or "")
+    try:
+        if not match:
+            raise ValueError
+        datetime.fromisocalendar(int(match.group(1)), int(match.group(2)), 1)
+    except ValueError:
+        raise BusinessRuleError("INVALID_CYCLE", f"El ciclo '{cycle}' no es válido.")
 
 
 def to_lima(moment: datetime) -> datetime:

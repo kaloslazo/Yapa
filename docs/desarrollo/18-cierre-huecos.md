@@ -49,3 +49,18 @@ Huecos reportados en `12-web-operacion.md` (1 a 7 y 9) y el que apareció al int
 
 - **OA-03 y OA-04** (`12-web-operacion.md`) usaban la zona piloto Z-LINCE-01 como ejemplo de "zona sin ubicación" (S-75). Con HR-07 las zonas del piloto tienen coordenadas. **La regla S-75 no cambia**: las pruebas ahora crean una zona antigua sin ubicación (`Z-SIN-UBICACION`) para verificarla.
 - **WA-10** (`09-interfaz-web.md`): liquidar desde la web sin entregar ahora da `ZONES_PENDING` (HR-10). El camino completo está en HA-10.
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| HR-01, S-109 | `zones.set_location`, `_check_coordinates` · web `/cuenta/ubicacion` | `test_hardening.test_ha01_*`, `test_web_hardening.test_ha01_*` |
+| HR-02 | `zones.create_zone` → `_check_coordinates` | `test_ha02_*` |
+| HR-03, S-110 | `zones.join_zone` | `test_ha03_*` |
+| HR-04, S-111 | `zones.request_merge` (duplicado), `reject_merge`, `withdraw_merge` | `test_ha04_*` |
+| HR-05 | `wallet.request_withdrawal` | `test_ha05_*` |
+| HR-06 | `cycle.check_cycle_id` en `settle_cycle` y `close_cycle` | `test_ha06_*` (dominio y web) |
+| HR-07, S-112 | `seed.py`: coordenadas de zonas y vecinos | `test_ha07_*` |
+| HR-08 | web `/admin/devoluciones` · `wallet.mark_refund_paid` exige código | `test_web_hardening.test_ha08_*` |
+| HR-09 | web `/admin/entrega-fallida` | `test_ha09_*` |
+| HR-10 | web `/admin/liquidar` → `fulfillment.close_cycle` | `test_ha10_*`, `test_web.test_wa10_*` |

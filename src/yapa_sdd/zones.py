@@ -62,6 +62,25 @@ def _check_can_move(store: InMemoryStore, customer_id: int) -> None:
         raise BusinessRuleError("HAS_ACTIVE_ORDER", "Tienes un pedido en curso; cámbiate de zona después de recibirlo.")
 
 
+def _check_coordinates(lat, lon) -> None:
+    """HR-01, HR-02: coordenadas numéricas, finitas y en rango."""
+    try:
+        lat, lon = float(lat), float(lon)
+    except (TypeError, ValueError):
+        raise BusinessRuleError("INVALID_LOCATION", "La ubicación no es válida.")
+    if not (math.isfinite(lat) and math.isfinite(lon)) or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise BusinessRuleError("INVALID_LOCATION", "La ubicación no es válida.")
+
+
+def set_location(store: InMemoryStore, customer_id: int, lat, lon) -> Customer:
+    """HR-01, S-109: el vecino registra dónde vive."""
+    customer = _customer(store, customer_id)
+    _check_coordinates(lat, lon)
+    located = replace(customer, lat=float(lat), lon=float(lon))
+    store.add_customer(located)
+    return located
+
+
 def _check_open(now: datetime) -> None:
     if not cycle.is_open(now):  # S-31
         raise BusinessRuleError("CYCLE_CLOSED", "Las zonas solo se unen o separan con el ciclo abierto.")
@@ -75,6 +94,7 @@ def create_zone(store: InMemoryStore, admin_id: int, *, name: str, district: str
         raise BusinessRuleError("ALREADY_ADMIN", "Ya eres admin de una zona.")
     if admin.lat is None or admin.lon is None or lat is None or lon is None:
         raise BusinessRuleError("LOCATION_REQUIRED", "Falta la ubicación.")
+    _check_coordinates(lat, lon)  # HR-02
     if district not in PILOT_DISTRICTS:
         raise BusinessRuleError("DISTRICT_NOT_IN_PILOT", "Por ahora solo Lince, Jesús María y La Victoria.")
     _check_can_move(store, admin_id)
@@ -101,6 +121,8 @@ def join_zone(store: InMemoryStore, customer_id: int, zone_id: str, *, now: date
     """ZN-03."""
     customer = _customer(store, customer_id)
     zone = _zone(store, zone_id)
+    if any(z.admin_id == customer_id and z.zone_id != zone_id for z in store.zones.values()):  # HR-03, S-110
+        raise BusinessRuleError("ADMIN_MUST_TRANSFER", "Eres admin de tu zona: primero transfiere el rol.")
     if customer.lat is None or customer.lon is None:
         raise BusinessRuleError("LOCATION_REQUIRED", "Registra tu ubicación para unirte a una zona.")
     _check_zone_location(zone)
@@ -133,6 +155,8 @@ def request_merge(store: InMemoryStore, zone_id: str, target_zone_id: str, admin
     zone = _admin_zone(store, zone_id, admin_id)
     target = _zone(store, target_zone_id)
     _check_open(now)
+    if (zone_id, target_zone_id) in store.merge_requests.values():  # HR-04, S-111
+        raise BusinessRuleError("MERGE_ALREADY_REQUESTED", "Ya hay una solicitud igual pendiente.")
     _check_merge(store, zone, target)
     merge_id = store.next_merge_id()
     store.merge_requests[merge_id] = (zone_id, target_zone_id)
@@ -152,6 +176,27 @@ def accept_merge(store: InMemoryStore, merge_id: int, admin_id: int, *, now: dat
     zone.group_id = target.group_id
     del store.merge_requests[merge_id]
     return zone
+
+
+def _merge_request(store: InMemoryStore, merge_id: int) -> tuple[str, str]:
+    request = store.merge_requests.get(merge_id)
+    if request is None:
+        raise BusinessRuleError("MERGE_REQUEST_NOT_FOUND", "La solicitud no existe.")
+    return request
+
+
+def reject_merge(store: InMemoryStore, merge_id: int, admin_id: int) -> None:
+    """HR-04: el admin de la zona destino dice que no."""
+    _, target_zone_id = _merge_request(store, merge_id)
+    _admin_zone(store, target_zone_id, admin_id)
+    del store.merge_requests[merge_id]
+
+
+def withdraw_merge(store: InMemoryStore, merge_id: int, admin_id: int) -> None:
+    """HR-04: el admin que la pidió la retira."""
+    zone_id, _ = _merge_request(store, merge_id)
+    _admin_zone(store, zone_id, admin_id)
+    del store.merge_requests[merge_id]
 
 
 def leave_group(store: InMemoryStore, zone_id: str, admin_id: int, *, now: datetime) -> Zone:

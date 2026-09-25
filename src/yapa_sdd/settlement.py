@@ -12,6 +12,7 @@ from typing import Iterable
 
 from .domain import MAX_DELIVERY_FEE, MIN_ORDERS_PER_GROUP, BusinessRuleError, Order, floor_cents
 from .store import InMemoryStore
+from . import cycle as cycles
 from . import wallet
 
 
@@ -78,6 +79,7 @@ def _missing_by_order(missing: Iterable, attended: dict[int, Order]) -> dict[tup
 
 def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=None,
                  savings_share=None) -> CycleSettlement:
+    cycles.check_cycle_id(cycle)  # HR-06
     share = VOLUME_SAVINGS_SHARE if savings_share is None else Decimal(str(savings_share))
     if not ZERO <= share <= 1:  # RA-02
         raise BusinessRuleError("INVALID_SAVINGS_SHARE", "La parte retenida debe estar entre 0 y 1.")
