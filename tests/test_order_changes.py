@@ -170,6 +170,15 @@ class OrderChangesSpecTests(unittest.TestCase):
         self.assertRule("CYCLE_CLOSED", edit_order, self.store, order.order_id, customer_id=101, now=CLOSE,
                         lines=[("PAPA-AMARILLA", "6"), ("LIMPIATODO-GALON", "3")])
 
+    # CE-H
+    def test_ce_h_no_balance_from_unverified_payment(self):
+        order = self.base_order(verified=False)
+        edited = edit_order(self.store, order.order_id, customer_id=101, now=NOW,
+                            lines=[("PAPA-AMARILLA", "6"), ("LIMPIATODO-GALON", "3")])
+        self.assertEqual(balance(self.store, 101), Decimal("0"))
+        self.assertEqual([p.amount for p in edited.payments], [Decimal("55.02")])
+        self.assertEqual(edited.payment_status, "POR_VERIFICAR")
+
     # CE-G
     def test_ce_g_not_served_after_edit_down_returns_everything(self):
         order = self.base_order()

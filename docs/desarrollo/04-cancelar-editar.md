@@ -19,6 +19,7 @@ Carlos (24/09/2026): *"la devolución ya no se puede si el personal ya compró l
 | S-20 | Si el pago externo **todavía no fue verificado**, se cancela sin reembolso automático de esa parte (igual que LQ-01). Atención al cliente resuelve si el pago sí llegó. | — |
 | S-21 | Un código de operación usado no se libera al cancelar: no se puede reutilizar. | — |
 | S-22 | Si al editar el total **baja**, la diferencia vuelve como **saldo** (el cliente puede pedirla de vuelta con BS-12). Así no se hacen devoluciones por Yape en cada cambio. | — |
+| S-24 | Al bajar un pedido, **solo se devuelve a saldo dinero ya confirmado**. Primero se reduce el pago externo **sin verificar** (el cliente simplemente debe menos), después el pago con saldo y al final el pago externo verificado. Solo lo reducido de estos dos últimos vuelve al saldo. *(Detectado al diseñar la edición: sin esto, alguien podría registrar con un código falso, bajar el pedido y cobrar la diferencia como saldo.)* | — |
 | S-23 | Si al editar el total **sube**, el cliente paga la diferencia (saldo y/o Yape/Plin con un código nuevo). Ese pago queda `POR_VERIFICAR` y aplica LQ-01: si no se verifica antes del cierre, el pedido completo se cancela. | — |
 
 ## Reglas
@@ -34,6 +35,7 @@ Carlos (24/09/2026): *"la devolución ya no se puede si el personal ya compró l
 | CE-07 | La liquidación ignora los pedidos cancelados por el cliente: no cuentan para el mínimo, los tramos ni el envío. | — |
 | CE-08 | Editar reemplaza las líneas del pedido con las mismas reglas RP-05..RP-11. Para el stock, lo que el propio pedido ya tenía reservado cuenta como disponible. | los de RP-05..RP-10 |
 | CE-09 | Si el nuevo total baja, la diferencia va a saldo (S-22) y los pagos se ajustan para que siempre sumen el total del pedido (primero se reduce el pago con saldo, luego el externo). | — |
+| CE-12 | Al bajar el total, el orden de reducción y lo que vuelve al saldo siguen S-24. | — |
 | CE-10 | Si el nuevo total sube, se exige el pago de la diferencia exacta (BS-03..BS-06 aplicados a la diferencia) (S-23). | `PAYMENT_AMOUNT_MISMATCH`, etc. |
 | CE-11 | Si la edición falla por cualquier regla, el pedido queda exactamente como estaba. | — |
 
@@ -57,4 +59,5 @@ Pedido base: 5 kg de papa amarilla + 4 galones de limpiatodo = subtotal S/ 54.60
 - **CE-D · Editar bajo el mínimo.** Dejar solo 5 galones (S/ 43.055) → `SUBTOTAL_BELOW_MINIMUM` y el pedido no cambia. → CE-08, CE-11
 - **CE-E · Stock propio.** Con 395 kg reservados por otros y 5 kg por este pedido (máximo 400): editar manteniendo 5 kg se acepta; subir a 6 kg → `PRODUCT_SOLD_OUT`. → CE-08
 - **CE-F · Editar después del cierre.** → `CYCLE_CLOSED`. → CE-03
+- **CE-H · No se regala saldo sin pago confirmado.** DADO el pedido base con el Yape **sin verificar**, CUANDO se edita a S/ 55.02, ENTONCES el saldo del vecino sigue en S/ 0 y el pago pendiente baja a S/ 55.02. → CE-12
 - **CE-G · Zona no atendida tras bajar el pedido.** El pedido editado a S/ 55.02 (S/ 4.58 ya en saldo) no se atiende: se reembolsan S/ 55.02 al medio de pago, y en total el vecino recupera S/ 59.60. → CE-09, BS-09
