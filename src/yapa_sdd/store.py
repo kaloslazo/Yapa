@@ -23,6 +23,12 @@ class InMemoryStore:
         self.refunds: dict = {}
         self.settled_cycles: set[str] = set()
         self.merge_requests: dict = {}  # zonas (iteración 5)
+        self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
+        self.bags: dict = {}  # armado: bolsas por pedido
+        self.deliveries: dict = {}  # entrega: (ciclo, zona) -> entrega
+        self.claims: dict = {}  # reclamos por artículo
+        self.buffer: dict = {}  # colchón de reposición por producto
+        self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1
         self._next_order_id = 1
@@ -78,6 +84,11 @@ class InMemoryStore:
         refund_id = self._next_refund_id
         self._next_refund_id += 1
         return refund_id
+
+    def next_claim_id(self) -> int:
+        claim_id = self._next_claim_id
+        self._next_claim_id += 1
+        return claim_id
 
     def save_new_order(self, order: Order) -> Order:
         order.order_id = self._next_order_id

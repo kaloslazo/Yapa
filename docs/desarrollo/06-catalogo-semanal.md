@@ -36,6 +36,7 @@ Como administrador de Yapa, quiero publicar cada semana la lista de productos co
 | CT-08 | Se puede publicar o reemplazar el catálogo solo antes de que el ciclo abra (S-33). | `CATALOG_LOCKED` |
 | CT-09 | Desactivar un producto: solo el administrador, con un producto que exista en el catálogo del ciclo (S-36). | `NOT_AUTHORIZED`, `PRODUCT_NOT_AVAILABLE` |
 | CT-10 | El registro, la cotización, el stock y la liquidación usan el catálogo **del ciclo del pedido** (S-35, S-37). | — |
+| CT-11 | Al editar, una línea con un producto desactivado se acepta si su cantidad no supera la que ya tenía el pedido (S-39). | `PRODUCT_NOT_AVAILABLE` |
 
 ## Criterios de aceptación
 
@@ -53,12 +54,14 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 - **CT-J · Desactivar a mitad de semana.** Con un pedido de papa amarilla ya registrado, el administrador la desactiva → un pedido nuevo con papa recibe `PRODUCT_NOT_AVAILABLE`, y el pedido anterior se liquida normal. → CT-09, S-36
 - **CT-K · Stock por ciclo.** 395 kg reservados en W38 no impiden pedir 6 kg en W39. → S-35
 - **CT-L · Liquidación con los tramos del ciclo.** En W39, con 200 kg pedidos entre todos (tramo desde 100), el precio final es 3.30 × 1.12 = S/ 3.696. → CT-10
+- **CT-M · Editar un pedido con un producto desactivado.** Pedido en W39 de 5 kg de papa amarilla + 4 galones de limpiatodo; el administrador desactiva la papa. Al editar: mantener 5 kg y subir a 5 galones → se acepta; bajar a 3 kg → se acepta; subir a 6 kg → `PRODUCT_NOT_AVAILABLE`; agregar un producto desactivado que no estaba en el pedido → `PRODUCT_NOT_AVAILABLE`. → CT-11, S-39
 
-## Supuesto agregado al implementar (a validar por el equipo)
+## Supuestos agregados al implementar (a validar por el equipo)
 
 | # | Supuesto | Valor |
 |---|---|---|
 | S-38 | Si un catálogo tiene varios errores, se informa el primero: primero quién publica (CT-01) y la fecha (CT-08); luego los productos en el orden de la lista y, dentro de cada producto, proveedor → tramos → stock → repetido → categoría (CT-02..CT-06). Es el mismo criterio de S-11. | — |
+| S-39 | Al **editar** un pedido, un producto desactivado a mitad de semana (S-36) se puede **mantener con la misma cantidad o menos**, al mismo precio máximo. No se puede aumentar ni agregar si no estaba en el pedido. *(Detectado en la revisión de la iteración 6: sin esto, el vecino no podía editar nada sin perder la línea desactivada.)* | — |
 
 ## Trazabilidad
 
@@ -74,13 +77,14 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 | CT-08, S-33 | `publish_catalog` + `cycle.opens_at` | `test_ct_i_*` |
 | CT-09, S-36 | `deactivate_product` (el producto queda `active=False`; la liquidación no mira `active`) | `test_ct_j_*` |
 | CT-10, S-37 | `store.catalog_for`; `quote_order(store, lines, cycle)`; `register_order`; `edit_order`; `settle_cycle` | `test_ct_a_*`, `test_ct_j_*`, `test_ct_l_*` |
+| CT-11, S-39 | `order_registration._product` y `quote_order(..., kept)`; `edit_order` pasa las cantidades que ya tenía el pedido | `test_ct_m_*` |
 | S-35 | `store.reserve / release / reserved_quantity` con ciclo; `register_order`, `cancel_order`, `edit_order` | `test_ct_k_*`, `test_ca10_*`, `test_ca15_*`, `test_cc01_*`, `test_ce_*` |
 
 ## Huecos encontrados al implementar (a decidir por el equipo)
 
-No se implementó nada para estos casos; se describe cómo se comporta hoy el código.
+Salvo el primero, no se implementó nada para estos casos; se describe cómo se comporta hoy el código.
 
-1. **Editar un pedido que tiene un producto desactivado.** S-36 dice que el pedido se mantiene, pero si el vecino lo edita (aunque sea para cambiar otra línea), la cotización nueva rechaza el producto con `PRODUCT_NOT_AVAILABLE`. Falta decidir si la línea ya comprada se conserva al editar.
+1. **Editar un pedido que tiene un producto desactivado.** Resuelto con S-39 y CT-11 (criterio CT-M).
 2. **Desactivar un producto en un ciclo sin catálogo publicado.** Como el ciclo usa el catálogo base (S-37), `deactivate_product` responde `PRODUCT_NOT_AVAILABLE`. Falta decidir si el administrador puede retirar un producto del catálogo base.
 3. **Unidad y paso del producto.** La spec no valida la unidad (`kg` o `unidad`) ni que el paso sea mayor que 0. Un producto con otra unidad se publicaría y fallaría al cotizar.
 4. **Proveedor que deja de ser aliado a mitad de semana.** El catálogo ya publicado no cambia; no hay regla sobre qué pasa con sus productos.

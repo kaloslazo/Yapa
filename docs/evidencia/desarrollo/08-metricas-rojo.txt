@@ -1,0 +1,7 @@
+# Iteracion 8 - pruebas ANTES del codigo
+# 2026-09-24 22:57
+ERROR: test_metrics (unittest.loader._FailedTest.test_metrics)
+ImportError: Failed to import test module: test_metrics
+ModuleNotFoundError: No module named 'yapa_sdd.metrics'
+Ran 133 tests in 0.064s
+FAILED (errors=1)

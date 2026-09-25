@@ -19,7 +19,7 @@ REFUND_DAYS = 30  # C-05, S-15
 @dataclass(frozen=True)
 class Movement:
     customer_id: int
-    kind: str  # ABONO_LIQUIDACION, DEVOLUCION_A_SALDO, USO_EN_PEDIDO, DEVOLUCION_SOLICITADA
+    kind: str  # ABONO_LIQUIDACION, DEVOLUCION_A_SALDO, USO_EN_PEDIDO, DEVOLUCION_SOLICITADA, RECLAMO_APROBADO
     amount: Decimal  # positivo = abono, negativo = cargo
     at: datetime | None
     reference: str = ""
