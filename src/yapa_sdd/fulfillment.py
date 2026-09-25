@@ -85,6 +85,9 @@ def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: d
         raise BusinessRuleError("CYCLE_STILL_OPEN", "El ciclo sigue abierto; todavía no se arma.")
     if not is_attended(store, order):  # AR-04
         raise BusinessRuleError("ORDER_NOT_ATTENDED", "Este pedido no se atiende en este ciclo.")
+    closed = (order.cycle, order.zone_id)
+    if closed in store.deliveries or closed in store.failed_deliveries:  # AR-06, S-121
+        raise BusinessRuleError("ZONE_ALREADY_CLOSED", "La zona ya se entregó o falló; lo que falte va por reclamo.")
     photo = check_photo(photo)  # AR-05
     bags = store.bags.setdefault(order_id, [])
     bag = Bag(order_id, len(bags) + 1, photo, by, now)

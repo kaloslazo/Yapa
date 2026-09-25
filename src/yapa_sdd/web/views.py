@@ -340,7 +340,7 @@ def admin_claims(claims, csrf: str | None = None) -> str:
     return page("Reclamos", body, csrf)
 
 
-def buffer_page(stocks, total, limit, products, csrf: str | None = None) -> str:
+def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=()) -> str:
     rows = "".join(f"<tr><td>{escape(s.product_id)}</td><td>{qty(s.quantity)}</td><td>{money(s.value)}</td></tr>"
                    for s in stocks)
     options = "".join(f'<option value="{escape(p.product_id)}">{escape(p.name)}</option>' for p in products)
@@ -351,9 +351,15 @@ def buffer_page(stocks, total, limit, products, csrf: str | None = None) -> str:
             '<label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Guardar en el colchón</button>'
             '</form>'
             f'<form class="card" method="post" action="/admin/colchon/usar">{hidden(csrf)}'
+            '<label>Pedido <input name="pedido" inputmode="numeric"></label>'
             f'<label>Producto <select name="producto">{options}</select></label>'
             '<label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Usar para reponer</button>'
             '</form>')
+    if uses:  # CO-08
+        used = "".join(f"<tr><td>Pedido {u.order_id}</td><td>{escape(u.product_id)}</td><td>{qty(u.quantity)}</td>"
+                       f"<td>{money(u.value)}</td><td>{escape(u.by)}</td></tr>" for u in uses)
+        body += ('<div class="card"><strong>Reposiciones</strong><table><tr><th>Pedido</th><th>Producto</th>'
+                 f'<th>Cantidad</th><th>Valor</th><th>Quién</th></tr>{used}</table></div>')
     return page("Colchón de reposición", body, csrf)
 
 

@@ -16,6 +16,9 @@ from .domain import COMMISSION, BusinessRuleError, PriceTier, Product
 from .store import InMemoryStore
 
 
+UNITS = frozenset({"kg", "unidad"})  # S-123
+
+
 def _check_admin(store: InMemoryStore, by: str) -> None:
     if by not in store.admins:  # CT-01, RN-16
         raise BusinessRuleError("NOT_AUTHORIZED", "Solo el administrador de Yapa puede cambiar el catálogo.")
@@ -39,6 +42,8 @@ def _check_product(store: InMemoryStore, product: Product, published: dict[str, 
     _check_tiers(product)  # CT-03
     if product.step <= 0 or product.max_available <= 0 or product.max_available % product.step != 0:  # CT-04, S-120
         raise BusinessRuleError("INVALID_STOCK", f"{product.name}: la cantidad máxima no es válida.")
+    if product.unit not in UNITS or (product.unit == "unidad" and product.step % 1 != 0):  # CT-12, S-123
+        raise BusinessRuleError("INVALID_UNIT", f"{product.name}: se vende por kg o por unidades enteras.")
     if product.product_id in published:  # CT-05
         raise BusinessRuleError("DUPLICATE_PRODUCT", f"{product.name} aparece más de una vez.")
     if product.category not in COMMISSION:  # CT-06

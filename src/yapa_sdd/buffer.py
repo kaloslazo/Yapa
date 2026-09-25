@@ -6,10 +6,11 @@ Spec: docs/desarrollo/07-armado-entrega-reclamos.md.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from .domain import BusinessRuleError
-from .fulfillment import check_staff
+from .fulfillment import check_staff, is_attended
 from .order_registration import _to_quantity
 from .store import InMemoryStore
 
@@ -24,6 +25,18 @@ class BufferStock:
     quantity: Decimal
     value: Decimal
     step: Decimal
+
+
+@dataclass(frozen=True)
+class BufferUse:
+    """CO-08, S-122."""
+
+    order_id: int
+    product_id: str
+    quantity: Decimal
+    value: Decimal
+    by: str
+    at: datetime
 
 
 def buffer_value(store: InMemoryStore) -> Decimal:
@@ -55,16 +68,30 @@ def add_to_buffer(store: InMemoryStore, cycle: str, product_id: str, quantity, *
     return stock
 
 
-def use_buffer(store: InMemoryStore, product_id: str, quantity, *, by: str) -> BufferStock:
-    """CO-05: reponer un faltante con lo guardado; el valor baja en proporción."""
+def use_buffer(store: InMemoryStore, product_id: str, quantity, *, order_id: int, by: str,
+               now: datetime) -> BufferStock:
+    """CO-05: reponer un faltante de un pedido con lo guardado; el valor baja en proporción."""
     check_staff(store, by)  # CO-01
+    order = store.orders.get(order_id)
+    if order is None:  # CO-06
+        raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
+    if not is_attended(store, order):
+        raise BusinessRuleError("ORDER_NOT_ATTENDED", "Este pedido no se atiende en este ciclo.")
     stock = store.buffer.get(product_id)
     if stock is None:
         raise BusinessRuleError("BUFFER_INSUFFICIENT", f"No hay {product_id} en el colchón.")
     value = _quantity(quantity, stock.step)
     if value > stock.quantity:
         raise BusinessRuleError("BUFFER_INSUFFICIENT", f"Solo hay {stock.quantity} de {product_id} en el colchón.")
+    ordered = sum((line.quantity for line in order.lines if line.product_id == product_id), Decimal("0"))
+    replaced = sum((use.quantity for use in store.buffer_uses
+                    if use.order_id == order_id and use.product_id == product_id), Decimal("0"))
+    if replaced + value > ordered:  # CO-07
+        raise BusinessRuleError("BUFFER_NOT_FOR_ORDER",
+                                f"El pedido {order_id} pidió {ordered} de {product_id} y ya se repusieron {replaced}.")
     remaining = stock.quantity - value
-    stock.value = stock.value * remaining / stock.quantity
+    used_value = stock.value * value / stock.quantity
+    stock.value -= used_value
     stock.quantity = remaining
+    store.buffer_uses.append(BufferUse(order_id, product_id, value, used_value, by, now))  # CO-08
     return stock

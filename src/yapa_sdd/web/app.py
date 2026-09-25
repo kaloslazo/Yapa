@@ -387,7 +387,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
     def colchon(environ, form, session):
         catalog = store.catalog_for(cycle.cycle_id(clock()))
         return views.buffer_page(list(store.buffer.values()), buffer.buffer_value(store), buffer.BUFFER_LIMIT,
-                                 [p for p in catalog.values() if p.active], session.csrf)
+                                 [p for p in catalog.values() if p.active], session.csrf, store.buffer_uses)
 
     def colchon_agregar(environ, form, session):
         stock = buffer.add_to_buffer(store, cycle.cycle_id(clock()), form.get("producto", ""),
@@ -397,7 +397,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
 
     def colchon_usar(environ, form, session):
         stock = buffer.use_buffer(store, form.get("producto", ""), form.get("cantidad", "").strip(),
-                                  by=session.principal)
+                                  order_id=_int(form.get("pedido", ""), "Número de pedido"),
+                                  by=session.principal, now=clock())  # S-122
         return views.simple("Colchón actualizado", f"{stock.product_id}: hay {views.qty(stock.quantity)} guardados.",
                             session.csrf, back="/admin/colchon")
 

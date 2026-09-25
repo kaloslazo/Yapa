@@ -30,6 +30,7 @@ class InMemoryStore:
         self.failed_deliveries: dict = {}  # entrega fallida: (ciclo, zona) -> falla (iteración 16)
         self.claims: dict = {}  # reclamos por artículo
         self.buffer: dict = {}  # colchón de reposición por producto
+        self.buffer_uses: list = []  # S-122: a qué pedido fue cada reposición
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1
