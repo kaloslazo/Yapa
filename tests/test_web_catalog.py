@@ -133,6 +133,11 @@ class WebCatalogTests(unittest.TestCase):
         self.assertTrue(self.store.catalogs[W38]["PAPA-AMARILLA"].active)
         self.assertTrue(self.store.products["AJO"].active)
 
+    # CW-I
+    def test_cw_i_zero_step_rejected(self):
+        self.assertRejected(self.publish(PAPA.replace(",kg,1,", ",kg,0,")), "INVALID_STOCK")
+        self.assertNotIn(W39, self.store.catalogs)
+
     # CW-H
     def test_cw_h_neighbor_forbidden(self):
         neighbor = WebClient(self.app)
