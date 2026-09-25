@@ -167,3 +167,9 @@
 - Error encontrado al revisar: la base SQLite no guardaba fechas sin hora. Se agregó RF-I a la spec, luego la prueba en rojo y después la corrección.
 - Resultado: 266 pruebas en verde.
 
+## Iteración 23 · "Te devolvemos" y el ahorro en Mi cuenta (25/09/2026)
+
+- Spec: `23-mi-ahorro.md` (S-130..S-132). Cada pedido liquidado muestra lo que se pagó, lo que costó, lo que se devolvió y a dónde, y cuánto costaba en el mercado y en el supermercado. Arriba, el total devuelto.
+- Se unificó el cálculo por canasta de la iteración 22 (`_basket_reference`) y se corrigió el empate entre dos precios con la misma fecha: ahora gana el último registrado.
+- Resultado: 272 pruebas en verde.
+

@@ -111,7 +111,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 53 | ¿Un admin de zona puede mudarse a otra zona? | Solo después de pasar el rol a otro vecino (S-110). | | | |
 | 54 | ¿Se puede rechazar o retirar una solicitud para unir zonas? | Sí (S-111). | | | |
 
-## E6. Iteraciones 19 a 22 (conciliación, catálogo desde la web, armado, colchón y precios de referencia)
+## E6. Iteraciones 19 a 23 (conciliación, catálogo desde la web, armado, colchón, precios de referencia y Mi cuenta)
 
 | # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
 |---|---|---|---|---|---|
@@ -124,6 +124,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 61 | Si un proveedor deja de ser aliado a mitad de semana, ¿qué pasa con sus productos? | Se mantienen esa semana (se respeta el precio que vio el vecino). El admin puede desactivarlos. Desde la semana siguiente ya no se publican (S-124). | | | |
 | 62 | ¿Mostramos al vecino el precio del mercado y del supermercado? | Sí, con fuente y fecha, por 14 días, aunque Yapa salga más caro (S-125..S-127). | | | |
 | 63 | ¿Qué ahorro mínimo buscamos frente a la referencia? | 15 %, igual que el kit de campo (S-128). Con precios de ejemplo, la papa amarilla no llega. | | | |
+| 64 | ¿Le decimos al vecino si el mercado le salía más barato? | Sí, en su cuenta, igual que en el catálogo (S-131). Es lo transparente, aunque pueda desanimar. | | | |
 
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 

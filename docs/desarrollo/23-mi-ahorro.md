@@ -37,3 +37,17 @@ Escenario de la iteración 22: 8 pedidos en Jesús María con la canasta de prue
 - **MA-D · Más caro que el mercado.** Si la papa blanca del mercado costara S/ 1.00 en vez de S/ 1.50, la canasta costaría S/ 57.50 allá y el vecino ve "pagaste S/ 0.14 más". → S-131
 - **MA-E · Pedido no atendido.** Un vecino de Lince cuyo grupo no llegó al mínimo ve "no se atendió" y "te devolvimos S/ 61.00", y el total devuelto es S/ 61.00. → S-130, MA-03
 - **MA-F · Mismos números.** `reference_savings` de W38 sigue dando 43.9 % y 7.8 % (iteración 22). → MA-04
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| MA-01, S-131 | `reference.order_comparison`, `reference._basket_reference` | `test_my_savings.test_ma_a_*`, `test_ma_b_*`, `test_ma_d_*` |
+| MA-02, S-130 | web `/cuenta` → `views.order_detail`, `views.account` | `test_ma_c_*`, `test_ma_d_*`, `test_ma_e_*` |
+| MA-03, S-132 | web `/cuenta` (suma de lo devuelto) | `test_ma_c_*`, `test_ma_e_*` |
+| MA-04 | `reference.reference_savings` usa `_basket_reference` | `test_ma_f_*`, `test_reference.test_rf_e_*` |
+
+## Notas
+
+- Al escribir MA-D apareció un empate: dos precios del mismo producto con la misma fecha. La métrica tomaba el primero y el catálogo el último. Ahora los dos toman el **último registrado**, igual que dice S-125.
+- Así se ve un pedido liquidado en "Mi cuenta", con los precios de ejemplo: "Pagaste S/ 61.00 · costó S/ 57.64 · te devolvimos S/ 3.36 a tu saldo / En el mercado de barrio costaba S/ 62.50: ahorraste S/ 4.86 / En el supermercado costaba S/ 102.75: ahorraste S/ 45.11".
