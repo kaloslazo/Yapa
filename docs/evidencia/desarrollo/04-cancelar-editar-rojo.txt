@@ -1,0 +1,8 @@
+# Iteracion 4 - pruebas ANTES del codigo
+# 2026-09-24 22:26
+
+
+----------------------------------------------------------------------
+Ran 62 tests in 0.023s
+
+FAILED (errors=1)
