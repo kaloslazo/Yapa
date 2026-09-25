@@ -15,7 +15,7 @@ from decimal import Decimal
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
-from .. import auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
+from .. import audit, auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
 from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
@@ -213,6 +213,9 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         zones.set_location(store, session.principal, _float(form.get("lat"), "Latitud"),
                            _float(form.get("lon"), "Longitud"))  # HR-01
         return views.simple("Ubicación guardada", "Ya puedes crear una zona o unirte a una cercana.", session.csrf)
+
+    def conciliacion(environ, form, session):
+        return views.balance_page(audit.money_balance(store), session.csrf)  # AU-03
 
     def devoluciones(environ, form, session):
         pending = [r for r in store.refunds.values() if r.status == "PENDIENTE"]
@@ -420,6 +423,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/admin/colchon/usar": {"POST": (colchon_usar, "admin")},
         "/admin/metricas": {"GET": (metricas, "admin")},
         "/admin/devoluciones": {"GET": (devoluciones, "admin")},
+        "/admin/conciliacion": {"GET": (conciliacion, "admin")},
         "/admin/devoluciones/pagar": {"POST": (devolucion_pagar, "admin")},
         "/admin/entrega-fallida": {"POST": (entrega_fallida, "admin")},
     }

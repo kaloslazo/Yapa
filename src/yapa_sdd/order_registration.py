@@ -219,6 +219,10 @@ def verify_payment(store: InMemoryStore, order_id: int, *, now: datetime) -> Ord
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
     if not cycle.is_open(now) or cycle.cycle_id(now) != order.cycle:
         raise BusinessRuleError("CYCLE_CLOSED", "El ciclo ya cerró; el pago no puede verificarse.")
+    from .audit import CashEntry  # evita importación circular
+
     for payment in order.payments:
+        if payment.status != "VERIFICADO" and payment.method != "SALDO":  # AU-01: solo la primera vez
+            store.cash_in.append(CashEntry(order.order_id, payment.method, payment.amount, payment.operation_code, now))
         payment.status = "VERIFICADO"
     return order

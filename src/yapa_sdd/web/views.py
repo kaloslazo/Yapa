@@ -158,7 +158,7 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
     )
     body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
             ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
-            ' · <a href="/admin/devoluciones">Devoluciones</a></div>'
+            ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a></div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
@@ -396,3 +396,15 @@ def refunds_page(pending, csrf: str | None = None) -> str:
     body = ('<div class="card"><table><tr><th>N.º</th><th>Cliente</th><th>Monto</th><th>Motivo</th><th>Vence</th>'
             f'<th></th></tr>{rows}</table></div>')
     return page("Devoluciones pendientes", body, csrf)
+
+
+def balance_page(balance, csrf: str | None = None) -> str:
+    """AU-03: recibido = en curso + retenido + deuda + devoluciones pagadas."""
+    ok = balance.difference == 0
+    state = ('<div class="card ok"><strong>Cuadra</strong></div>' if ok else
+             '<div class="card error"><strong>No cuadra: revisar antes de seguir operando</strong></div>')
+    rows = "".join(f"<tr><td>{label}</td><td>{money(value)}</td></tr>" for label, value in (
+        ("Recibido por Yape/Plin", balance.received), ("En curso (pedidos sin liquidar)", balance.in_flight),
+        ("Retenido por Yapa", balance.kept), ("Deuda con clientes (saldos y devoluciones pendientes)", balance.owed),
+        ("Devoluciones ya pagadas", balance.refunds_paid), ("Diferencia", balance.difference)))
+    return page("Conciliación del dinero", state + f'<div class="card"><table>{rows}</table></div>', csrf)
