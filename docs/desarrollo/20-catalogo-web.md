@@ -54,3 +54,20 @@ Hora: sábado 19/09/2026 (ciclo 2026-W38). El siguiente ciclo es 2026-W39, que a
 - **CW-G · Desactivar en un ciclo con catálogo base.** El miércoles 16/09 (W38 usa el base), el admin desactiva el ajo → W38 tiene su propio catálogo con el ajo inactivo y los demás productos iguales; el catálogo base sigue con el ajo activo. → S-118
 - **CW-I · Paso 0.** Una lista con la papa amarilla con paso `0` → 422 `INVALID_STOCK`, sin publicar nada. → S-120, CT-04
 - **CW-H · Solo el admin.** Un vecino que abre `/admin/catalogo` recibe 403. → CW-05
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| CW-01, S-117 | web `GET /admin/catalogo` → `catalog.export_catalog`, `views.catalog_admin` | `test_web_catalog.test_cw_a_*`, `test_cw01_*`, `test_cw_b_page_*` |
+| CW-02, S-116 | `catalog.parse_catalog` | `test_cw_c_*`, `test_cw02_*` |
+| CW-03 | web `POST /admin/catalogo` → `catalog.publish_catalog` | `test_cw_b_publish_*`, `test_cw_d_*`, `test_cw_e_*` |
+| CW-04, S-118 | web `POST /admin/catalogo/desactivar` → `catalog.deactivate_product` (copia del base) | `test_cw_f_*`, `test_cw04_*`, `test_cw_g_*` |
+| CW-05 | control de rol de la web (AC-05) | `test_cw_h_*` |
+| S-119 | `seed.PILOT_PRODUCTS` con proveedor por categoría | `test_cw_a_*` |
+| S-120 | `catalog._check_product` (CT-04) | `test_cw_i_*` |
+
+## Notas
+
+- Un nombre de producto no puede llevar comas, porque la coma separa las columnas (S-116). Si el equipo lo necesita, se puede cambiar a punto y coma.
+- Desactivar un producto de un ciclo ya liquidado también guarda una copia, pero no cambia la liquidación, que ya está calculada.

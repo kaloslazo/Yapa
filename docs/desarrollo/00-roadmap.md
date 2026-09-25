@@ -34,6 +34,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 17 | **Pérdida de una zona fallida en el margen** | hueco de la iteración 16 | completa, ver `17-perdida-zona-fallida.md` |
 | 18 | **Cierre de huecos de robustez** (ubicación del vecino, coordenadas, solicitudes de unión, montos, ciclo válido, devoluciones y entrega fallida desde la web) | revisiones de las iteraciones 12 y 16 | completa, ver `18-cierre-huecos.md` |
 | 19 | **Conciliación del dinero y semana completa por la web** (registro de caja, `/admin/conciliacion`) | confianza en el saldo (C-05), integración de todas las iteraciones | completa, ver `19-conciliacion-punta-a-punta.md` |
+| 20 | **Catálogo semanal desde la web** (pegar la lista del proveedor, desactivar productos) | operación semanal (C-12), iteración 6 | completa, ver `20-catalogo-web.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

@@ -146,3 +146,10 @@
 - Se corrigió el escenario de la prueba, no el código. El vecino pedía devolver S/ 10, pero solo tenía S/ 5.38, y el sistema lo rechazó como debía. Primero se cambió la spec y después la prueba.
 - Resultado: 230 pruebas en verde.
 
+## Iteración 20 · Catálogo semanal desde la web (24/09/2026)
+
+- Spec: `20-catalogo-web.md` (S-116..S-120). El admin pega la lista del proveedor, separada por comas, en `/admin/catalogo`. La pantalla abre con el ciclo siguiente y la lista actual ya cargada, y permite desactivar un producto.
+- Cambio de regla (S-118): antes no se podía desactivar un producto en una semana que usaba el catálogo base. Ahora se guarda una copia para esa semana.
+- Error encontrado al revisar: un paso de 0 dividía por cero. Se agregó S-120 a la spec, luego la prueba CW-I en rojo y después la corrección.
+- Resultado: 244 pruebas en verde.
+
