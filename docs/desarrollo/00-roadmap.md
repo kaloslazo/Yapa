@@ -1,0 +1,29 @@
+# Desarrollo de Yapa después del Lab 4
+
+Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `carlos/desarrollo`.
+
+## Método (el mismo del Lab 4)
+
+Cada iteración sigue el orden SDD y se commitea en ese orden:
+
+1. `docs:` especificación de la iteración (`docs/desarrollo/NN-*.md`): requisito, reglas, errores, criterios de aceptación y supuestos nuevos.
+2. `test:` pruebas de aceptación antes del código. Se guarda la ejecución en rojo.
+3. `feat:` implementación mínima que cumple la spec.
+4. `docs:` trazabilidad y registro de la iteración.
+
+Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10-clarificaciones-v2.md`. Lo nuevo que no esté decidido por el equipo entra como **supuesto a validar** (S-13 en adelante).
+
+## Iteraciones planificadas
+
+| # | Iteración | Origen (decisión del equipo) | Estado |
+|---|---|---|---|
+| 3 | **Billetera de saldo**: el saldo de la liquidación se guarda, se usa en la siguiente compra (combinado con Yape o Plin), no vence y se puede pedir de vuelta al medio de pago (hasta 30 días) | C-05, C-02 | ver `03-billetera-saldo.md` |
+| 4 | **Cancelar y editar el pedido antes del cierre**: devolución completa si todavía no se compró | Carlos 24/09 (cancelación con devolución antes de la compra) | pendiente |
+| 5 | **Zonas de vecinos**: crear zona con punto de recepción, radio máximo, unir zonas cercanas con dos admins, transferir el rol de admin | C-07 | pendiente |
+| 6 | **Catálogo semanal del proveedor aliado (CUN-01)**: lista con tramos, stock máximo y marca única; solo el administrador publica | C-11, C-12, RN-16 | pendiente |
+| 7 | **Armado, entrega e incidencias por artículo**: foto por bolsa, foto de entrega en portería, reclamo por artículo en 24 h, colchón de reposición con tope | C-10, decisiones del 24/09 | pendiente |
+| 8 | **Métricas del piloto**: recompra en la semana 4, margen por pedido, ahorro entregado | lecciones de los antecedentes | pendiente |
+
+## Registro
+
+Ver `docs/desarrollo/99-registro.md`.
