@@ -18,6 +18,9 @@ class InMemoryStore:
         self.movements: list = []  # billetera (iteración 3)
         self.refunds: dict = {}
         self.settled_cycles: set[str] = set()
+        self.merge_requests: dict = {}  # zonas (iteración 5)
+        self._next_zone_number = 1
+        self._next_merge_id = 1
         self._next_order_id = 1
         self._next_refund_id = 1
 
@@ -49,6 +52,16 @@ class InMemoryStore:
 
     def orders_in_cycle(self, cycle: str) -> list[Order]:
         return [order for order in self.orders.values() if order.cycle == cycle]
+
+    def next_zone_id(self) -> str:
+        zone_id = f"Z-{self._next_zone_number:03d}"
+        self._next_zone_number += 1
+        return zone_id
+
+    def next_merge_id(self) -> int:
+        merge_id = self._next_merge_id
+        self._next_merge_id += 1
+        return merge_id
 
     def next_refund_id(self) -> int:
         refund_id = self._next_refund_id

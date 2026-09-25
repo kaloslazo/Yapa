@@ -62,3 +62,16 @@ Coordenadas de prueba alrededor de un punto de Lince (lat −12.0850, lon −77.
 - **ZA-12 · Salir del grupo.** El admin de A separa su zona → A vuelve a su propio grupo. → ZN-06
 - **ZA-13 · Transferir admin.** El admin pasa el rol a un vecino de su zona → el nuevo admin puede activar o unir. Pasarlo a alguien de otra zona → `NOT_ZONE_MEMBER`. → ZN-07
 - **ZA-14 · Unir fuera de ciclo.** Pedir unión el jueves → `CYCLE_CLOSED`. → ZN-04, S-31
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/zones.py`) | Prueba (`tests/test_zones.py`) |
+|---|---|---|
+| S-27 | `distance_m` | `test_distance_is_about_100m` |
+| ZN-01 | `create_zone` | `test_za01_*`, `test_za02_*`, `test_za03_*` |
+| ZN-02 | `activate_zone` (+ RP-02 en `order_registration._zone`) | `test_za04_*`, `test_za05_*` |
+| ZN-03, S-30 | `join_zone`, `_check_can_move` | `test_za06_*`, `test_za07_*` |
+| ZN-04, ZN-05, S-26, S-31 | `request_merge`, `accept_merge`, `_check_merge`, `_check_open` | `test_za08_*`..`test_za11_*`, `test_za14_*` |
+| ZN-06 | `leave_group` | `test_za12_*` |
+| ZN-07 | `transfer_admin` | `test_za13_*` |
+| ZN-08 | ninguna función de `zones.py` importa `wallet` ni toca pagos | revisión de código |

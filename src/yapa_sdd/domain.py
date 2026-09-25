@@ -64,7 +64,7 @@ class Product:
         return max(reached, key=lambda tier: tier.min_quantity)
 
 
-@dataclass(frozen=True)
+@dataclass
 class Zone:
     zone_id: str
     name: str
@@ -72,6 +72,15 @@ class Zone:
     group_id: str
     stop_cost: Decimal
     reception_accepted: bool = True
+    lat: float | None = None
+    lon: float | None = None
+    admin_id: int | None = None
+    reception_kind: str = ""
+    reception_contact: str = ""
+
+    @property
+    def status(self) -> str:
+        return "ACTIVA" if self.reception_accepted else "PENDIENTE_RECEPCION"
 
 
 @dataclass(frozen=True)
@@ -80,6 +89,8 @@ class Customer:
     name: str
     zone_id: str
     suspended: bool = False
+    lat: float | None = None
+    lon: float | None = None
 
 
 @dataclass(frozen=True)
