@@ -182,7 +182,17 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         customer = store.customers[customer_id]
         orders = [o for o in store.orders.values() if o.customer_id == customer_id]
         refunds = [r for r in store.refunds.values() if r.customer_id == customer_id and r.status == "PENDIENTE"]
-        return views.account(customer, wallet.balance(store, customer_id), orders, refunds, session.csrf)
+        details, returned = {}, Decimal("0")
+        for order in orders:  # S-130..S-132
+            result = store.settlements.get(order.cycle)
+            settled = result.orders.get(order.order_id) if result else None
+            if settled is None:
+                continue
+            details[order.order_id] = (settled, reference.order_comparison(store, order.order_id))
+            if settled.status in ("LIQUIDADO", "NO_ATENDIDO", "NO_ENTREGADO"):
+                returned += settled.refund_amount + settled.returned_to_balance
+        return views.account(customer, wallet.balance(store, customer_id), orders, refunds, session.csrf,
+                             details, returned)
 
     def cancelar(environ, form, session):
         order = cancel_order(store, _int(form.get("pedido", ""), "Número de pedido"),

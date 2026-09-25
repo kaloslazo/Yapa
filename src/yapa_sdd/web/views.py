@@ -123,14 +123,40 @@ def registered(order, csrf: str | None = None) -> str:
     return page("Pedido registrado", body, csrf)
 
 
-def account(customer, balance, orders, refunds, csrf: str | None = None) -> str:
+def order_detail(settled, comparison) -> str:
+    """S-130, S-131: qué costó el pedido, qué se devolvió y cuánto costaba en otro lado."""
+    returned = settled.refund_amount + settled.returned_to_balance
+    where = {"SALDO": " a tu saldo", "MEDIO_DE_PAGO": " a tu Yape/Plin"}.get(settled.refund_destination, "")
+    if settled.status == "LIQUIDADO":
+        text = [f"Pagaste {money(settled.paid)} · costó {money(settled.final_amount)} · "
+                f"te devolvimos {money(settled.refund_amount)}{where}"]
+    elif settled.status == "NO_ATENDIDO":
+        text = [f"Tu grupo no llegó al mínimo y no se atendió · te devolvimos {money(returned)}"]
+    elif settled.status == "NO_ENTREGADO":
+        text = [f"No se pudo entregar · te devolvimos {money(returned)}"]
+    else:
+        return ""
+    for kind, label in (("MERCADO", "En el mercado de barrio"), ("SUPERMERCADO", "En el supermercado")):
+        if kind in comparison:
+            c = comparison[kind]
+            result = f"ahorraste {money(c.savings)}" if c.savings >= 0 else f"pagaste {money(-c.savings)} más"
+            text.append(f"{label} costaba {money(c.reference_total)}: {result}")
+    return "<br>".join(escape(line) for line in text)
+
+
+def account(customer, balance, orders, refunds, csrf: str | None = None, details=None, returned=None) -> str:
+    details = details or {}
     rows = "".join(
         f"<tr><td>Pedido {o.order_id}</td><td>{escape(o.cycle)}</td><td>{escape(o.status)}</td>"
-        f"<td>{money(o.total)}</td></tr>" for o in orders
+        f"<td>{money(o.total)}</td></tr>"
+        + (f'<tr><td colspan="4" class="muted">{order_detail(*details[o.order_id])}</td></tr>'
+           if o.order_id in details else "")
+        for o in orders
     )
+    total_back = f"<p>Con Yapa ya te devolvimos {money(returned)}</p>" if returned else ""  # S-132
     pending = "".join(f"<li>{money(r.amount)} · {escape(r.reason)} · {escape(r.status)}</li>" for r in refunds)
     body = (f'<div class="card"><strong>{escape(customer.name)}</strong> · zona {escape(customer.zone_id)}'
-            f'<p><strong>Saldo: {money(balance)}</strong></p>'
+            f'<p><strong>Saldo: {money(balance)}</strong></p>{total_back}'
             '<p><a href="/zona">Mi zona</a> · <a href="/reclamos">Reclamos</a></p></div>'
             '<form class="card" method="post" action="/cuenta/devolucion">' + hidden(csrf) +
             '<label>Devolverme de mi saldo a mi Yape/Plin (S/) <input name="monto" inputmode="decimal" '

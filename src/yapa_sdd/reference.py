@@ -6,7 +6,7 @@ Spec: docs/desarrollo/22-precio-referencia.md (S-125..S-129).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 from . import cycle as cycles
@@ -77,12 +77,47 @@ def current_references(store: InMemoryStore, product_id: str, day: date) -> dict
 
 
 def _near_close(store: InMemoryStore, product_id: str, kind: str, day: date) -> ReferencePrice | None:
-    """S-129: el precio de ese tipo más cercano al cierre, a 14 días o menos, antes o después."""
-    candidates = [r for r in store.reference_prices
-                  if r.product_id == product_id and r.kind == kind and _is_current(r, day)]
-    if not candidates:
+    """S-129: el precio de ese tipo más cercano al cierre, a 14 días o menos, antes o después.
+    Con la misma distancia gana el de fecha más nueva y, con la misma fecha, el último registrado."""
+    best, best_key = None, None
+    for reference in store.reference_prices:
+        if reference.product_id != product_id or reference.kind != kind or not _is_current(reference, day):
+            continue
+        key = (abs((day - reference.observed_on).days), -reference.observed_on.toordinal())
+        if best_key is None or key <= best_key:
+            best, best_key = reference, key
+    return best
+
+
+def _basket_reference(store: InMemoryStore, settled, kind: str, day: date) -> Decimal | None:
+    """S-129: lo que costaba allá lo recibido; None si algún producto no tiene precio de ese tipo."""
+    lines = [line for line in settled.lines if line.delivered > 0]
+    references = [_near_close(store, line.product_id, kind, day) for line in lines]
+    if settled.status != "LIQUIDADO" or not lines or None in references:
         return None
-    return min(candidates, key=lambda r: (abs((day - r.observed_on).days), -r.observed_on.toordinal()))
+    return sum((ref.price * line.delivered for ref, line in zip(references, lines)), ZERO)
+
+
+@dataclass(frozen=True)
+class OrderComparison:
+    reference_total: Decimal
+    savings: Decimal
+
+
+def order_comparison(store: InMemoryStore, order_id: int) -> dict[str, OrderComparison]:
+    """MA-01: por tipo, solo si el pedido está liquidado y su canasta es comparable."""
+    order = store.orders[order_id]
+    result = store.settlements.get(order.cycle)
+    settled = result.orders.get(order_id) if result else None
+    if settled is None:
+        return {}
+    day = cycles.closes_at(order.cycle).date()
+    comparison = {}
+    for kind in KINDS:
+        total = _basket_reference(store, settled, kind, day)
+        if total is not None:
+            comparison[kind] = OrderComparison(total, total - settled.final_amount)
+    return comparison
 
 
 def savings_percent(yapa_price: Decimal, reference_price: Decimal) -> Decimal:
@@ -99,14 +134,11 @@ def reference_savings(store: InMemoryStore, cycle: str) -> dict[str, ReferenceSa
     for kind in KINDS:
         baskets, reference_total, yapa_total = 0, ZERO, ZERO
         for settled in result.orders.values():
-            if settled.status != "LIQUIDADO":
-                continue
-            lines = [line for line in settled.lines if line.delivered > 0]
-            references = [_near_close(store, line.product_id, kind, close_day) for line in lines]
-            if not lines or None in references:
+            total = _basket_reference(store, settled, kind, close_day)  # MA-04: la misma cuenta por canasta
+            if total is None:
                 continue
             baskets += 1
-            reference_total += sum((ref.price * line.delivered for ref, line in zip(references, lines)), ZERO)
+            reference_total += total
             yapa_total += settled.final_amount
         savings = reference_total - yapa_total
         percent = savings / reference_total * 100 if baskets else None
