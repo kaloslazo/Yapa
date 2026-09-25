@@ -28,3 +28,10 @@ def is_open(moment: datetime) -> bool:
     if weekday in (0, 1):
         return True
     return weekday == 2 and local.time() < CLOSE_TIME
+
+
+def opens_at(cycle: str) -> datetime:
+    """Lunes 00:00 (hora de Lima) de la semana del ciclo, por ejemplo "2026-W39"."""
+    year, week = cycle.split("-W")
+    monday = datetime.fromisocalendar(int(year), int(week), 1)
+    return datetime.combine(monday.date(), time(0, 0), LIMA)

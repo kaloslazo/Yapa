@@ -48,6 +48,7 @@ class Product:
     max_available: Decimal
     tiers: tuple[PriceTier, ...]
     active: bool = True
+    supplier_id: str | None = None
 
     def price_with_commission(self, base_price: Decimal) -> Decimal:
         return base_price * (1 + COMMISSION[self.category])
@@ -62,6 +63,13 @@ class Product:
         if not reached:
             return self.tiers[0]
         return max(reached, key=lambda tier: tier.min_quantity)
+
+
+@dataclass(frozen=True)
+class Supplier:
+    supplier_id: str
+    name: str
+    allied: bool = True
 
 
 @dataclass

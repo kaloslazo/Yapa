@@ -81,9 +81,9 @@ def _merge_lines(lines: Iterable) -> list[tuple[str, Decimal]]:
     return list(merged.items())
 
 
-def _product(store: InMemoryStore, product_id: str) -> Product:
+def _product(catalog: dict[str, Product], product_id: str) -> Product:
     """RP-06: el producto está en el catálogo del ciclo y activo."""
-    product = store.products.get(product_id)
+    product = catalog.get(product_id)
     if product is None or not product.active:
         raise BusinessRuleError("PRODUCT_NOT_AVAILABLE", f"{product_id} no está disponible este ciclo.")
     return product
@@ -99,19 +99,23 @@ def _check_quantity(product: Product, quantity: Decimal) -> None:
         )
 
 
-def _check_stock(store: InMemoryStore, product: Product, quantity: Decimal) -> None:
-    """RP-08: nunca vender más de lo que el proveedor declaró."""
-    if store.reserved_quantity(product.product_id) + quantity > product.max_available:
+def _check_stock(store: InMemoryStore, product: Product, quantity: Decimal, cycle_id: str | None) -> None:
+    """RP-08: nunca vender más de lo que el proveedor declaró (por ciclo, S-35)."""
+    if store.reserved_quantity(product.product_id, cycle_id) + quantity > product.max_available:
         raise BusinessRuleError("PRODUCT_SOLD_OUT", f"{product.name} está agotado este ciclo.")
 
 
-def quote_order(store: InMemoryStore, lines: Iterable) -> Quote:
-    """Cotización: RP-05..RP-11 sin reservar stock ni crear el pedido."""
+def quote_order(store: InMemoryStore, lines: Iterable, cycle: str | None = None) -> Quote:
+    """Cotización: RP-05..RP-11 sin reservar stock ni crear el pedido.
+
+    CT-10: usa el catálogo del ciclo; sin ciclo o sin catálogo publicado, el base (S-37).
+    """
+    catalog = store.catalog_for(cycle)
     order_lines = []
     for product_id, quantity in _merge_lines(lines):
-        product = _product(store, product_id)
+        product = _product(catalog, product_id)
         _check_quantity(product, quantity)
-        _check_stock(store, product, quantity)
+        _check_stock(store, product, quantity, cycle)
         order_lines.append(OrderLine(product_id, quantity, product.max_unit_price()))  # RP-09
 
     subtotal = sum((line.max_total for line in order_lines), Decimal("0"))
@@ -170,7 +174,7 @@ def register_order(
     if store.find_order(customer_id, cycle_id):  # RP-04
         raise BusinessRuleError("ORDER_ALREADY_EXISTS", "Ya tienes un pedido en este ciclo.")
 
-    quote = quote_order(store, lines)
+    quote = quote_order(store, lines, cycle_id)
     used = _check_balance_use(store, customer_id, use_balance, quote.total)
     external_due = quote.total - used  # BS-05
     payments = []
@@ -183,7 +187,7 @@ def register_order(
         raise BusinessRuleError("PAYMENT_AMOUNT_MISMATCH", "El saldo ya cubre el total; no hay que yapear.")
 
     for line in quote.lines:
-        store.reserve(line.product_id, line.quantity)
+        store.reserve(line.product_id, line.quantity, cycle_id)
     for payment in payments:
         if payment.operation_code:
             store.used_codes.add(payment.operation_code)

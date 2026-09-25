@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from .domain import Customer, Order, Product, Zone
+from .domain import Customer, Order, Product, Supplier, Zone
 
 
 class InMemoryStore:
@@ -13,7 +13,10 @@ class InMemoryStore:
         self.zones: dict[str, Zone] = {}
         self.products: dict[str, Product] = {}
         self.orders: dict[int, Order] = {}
-        self.reserved: dict[str, Decimal] = {}
+        self.reserved: dict[tuple[str, str], Decimal] = {}  # (ciclo, producto), S-35
+        self.catalogs: dict[str, dict[str, Product]] = {}  # catálogo por ciclo (iteración 6)
+        self.admins: set[str] = set()
+        self.suppliers: dict[str, Supplier] = {}
         self.used_codes: set[str] = set()
         self.movements: list = []  # billetera (iteración 3)
         self.refunds: dict = {}
@@ -33,14 +36,21 @@ class InMemoryStore:
     def add_product(self, product: Product) -> None:
         self.products[product.product_id] = product
 
-    def reserved_quantity(self, product_id: str) -> Decimal:
-        return self.reserved.get(product_id, Decimal("0"))
+    def add_supplier(self, supplier: Supplier) -> None:
+        self.suppliers[supplier.supplier_id] = supplier
 
-    def reserve(self, product_id: str, quantity: Decimal) -> None:
-        self.reserved[product_id] = self.reserved_quantity(product_id) + quantity
+    def catalog_for(self, cycle: str | None) -> dict[str, Product]:
+        """CT-10: catálogo publicado del ciclo; si no hay, el catálogo base (S-37)."""
+        return self.catalogs.get(cycle, self.products)
 
-    def release(self, product_id: str, quantity: Decimal) -> None:
-        self.reserved[product_id] = self.reserved_quantity(product_id) - quantity
+    def reserved_quantity(self, product_id: str, cycle: str | None) -> Decimal:
+        return self.reserved.get((cycle, product_id), Decimal("0"))
+
+    def reserve(self, product_id: str, quantity: Decimal, cycle: str) -> None:
+        self.reserved[(cycle, product_id)] = self.reserved_quantity(product_id, cycle) + quantity
+
+    def release(self, product_id: str, quantity: Decimal, cycle: str) -> None:
+        self.reserved[(cycle, product_id)] = self.reserved_quantity(product_id, cycle) - quantity
 
     def find_order(self, customer_id: int, cycle: str) -> Order | None:
         """Pedido activo del cliente en el ciclo (CE-06: los cancelados no cuentan)."""

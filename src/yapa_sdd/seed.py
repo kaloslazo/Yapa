@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal as D
 
-from .domain import Customer, PriceTier, Product, Zone
+from .domain import Customer, PriceTier, Product, Supplier, Zone
 from .store import InMemoryStore
 
 
@@ -62,8 +62,20 @@ PILOT_CUSTOMERS = [
 ]
 
 
+PILOT_SUPPLIERS = [
+    Supplier("SUP-FRESCOS", "Proveedor aliado de frescos"),
+    Supplier("SUP-LIMPIEZA", "Proveedor aliado de limpieza"),
+    Supplier("SUP-OTRO", "Proveedor sin acuerdo", allied=False),
+]
+
+PILOT_ADMINS = {"admin-yapa"}  # RN-16: quien publica el catálogo
+
+
 def pilot_store() -> InMemoryStore:
     store = InMemoryStore()
+    for supplier in PILOT_SUPPLIERS:
+        store.add_supplier(supplier)
+    store.admins.update(PILOT_ADMINS)
     for product in PILOT_PRODUCTS:
         store.add_product(product)
     for zone in PILOT_ZONES:

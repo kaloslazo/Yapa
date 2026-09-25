@@ -83,7 +83,7 @@ def ciclo(path: str) -> None:
     print(f"LIQUIDACION DEL CICLO {result.cycle}")
     print("\nPrecio final por producto (tramo alcanzado entre todos):")
     for summary in result.products.values():
-        product = store.products[summary.product_id]
+        product = store.catalog_for(result.cycle)[summary.product_id]
         print(f"  {summary.product_id:<26} total {summary.total_quantity:>6} {product.unit:<6}"
               f" tramo desde {summary.tier_min_quantity:>4}  max S/ {product.max_unit_price():.4f}"
               f" -> final S/ {summary.final_unit_price:.4f}")

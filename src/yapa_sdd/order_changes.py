@@ -36,7 +36,7 @@ def cancel_order(store: InMemoryStore, order_id: int, *, customer_id: int, now: 
         raise BusinessRuleError("INVALID_REFUND_DESTINATION", "Elige devolver a tu medio de pago o a tu saldo.")
 
     for line in order.lines:  # CE-04
-        store.release(line.product_id, line.quantity)
+        store.release(line.product_id, line.quantity, order.cycle)
     reference = f"cancelación pedido {order.order_id}"
     for payment in order.payments:  # CE-05
         if payment.method == "SALDO":
@@ -78,9 +78,9 @@ def edit_order(store: InMemoryStore, order_id: int, *, customer_id: int, lines: 
 
     # CE-08: lo que este pedido ya reservó cuenta como disponible mientras se cotiza
     for line in order.lines:
-        store.release(line.product_id, line.quantity)
+        store.release(line.product_id, line.quantity, order.cycle)
     try:
-        quote = quote_order(store, lines)
+        quote = quote_order(store, lines, order.cycle)
         difference = quote.total - order.total
         new_payments = []
         if difference > 0:  # CE-10, S-23
@@ -97,11 +97,11 @@ def edit_order(store: InMemoryStore, order_id: int, *, customer_id: int, lines: 
             raise BusinessRuleError("PAYMENT_AMOUNT_MISMATCH", "El pedido no subió; no hay nada que pagar.")
     except BusinessRuleError:
         for line in order.lines:  # CE-11: todo vuelve como estaba
-            store.reserve(line.product_id, line.quantity)
+            store.reserve(line.product_id, line.quantity, order.cycle)
         raise
 
     for line in quote.lines:
-        store.reserve(line.product_id, line.quantity)
+        store.reserve(line.product_id, line.quantity, order.cycle)
     reference = f"edición pedido {order.order_id}"
     if difference < 0:  # CE-09, CE-12
         confirmed = _reduce_payments(order, -difference)

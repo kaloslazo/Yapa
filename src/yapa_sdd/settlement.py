@@ -116,9 +116,10 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
         for line in order.lines:
             totals[line.product_id] = totals.get(line.product_id, ZERO) + line.quantity
 
+    catalog = store.catalog_for(cycle)  # CT-10
     products: dict[str, ProductSummary] = {}
     for product_id, total_quantity in totals.items():
-        product = store.products[product_id]
+        product = catalog[product_id]
         tier = product.tier_for(total_quantity)
         price = min(product.price_with_commission(tier.base_price), product.max_unit_price())
         products[product_id] = ProductSummary(product_id, total_quantity, tier.min_quantity, price)
