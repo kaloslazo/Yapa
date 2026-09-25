@@ -44,3 +44,8 @@ Huecos reportados en `12-web-operacion.md` (1 a 7 y 9) y el que apareció al int
 - **HA-08 · Pagar devolución desde la web.** El admin ve la devolución pendiente, registra el código `YP-1234` y queda `PAGADO`. → HR-08
 - **HA-09 · Falla desde la web.** El admin registra `NADIE_RECIBE` con foto para una zona armada → queda registrada. → HR-09
 - **HA-10 · Liquidar desde la web exige cerrar zonas.** Liquidar con una zona atendida sin entregar → 422 con `ZONES_PENDING`. Después de armar y entregar por la web → los pedidos quedan `LIQUIDADO`. → HR-10
+
+## Cambios en criterios anteriores
+
+- **OA-03 y OA-04** (`12-web-operacion.md`) usaban la zona piloto Z-LINCE-01 como ejemplo de "zona sin ubicación" (S-75). Con HR-07 las zonas del piloto tienen coordenadas. **La regla S-75 no cambia**: las pruebas ahora crean una zona antigua sin ubicación (`Z-SIN-UBICACION`) para verificarla.
+- **WA-10** (`09-interfaz-web.md`): liquidar desde la web sin entregar ahora da `ZONES_PENDING` (HR-10). El camino completo está en HA-10.

@@ -8,7 +8,7 @@ from web_client import WebClient, fast_hashing
 from yapa_sdd import wallet
 from yapa_sdd.auth import set_admin_password, set_pin
 from yapa_sdd.cycle import LIMA
-from yapa_sdd.domain import Customer
+from yapa_sdd.domain import Zone, Customer
 from yapa_sdd.fulfillment import deliver_zone, pack_bag
 from yapa_sdd.settlement import settle_cycle
 from yapa_sdd.web.app import create_app
@@ -119,7 +119,8 @@ class NeighborZoneTests(WebOperationBase):
         status, _, html = far.post("/zona/unirse", {"zona": "Z-001"})
         self.assertEqual(status, 422)
         self.assertIn("OUTSIDE_ZONE_RADIUS", html)
-        status, _, html = near.post("/zona/unirse", {"zona": "Z-LINCE-01"})
+        self.store.add_zone(Zone("Z-SIN-UBICACION", "Zona antigua", "Lince", "G-SIN", D("40")))  # S-75
+        status, _, html = near.post("/zona/unirse", {"zona": "Z-SIN-UBICACION"})
         self.assertEqual(status, 422)
         self.assertIn("LOCATION_REQUIRED", html)
         self.assertEqual(self.store.customers[3002].zone_id, "Z-001")
@@ -142,7 +143,8 @@ class NeighborZoneTests(WebOperationBase):
         status, _, _ = first.post("/zona/separar", {"zona": "Z-001"})
         self.assertEqual(status, 200)
         self.assertEqual(self.store.zones["Z-001"].group_id, "G-Z-001")
-        status, _, html = first.post("/zona/unir", {"zona": "Z-001", "destino": "Z-LINCE-01"})
+        self.store.add_zone(Zone("Z-SIN-UBICACION", "Zona antigua", "Lince", "G-SIN", D("40")))  # S-75
+        status, _, html = first.post("/zona/unir", {"zona": "Z-001", "destino": "Z-SIN-UBICACION"})
         self.assertEqual(status, 422)
         self.assertIn("LOCATION_REQUIRED", html)
         self.neighbor(3002, lat=north(100)).post("/zona/unirse", {"zona": "Z-001"})
