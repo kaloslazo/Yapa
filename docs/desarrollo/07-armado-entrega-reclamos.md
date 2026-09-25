@@ -115,6 +115,27 @@ Escenario: ciclo 2026-W38 con catálogo base. 8 pedidos verificados en la zona Z
 - **CO-D · Reponer.** De 6 galones guardados se usan 2 → quedan 4, con valor S/ 31.60. Usar 5 → `BUFFER_INSUFFICIENT`; usar un producto que no está guardado → `BUFFER_INSUFFICIENT`. → CO-05
 - **CO-E · Solo el personal.** Un vecino intenta guardar o usar el colchón → `NOT_AUTHORIZED`. → CO-01
 
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/`) | Prueba (`tests/test_fulfillment.py`) |
+|---|---|---|
+| S-40 | `fulfillment.check_staff` (usado en armado, entrega, reclamos y colchón) | `test_ar_e_*`, `test_en_e_*`, `test_rv_d_*`, `test_co_e_*` |
+| AR-01..AR-05, S-41 | `fulfillment.pack_bag`, `is_attended`, `check_photo`; `cycle.closes_at` | `test_ar_a_*`..`test_ar_e_*` |
+| EN-01..EN-05, S-42 | `fulfillment.deliver_zone` | `test_en_a_*`..`test_en_e_*` |
+| RC-01..RC-06, S-43, S-44 | `claims.file_claim`, `_claim_quantity` | `test_rc_a_*`..`test_rc_e_*` |
+| RV-01..RV-05, S-45 | `claims.review_claim`; `settlement.settle_cycle` guarda `store.settlements[ciclo]` | `test_rv_a_*`..`test_rv_e_*` |
+| CO-01..CO-05, S-46 | `buffer.add_to_buffer`, `use_buffer`, `buffer_value` | `test_co_a_*`..`test_co_e_*` |
+
+## Huecos encontrados al implementar (a decidir por el equipo)
+
+No se implementó nada para estos casos; se describe cómo se comporta hoy el código.
+
+1. **Zona que no recibe.** Si la portería no está o no acepta las bolsas, no hay regla: la entrega simplemente no se registra y el pedido no puede reclamarse. Es el hueco H1.11 de `docs/analisis/03_huecos_negocio.md` (¿reintento?, ¿reembolso?).
+2. **Liquidación antes de la entrega.** `settle_cycle` no exige que la zona esté entregada; la spec de la liquidación dice "después de la entrega", pero no hay una regla que lo obligue.
+3. **Bolsas después de entregar.** Se pueden registrar bolsas de un pedido cuya zona ya se entregó.
+4. **Uso del colchón.** Al reponer con el colchón no se registra a qué pedido fue; tampoco hay una regla que diga si ese faltante repuesto se descuenta del acuerdo con el proveedor (punto 5 del análisis).
+5. **Devolución por reclamo al medio de pago.** Lo aprobado va a saldo (C-05); el cliente puede pedirlo de vuelta con BS-12, pero no se decidió si un artículo dañado debería devolverse directo a Yape o Plin.
+
 ## Fuera de alcance (con motivo)
 
 - **Regla del 70 % para comprar la caja completa.** Es una recomendación del análisis, y el catálogo todavía no dice cuántas unidades trae cada caja.

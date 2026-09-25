@@ -10,3 +10,4 @@ slides/.build/
 slides/node_modules
 artifacts/
 .codex-finalizer/
+.claude/
