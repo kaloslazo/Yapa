@@ -40,3 +40,11 @@
 - La web es solo un adaptador (`src/yapa_sdd/web/`): no tiene reglas de negocio propias, llama a los casos de uso de las iteraciones 2 a 6.
 - **Revisión visual:** una captura a 390 px parecía mostrar la página desbordada. Se investigó y resultó ser un límite de la herramienta: Chrome sin interfaz no dibuja por debajo de 512 px y recortaba la imagen. A 512 px se ve bien. Igual se dejó el ajuste de CSS (`min-width:0` en la fila), que ayuda en pantallas más angostas.
 - Resultado: la suite completa en verde.
+
+## Iteración 10 · Acceso con PIN, sesión y CSRF (24/09/2026, rama `carlos/web`)
+
+- Spec: `10-acceso.md` (S-64..S-71). Reemplaza a S-60 y S-61 de la iteración 9: ya no se entra con solo escribir un número de cliente, y el admin tiene contraseña.
+- Las pruebas de la iteración 9 se adaptaron **antes** del código. WA-07, WA-11 y WA-12 cambiaron según la spec 10.
+- Implementación: `auth.py` (PIN con hash PBKDF2 y sal, bloqueo tras 5 fallos, mismo error si el usuario no existe). En `web/app.py`: sesión en el servidor con cookie `HttpOnly`/`SameSite=Lax`, rol por ruta, token CSRF en cada POST, entrar, salir y cambiar PIN.
+- La suite tardaba 24 s por el hash lento. Se resolvió bajando las iteraciones solo en las pruebas, y AA-11 fija el valor de producción.
+- Resultado: 130 pruebas en verde en la rama.

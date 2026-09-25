@@ -55,3 +55,19 @@ Con el acceso, cambian tres criterios de `09-interfaz-web.md`. Las pruebas se ac
 - **WA-07:** `/cuenta` muestra la cuenta del vecino de la sesión, ya no la de un `?cliente=` de la URL. El caso "cliente inexistente → 404" desaparece: ahora ese cliente simplemente no puede entrar (AA-03).
 - **WA-11:** para ver la cuenta con el nombre malicioso hay que entrar como ese cliente. Se sigue verificando que el nombre sale escapado.
 - **WA-12:** el caso "cliente=abc" ya no aplica, porque el cliente viene de la sesión. Se reemplaza por una cantidad no numérica, que da 422 con `INVALID_QUANTITY`.
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AC-01, S-66, S-67 | `auth.py` `_check_pin`, `set_pin`, `change_pin`, `_hash` | `test_access.py` `test_aa01_*`, `test_aa02_*`, `test_aa10_*`, `test_aa11_*` |
+| AC-02 | `auth.py` `authenticate` (mismo error y mismo costo si el usuario no existe) · `web/app.py` `entrar` | `test_aa03_*` |
+| AC-03, S-68 | `auth.py` `authenticate` (contador y bloqueo) | `test_aa04_*` |
+| AC-04 | `web/app.py` `dispatch` (rol requerido) y handlers que usan `session.principal` | `test_aa05_*`, `test_aa06_*` |
+| AC-05, S-70 | `web/app.py` `dispatch` · `auth.py` `set_admin_password` | `test_aa07_*` |
+| AC-06, S-71 | `web/app.py` `dispatch` (`hmac.compare_digest` del token) · `views.hidden` | `test_aa08_*` |
+| AC-07 | `web/app.py` `salir` | `test_aa09_*` |
+
+## Nota sobre la velocidad de las pruebas
+
+PBKDF2 con 200 000 iteraciones hace que cada acceso tarde a propósito (así cuesta adivinar un PIN). Con eso, la suite tardaba 24 s. Las pruebas web bajan las iteraciones a 1 000 solo mientras corren (`fast_hashing`), y la prueba AA-11 fija que el código de producción use 200 000. No se debilita ninguna aserción.

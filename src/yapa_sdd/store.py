@@ -16,6 +16,7 @@ class InMemoryStore:
         self.reserved: dict[tuple[str, str], Decimal] = {}  # (ciclo, producto), S-35
         self.catalogs: dict[str, dict[str, Product]] = {}  # catálogo por ciclo (iteración 6)
         self.admins: set[str] = set()
+        self.credentials: dict = {}  # acceso (iteración 10)
         self.suppliers: dict[str, Supplier] = {}
         self.used_codes: set[str] = set()
         self.movements: list = []  # billetera (iteración 3)

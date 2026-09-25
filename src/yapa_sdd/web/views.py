@@ -36,13 +36,23 @@ def qty(value: Decimal) -> str:
     return f"{Decimal(value).normalize():f}"
 
 
-def page(title: str, body: str) -> str:
+def hidden(csrf: str | None) -> str:
+    """S-71: todo formulario que cambia datos lleva el token de la sesión."""
+    return f'<input type="hidden" name="csrf" value="{escape(csrf)}">' if csrf else ""
+
+
+def page(title: str, body: str, csrf: str | None = None) -> str:
+    if csrf:
+        session_link = ('<form method="post" action="/salir" style="display:inline">' + hidden(csrf)
+                        + '<button style="width:auto;padding:4px 10px;margin:0">Salir</button></form>')
+    else:
+        session_link = '<a href="/entrar">Entrar</a>'
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>{escape(title)} · Yapa</title><style>{CSS}</style></head><body>"
         '<header><strong>Yapa</strong> &nbsp; <a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a>'
-        '<a href="/admin">Admin</a></header>'
+        f'<a href="/admin">Admin</a>{session_link}</header>'
         f"<main><h1>{escape(title)}</h1>{body}</main></body></html>"
     )
 
@@ -52,7 +62,7 @@ def error_box(code: str, message: str) -> str:
             f'<div class="muted">Código: {escape(code)}</div></div>')
 
 
-def home(cycle_label: str, is_open: bool, rows: list[dict]) -> str:
+def home(cycle_label: str, is_open: bool, rows: list[dict], csrf: str | None = None) -> str:
     estado = "abierto hasta el miércoles 20:00" if is_open else "cerrado"
     items = []
     for row in rows:
@@ -61,12 +71,15 @@ def home(cycle_label: str, is_open: bool, rows: list[dict]) -> str:
             f'<strong>{escape(row["name"])}</strong><div class="muted">por {escape(row["unit"])} · '
             f'hoy pagas máximo {money(row["max_price"])}</div>'
             f'<div class="muted">{escape(row["progress"])}</div></div>'
-            f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" '
-            f'name="cant_{escape(row["product_id"])}" placeholder="0"></div></div>'
+            + (f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" '
+               f'name="cant_{escape(row["product_id"])}" placeholder="0">' if csrf else "")
+            + '</div></div>'
         )
+    if not csrf:
+        entrar = '<p><a href="/entrar"><button>Entrar para pedir</button></a></p>'
+        return page("Catálogo de la semana", entrar + "".join(items))
     form = (
-        '<form method="post" action="/cotizar">'
-        '<div class="card"><label>Tu número de cliente <input name="cliente" required></label></div>'
+        '<form method="post" action="/cotizar">' + hidden(csrf)
         + "".join(items)
         + '<div class="card"><label>Medio <select name="metodo"><option>YAPE</option><option>PLIN</option>'
           '</select></label><label>Código de operación <input name="codigo"></label>'
@@ -76,7 +89,7 @@ def home(cycle_label: str, is_open: bool, rows: list[dict]) -> str:
     )
     intro = (f'<p class="muted">Ciclo {escape(cycle_label)}: {estado}. Pagas el precio máximo; lo que ahorremos '
              'entre todos te lo devolvemos como saldo después de la entrega.</p>')
-    return page("Catálogo de la semana", intro + form)
+    return page("Catálogo de la semana", intro + form, csrf)
 
 
 def order_lines(lines) -> str:
@@ -88,20 +101,20 @@ def order_lines(lines) -> str:
     return f"<table><tr><th>Producto</th><th>Cant.</th><th>Precio máx.</th><th>Total</th></tr>{rows}</table>"
 
 
-def quote(result) -> str:
+def quote(result, csrf: str | None = None) -> str:
     body = (f'<div class="card">{order_lines(result.lines)}<p>Envío máximo: {money(result.delivery_fee)}</p>'
             f'<p><strong>Total a yapear: {money(result.total)}</strong></p></div>')
-    return page("Cotización", body)
+    return page("Cotización", body, csrf)
 
 
-def registered(order) -> str:
+def registered(order, csrf: str | None = None) -> str:
     body = (f'<div class="card ok"><strong>Pedido {order.order_id} · {escape(order.status)}</strong>'
             f'<p>Total: {money(order.total)} · pago {escape(order.payment_status)}</p>'
             f'{order_lines(order.lines)}</div>')
-    return page("Pedido registrado", body)
+    return page("Pedido registrado", body, csrf)
 
 
-def account(customer, balance, orders, refunds) -> str:
+def account(customer, balance, orders, refunds, csrf: str | None = None) -> str:
     rows = "".join(
         f"<tr><td>Pedido {o.order_id}</td><td>{escape(o.cycle)}</td><td>{escape(o.status)}</td>"
         f"<td>{money(o.total)}</td></tr>" for o in orders
@@ -111,36 +124,43 @@ def account(customer, balance, orders, refunds) -> str:
             f'<p><strong>Saldo: {money(balance)}</strong></p></div>'
             f'<div class="card"><table><tr><th>Pedido</th><th>Ciclo</th><th>Estado</th><th>Total</th></tr>{rows}'
             f'</table></div><div class="card"><strong>Devoluciones pendientes</strong><ul>{pending}</ul></div>'
-            '<form class="card" method="post" action="/cuenta/cancelar">'
-            f'<input type="hidden" name="cliente" value="{customer.customer_id}">'
+            '<form class="card" method="post" action="/cuenta/cancelar">' + hidden(csrf) +
             '<label>Pedido a cancelar <input name="pedido"></label>'
             '<label>Devolver a <select name="destino"><option value="MEDIO_DE_PAGO">Mi Yape/Plin</option>'
-            '<option value="SALDO">Mi saldo</option></select></label><button>Cancelar pedido</button></form>')
-    return page("Mi cuenta", body)
+            '<option value="SALDO">Mi saldo</option></select></label><button>Cancelar pedido</button></form>'
+            '<form class="card" method="post" action="/cuenta/pin">' + hidden(csrf) +
+            '<label>PIN actual <input name="actual" type="password" inputmode="numeric"></label>'
+            '<label>PIN nuevo (6 dígitos) <input name="nuevo" type="password" inputmode="numeric"></label>'
+            '<button>Cambiar PIN</button></form>')
+    return page("Mi cuenta", body, csrf)
 
 
-def ask_customer() -> str:
-    return page("Mi cuenta", '<form class="card" method="get" action="/cuenta">'
-                             '<label>Tu número de cliente <input name="cliente"></label><button>Ver</button></form>')
+def login(error: str = "") -> str:
+    body = (error + '<form class="card" method="post" action="/entrar">'
+            '<label>Soy <select name="tipo"><option value="vecino">Vecino</option>'
+            '<option value="admin">Administrador</option></select></label>'
+            '<label>Número de cliente o usuario <input name="usuario" autocomplete="username"></label>'
+            '<label>PIN o contraseña <input name="secreto" type="password" autocomplete="current-password"></label>'
+            '<button>Entrar</button></form>')
+    return page("Entrar", body)
 
 
-def admin(cycle_label: str, pending) -> str:
+def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
     rows = "".join(
         f"<tr><td>{o.order_id}</td><td>{o.customer_id}</td><td>{money(o.total)}</td>"
         f"<td>{escape(o.payment_method)} {escape(o.operation_code)}</td><td>"
-        f'<form method="post" action="/admin/verificar"><input type="hidden" name="pedido" value="{o.order_id}">'
+        f'<form method="post" action="/admin/verificar">{hidden(csrf)}<input type="hidden" name="pedido" value="{o.order_id}">'
         "<button>Verificar</button></form></td></tr>" for o in pending
     )
     body = (f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
-            '<form class="card" method="post" action="/admin/liquidar">'
+            '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
             f'<label>Ciclo a liquidar <input name="ciclo" value="{escape(cycle_label)}"></label>'
-            '<button>Liquidar ciclo</button></form>'
-            '<p class="muted">Solo para uso local en esta etapa (sin contraseña, S-61).</p>')
-    return page("Administración", body)
+            '<button>Liquidar ciclo</button></form>')
+    return page("Administración", body, csrf)
 
 
-def settlement(result) -> str:
+def settlement(result, csrf: str | None = None) -> str:
     products = "".join(
         f"<tr><td>{escape(p.product_id)}</td><td>{qty(p.total_quantity)}</td><td>desde {qty(p.tier_min_quantity)}</td>"
         f"<td>{money(p.final_unit_price)}</td></tr>" for p in result.products.values()
@@ -154,8 +174,8 @@ def settlement(result) -> str:
             f'<th>Final</th><th>Devuelto</th></tr>{orders}</table>'
             f'<p>Devuelto como saldo: {money(result.total_credited)} · '
             f'reembolsado: {money(result.total_refunded)}</p></div>')
-    return page(f"Liquidación {result.cycle}", body)
+    return page(f"Liquidación {result.cycle}", body, csrf)
 
 
-def simple(title: str, message: str) -> str:
-    return page(title, f'<div class="card">{escape(message)}</div>')
+def simple(title: str, message: str, csrf: str | None = None) -> str:
+    return page(title, f'<div class="card">{escape(message)}</div>', csrf)

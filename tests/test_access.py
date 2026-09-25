@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import unittest
 
-from web_client import WebClient
+from web_client import WebClient, fast_hashing
 
 from yapa_sdd.auth import authenticate, change_pin, set_admin_password, set_pin
 from yapa_sdd.cycle import LIMA
@@ -20,6 +20,7 @@ CA01 = {"cant_PAPA-AMARILLA": "5", "cant_CEBOLLA-ROJA": "3", "cant_LIMON": "2", 
 
 class AccessSpecTests(unittest.TestCase):
     def setUp(self):
+        fast_hashing(self)
         self.store = pilot_store()
         set_pin(self.store, 101, PIN)
         set_pin(self.store, 105, "739104")
@@ -119,6 +120,13 @@ class AccessSpecTests(unittest.TestCase):
         status, headers, _ = client.get("/cuenta")
         self.assertEqual(status, 303)
         self.assertEqual(headers["Location"], "/entrar")
+
+    # AA-11 · el valor real de producción (S-67), aunque las pruebas lo bajen por velocidad
+    def test_aa11_production_iterations(self):
+        import importlib
+        from yapa_sdd import auth
+        fresh = importlib.reload(auth)
+        self.assertEqual(fresh.ITERATIONS, 200_000)
 
     # AA-10
     def test_aa10_change_pin(self):

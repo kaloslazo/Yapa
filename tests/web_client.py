@@ -6,6 +6,14 @@ from urllib.parse import urlencode
 from wsgiref.util import setup_testing_defaults
 
 
+def fast_hashing(test_case):
+    """Baja las iteraciones de PBKDF2 solo durante la prueba (velocidad). El valor real se prueba en AA-11."""
+    from yapa_sdd import auth
+    original = auth.ITERATIONS
+    auth.ITERATIONS = 1000
+    test_case.addCleanup(setattr, auth, "ITERATIONS", original)
+
+
 class WebClient:
     def __init__(self, app):
         self.app = app

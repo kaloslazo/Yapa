@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 import unittest
 
-from web_client import WebClient
+from web_client import WebClient, fast_hashing
 
 from yapa_sdd.auth import set_admin_password, set_pin
 from yapa_sdd.cycle import LIMA
@@ -22,6 +22,7 @@ class WebSpecTests(unittest.TestCase):
     """Criterios de la iteración 9, ya con acceso (iteración 10)."""
 
     def setUp(self):
+        fast_hashing(self)
         self.store = pilot_store()
         for customer_id, pin in PINS.items():
             set_pin(self.store, customer_id, pin)
