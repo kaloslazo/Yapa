@@ -35,7 +35,7 @@
 
 ## Iteración 9 · Interfaz web (24/09/2026, rama `carlos/web`)
 
-- Spec: `09-interfaz-web.md`, con los supuestos S-39..S-42 (sin inicio de sesión todavía, admin solo local, datos en memoria, hora fija para la demo).
+- Spec: `09-interfaz-web.md`, con los supuestos S-60..S-63 (sin inicio de sesión todavía, admin solo local, datos en memoria, hora fija para la demo).
 - Pruebas antes del código: `docs/evidencia/desarrollo/09-web-rojo.txt`. Hay 13 pruebas que llaman a la aplicación WSGI sin levantar el servidor.
 - La web es solo un adaptador (`src/yapa_sdd/web/`): no tiene reglas de negocio propias, llama a los casos de uso de las iteraciones 2 a 6.
 - **Revisión visual:** una captura a 390 px parecía mostrar la página desbordada. Se investigó y resultó ser un límite de la herramienta: Chrome sin interfaz no dibuja por debajo de 512 px y recortaba la imagen. A 512 px se ve bien. Igual se dejó el ajuste de CSS (`min-width:0` en la fila), que ayuda en pantallas más angostas.

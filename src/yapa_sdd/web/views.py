@@ -136,7 +136,7 @@ def admin(cycle_label: str, pending) -> str:
             '<form class="card" method="post" action="/admin/liquidar">'
             f'<label>Ciclo a liquidar <input name="ciclo" value="{escape(cycle_label)}"></label>'
             '<button>Liquidar ciclo</button></form>'
-            '<p class="muted">Solo para uso local en esta etapa (sin contraseña, S-40).</p>')
+            '<p class="muted">Solo para uso local en esta etapa (sin contraseña, S-61).</p>')
     return page("Administración", body)
 
 

@@ -16,10 +16,10 @@ Como administrador, quiero ver los pagos por verificar, verificarlos y liquidar 
 
 | # | Supuesto | Valor |
 |---|---|---|
-| S-39 | En esta etapa **no hay inicio de sesión**: el vecino se identifica con su número de cliente. La autenticación queda para una iteración posterior. | — |
-| S-40 | Las páginas de administración no tienen contraseña en esta etapa. Por eso **el servidor de demo solo escucha en la propia máquina** (`127.0.0.1`). | — |
-| S-41 | Los datos viven en memoria mientras el servidor está prendido (repositorio en memoria). La persistencia es otra iteración. | — |
-| S-42 | Para la demo se puede fijar la hora con `--ahora` (por ejemplo, un miércoles a las 10:00) para ver el ciclo abierto. Sin esa opción se usa la hora real de Lima. | — |
+| S-60 | En esta etapa **no hay inicio de sesión**: el vecino se identifica con su número de cliente. La autenticación queda para una iteración posterior. | — |
+| S-61 | Las páginas de administración no tienen contraseña en esta etapa. Por eso **el servidor de demo solo escucha en la propia máquina** (`127.0.0.1`). | — |
+| S-62 | Los datos viven en memoria mientras el servidor está prendido (repositorio en memoria). La persistencia es otra iteración. | — |
+| S-63 | Para la demo se puede fijar la hora con `--ahora` (por ejemplo, un miércoles a las 10:00) para ver el ciclo abierto. Sin esa opción se usa la hora real de Lima. | — |
 
 ## Reglas
 
@@ -72,4 +72,4 @@ PYTHONPATH=src python -m yapa_sdd.web --ahora 2026-09-16T10:00:00-05:00
 | WB-07 | `views.py`: `html.escape` en todo texto variable | `test_wa11_*` |
 | WB-08 | `app.py` `app` (404/405/422), `_int` | `test_wa04_*`, `test_wa06_*`, `test_wa12_*` |
 | WB-09 | `views.page` (viewport) + CSS de una columna | `test_wa13_*` + revisión visual a 512 px |
-| S-40 | `__main__.py`: `make_server("127.0.0.1", ...)` | revisión de código |
+| S-61 | `__main__.py`: `make_server("127.0.0.1", ...)` | revisión de código |
