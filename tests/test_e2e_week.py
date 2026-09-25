@@ -102,7 +102,8 @@ class WholeWeekTest(unittest.TestCase):
         self.assertBalanced("reclamo aprobado")
 
         # 5. Devolución del saldo pedida y pagada
-        self.assertEqual(vecino.post("/cuenta/devolucion", {"monto": "10.00"})[0], 200)
+        self.assertEqual(balance(self.store, 801), D("5.38"))  # 3.36 de ahorro + 2.02 del reclamo
+        self.assertEqual(vecino.post("/cuenta/devolucion", {"monto": "5.00"})[0], 200)
         refund_id = max(r.refund_id for r in self.store.refunds.values() if r.customer_id == 801)
         self.assertEqual(admin.post("/admin/devoluciones/pagar", {"reembolso": str(refund_id),
                                                                   "codigo": "YP-1"})[0], 200)
@@ -116,7 +117,7 @@ class WholeWeekTest(unittest.TestCase):
         self.assertIn("S/ 0.00", html)
         final = money_balance(self.store)
         self.assertEqual(final.received, D("671.00"))  # 11 pedidos × S/ 61.00
-        self.assertEqual(final.refunds_paid, D("10.00"))
+        self.assertEqual(final.refunds_paid, D("5.00"))
 
 
 if __name__ == "__main__":
