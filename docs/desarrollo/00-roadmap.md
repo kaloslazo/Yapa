@@ -37,7 +37,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 20 | **Catálogo semanal desde la web** (pegar la lista del proveedor, desactivar productos) | operación semanal (C-12), iteración 6 | completa, ver `20-catalogo-web.md` |
 | 21 | **Huecos del armado, el colchón y el catálogo** (sin bolsas tras cerrar la zona, reposición con pedido, unidad válida, proveedor que deja de ser aliado) | huecos de las iteraciones 6 y 7 | completa, ver `21-huecos-armado-colchon.md` |
 | 22 | **Precio de referencia y ahorro frente al mercado** (fuente y fecha, vigencia de 14 días, métrica por canasta) | hueco 2 de la iteración 8, kit de campo, Ley 29571 | completa, ver `22-precio-referencia.md` |
-| 23 | **\"Te devolvemos\" y el ahorro en Mi cuenta** (lo pagado, lo que costó, lo devuelto y la comparación por pedido) | C-05, recompra de la semana 4 (iteración 8) | completa, ver `23-mi-ahorro.md` |
+| 23 | **"Te devolvemos" y el ahorro en Mi cuenta** (lo pagado, lo que costó, lo devuelto y la comparación por pedido) | C-05, recompra de la semana 4 (iteración 8) | completa, ver `23-mi-ahorro.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro
