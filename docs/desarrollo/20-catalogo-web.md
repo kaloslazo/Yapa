@@ -21,6 +21,7 @@ La iteración 6 dejó las reglas del catálogo (`publish_catalog`, `deactivate_p
 | S-117 | La pantalla abre con el ciclo **siguiente** y con el cuadro de texto ya lleno con su catálogo actual (el publicado o, si no hay, el base). Así el admin solo cambia lo que cambió el proveedor. Solo se copian los productos activos. | — |
 | S-118 | Si el ciclo usa el catálogo base y el admin desactiva un producto, se guarda una **copia** del catálogo base como catálogo de ese ciclo, con el producto desactivado. El catálogo base no cambia. *(Antes daba `PRODUCT_NOT_AVAILABLE`, y en el piloto no se podía retirar un producto en una semana sin catálogo publicado.)* | — |
 | S-119 | Los productos del catálogo base del piloto quedan asignados a los proveedores aliados de ejemplo según su categoría: frescos a `SUP-FRESCOS` y limpieza a `SUP-LIMPIEZA`. Sin esto, el catálogo base copiado no se podría volver a publicar (CT-02). | — |
+| S-120 | El **paso** de un producto debe ser mayor que 0. Si no, `INVALID_STOCK` (se amplía CT-04). *(Se encontró al revisar el código: con paso 0, la validación del máximo dividía por cero y la web respondía con un error interno.)* | — |
 
 ## Reglas
 
@@ -51,4 +52,5 @@ Hora: sábado 19/09/2026 (ciclo 2026-W38). El siguiente ciclo es 2026-W39, que a
 - **CW-E · Ciclo abierto.** El martes 22/09, publicar para W39 → 422 `CATALOG_LOCKED`. → CT-08
 - **CW-F · Desactivar.** Con el catálogo de CW-B publicado, el martes 22/09 el admin desactiva la papa amarilla de W39 → 200, la papa queda inactiva y ya no aparece en el catálogo del vecino. → CW-04
 - **CW-G · Desactivar en un ciclo con catálogo base.** El miércoles 16/09 (W38 usa el base), el admin desactiva el ajo → W38 tiene su propio catálogo con el ajo inactivo y los demás productos iguales; el catálogo base sigue con el ajo activo. → S-118
+- **CW-I · Paso 0.** Una lista con la papa amarilla con paso `0` → 422 `INVALID_STOCK`, sin publicar nada. → S-120, CT-04
 - **CW-H · Solo el admin.** Un vecino que abre `/admin/catalogo` recibe 403. → CW-05
