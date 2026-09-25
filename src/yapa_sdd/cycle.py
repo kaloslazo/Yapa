@@ -35,3 +35,8 @@ def opens_at(cycle: str) -> datetime:
     year, week = cycle.split("-W")
     monday = datetime.fromisocalendar(int(year), int(week), 1)
     return datetime.combine(monday.date(), time(0, 0), LIMA)
+
+
+def closes_at(cycle: str) -> datetime:
+    """Miércoles 20:00 (hora de Lima) del ciclo: desde ahí ya no entran pedidos."""
+    return opens_at(cycle) + timedelta(days=2, hours=CLOSE_TIME.hour)

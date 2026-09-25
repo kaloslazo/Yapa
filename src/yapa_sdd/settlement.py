@@ -166,10 +166,12 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
     total_credited = sum((o.refund_amount for o in settled.values() if o.status == "LIQUIDADO"), ZERO)
     total_refunded = sum((o.refund_amount for o in settled.values() if o.status == "NO_ATENDIDO"), ZERO)
     ordered_ids = sorted(settled)
-    return CycleSettlement(
+    result = CycleSettlement(
         cycle,
         {order_id: settled[order_id] for order_id in ordered_ids},
         products,
         total_credited,
         total_refunded,
     )
+    store.settlements[cycle] = result  # RV-03: los reclamos usan el precio final
+    return result
