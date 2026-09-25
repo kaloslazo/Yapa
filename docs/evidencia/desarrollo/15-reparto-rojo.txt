@@ -1,0 +1,5 @@
+# Iteracion 15 - pruebas ANTES del codigo
+# 2026-09-24 23:12
+Ran 185 tests in 0.222s
+
+FAILED (errors=1)
