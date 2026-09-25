@@ -1,0 +1,23 @@
+# Iteracion 12 - pruebas ANTES del codigo
+# 2026-09-24 23:09
+# Las rutas nuevas todavia no existen: responden 404 donde la spec pide 200, 422, 403, 303 o 405.
+# Las 167 pruebas anteriores siguen en verde; fallan las 15 nuevas (22 fallas contando los subTest).
+FAIL: test_oa01_create_zone (test_web_operacion.NeighborZoneTests.test_oa01_create_zone)
+FAIL: test_oa02_activate_zone (test_web_operacion.NeighborZoneTests.test_oa02_activate_zone)
+FAIL: test_oa03_join_zone (test_web_operacion.NeighborZoneTests.test_oa03_join_zone)
+FAIL: test_oa04_merge_leave_and_transfer (test_web_operacion.NeighborZoneTests.test_oa04_merge_leave_and_transfer)
+FAIL: test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data) (lat='abc')
+FAIL: test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data) (lat='nan')
+FAIL: test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data)
+FAIL: test_oa06_withdrawal_request (test_web_operacion.NeighborMoneyAndClaimTests.test_oa06_withdrawal_request)
+FAIL: test_oa07_file_claim (test_web_operacion.NeighborMoneyAndClaimTests.test_oa07_file_claim)
+FAIL: test_oa08_packing (test_web_operacion.AdminOperationTests.test_oa08_packing)
+FAIL: test_oa09_delivery (test_web_operacion.AdminOperationTests.test_oa09_delivery)
+FAIL: test_oa10_review_claims (test_web_operacion.AdminOperationTests.test_oa10_review_claims)
+FAIL: test_oa11_buffer (test_web_operacion.AdminOperationTests.test_oa11_buffer)
+FAIL: test_oa12_metrics_dashboard (test_web_operacion.AdminOperationTests.test_oa12_metrics_dashboard)
+FAIL: test_oa13_access (test_web_operacion.CrossCuttingTests.test_oa13_access)
+FAIL: test_oa14_routes_and_escaping (test_web_operacion.CrossCuttingTests.test_oa14_routes_and_escaping)
+FAIL: test_oa15_mobile_viewport (test_web_operacion.CrossCuttingTests.test_oa15_mobile_viewport) (status=404)
+Ran 182 tests in 0.094s
+FAILED (failures=22)
