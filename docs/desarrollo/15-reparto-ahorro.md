@@ -29,3 +29,21 @@ Escenario: 20 pedidos, parada de S/ 40, comisión de 12 %, costos pesimistas.
 - **RA-C · Parte inválida.** −0.1 o 1.5 → `INVALID_SAVINGS_SHARE`. → RA-02
 - **RA-D · Nunca más que el máximo.** Con parte 1, el precio final es igual al precio máximo y el cliente recupera solo el envío. → RA-03
 - **RA-E · No toca el sistema real.** Después de simular con 50 %, una liquidación normal usa parte 0. → RA-04, SM-02
+
+## Resultado del simulador (20 pedidos, parada de S/ 40, 12 %)
+
+| Parte que retiene Yapa | Margen neto optimista | Margen neto pesimista | Ahorro del cliente por pedido |
+|---|---|---|---|
+| 0 % (modelo actual) | S/ 2.61 | −S/ 2.52 | S/ 12.86 |
+| 25 % | S/ 5.07 | −S/ 0.06 | S/ 10.39 |
+| 50 % | S/ 7.54 | +S/ 2.41 | S/ 7.93 |
+
+**Lectura para el equipo:** si Yapa retiene el 25 % del ahorro por volumen, el peor escenario queda prácticamente en equilibrio y el vecino sigue recuperando más de S/ 10 por pedido. El mensaje "te devolvemos" se mantiene, pero es "te devolvemos la mayor parte". **Esto no está decidido**: el sistema sigue en 0 % (S-100) hasta que el equipo lo decida.
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_savings_share.py`) |
+|---|---|---|
+| RA-01, RA-03 | `settlement.py`: precio final = tramo + parte × (máximo − tramo) | `test_ra_a_*`, `test_ra_b_*`, `test_ra_d_*` |
+| RA-02 | `settlement.settle_cycle` (validación al inicio) | `test_ra_c_*` |
+| RA-04, S-100 | `settlement.VOLUME_SAVINGS_SHARE = 0` · `simulator.savings_share_table` | `test_ra_b_*`, `test_ra_e_*` |

@@ -50,7 +50,7 @@ def _commission(fresh: Decimal):
 
 
 def simulate(orders: int, stop_cost: Decimal, fresh_commission: Decimal, costs: OperatingCosts,
-             basket=BASKET) -> SimulationResult:
+             basket=BASKET, savings_share=Decimal("0")) -> SimulationResult:
     """SM-01: un ciclo sintético de una zona, con las reglas reales."""
     with _commission(fresh_commission):
         store = pilot_store()
@@ -64,7 +64,7 @@ def simulate(orders: int, stop_cost: Decimal, fresh_commission: Decimal, costs: 
                                    operation_code=f"SIM-{i}", amount=quote_order(store, basket).total, now=WHEN)
             verify_payment(store, order.order_id, now=WHEN)
         cycle = cycle_id(WHEN)
-        settle_cycle(store, cycle, at=WHEN)
+        settle_cycle(store, cycle, at=WHEN, savings_share=savings_share)
         summary = net_margin_summary(store, cycle, costs)
         savings = delivered_savings(store, cycle)
     return SimulationResult(orders, summary.average_net_margin, summary.losing_orders, savings.total / orders)
@@ -89,6 +89,20 @@ def decision_table(stop_cost: Decimal) -> dict[str, dict[tuple[int, Decimal], De
     return table
 
 
+SHARES = (Decimal("0"), Decimal("0.25"), Decimal("0.5"))
+
+
+def savings_share_table(stop_cost: Decimal, orders: int, commission=Decimal("0.12")) -> dict:
+    """RA-04: margen neto (optimista y pesimista) y ahorro del cliente según la parte retenida."""
+    table = {}
+    for share in SHARES:
+        optimistic = simulate(orders, stop_cost, commission, OPTIMISTIC, savings_share=share)
+        pessimistic = simulate(orders, stop_cost, commission, PESSIMISTIC, savings_share=share)
+        table[share] = {"OPTIMISTA": optimistic.average_net_margin, "PESIMISTA": pessimistic.average_net_margin,
+                        "AHORRO_CLIENTE": optimistic.average_customer_savings}
+    return table
+
+
 def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout.reconfigure(encoding="utf-8")
@@ -104,6 +118,11 @@ def main() -> int:
     for costs in (OPTIMISTIC, PESSIMISTIC):
         minimum = break_even_orders(stop_cost, Decimal("0.12"), costs)
         print(f"  {costs.name}: {minimum if minimum else f'no alcanza ni con {MAX_ORDERS}'}")
+    print("\nSi Yapa retiene parte del ahorro por volumen (20 pedidos, 12 %):")
+    print(f"{'parte':>7} {'optimista':>10} {'pesimista':>10} {'ahorro cliente':>15}")
+    for share, row in savings_share_table(stop_cost, 20).items():
+        print(f"{share * 100:>6.0f}% {row['OPTIMISTA'].quantize(Decimal('0.01')):>10} "
+              f"{row['PESIMISTA'].quantize(Decimal('0.01')):>10} {row['AHORRO_CLIENTE'].quantize(Decimal('0.01')):>15}")
     return 0
 
 

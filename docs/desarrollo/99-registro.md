@@ -94,3 +94,9 @@
 
   Se agregaron a las decisiones urgentes.
 - Resultado: la suite completa en verde.
+
+## Iteración 15 · Parte del ahorro que retiene Yapa (24/09/2026)
+
+- Spec: `15-reparto-ahorro.md` (S-100, S-101). Un parámetro de la liquidación, que por defecto es 0 %: el modelo actual no cambia.
+- Resultado del simulador: retener el 25 % deja el peor escenario en −S/ 0.06 por pedido (antes −S/ 2.52), y el cliente sigue recuperando S/ 10.39 (antes S/ 12.86). Queda como dato para la decisión urgente n.º 5.
+- Resultado: 189 pruebas en verde.

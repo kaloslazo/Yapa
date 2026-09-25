@@ -16,6 +16,7 @@ from . import wallet
 
 
 ZERO = Decimal("0")
+VOLUME_SAVINGS_SHARE = Decimal("0")  # S-100: parte del ahorro por volumen que retiene Yapa (0 = todo al cliente)
 
 
 @dataclass(frozen=True)
@@ -75,7 +76,11 @@ def _missing_by_order(missing: Iterable, attended: dict[int, Order]) -> dict[tup
     return result
 
 
-def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=None) -> CycleSettlement:
+def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=None,
+                 savings_share=None) -> CycleSettlement:
+    share = VOLUME_SAVINGS_SHARE if savings_share is None else Decimal(str(savings_share))
+    if not ZERO <= share <= 1:  # RA-02
+        raise BusinessRuleError("INVALID_SAVINGS_SHARE", "La parte retenida debe estar entre 0 y 1.")
     if cycle in store.settled_cycles:  # BS-11
         raise BusinessRuleError("CYCLE_ALREADY_SETTLED", f"El ciclo {cycle} ya fue liquidado.")
     settled: dict[int, SettledOrder] = {}
@@ -121,7 +126,9 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
     for product_id, total_quantity in totals.items():
         product = catalog[product_id]
         tier = product.tier_for(total_quantity)
-        price = min(product.price_with_commission(tier.base_price), product.max_unit_price())
+        max_price = product.max_unit_price()
+        tier_price = min(product.price_with_commission(tier.base_price), max_price)
+        price = tier_price + share * (max_price - tier_price)  # RA-01, RA-03: nunca pasa del máximo
         products[product_id] = ProductSummary(product_id, total_quantity, tier.min_quantity, price)
 
     # LQ-05: envío repartido por zona, con tope

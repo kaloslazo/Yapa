@@ -17,3 +17,9 @@ pedidos        10 %      12 %      15 %
 Mínimo de pedidos por zona para no perder (comisión 12 %):
   OPTIMISTA: 8
   PESIMISTA: no alcanza ni con 60
+
+Si Yapa retiene parte del ahorro por volumen (20 pedidos, 12 %):
+  parte  optimista  pesimista  ahorro cliente
+     0%       2.61      -2.52           12.86
+    25%       5.07      -0.06           10.39
+    50%       7.54       2.41            7.93
