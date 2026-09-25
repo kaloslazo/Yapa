@@ -32,6 +32,12 @@ def money(value) -> str:
     return f"S/ {Decimal(value).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}"
 
 
+def percent(value) -> str:
+    if value is None:
+        return "sin datos"
+    return f"{Decimal(value).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)} %"
+
+
 def qty(value: Decimal) -> str:
     return f"{Decimal(value).normalize():f}"
 
@@ -70,7 +76,10 @@ def home(cycle_label: str, is_open: bool, rows: list[dict], csrf: str | None = N
             '<div class="card"><div class="row"><div>'
             f'<strong>{escape(row["name"])}</strong><div class="muted">por {escape(row["unit"])} · '
             f'hoy pagas máximo {money(row["max_price"])}</div>'
-            f'<div class="muted">{escape(row["progress"])}</div></div>'
+            f'<div class="muted">{escape(row["progress"])}</div>'
+            + "".join(f'<div class="muted">{escape(r.source)}: {money(r.price)} (visto el '
+                      f'{r.observed_on.strftime("%d/%m")})</div>' for r in row.get("references", ()))
+            + '</div>'
             + (f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" '
                f'name="cant_{escape(row["product_id"])}" placeholder="0">' if csrf else "")
             + '</div></div>'
@@ -159,7 +168,7 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
     body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
             ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
             ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a>'
-            ' · <a href="/admin/catalogo">Catálogo</a></div>'
+            ' · <a href="/admin/catalogo">Catálogo</a> · <a href="/admin/referencias">Precios de referencia</a></div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
@@ -364,7 +373,7 @@ def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=()
 
 
 def metrics_page(cycle_label: str, margins, alerts, savings, repurchase, repurchase_error,
-                 csrf: str | None = None) -> str:
+                 csrf: str | None = None, compared=None) -> str:
     rows = "".join(
         f"<tr><td>{m.order_id}</td><td>{money(m.revenue)}</td><td>{money(m.claims)}</td>"
         f"<td>{money(m.product_cost)}</td><td>{money(m.stop_cost)}</td><td>{money(m.margin)}"
@@ -387,6 +396,15 @@ def metrics_page(cycle_label: str, margins, alerts, savings, repurchase, repurch
             f'<div class="card"><strong>Ahorro entregado</strong><p>Por volumen: {money(savings.volume)} · '
             f'por envío: {money(savings.delivery)} · total: {money(savings.total)}</p></div>'
             f'<div class="card"><strong>Recompra en la semana 4</strong>{returning}</div>')
+    if compared:  # RF-08
+        lines = "".join(
+            f"<tr><td>{label}</td><td>{c.baskets}</td><td>{money(c.reference_total)}</td><td>{money(c.yapa_total)}</td>"
+            f"<td>{money(c.savings) if c.baskets else '-'}</td><td>{percent(c.percent)}</td></tr>"
+            for label, c in (("Mercado de barrio", compared["MERCADO"]), ("Supermercado", compared["SUPERMERCADO"])))
+        body += ('<div class="card"><strong>Ahorro frente a otros precios</strong> <span class="muted">(solo canastas '
+                 'con todos sus precios de referencia; envío incluido)</span><table><tr><th>Frente a</th>'
+                 '<th>Canastas</th><th>Allá costaba</th><th>En Yapa</th><th>Ahorro</th><th>%</th></tr>'
+                 f'{lines}</table></div>')
     return page(f"Métricas {cycle_label}", body, csrf)
 
 
@@ -443,3 +461,34 @@ def catalog_admin(cycle_label: str, published: bool, products, text: str, csrf: 
             '</label><p class="muted">Se publica todo o nada, y solo antes de que el ciclo abra (lunes 00:00).</p>'
             '<button>Publicar catálogo</button></form>')
     return page(f"Catálogo {cycle_label}", body, csrf)
+
+
+def references_page(rows, csrf: str | None = None) -> str:
+    """RF-07: precios de referencia vigentes y ahorro del precio máximo de Yapa (S-128)."""
+    from ..reference import TARGET_SAVINGS, savings_percent
+
+    def cell(product, ref):
+        if ref is None:
+            return "<td>-</td>"
+        saving = savings_percent(product.max_unit_price(), ref.price)
+        warning = " · menos de 15 %" if saving < TARGET_SAVINGS else ""
+        return (f"<td>{money(ref.price)} en {escape(ref.source)} ({ref.observed_on.strftime('%d/%m')})<br>"
+                f"ahorro {percent(saving)}{warning}</td>")
+
+    table = "".join(
+        f"<tr><td>{escape(p.name)}</td><td>{money(p.max_unit_price())}</td>"
+        f"{cell(p, refs.get('MERCADO'))}{cell(p, refs.get('SUPERMERCADO'))}</tr>"
+        for p, refs in rows
+    )
+    options = "".join(f'<option value="{escape(p.product_id)}">{escape(p.name)}</option>' for p, _ in rows)
+    body = ('<div class="card"><table><tr><th>Producto</th><th>Máximo Yapa</th><th>Mercado de barrio</th>'
+            f'<th>Supermercado</th></tr>{table}</table></div>'
+            f'<form class="card" method="post" action="/admin/referencias">{hidden(csrf)}'
+            f'<label>Producto <select name="producto">{options}</select></label>'
+            '<label>Dónde <select name="tipo"><option value="MERCADO">Mercado de barrio</option>'
+            '<option value="SUPERMERCADO">Supermercado</option></select></label>'
+            '<label>Precio por kg o unidad <input name="precio" inputmode="decimal" placeholder="0.00"></label>'
+            '<label>Fuente (nombre del mercado o tienda) <input name="fuente"></label>'
+            '<label>Fecha en que se vio <input name="fecha" type="date"></label>'
+            '<button>Registrar precio</button></form>')
+    return page("Precios de referencia", body, csrf)

@@ -12,7 +12,7 @@ import importlib
 import json
 import os
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from .domain import BusinessRuleError
@@ -29,6 +29,8 @@ def _encode(value):
         return {"$dec": str(value)}
     if isinstance(value, datetime):
         return {"$dt": value.isoformat()}
+    if isinstance(value, date):  # RF-I: fecha sin hora (precios de referencia)
+        return {"$date": value.isoformat()}
     if isinstance(value, bytes):
         return {"$b64": base64.b64encode(value).decode("ascii")}
     if isinstance(value, tuple):
@@ -73,6 +75,8 @@ def _decode(value):
         return Decimal(value["$dec"])
     if "$dt" in value:
         return datetime.fromisoformat(value["$dt"])
+    if "$date" in value:
+        return date.fromisoformat(value["$date"])
     if "$b64" in value:
         return base64.b64decode(value["$b64"])
     if "$tuple" in value:

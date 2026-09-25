@@ -31,6 +31,7 @@ class InMemoryStore:
         self.claims: dict = {}  # reclamos por artículo
         self.buffer: dict = {}  # colchón de reposición por producto
         self.buffer_uses: list = []  # S-122: a qué pedido fue cada reposición
+        self.reference_prices: list = []  # S-125: precios del mercado y del supermercado
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1

@@ -10,12 +10,12 @@ import math
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
+from .. import audit, auth, buffer, claims, cycle, fulfillment, metrics, reference, wallet, zones
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
@@ -136,8 +136,10 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
                             f"{views.money(product.price_with_commission(tier.base_price))}")
             else:
                 progress = f"{views.qty(total)} {product.unit} pedidos · ya estamos en el mejor precio"
+            references = reference.current_references(store, product.product_id, cycle.to_lima(now).date())  # RF-06
             rows.append({"product_id": product.product_id, "name": product.name, "unit": product.unit,
-                         "step": product.step, "max_price": product.max_unit_price(), "progress": progress})
+                         "step": product.step, "max_price": product.max_unit_price(), "progress": progress,
+                         "references": [references[k] for k in reference.KINDS if k in references]})
         csrf = session.csrf if session and session.role == "vecino" else None
         return views.home(cycle_id, cycle.is_open(now), rows, csrf)
 
@@ -236,6 +238,23 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         product = deactivate_product(store, label, form.get("producto", "").strip(), by=session.principal)  # CW-04
         return views.simple("Producto desactivado", f"{product.name} ya no recibe pedidos en {label}.",
                             session.csrf, back=f"/admin/catalogo?ciclo={label}")
+
+    def referencias(environ, form, session):
+        today = cycle.to_lima(clock()).date()
+        products = [p for p in store.catalog_for(cycle.cycle_id(clock())).values() if p.active]
+        rows = [(p, reference.current_references(store, p.product_id, today)) for p in products]
+        return views.references_page(rows, session.csrf)  # RF-07
+
+    def referencia_registrar(environ, form, session):
+        try:
+            observed = date.fromisoformat((form.get("fecha") or "").strip())
+        except ValueError:
+            raise BusinessRuleError("INVALID_INPUT", "Fecha no válida; usa el formato AAAA-MM-DD.")
+        saved = reference.register_reference(store, form.get("producto", "").strip(), form.get("tipo", "").strip(),
+                                             _money(form.get("precio", ""), "Precio"), form.get("fuente", ""),
+                                             observed, by=session.principal, now=clock())
+        return views.simple("Precio registrado", f"{saved.product_id}: {views.money(saved.price)} en {saved.source}.",
+                            session.csrf, back="/admin/referencias")
 
     def conciliacion(environ, form, session):
         return views.balance_page(audit.money_balance(store), session.csrf)  # AU-03
@@ -411,7 +430,9 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
             repurchase, repurchase_error = metrics.repurchase_week4(store, cycle_id), None
         except BusinessRuleError as error:
             repurchase, repurchase_error = None, error
-        return views.metrics_page(cycle_id, margins, alerts, savings, repurchase, repurchase_error, session.csrf)
+        compared = reference.reference_savings(store, cycle_id)  # RF-08
+        return views.metrics_page(cycle_id, margins, alerts, savings, repurchase, repurchase_error, session.csrf,
+                                  compared)
 
     # ruta -> método -> (función, rol requerido)
     routes = {
@@ -448,6 +469,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/admin/metricas": {"GET": (metricas, "admin")},
         "/admin/devoluciones": {"GET": (devoluciones, "admin")},
         "/admin/conciliacion": {"GET": (conciliacion, "admin")},
+        "/admin/referencias": {"GET": (referencias, "admin"), "POST": (referencia_registrar, "admin")},
         "/admin/catalogo": {"GET": (catalogo, "admin"), "POST": (catalogo_publicar, "admin")},
         "/admin/catalogo/desactivar": {"POST": (catalogo_desactivar, "admin")},
         "/admin/devoluciones/pagar": {"POST": (devolucion_pagar, "admin")},
