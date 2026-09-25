@@ -114,3 +114,58 @@ def repurchase_week4(store: InMemoryStore, cohort_cycle: str) -> Repurchase:
     returned = sum(1 for customer in cohort if target_cycle in purchases[customer])
     rate = Decimal(returned) * 100 / len(cohort)
     return Repurchase(cohort_cycle, target_cycle, len(cohort), returned, rate, rate >= REPURCHASE_TARGET)
+
+
+# --- Iteración 13: margen neto con costos operativos (docs/desarrollo/13-margen-neto.md) ---
+
+
+@dataclass(frozen=True)
+class OperatingCosts:
+    """S-95: costos por pedido que no están en el margen de contribución."""
+
+    name: str
+    purchase_trip: Decimal
+    packing: Decimal
+    support: Decimal
+    payment_fee_rate: Decimal  # sobre lo pagado por Yape/Plin
+
+
+OPTIMISTIC = OperatingCosts("OPTIMISTA", Decimal("0"), Decimal("1.60"), Decimal("0.73"), Decimal("0"))  # S-96
+PESSIMISTIC = OperatingCosts("PESIMISTA", Decimal("3.33"), Decimal("1.60"), Decimal("0.73"), Decimal("0.0295"))  # S-97
+
+
+@dataclass(frozen=True)
+class NetMargin:
+    order_id: int
+    contribution: Decimal
+    payment_fee: Decimal
+    operating_cost: Decimal
+    net_margin: Decimal
+
+
+@dataclass(frozen=True)
+class NetMarginSummary:
+    scenario: str
+    orders: int
+    average_net_margin: Decimal
+    losing_orders: int
+    shortfall_per_losing_order: Decimal
+
+
+def net_margins(store: InMemoryStore, cycle: str, costs: OperatingCosts) -> dict[int, NetMargin]:
+    """NM-01 y NM-02: margen de contribución menos costos operativos del escenario."""
+    result = {}
+    for order_id, margin in order_margins(store, cycle).items():
+        fee = store.orders[order_id].paid_external * costs.payment_fee_rate
+        operating = costs.purchase_trip + costs.packing + costs.support + fee
+        result[order_id] = NetMargin(order_id, margin.margin, fee, operating, margin.margin - operating)
+    return result
+
+
+def net_margin_summary(store: InMemoryStore, cycle: str, costs: OperatingCosts) -> NetMarginSummary:
+    """NM-03: cuánto deja en promedio y cuánto falta en los pedidos que pierden."""
+    margins = list(net_margins(store, cycle, costs).values())
+    losing = [m for m in margins if m.net_margin < 0]
+    average = sum((m.net_margin for m in margins), ZERO) / len(margins) if margins else ZERO
+    shortfall = -sum((m.net_margin for m in losing), ZERO) / len(losing) if losing else ZERO
+    return NetMarginSummary(costs.name, len(margins), average, len(losing), shortfall)

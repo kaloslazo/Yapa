@@ -47,3 +47,12 @@ Si el escenario pesimista se parece a la realidad, **cada pedido pierde plata**.
 - o subir el mínimo de pedidos por zona.
 
 Esta iteración da los números para decidir; no decide.
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/metrics.py`) | Prueba (`tests/test_net_margin.py`) |
+|---|---|---|
+| NM-01, S-95 | `net_margins` (comisión solo sobre `paid_external`) | `test_na01_*`, `test_na02_*`, `test_na03_*` |
+| NM-02 | `net_margins` sobre `order_margins` (hereda MT-01) | `test_na04_*` |
+| NM-03 | `net_margin_summary` | `test_na01_*`, `test_na02_*` |
+| NM-04, S-96, S-97 | `OperatingCosts`, `OPTIMISTIC`, `PESSIMISTIC` | `test_na05_*` |

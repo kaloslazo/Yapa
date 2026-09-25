@@ -27,7 +27,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 10 | **Acceso con PIN, sesión y CSRF** | necesario para que el saldo (plata del cliente) esté protegido | completa, ver `10-acceso.md` |
 | 11 | **Persistencia en SQLite**: que los datos sobrevivan a reiniciar el servidor | S-62 (hoy todo vive en memoria) | completa, ver `11-persistencia.md` |
 | 12 | **Web para lo que falta**: zonas, armado y entrega con foto, reclamos, devolución de saldo, métricas | iteraciones 5, 7 y 8 ya tienen reglas y pruebas, falta la pantalla | pendiente |
-| — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
+| 13 | **Margen neto con costos operativos** por escenario (optimista y pesimista) | hallazgo de la iteración 8 | completa, ver `13-margen-neto.md` (falta que el equipo elija el escenario real) |
 
 ## Registro
 

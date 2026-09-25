@@ -76,3 +76,10 @@
 - Seguridad: al cargar solo se reconstruyen clases del propio paquete. Una base alterada se rechaza sin ejecutar nada.
 - **Hallazgo al probar con el servidor real:** con una base nueva nadie podía entrar (no hay PINs). Se agregó S-94 (credenciales de demo solo si no hay ninguna).
 - Resultado: 174 pruebas en verde y prueba manual de punta a punta con HTTP real.
+
+## Iteración 13 · Margen neto con costos operativos (24/09/2026)
+
+- Spec: `13-margen-neto.md` (S-95..S-97). Atiende el hallazgo urgente n.º 1: el margen de contribución de S/ 5.64 no incluía armado, cobro ni atención.
+- **Resultado con los costos documentados** (escenario MT-A, 8 pedidos): optimista **+S/ 3.31** por pedido; pesimista **−S/ 1.82** por pedido (los 8 pierden). La diferencia la hacen el cobro (Yape Empresa 2.95 % frente a Plin 0 %) y que el proveedor entregue o no.
+- No se decidió qué escenario es el real: eso lo decide el equipo. El código deja los escenarios como datos.
+- Resultado: la suite completa en verde.
