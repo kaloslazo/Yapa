@@ -194,7 +194,7 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
     body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
             ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
             ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a>'
-            ' · <a href="/admin/catalogo">Catálogo</a> · <a href="/admin/referencias">Precios de referencia</a></div>'
+            ' · <a href="/admin/catalogo">Catálogo</a> · <a href="/admin/referencias">Precios de referencia</a> · <a href="/admin/vecinos">Vecinos</a></div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
@@ -518,3 +518,28 @@ def references_page(rows, csrf: str | None = None) -> str:
             '<label>Fecha en que se vio <input name="fecha" type="date"></label>'
             '<button>Registrar precio</button></form>')
     return page("Precios de referencia", body, csrf)
+
+
+def customers_page(customers, zone_ids, csrf: str | None = None) -> str:
+    """AV-08: lista de vecinos, alta con consentimiento y reinicio del PIN. El PIN nunca se lista."""
+    rows = "".join(
+        f"<tr><td>{c.customer_id}</td><td>{escape(c.name)}</td><td>{escape(c.phone or '-')}</td>"
+        f"<td>{escape(c.zone_id)}</td>"
+        f"<td>{escape(c.consent_at.strftime('%d/%m/%Y %H:%M')) if c.consent_at else '-'}</td></tr>"
+        for c in customers
+    )
+    zones = "".join(f'<option value="{escape(z)}">{escape(z)}</option>' for z in zone_ids)
+    body = (f'<form class="card" method="post" action="/admin/vecinos">{hidden(csrf)}'
+            '<strong>Dar de alta</strong>'
+            '<label>Nombre <input name="nombre"></label>'
+            '<label>Celular <input name="celular" inputmode="numeric" placeholder="9XXXXXXXX"></label>'
+            f'<label>Zona <select name="zona">{zones}</select></label>'
+            '<label><input type="checkbox" name="consentimiento" value="si" style="width:auto"> El vecino aceptó '
+            'que Yapa guarde su nombre y celular para sus pedidos</label>'
+            '<button>Registrar y generar PIN</button></form>'
+            f'<form class="card" method="post" action="/admin/vecinos/pin">{hidden(csrf)}'
+            '<strong>Olvidó su PIN</strong><label>Número de cliente <input name="cliente" inputmode="numeric">'
+            '</label><button>Generar PIN nuevo</button></form>'
+            '<div class="card"><table><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th>'
+            f'<th>Consentimiento</th></tr>{rows}</table></div>')
+    return page("Vecinos", body, csrf)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
 
@@ -99,6 +100,8 @@ class Customer:
     suspended: bool = False
     lat: float | None = None
     lon: float | None = None
+    phone: str | None = None  # S-134
+    consent_at: datetime | None = None  # S-133, Ley 29733
 
 
 @dataclass(frozen=True)

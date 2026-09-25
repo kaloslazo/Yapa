@@ -15,7 +15,7 @@ from decimal import Decimal
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, cycle, fulfillment, metrics, reference, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
@@ -266,6 +266,23 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         return views.simple("Precio registrado", f"{saved.product_id}: {views.money(saved.price)} en {saved.source}.",
                             session.csrf, back="/admin/referencias")
 
+    def vecinos(environ, form, session):
+        return views.customers_page(sorted(store.customers.values(), key=lambda c: c.customer_id),
+                                    sorted(store.zones), session.csrf)  # AV-08
+
+    def vecino_alta(environ, form, session):
+        customer, pin = customers.register_customer(store, form.get("nombre", ""), form.get("celular", ""),
+                                                    form.get("zona", "").strip(), form.get("consentimiento") == "si",
+                                                    by=session.principal, now=clock())
+        return views.simple("Vecino registrado", f"Cliente {customer.customer_id} · PIN: {pin}. Envíaselo por "
+                            "WhatsApp; no se vuelve a mostrar.", session.csrf, back="/admin/vecinos")
+
+    def vecino_pin(environ, form, session):
+        customer_id = _int(form.get("cliente", ""), "Número de cliente")
+        pin = customers.reset_pin(store, customer_id, by=session.principal)
+        return views.simple("PIN nuevo", f"Cliente {customer_id} · PIN: {pin}. Envíaselo por WhatsApp; "
+                            "no se vuelve a mostrar.", session.csrf, back="/admin/vecinos")
+
     def conciliacion(environ, form, session):
         return views.balance_page(audit.money_balance(store), session.csrf)  # AU-03
 
@@ -479,6 +496,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/admin/metricas": {"GET": (metricas, "admin")},
         "/admin/devoluciones": {"GET": (devoluciones, "admin")},
         "/admin/conciliacion": {"GET": (conciliacion, "admin")},
+        "/admin/vecinos": {"GET": (vecinos, "admin"), "POST": (vecino_alta, "admin")},
+        "/admin/vecinos/pin": {"POST": (vecino_pin, "admin")},
         "/admin/referencias": {"GET": (referencias, "admin"), "POST": (referencia_registrar, "admin")},
         "/admin/catalogo": {"GET": (catalogo, "admin"), "POST": (catalogo_publicar, "admin")},
         "/admin/catalogo/desactivar": {"POST": (catalogo_desactivar, "admin")},
