@@ -34,7 +34,7 @@ Carlos (24/09/2026): *"la devolución ya no se puede si el personal ya compró l
 | CE-06 | RP-04 pasa a ser **un pedido activo** por ciclo: tras cancelar, el cliente puede registrar otro. | — |
 | CE-07 | La liquidación ignora los pedidos cancelados por el cliente: no cuentan para el mínimo, los tramos ni el envío. | — |
 | CE-08 | Editar reemplaza las líneas del pedido con las mismas reglas RP-05..RP-11. Para el stock, lo que el propio pedido ya tenía reservado cuenta como disponible. | los de RP-05..RP-10 |
-| CE-09 | Si el nuevo total baja, la diferencia va a saldo (S-22) y los pagos se ajustan para que siempre sumen el total del pedido (primero se reduce el pago con saldo, luego el externo). | — |
+| CE-09 | Si el nuevo total baja, la diferencia va a saldo (S-22) y los pagos se ajustan para que siempre sumen el total del pedido, en el orden de S-24. | — |
 | CE-12 | Al bajar el total, el orden de reducción y lo que vuelve al saldo siguen S-24. | — |
 | CE-10 | Si el nuevo total sube, se exige el pago de la diferencia exacta (BS-03..BS-06 aplicados a la diferencia) (S-23). | `PAYMENT_AMOUNT_MISMATCH`, etc. |
 | CE-11 | Si la edición falla por cualquier regla, el pedido queda exactamente como estaba. | — |
@@ -61,3 +61,15 @@ Pedido base: 5 kg de papa amarilla + 4 galones de limpiatodo = subtotal S/ 54.60
 - **CE-F · Editar después del cierre.** → `CYCLE_CLOSED`. → CE-03
 - **CE-H · No se regala saldo sin pago confirmado.** DADO el pedido base con el Yape **sin verificar**, CUANDO se edita a S/ 55.02, ENTONCES el saldo del vecino sigue en S/ 0 y el pago pendiente baja a S/ 55.02. → CE-12
 - **CE-G · Zona no atendida tras bajar el pedido.** El pedido editado a S/ 55.02 (S/ 4.58 ya en saldo) no se atiende: se reembolsan S/ 55.02 al medio de pago, y en total el vecino recupera S/ 59.60. → CE-09, BS-09
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/`) | Prueba (`tests/test_order_changes.py`) |
+|---|---|---|
+| CE-01..CE-03 | `order_changes.py` `_editable_order` | `test_cc05_*`, `test_cc06_*`, `test_cc07_*`, `test_ce_f_*` |
+| CE-04, CE-05 | `order_changes.py` `cancel_order` · `store.py` `release` | `test_cc01_*`..`test_cc04_*`, `test_cc09_*` |
+| CE-06 | `store.py` `find_order` (ignora cancelados) | `test_cc08_*` |
+| CE-07 | `settlement.py` (filtro al inicio de `settle_cycle`) | `test_cc10_*` |
+| CE-08, CE-11 | `order_changes.py` `edit_order` (libera, cotiza, restaura si falla) | `test_ce_c_*`, `test_ce_d_*`, `test_ce_e_*` |
+| CE-09, CE-12 | `order_changes.py` `_reduce_payments` | `test_ce_a_*`, `test_ce_h_*`, `test_ce_g_*` |
+| CE-10 | `order_changes.py` `edit_order` (reusa `_check_balance_use` y `_check_payment`) | `test_ce_b_*`, `test_ce_c_*` |

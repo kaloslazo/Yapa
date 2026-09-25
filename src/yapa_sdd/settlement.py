@@ -79,7 +79,8 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
     if cycle in store.settled_cycles:  # BS-11
         raise BusinessRuleError("CYCLE_ALREADY_SETTLED", f"El ciclo {cycle} ya fue liquidado.")
     settled: dict[int, SettledOrder] = {}
-    orders = store.orders_in_cycle(cycle)
+    # CE-07: los cancelados por el cliente ya se resolvieron al cancelar
+    orders = [o for o in store.orders_in_cycle(cycle) if o.status != "CANCELADO_POR_CLIENTE"]
 
     # LQ-01: solo cuentan los pagos verificados
     verified = []

@@ -36,9 +36,14 @@ class InMemoryStore:
     def reserve(self, product_id: str, quantity: Decimal) -> None:
         self.reserved[product_id] = self.reserved_quantity(product_id) + quantity
 
+    def release(self, product_id: str, quantity: Decimal) -> None:
+        self.reserved[product_id] = self.reserved_quantity(product_id) - quantity
+
     def find_order(self, customer_id: int, cycle: str) -> Order | None:
+        """Pedido activo del cliente en el ciclo (CE-06: los cancelados no cuentan)."""
         for order in self.orders.values():
-            if order.customer_id == customer_id and order.cycle == cycle:
+            if (order.customer_id == customer_id and order.cycle == cycle
+                    and order.status != "CANCELADO_POR_CLIENTE"):
                 return order
         return None
 
