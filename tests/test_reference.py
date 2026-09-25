@@ -107,6 +107,16 @@ class ReferenceSpecTests(ReferenceBase):
         self.assertEqual((market.baskets, market.savings, market.percent), (0, D("0"), None))
         self.assertEqual(reference_savings(self.store, CYCLE)["SUPERMERCADO"].baskets, 8)
 
+    # RF-I
+    def test_rf_i_references_survive_database(self):
+        import os
+        import tempfile
+        from yapa_sdd import persistence
+        self.register("PAPA-AMARILLA", "MERCADO", "4.50", MARKET)
+        path = os.path.join(tempfile.mkdtemp(), "yapa.db")
+        persistence.save(self.store, path)
+        self.assertEqual(persistence.load(path).reference_prices, self.store.reference_prices)
+
     def test_rf08_cycle_must_be_settled(self):
         self.assertRule("CYCLE_NOT_SETTLED", reference_savings, self.store, CYCLE)
 
