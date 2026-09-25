@@ -1,0 +1,7 @@
+# Iteracion 7 - pruebas ANTES del codigo
+# 2026-09-24 22:52
+ERROR: test_fulfillment (unittest.loader._FailedTest.test_fulfillment)
+ImportError: Failed to import test module: test_fulfillment
+ModuleNotFoundError: No module named 'yapa_sdd.buffer'
+Ran 108 tests in 0.039s
+FAILED (errors=1)
