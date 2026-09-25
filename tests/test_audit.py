@@ -21,7 +21,8 @@ class AuditSpecTests(unittest.TestCase):
         s = Scenario()
         s.order("Z-JM-01")
         balance = money_balance(s.store)
-        self.assertEqual((balance.received, balance.kept, balance.owed), (D("61.00"), D("0"), D("0")))
+        self.assertEqual((balance.received, balance.in_flight, balance.kept, balance.owed),
+                         (D("61.00"), D("61.00"), D("0"), D("0")))
         self.assertEqual(balance.difference, D("0"))
         s.orders("Z-JM-01", 7)
         settle_cycle(s.store, CYCLE)
