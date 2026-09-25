@@ -73,7 +73,8 @@ def _lines(form: dict[str, str]) -> list[tuple[str, str]]:
     return lines
 
 
-def create_app(store: InMemoryStore, clock=None):
+def create_app(store: InMemoryStore, clock=None, on_change=None):
+    """on_change(store) se llama después de cada POST que termina bien (PS-03)."""
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     sessions: dict[str, Session] = {}
 
@@ -228,6 +229,8 @@ def create_app(store: InMemoryStore, clock=None):
             status, html, headers = dispatch(environ)
         except Response as response:
             status, html, headers = response.status, response.html, response.headers
+        if on_change and environ.get("REQUEST_METHOD") == "POST" and status[:3] in ("200", "303"):
+            on_change(store)
         body = html.encode("utf-8")
         start_response(status, [("Content-Type", "text/html; charset=utf-8"),
                                 ("Content-Length", str(len(body)))] + headers)

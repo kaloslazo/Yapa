@@ -68,3 +68,11 @@
 - Implementación: `auth.py` (PIN con hash PBKDF2 y sal, bloqueo tras 5 fallos, mismo error si el usuario no existe). En `web/app.py`: sesión en el servidor con cookie `HttpOnly`/`SameSite=Lax`, rol por ruta, token CSRF en cada POST, entrar, salir y cambiar PIN.
 - La suite tardaba 24 s por el hash lento. Se resolvió bajando las iteraciones solo en las pruebas, y AA-11 fija el valor de producción.
 - Resultado: 130 pruebas en verde en la rama.
+
+## Iteración 11 · Persistencia en SQLite (24/09/2026)
+
+- Spec: `11-persistencia.md` (S-90..S-94). Se guarda el estado completo después de cada POST exitoso, en una transacción.
+- Pruebas antes del código: `docs/evidencia/desarrollo/11-persistencia-rojo.txt`. La prueba PA-04 se corrigió antes de programar, porque la falla simulada ocurría en el primer dato y no probaba el "todo o nada".
+- Seguridad: al cargar solo se reconstruyen clases del propio paquete. Una base alterada se rechaza sin ejecutar nada.
+- **Hallazgo al probar con el servidor real:** con una base nueva nadie podía entrar (no hay PINs). Se agregó S-94 (credenciales de demo solo si no hay ninguna).
+- Resultado: 174 pruebas en verde y prueba manual de punta a punta con HTTP real.
