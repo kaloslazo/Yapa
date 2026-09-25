@@ -103,6 +103,7 @@ def join_zone(store: InMemoryStore, customer_id: int, zone_id: str, *, now: date
     zone = _zone(store, zone_id)
     if customer.lat is None or customer.lon is None:
         raise BusinessRuleError("LOCATION_REQUIRED", "Registra tu ubicación para unirte a una zona.")
+    _check_zone_location(zone)
     if distance_m(customer.lat, customer.lon, zone.lat, zone.lon) > MEMBER_RADIUS_M:
         raise BusinessRuleError("OUTSIDE_ZONE_RADIUS", "Vives lejos del punto de recepción de esta zona.")
     _check_can_move(store, customer_id)
@@ -111,10 +112,18 @@ def join_zone(store: InMemoryStore, customer_id: int, zone_id: str, *, now: date
     return moved
 
 
+def _check_zone_location(zone: Zone) -> None:
+    """S-75: las zonas cargadas antes de la iteración 5 no tienen ubicación."""
+    if zone.lat is None or zone.lon is None:
+        raise BusinessRuleError("LOCATION_REQUIRED", f"La zona {zone.zone_id} no tiene ubicación registrada.")
+
+
 def _check_merge(store: InMemoryStore, zone: Zone, target: Zone) -> None:
     if zone.group_id == target.group_id:
         raise BusinessRuleError("SAME_GROUP", "Las zonas ya están unidas.")
     group = [z for z in store.zones.values() if z.group_id == target.group_id]
+    for z in [zone] + group:
+        _check_zone_location(z)
     if any(distance_m(zone.lat, zone.lon, z.lat, z.lon) > MERGE_DISTANCE_M for z in group):
         raise BusinessRuleError("ZONES_TOO_FAR", "Las zonas están muy lejos para compartir camión.")
 
