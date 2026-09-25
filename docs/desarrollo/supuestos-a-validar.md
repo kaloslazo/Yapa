@@ -14,6 +14,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
    - qué costo por pedido se descuenta en las métricas.
 2. **Zonas lejanas.** Una zona con parada de S/ 100 y 8 pedidos pierde S/ 1.86 por pedido (MT-B), porque el envío cobrado tiene tope de S/ 5. **El mínimo de 8 pedidos solo alcanza si la parada cuesta hasta S/ 40.** ¿El mínimo debería depender del costo de la parada?
 3. **Portería que no recibe.** Si el día de la entrega nadie recibe, no hay regla: ¿se reintenta?, ¿se devuelve la plata?, ¿qué pasa con los frescos?
+5. **Crecer no mejora el margen (simulador, iteración 14).** Como todo el ahorro por volumen vuelve al cliente y la comisión es un % del precio final, **Yapa gana menos por pedido mientras más compra el grupo**: de S/ 3.31 con 8 pedidos a S/ 2.52 con 30 (optimista). ¿Yapa se queda con parte del ahorro, cobra un fee fijo o solo baja costos? Ver `14-simulador-escenarios.md`.
 4. **Reclamo por un artículo dañado:** ¿la plata vuelve a saldo (como está hoy) o directo al Yape/Plin?
 
 ## A. Dinero y pagos (los más importantes)

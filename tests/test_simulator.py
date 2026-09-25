@@ -12,12 +12,14 @@ class SimulatorSpecTests(unittest.TestCase):
         self.assertEqual(simulate(8, D("40"), D("0.12"), PESSIMISTIC).average_net_margin, D("-1.8195"))
         self.assertEqual(simulate(8, D("40"), D("0.12"), OPTIMISTIC).average_net_margin, D("3.31"))
 
-    # SA-02
-    def test_sa02_more_orders_better_margin(self):
+    # SA-02 (corregido: el volumen beneficia al cliente, no al margen de Yapa)
+    def test_sa02_volume_helps_customer_not_margin(self):
         small = simulate(8, D("40"), D("0.12"), PESSIMISTIC)
         big = simulate(20, D("40"), D("0.12"), PESSIMISTIC)
-        self.assertGreater(big.average_net_margin, small.average_net_margin)
-        self.assertGreater(big.average_customer_savings, small.average_customer_savings)
+        self.assertEqual(small.average_customer_savings.quantize(D("0.01")), D("3.36"))
+        self.assertEqual(big.average_customer_savings.quantize(D("0.01")), D("12.86"))
+        self.assertEqual(big.average_net_margin.quantize(D("0.01")), D("-2.52"))
+        self.assertLess(big.average_net_margin, small.average_net_margin)
 
     # SA-03
     def test_sa03_does_not_touch_real_commission(self):
@@ -27,8 +29,7 @@ class SimulatorSpecTests(unittest.TestCase):
     # SA-04
     def test_sa04_break_even(self):
         self.assertEqual(break_even_orders(D("40"), D("0.12"), OPTIMISTIC), 8)
-        pessimistic = break_even_orders(D("40"), D("0.12"), PESSIMISTIC)
-        self.assertTrue(pessimistic is None or pessimistic > 8)
+        self.assertIsNone(break_even_orders(D("40"), D("0.12"), PESSIMISTIC))
 
     # SA-05
     def test_sa05_decision_table(self):
