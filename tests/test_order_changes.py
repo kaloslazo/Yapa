@@ -45,7 +45,7 @@ class OrderChangesSpecTests(unittest.TestCase):
         cancel_order(self.store, order.order_id, customer_id=101, refund_to="MEDIO_DE_PAGO", now=NOW)
         self.assertEqual(self.store.orders[order.order_id].status, "CANCELADO_POR_CLIENTE")
         self.assertEqual(self.pending_refunds(101), [Decimal("59.60")])
-        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA"), Decimal("0"))
+        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA", CYCLE), Decimal("0"))
 
     # CC-02
     def test_cc02_cancel_refunds_to_balance(self):
@@ -120,8 +120,8 @@ class OrderChangesSpecTests(unittest.TestCase):
         self.assertEqual(edited.total, Decimal("55.02"))
         self.assertEqual(balance(self.store, 101), Decimal("4.58"))
         self.assertEqual(sum(p.amount for p in edited.payments), Decimal("55.02"))
-        self.assertEqual(self.store.reserved_quantity("LIMPIATODO-GALON"), Decimal("3"))
-        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA"), Decimal("6"))
+        self.assertEqual(self.store.reserved_quantity("LIMPIATODO-GALON", CYCLE), Decimal("3"))
+        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA", CYCLE), Decimal("6"))
 
     # CE-B
     def test_ce_b_edit_up_requires_paying_the_difference(self):
@@ -141,7 +141,7 @@ class OrderChangesSpecTests(unittest.TestCase):
                         payment_method="PLIN", operation_code="PL-DIF1", amount=Decimal("8.00"))
         same = self.store.orders[order.order_id]
         self.assertEqual(same.total, Decimal("59.60"))
-        self.assertEqual(self.store.reserved_quantity("LIMPIATODO-GALON"), Decimal("4"))
+        self.assertEqual(self.store.reserved_quantity("LIMPIATODO-GALON", CYCLE), Decimal("4"))
         self.assertNotIn("PL-DIF1", self.store.used_codes)
 
     # CE-D
@@ -150,11 +150,11 @@ class OrderChangesSpecTests(unittest.TestCase):
         self.assertRule("SUBTOTAL_BELOW_MINIMUM", edit_order, self.store, order.order_id, customer_id=101, now=NOW,
                         lines=[("LIMPIATODO-GALON", "5")])
         self.assertEqual(self.store.orders[order.order_id].total, Decimal("59.60"))
-        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA"), Decimal("5"))
+        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA", CYCLE), Decimal("5"))
 
     # CE-E
     def test_ce_e_own_reservation_counts_as_available(self):
-        self.store.reserve("PAPA-AMARILLA", Decimal("395"))
+        self.store.reserve("PAPA-AMARILLA", Decimal("395"), CYCLE)
         order = self.base_order()
         edited = edit_order(self.store, order.order_id, customer_id=101, now=NOW,
                             lines=[("PAPA-AMARILLA", "5"), ("LIMPIATODO-GALON", "5")],

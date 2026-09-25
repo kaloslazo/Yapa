@@ -52,4 +52,4 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 - **CT-I · Precio fijo en la semana.** Intentar publicar para W39 el martes 22/09 → `CATALOG_LOCKED`. → CT-08
 - **CT-J · Desactivar a mitad de semana.** Con un pedido de papa amarilla ya registrado, el administrador la desactiva → un pedido nuevo con papa recibe `PRODUCT_NOT_AVAILABLE`, y el pedido anterior se liquida normal. → CT-09, S-36
 - **CT-K · Stock por ciclo.** 395 kg reservados en W38 no impiden pedir 6 kg en W39. → S-35
-- **CT-L · Liquidación con los tramos del ciclo.** En W39, con 100 kg pedidos entre todos, el precio final es 3.30 × 1.12 = S/ 3.696. → CT-10
+- **CT-L · Liquidación con los tramos del ciclo.** En W39, con 200 kg pedidos entre todos (tramo desde 100), el precio final es 3.30 × 1.12 = S/ 3.696. → CT-10

@@ -127,13 +127,13 @@ class RegisterOrderSpecTests(unittest.TestCase):
 
     # CA-10
     def test_ca10_rejects_quantity_above_supplier_stock(self):
-        self.store.reserve("PAPA-AMARILLA", Decimal("395"))
+        self.store.reserve("PAPA-AMARILLA", Decimal("395"), "2026-W38")
         self.assertRule("PRODUCT_SOLD_OUT", lines=[("PAPA-AMARILLA", "6"), ("LIMPIATODO-GALON", "4")], amount=Decimal("60"))
 
     def test_ca10_accepts_exactly_remaining_stock_and_reserves_it(self):
-        self.store.reserve("PAPA-AMARILLA", Decimal("395"))
+        self.store.reserve("PAPA-AMARILLA", Decimal("395"), "2026-W38")
         register(self.store, lines=[("PAPA-AMARILLA", "5"), ("LIMPIATODO-GALON", "4")])
-        self.assertEqual(self.store.reserved["PAPA-AMARILLA"], Decimal("400"))
+        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA", "2026-W38"), Decimal("400"))
 
     # CA-11
     def test_ca11_minimum_uses_exact_subtotal(self):
@@ -181,7 +181,7 @@ class RegisterOrderSpecTests(unittest.TestCase):
         quote = quote_order(self.store, CA01_LINES)
         self.assertEqual(quote.total, Decimal("59.51"))
         self.assertEqual(self.store.orders, {})
-        self.assertEqual(self.store.reserved.get("PAPA-AMARILLA", Decimal("0")), Decimal("0"))
+        self.assertEqual(self.store.reserved_quantity("PAPA-AMARILLA", "2026-W38"), Decimal("0"))
 
     # CA-14
     def test_ca14_admin_verifies_payment_before_close(self):
