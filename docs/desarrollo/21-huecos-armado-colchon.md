@@ -36,17 +36,17 @@ El hueco 2 de la iteración 6 (desactivar en el catálogo base) se cerró en la 
 
 ## Criterios de aceptación
 
-Escenario: 8 pedidos de Jesús María del ciclo 2026-W38 con la canasta de prueba, más un pedido 9 con 4 galones de limpiatodo. El colchón tiene 6 galones de limpiatodo (S/ 47.40).
+Escenario: 8 pedidos de Jesús María del ciclo 2026-W38 con la canasta de prueba, más un pedido 9 con 4 galones de limpiatodo y 5 kg de papa amarilla (S/ 54.60; solo con el limpiatodo no llegaba al pedido mínimo de S/ 50). El colchón tiene 6 galones de limpiatodo (S/ 47.40).
 
 - **HC-A · Bolsa después de entregar.** Se arman los pedidos y se entrega la zona. Registrar otra bolsa del pedido 1 → `ZONE_ALREADY_CLOSED`. Lo mismo en una zona con entrega fallida. → AR-06
 - **HC-B · Reponer a un pedido.** Se usan 2 galones para el pedido 9 → quedan 4 (S/ 31.60) y hay un registro: pedido 9, limpiatodo, 2, S/ 15.80, `admin-yapa`, con su hora. → CO-06, CO-08
 - **HC-C · Límite por pedido.** Con 2 ya repuestos al pedido 9, reponer 3 más → `BUFFER_NOT_FOR_ORDER` (2 + 3 = 5 > 4). Reponer 2 más sí se acepta. → CO-07
 - **HC-D · Pedido sin ese producto.** Reponer limpiatodo al pedido 1 (no lo pidió) → `BUFFER_NOT_FOR_ORDER`. → CO-07
-- **HC-E · Pedido inválido.** Pedido 999 → `ORDER_NOT_FOUND`. Un pedido de limpiatodo en Lince, donde el grupo no llega al mínimo → `ORDER_NOT_ATTENDED`. → CO-06
+- **HC-E · Pedido inválido.** Pedido 999 → `ORDER_NOT_FOUND`. El mismo pedido en Lince, donde el grupo no llega al mínimo → `ORDER_NOT_ATTENDED`. → CO-06
 - **HC-F · Web.** En `/admin/colchon`, el formulario de reponer pide el número de pedido, y la pantalla muestra el uso ("Pedido 9"). → CO-08
 - **HC-G · Unidad.** Publicar un producto con unidad `caja` → `INVALID_UNIT`. Uno con unidad `unidad` y paso 0.5 → `INVALID_UNIT`. Con `kg` y paso 0.25 se acepta. → CT-12
-- **HC-H · Proveedor que deja de ser aliado.** Con el catálogo de W39 publicado, el proveedor de frescos deja de ser aliado el lunes → la papa amarilla sigue en el catálogo de W39 y un vecino puede pedirla. Publicar W40 con ese proveedor → `SUPPLIER_NOT_ALLIED`. → S-124
+- **HC-H · Proveedor que deja de ser aliado.** Con el catálogo de W39 publicado, el proveedor de frescos deja de ser aliado el lunes → la papa amarilla sigue en el catálogo de W39 y un vecino puede pedir 13 kg (S/ 50.96). Publicar W40 con ese proveedor → `SUPPLIER_NOT_ALLIED`. → S-124
 
 ## Cambios en pruebas anteriores
 
-- CO-D, CO-E (`test_fulfillment`) y OA-11 (`test_web_operacion`) usaban el colchón sin indicar pedido. Por S-122, ahora indican el pedido de limpiatodo del escenario. Los números que verifican no cambian.
+- CO-D, CO-E (`test_fulfillment`) y OA-11 (`test_web_operacion`) usaban el colchón sin indicar pedido. Por S-122, ahora indican un pedido con limpiatodo (con papa amarilla para llegar al mínimo). Los números que verifican no cambian.
