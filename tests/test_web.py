@@ -116,10 +116,12 @@ class WebSpecTests(unittest.TestCase):
             client.login(customer_id, "482915")
             self.register(client=client, code=f"WEB{i}")
             self.admin.post("/admin/verificar", {"pedido": str(i + 1)})
+        # HR-10 (iteración 18): liquidar desde la web usa close_cycle; sin entregar la zona, no se liquida.
+        # El camino completo (armar, entregar y liquidar) está en test_web_hardening.test_ha10_*.
         status, _, html = self.admin.post("/admin/liquidar", {"ciclo": "2026-W38"})
-        self.assertEqual(status, 200)
-        self.assertIn("LIQUIDADO", html)
-        self.assertIn("PAPA-AMARILLA", html)
+        self.assertEqual(status, 422)
+        self.assertIn("ZONES_PENDING", html)
+        self.assertIn("Z-JM-01", html)
 
     # WA-11 (ajustado en la iteración 10)
     def test_wa11_html_is_escaped(self):
