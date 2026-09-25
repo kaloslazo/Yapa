@@ -81,10 +81,13 @@ def _merge_lines(lines: Iterable) -> list[tuple[str, Decimal]]:
     return list(merged.items())
 
 
-def _product(catalog: dict[str, Product], product_id: str) -> Product:
-    """RP-06: el producto está en el catálogo del ciclo y activo."""
+def _product(catalog: dict[str, Product], product_id: str, quantity: Decimal, kept: dict[str, Decimal]) -> Product:
+    """RP-06: el producto está en el catálogo del ciclo y activo.
+
+    CT-11, S-39: al editar, un producto desactivado se mantiene si no sube de lo que ya tenía el pedido.
+    """
     product = catalog.get(product_id)
-    if product is None or not product.active:
+    if product is None or (not product.active and quantity > kept.get(product_id, Decimal("0"))):
         raise BusinessRuleError("PRODUCT_NOT_AVAILABLE", f"{product_id} no está disponible este ciclo.")
     return product
 
@@ -105,15 +108,17 @@ def _check_stock(store: InMemoryStore, product: Product, quantity: Decimal, cycl
         raise BusinessRuleError("PRODUCT_SOLD_OUT", f"{product.name} está agotado este ciclo.")
 
 
-def quote_order(store: InMemoryStore, lines: Iterable, cycle: str | None = None) -> Quote:
+def quote_order(store: InMemoryStore, lines: Iterable, cycle: str | None = None,
+                kept: dict[str, Decimal] | None = None) -> Quote:
     """Cotización: RP-05..RP-11 sin reservar stock ni crear el pedido.
 
     CT-10: usa el catálogo del ciclo; sin ciclo o sin catálogo publicado, el base (S-37).
+    `kept` son las cantidades que ya tenía el pedido que se edita (S-39).
     """
     catalog = store.catalog_for(cycle)
     order_lines = []
     for product_id, quantity in _merge_lines(lines):
-        product = _product(catalog, product_id)
+        product = _product(catalog, product_id, quantity, kept or {})
         _check_quantity(product, quantity)
         _check_stock(store, product, quantity, cycle)
         order_lines.append(OrderLine(product_id, quantity, product.max_unit_price()))  # RP-09

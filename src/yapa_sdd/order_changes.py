@@ -80,7 +80,8 @@ def edit_order(store: InMemoryStore, order_id: int, *, customer_id: int, lines: 
     for line in order.lines:
         store.release(line.product_id, line.quantity, order.cycle)
     try:
-        quote = quote_order(store, lines, order.cycle)
+        kept = {line.product_id: line.quantity for line in order.lines}  # S-39
+        quote = quote_order(store, lines, order.cycle, kept)
         difference = quote.total - order.total
         new_payments = []
         if difference > 0:  # CE-10, S-23
