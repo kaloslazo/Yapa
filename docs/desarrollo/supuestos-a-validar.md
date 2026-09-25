@@ -6,6 +6,16 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 
 ---
 
+## ⚠️ Decisiones urgentes (salieron al programar)
+
+1. **¿Nos alcanza el margen?** En el escenario base, cada pedido deja **S/ 5.64** antes de costos operativos (`08-metricas-piloto.md`, MT-A). Pero armar, cobrar y atender cuesta entre **S/ 3.22 y S/ 12.69 por pedido** (`docs/analisis/08_validacion_economica.md`). Con Yape Empresa (2.95 %) y armado pagado, el margen puede quedar **negativo**. Hay que decidir:
+   - si subimos la comisión;
+   - si usamos Plin negocios (0 %) en vez de Yape Empresa;
+   - qué costo por pedido se descuenta en las métricas.
+2. **Zonas lejanas.** Una zona con parada de S/ 100 y 8 pedidos pierde S/ 1.86 por pedido (MT-B), porque el envío cobrado tiene tope de S/ 5. **El mínimo de 8 pedidos solo alcanza si la parada cuesta hasta S/ 40.** ¿El mínimo debería depender del costo de la parada?
+3. **Portería que no recibe.** Si el día de la entrega nadie recibe, no hay regla: ¿se reintenta?, ¿se devuelve la plata?, ¿qué pasa con los frescos?
+4. **Reclamo por un artículo dañado:** ¿la plata vuelve a saldo (como está hoy) o directo al Yape/Plin?
+
 ## A. Dinero y pagos (los más importantes)
 
 | # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
@@ -53,9 +63,33 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 26 | ¿Cuánto se puede pedir por línea? | Hasta 10 kg o 6 unidades; frescos en pasos de 1 kg (ajo de 250 g) (S-08). | | | |
 | 27 | ¿Los precios del piloto son reales? | Son de ejemplo, sacados del mayorista del 23–24/09. Hay que cambiarlos por la lista real del proveedor aliado (S-12). | | | |
 
+## E2. Iteraciones 6 a 8 (catálogo, armado, reclamos, métricas)
+
+| # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
+|---|---|---|---|---|---|
+| 28 | Si Yapa desactiva un producto a mitad de semana, ¿el vecino que ya lo pidió puede editar su pedido? | Sí, puede mantener o bajar esa cantidad, pero no subirla (S-39). | | | |
+| 29 | ¿Quién arma y entrega? | Por ahora, los administradores; no hay rol separado de armador o repartidor (S-40). | | | |
+| 30 | ¿Cómo se prueba que se armó bien? | Una foto por bolsa, al terminar de armarla (S-41). | | | |
+| 31 | ¿Cómo se prueba que se entregó? | Foto de la entrega y nombre de quien recibe en portería; una entrega por zona y por semana (S-42). | | | |
+| 32 | ¿Hasta cuándo se puede reclamar un artículo? | Hasta 24 horas después de la entrega (S-43). | | | |
+| 33 | ¿Qué debe traer un reclamo? | Motivo (faltó o llegó dañado), foto y cantidad (S-44). | | | |
+| 34 | Si se aprueba un reclamo, ¿cuánto se devuelve y a dónde? | El precio final del artículo, redondeado a favor del cliente, como saldo (S-45). | | | |
+| 35 | ¿Qué se guarda como colchón de reposición? | Solo limpieza (no perecible), con un tope de S/ 500 (S-46). | | | |
+| 36 | ¿Cómo medimos la recompra? | De los que compran por primera vez en una semana, cuántos vuelven a comprar 3 semanas después. Meta: 50 % (S-48). | | | |
+| 37 | ¿Qué cuenta en el margen por pedido? | Lo cobrado − reclamos − costo del proveedor − parada repartida. **No incluye costos operativos** (S-49, ver urgentes). | | | |
+
+## E3. Web y acceso (iteraciones 9 y 10)
+
+| # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
+|---|---|---|---|---|---|
+| 38 | ¿Cómo entra un vecino? | Número de cliente + PIN de 6 dígitos, que no puede ser fácil como 123456 o 111111 (S-64, S-66). | | | |
+| 39 | ¿Quién le da el PIN inicial? | El administrador, al darlo de alta (por ejemplo, por WhatsApp). Después el vecino lo puede cambiar (S-65). | | | |
+| 40 | ¿Qué pasa si alguien falla el PIN varias veces? | Con 5 intentos fallidos se bloquea 15 minutos (S-68). | | | |
+| 41 | ¿Cuánto dura la sesión? | 8 horas (S-69). | | | |
+
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 
-S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno).
+S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas), S-62/S-63 (datos en memoria, hora fija para la demo), S-67 (hash del PIN), S-70/S-71 (contraseña de admin, protección de formularios), S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno).
 
 ---
 

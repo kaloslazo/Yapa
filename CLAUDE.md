@@ -35,16 +35,16 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```
 
-## Estado al 24/09/2026
+## Estado al 24/09/2026 (noche)
 
-- Iteraciones 2 (Lab 4), 3 (billetera), 4 (cancelar/editar) y 5 (zonas): **completas y en verde**.
-- **Iteración 6 (catálogo semanal): spec y pruebas commiteadas, EN ROJO (9 errores esperados).** Falta:
-  - crear `src/yapa_sdd/catalog.py` con `publish_catalog(store, cycle, products, *, by, now)` y `deactivate_product(store, cycle, product_id, *, by)`;
-  - que `store` tenga `catalogs`, `admins` (con `"admin-yapa"` en el seed) y `suppliers` (seed: `SUP-FRESCOS` y `SUP-LIMPIEZA` aliados, `SUP-OTRO` no aliado);
-  - `Product.supplier_id` opcional;
-  - reservas por ciclo: `reserve(product_id, qty, cycle)`, `reserved_quantity(product_id, cycle)`, `release(product_id, qty, cycle)`;
-  - `quote_order(store, lines, cycle=None)` que use `store.catalog_for(cycle)`;
-  - registro, edición, cancelación y liquidación con el catálogo y las reservas del ciclo del pedido.
+- Iteraciones 2 a 10 **completas y en verde** (164 pruebas): pedido, liquidación, billetera, cancelar/editar, zonas, catálogo semanal, armado/entrega/reclamos/colchón, métricas, web y acceso con PIN.
+- Numeración de supuestos: S-01..S-52 (dominio) y S-60..S-71 (web y acceso). Los nuevos van desde S-72.
+- Siguiente: iteración 11 (persistencia en SQLite) y luego la 12 (pantallas web para zonas, armado, entrega, reclamos y métricas). Ver `docs/desarrollo/00-roadmap.md`.
+- Supuestos pendientes de validar por el equipo: `docs/desarrollo/supuestos-a-validar.md`.
+- Tarea de campo pendiente: precios del mercado de barrio (`docs/desarrollo/kit-validacion-campo.md`).
 
-  Ver `docs/desarrollo/06-catalogo-semanal.md` y `tests/test_catalog.py`.
-- Pendientes después: iteración 7 (armado con foto por bolsa, entrega en portería con foto, reclamo por artículo en 24 h, colchón de reposición con tope) e iteración 8 (métricas: recompra en la semana 4, margen por pedido, ahorro entregado). Ver `docs/desarrollo/00-roadmap.md` y `docs/analisis/07_modelo_precios_zonas.md`.
+## Levantar la web de demo
+
+```bash
+PYTHONPATH=src python -m yapa_sdd.web --ahora 2026-09-16T10:00:00-05:00
+```
