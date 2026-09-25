@@ -12,6 +12,7 @@ from typing import Iterable
 
 from .domain import MAX_DELIVERY_FEE, MIN_ORDERS_PER_GROUP, BusinessRuleError, Order, floor_cents
 from .store import InMemoryStore
+from . import wallet
 
 
 ZERO = Decimal("0")
@@ -36,6 +37,7 @@ class SettledOrder:
     final_amount: Decimal = ZERO
     refund_amount: Decimal = ZERO
     refund_destination: str | None = None
+    returned_to_balance: Decimal = ZERO
 
 
 @dataclass(frozen=True)
@@ -73,7 +75,9 @@ def _missing_by_order(missing: Iterable, attended: dict[int, Order]) -> dict[tup
     return result
 
 
-def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = ()) -> CycleSettlement:
+def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=None) -> CycleSettlement:
+    if cycle in store.settled_cycles:  # BS-11
+        raise BusinessRuleError("CYCLE_ALREADY_SETTLED", f"El ciclo {cycle} ya fue liquidado.")
     settled: dict[int, SettledOrder] = {}
     orders = store.orders_in_cycle(cycle)
 
@@ -83,8 +87,9 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = ()) -> Cy
         if order.payment_status == "VERIFICADO":
             verified.append(order)
         else:
-            order.status = "CANCELADO"
-            settled[order.order_id] = SettledOrder(order.order_id, "CANCELADO", order.total)
+            settled[order.order_id] = SettledOrder(  # BS-10: el saldo usado vuelve
+                order.order_id, "CANCELADO", order.total, returned_to_balance=order.paid_with_balance,
+            )
 
     # LQ-02: mínimo por grupo de zonas
     def group_of(order: Order) -> str:
@@ -94,10 +99,10 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = ()) -> Cy
     attended: dict[int, Order] = {}
     for order in verified:
         if per_group[group_of(order)] < MIN_ORDERS_PER_GROUP:
-            order.status = "NO_ATENDIDO"
-            settled[order.order_id] = SettledOrder(
+            settled[order.order_id] = SettledOrder(  # BS-09: externo al medio de pago, saldo a saldo
                 order.order_id, "NO_ATENDIDO", order.total,
-                refund_amount=order.total, refund_destination="MEDIO_DE_PAGO",
+                refund_amount=order.paid_external, refund_destination="MEDIO_DE_PAGO",
+                returned_to_balance=order.paid_with_balance,
             )
         else:
             attended[order.order_id] = order
@@ -135,7 +140,6 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = ()) -> Cy
             amount += price * delivered
             lines.append(SettledLine(line.product_id, line.quantity, lost, delivered, price))
         final_amount = floor_cents(amount)
-        order.status = "LIQUIDADO"
         settled[order.order_id] = SettledOrder(
             order.order_id, "LIQUIDADO", order.total, lines,
             delivery_fee=fee_by_zone[order.zone_id],
@@ -143,6 +147,18 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = ()) -> Cy
             refund_amount=order.total - final_amount,
             refund_destination="SALDO",
         )
+
+    # Recién aquí, con todo validado, se aplican los efectos (estados, billetera, reembolsos).
+    for result in settled.values():
+        order = store.orders[result.order_id]
+        order.status = result.status
+        reference = f"pedido {order.order_id}"
+        if result.status == "LIQUIDADO":
+            wallet.credit(store, order.customer_id, result.refund_amount, "ABONO_LIQUIDACION", at, reference)
+        wallet.credit(store, order.customer_id, result.returned_to_balance, "DEVOLUCION_A_SALDO", at, reference)
+        if result.status == "NO_ATENDIDO" and result.refund_amount > 0:
+            wallet.add_refund(store, order.customer_id, result.refund_amount, "ZONA_NO_ATENDIDA", at)
+    store.settled_cycles.add(cycle)
 
     # LQ-09: resumen del ciclo
     total_credited = sum((o.refund_amount for o in settled.values() if o.status == "LIQUIDADO"), ZERO)

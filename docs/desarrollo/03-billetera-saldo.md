@@ -49,6 +49,7 @@ Como Yapa, quiero saber en todo momento cuánto le debo a cada cliente, porque e
 | BS-09 | Pedido `NO_ATENDIDO`: la parte externa se registra como reembolso pendiente al medio de pago y la parte de saldo vuelve a la billetera (S-16). | — |
 | BS-10 | Pedido `CANCELADO` (sin pago verificado): la parte de saldo vuelve a la billetera. La parte externa no tiene reembolso automático (LQ-01). | — |
 | BS-11 | Un ciclo ya liquidado no se puede volver a liquidar (S-17). | `CYCLE_ALREADY_SETTLED` |
+| BS-15 | La liquidación es **todo o nada**: si el reporte de faltantes es inválido, no cambia ningún estado, saldo ni reembolso, y el ciclo puede liquidarse de nuevo con el reporte corregido. *(Detectada en la revisión de la implementación.)* | `INVALID_MISSING_ITEM` |
 
 ### Devolución del saldo a pedido del cliente
 
@@ -73,6 +74,7 @@ Como Yapa, quiero saber en todo momento cuánto le debo a cada cliente, porque e
 - **CB-11 · Pedir devolución.** DADO S/ 12.86 de saldo, CUANDO el vecino pide S/ 10 de vuelta el 20/09/2026, ENTONCES su saldo queda en S/ 2.86 y existe un reembolso pendiente de S/ 10 con fecha límite 20/10/2026. → BS-12
 - **CB-12 · Devolución inválida.** Pedir S/ 0 → `INVALID_AMOUNT`. Pedir más que el saldo → `INSUFFICIENT_BALANCE`. → BS-12
 - **CB-13 · Pagar un reembolso.** DADO un reembolso pendiente, CUANDO el administrador lo marca pagado con un código, ENTONCES queda `PAGADO`. Pagarlo de nuevo → `REFUND_ALREADY_PAID`. Uno inexistente → `REFUND_NOT_FOUND`. → BS-13
+- **CB-15 · Todo o nada.** DADO un ciclo con un faltante inválido en el reporte, CUANDO se intenta liquidar, ENTONCES se rechaza, ningún pedido cambia de estado, nadie recibe saldo, y con el reporte corregido la liquidación funciona. → BS-15
 - **CB-14 · Deuda con clientes.** DADO saldos de S/ 12.86 y S/ 2.86 y un reembolso pendiente de S/ 10, ENTONCES Yapa le debe S/ 25.72 a sus clientes. → BS-14
 
 ## Impacto en el diseño
@@ -80,3 +82,22 @@ Como Yapa, quiero saber en todo momento cuánto le debo a cada cliente, porque e
 - `Order` pasa de un solo pago a una **lista de pagos** (`Payment`: medio, monto, código, estado). Para no romper el contrato de la iteración 2, `payment_status` y `payment_method` se mantienen como propiedades derivadas.
 - Nuevo módulo `wallet.py`, con la billetera, los movimientos y los reembolsos pendientes.
 - `settlement.py` abona a la billetera y registra reembolsos. Guarda qué ciclos ya se liquidaron.
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_wallet.py`) |
+|---|---|---|
+| BS-01, BS-02 | `wallet.py:40` `balance` | `test_cb01_*`, `test_cb07_*` |
+| BS-03, BS-04 | `order_registration.py:145` `_check_balance_use` | `test_cb04_*`, `test_cb05_*` |
+| BS-05, BS-06 | `order_registration.py:175`, `:182` | `test_cb03_*`, `test_cb06_*` |
+| BS-07 | `order_registration.py:202` | `test_cb02_*` |
+| BS-08..BS-10 | `settlement.py:90`, `:102` y el bloque de efectos al final | `test_cb08_*`, `test_cb09_*` |
+| BS-11 | `settlement.py:79` | `test_cb10_*` |
+| BS-12 | `wallet.py:64` `request_withdrawal` | `test_cb11_*`, `test_cb12_*` |
+| BS-13 | `wallet.py:73` `mark_refund_paid` | `test_cb13_*` |
+| BS-14 | `wallet.py:85` `amount_owed` | `test_cb14_*` |
+| BS-15 | `settlement.py`: los efectos se aplican solo después de validar todo | `test_cb15_*` |
+
+## Limitación conocida
+
+El stock reservado (RP-08) no se separa por ciclo: la reserva de una semana cuenta también para la siguiente. Se resuelve en la iteración 6 (catálogo semanal), donde cada ciclo tiene su propia lista del proveedor.

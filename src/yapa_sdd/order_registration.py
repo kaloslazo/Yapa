@@ -22,12 +22,14 @@ from .domain import (
     Customer,
     Order,
     OrderLine,
+    Payment,
     Product,
     Zone,
     ceil_cents,
     floor_cents,
 )
 from .store import InMemoryStore
+from . import wallet
 
 
 @dataclass(frozen=True)
@@ -140,15 +142,26 @@ def _check_payment(store: InMemoryStore, method: str, operation_code: str, amoun
     return code
 
 
+def _check_balance_use(store: InMemoryStore, customer_id: int, use_balance, total: Decimal) -> Decimal:
+    """BS-03 y BS-04: el saldo usado existe y no pasa del total."""
+    used = Decimal(str(use_balance or 0))
+    if used < 0 or used > wallet.balance(store, customer_id):
+        raise BusinessRuleError("INSUFFICIENT_BALANCE", "No tienes saldo suficiente.")
+    if used > total:
+        raise BusinessRuleError("BALANCE_EXCEEDS_TOTAL", f"El saldo a usar no puede pasar de S/ {total}.")
+    return used
+
+
 def register_order(
     store: InMemoryStore,
     *,
     customer_id: int,
     lines: Iterable,
-    payment_method: str,
-    operation_code: str,
+    payment_method: str | None,
+    operation_code: str | None,
     amount,
     now: datetime,
+    use_balance=Decimal("0"),
 ) -> Order:
     customer = _customer(store, customer_id)  # RP-01
     zone = _zone(store, customer)  # RP-02
@@ -158,11 +171,22 @@ def register_order(
         raise BusinessRuleError("ORDER_ALREADY_EXISTS", "Ya tienes un pedido en este ciclo.")
 
     quote = quote_order(store, lines)
-    code = _check_payment(store, payment_method, operation_code, amount, quote.total)
+    used = _check_balance_use(store, customer_id, use_balance, quote.total)
+    external_due = quote.total - used  # BS-05
+    payments = []
+    if used > 0:
+        payments.append(Payment("SALDO", used, status="VERIFICADO"))
+    if external_due > 0:
+        code = _check_payment(store, payment_method, operation_code, amount, external_due)
+        payments.append(Payment(payment_method, external_due, code))
+    elif Decimal(str(amount or 0)) != 0:  # BS-06: el saldo cubre todo
+        raise BusinessRuleError("PAYMENT_AMOUNT_MISMATCH", "El saldo ya cubre el total; no hay que yapear.")
 
     for line in quote.lines:
         store.reserve(line.product_id, line.quantity)
-    store.used_codes.add(code)
+    for payment in payments:
+        if payment.operation_code:
+            store.used_codes.add(payment.operation_code)
     order = Order(
         order_id=0,
         cycle=cycle_id,
@@ -172,10 +196,11 @@ def register_order(
         subtotal=quote.subtotal,
         delivery_fee=quote.delivery_fee,
         total=quote.total,
-        payment_method=payment_method,
-        operation_code=code,
+        payments=payments,
     )
-    return store.save_new_order(order)
+    order = store.save_new_order(order)
+    wallet.debit(store, customer_id, used, "USO_EN_PEDIDO", now, f"pedido {order.order_id}")  # BS-07
+    return order
 
 
 def verify_payment(store: InMemoryStore, order_id: int, *, now: datetime) -> Order:
@@ -185,5 +210,6 @@ def verify_payment(store: InMemoryStore, order_id: int, *, now: datetime) -> Ord
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
     if not cycle.is_open(now) or cycle.cycle_id(now) != order.cycle:
         raise BusinessRuleError("CYCLE_CLOSED", "El ciclo ya cerró; el pago no puede verificarse.")
-    order.payment_status = "VERIFICADO"
+    for payment in order.payments:
+        payment.status = "VERIFICADO"
     return order

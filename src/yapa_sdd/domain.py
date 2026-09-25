@@ -94,6 +94,16 @@ class OrderLine:
 
 
 @dataclass
+class Payment:
+    """Un pago del pedido: SALDO, YAPE o PLIN (S-13)."""
+
+    method: str
+    amount: Decimal
+    operation_code: str = ""
+    status: str = "POR_VERIFICAR"
+
+
+@dataclass
 class Order:
     order_id: int
     cycle: str
@@ -103,7 +113,36 @@ class Order:
     subtotal: Decimal
     delivery_fee: Decimal
     total: Decimal
-    payment_method: str
-    operation_code: str
+    payments: list[Payment]
     status: str = "REGISTRADO"
-    payment_status: str = "POR_VERIFICAR"
+
+    @property
+    def payment_status(self) -> str:
+        if all(payment.status == "VERIFICADO" for payment in self.payments):
+            return "VERIFICADO"
+        return "POR_VERIFICAR"
+
+    @property
+    def external_payment(self) -> Payment | None:
+        for payment in self.payments:
+            if payment.method != "SALDO":
+                return payment
+        return None
+
+    @property
+    def payment_method(self) -> str:
+        external = self.external_payment
+        return external.method if external else "SALDO"
+
+    @property
+    def operation_code(self) -> str:
+        external = self.external_payment
+        return external.operation_code if external else ""
+
+    @property
+    def paid_with_balance(self) -> Decimal:
+        return sum((p.amount for p in self.payments if p.method == "SALDO"), Decimal("0"))
+
+    @property
+    def paid_external(self) -> Decimal:
+        return sum((p.amount for p in self.payments if p.method != "SALDO"), Decimal("0"))

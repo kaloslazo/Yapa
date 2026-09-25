@@ -15,7 +15,11 @@ class InMemoryStore:
         self.orders: dict[int, Order] = {}
         self.reserved: dict[str, Decimal] = {}
         self.used_codes: set[str] = set()
+        self.movements: list = []  # billetera (iteración 3)
+        self.refunds: dict = {}
+        self.settled_cycles: set[str] = set()
         self._next_order_id = 1
+        self._next_refund_id = 1
 
     def add_customer(self, customer: Customer) -> None:
         self.customers[customer.customer_id] = customer
@@ -40,6 +44,11 @@ class InMemoryStore:
 
     def orders_in_cycle(self, cycle: str) -> list[Order]:
         return [order for order in self.orders.values() if order.cycle == cycle]
+
+    def next_refund_id(self) -> int:
+        refund_id = self._next_refund_id
+        self._next_refund_id += 1
+        return refund_id
 
     def save_new_order(self, order: Order) -> Order:
         order.order_id = self._next_order_id

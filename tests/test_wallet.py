@@ -152,6 +152,17 @@ class WalletSpecTests(unittest.TestCase):
         self.assertRule("REFUND_ALREADY_PAID", mark_refund_paid, self.store, refund.refund_id, "YP-99882")
         self.assertRule("REFUND_NOT_FOUND", mark_refund_paid, self.store, 999, "YP-1")
 
+    # CB-15
+    def test_cb15_settlement_is_all_or_nothing(self):
+        orders = self.s.orders("Z-JM-01", 8)
+        first = orders[0]
+        self.assertRule("INVALID_MISSING_ITEM", settle_cycle, self.store, CYCLE,
+                        missing=[(first.order_id, "PAPA-AMARILLA", "99")])
+        self.assertEqual(self.store.orders[first.order_id].status, "REGISTRADO")
+        self.assertEqual(balance(self.store, first.customer_id), Decimal("0"))
+        result = settle_cycle(self.store, CYCLE, missing=[(first.order_id, "PAPA-AMARILLA", "1")])
+        self.assertEqual(result.orders[first.order_id].status, "LIQUIDADO")
+
     # CB-14
     def test_cb14_total_owed_to_customers(self):
         credit(self.store, 101, Decimal("12.86"), "ABONO_LIQUIDACION", NOW)
