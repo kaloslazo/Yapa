@@ -16,6 +16,7 @@ from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
 from .. import audit, auth, buffer, claims, cycle, fulfillment, metrics, wallet, zones
+from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
@@ -213,6 +214,28 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         zones.set_location(store, session.principal, _float(form.get("lat"), "Latitud"),
                            _float(form.get("lon"), "Longitud"))  # HR-01
         return views.simple("Ubicación guardada", "Ya puedes crear una zona o unirte a una cercana.", session.csrf)
+
+    def catalogo(environ, form, session):
+        # CW-01, S-117: por defecto, el ciclo siguiente
+        label = (_query(environ).get("ciclo") or "").strip() or cycle.add_weeks(cycle.cycle_id(clock()), 1)
+        cycle.check_cycle_id(label)
+        products = list(store.catalog_for(label).values())
+        return views.catalog_admin(label, label in store.catalogs, products, export_catalog(products), session.csrf)
+
+    def catalogo_publicar(environ, form, session):
+        label = (form.get("ciclo") or "").strip()
+        cycle.check_cycle_id(label)
+        products = parse_catalog(form.get("lista", ""))  # CW-02
+        published = publish_catalog(store, label, products, by=session.principal, now=clock())  # CW-03
+        return views.simple("Catálogo publicado", f"El ciclo {label} tiene {len(published)} productos.",
+                            session.csrf, back=f"/admin/catalogo?ciclo={label}")
+
+    def catalogo_desactivar(environ, form, session):
+        label = (form.get("ciclo") or "").strip()
+        cycle.check_cycle_id(label)
+        product = deactivate_product(store, label, form.get("producto", "").strip(), by=session.principal)  # CW-04
+        return views.simple("Producto desactivado", f"{product.name} ya no recibe pedidos en {label}.",
+                            session.csrf, back=f"/admin/catalogo?ciclo={label}")
 
     def conciliacion(environ, form, session):
         return views.balance_page(audit.money_balance(store), session.csrf)  # AU-03
@@ -424,6 +447,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         "/admin/metricas": {"GET": (metricas, "admin")},
         "/admin/devoluciones": {"GET": (devoluciones, "admin")},
         "/admin/conciliacion": {"GET": (conciliacion, "admin")},
+        "/admin/catalogo": {"GET": (catalogo, "admin"), "POST": (catalogo_publicar, "admin")},
+        "/admin/catalogo/desactivar": {"POST": (catalogo_desactivar, "admin")},
         "/admin/devoluciones/pagar": {"POST": (devolucion_pagar, "admin")},
         "/admin/entrega-fallida": {"POST": (entrega_fallida, "admin")},
     }

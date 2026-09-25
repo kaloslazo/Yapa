@@ -158,7 +158,8 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
     )
     body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
             ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
-            ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a></div>'
+            ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a>'
+            ' · <a href="/admin/catalogo">Catálogo</a></div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
@@ -408,3 +409,31 @@ def balance_page(balance, csrf: str | None = None) -> str:
         ("Retenido por Yapa", balance.kept), ("Deuda con clientes (saldos y devoluciones pendientes)", balance.owed),
         ("Devoluciones ya pagadas", balance.refunds_paid), ("Diferencia", balance.difference)))
     return page("Conciliación del dinero", state + f'<div class="card"><table>{rows}</table></div>', csrf)
+
+
+def catalog_admin(cycle_label: str, published: bool, products, text: str, csrf: str | None = None) -> str:
+    """CW-01: catálogo del ciclo, lista para publicar (S-116, S-117) y desactivar productos."""
+    rows = "".join(
+        f"<tr><td>{escape(p.product_id)}</td><td>{escape(p.name)}</td><td>{money(p.max_unit_price())}</td>"
+        f"<td>{escape(', '.join(f'desde {qty(t.min_quantity)}: {money(t.base_price)}' for t in p.tiers))}</td>"
+        f"<td>{qty(p.max_available)} {escape(p.unit)}</td><td>"
+        + (f'<form method="post" action="/admin/catalogo/desactivar">{hidden(csrf)}'
+           f'<input type="hidden" name="ciclo" value="{escape(cycle_label)}">'
+           f'<input type="hidden" name="producto" value="{escape(p.product_id)}"><button>Desactivar</button></form>'
+           if p.active else "desactivado")
+        + "</td></tr>"
+        for p in products
+    )
+    state = "publicado" if published else "sin publicar: se usa el catálogo base"
+    body = (f'<form class="card" method="get" action="/admin/catalogo"><label>Ciclo '
+            f'<input name="ciclo" value="{escape(cycle_label)}"></label><button>Ver</button></form>'
+            f'<div class="card"><strong>Ciclo {escape(cycle_label)} · {state}</strong>'
+            '<table><tr><th>Código</th><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th>'
+            f'<th>Máximo</th><th></th></tr>{rows}</table></div>'
+            f'<form class="card" method="post" action="/admin/catalogo">{hidden(csrf)}'
+            f'<input type="hidden" name="ciclo" value="{escape(cycle_label)}">'
+            '<label>Lista del proveedor (una línea por producto, separada por comas, decimales con punto)'
+            f'<textarea name="lista" rows="14" style="width:100%;font-family:monospace">{escape(text)}</textarea>'
+            '</label><p class="muted">Se publica todo o nada, y solo antes de que el ciclo abra (lunes 00:00).</p>'
+            '<button>Publicar catálogo</button></form>')
+    return page(f"Catálogo {cycle_label}", body, csrf)

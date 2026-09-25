@@ -7,6 +7,7 @@ real de Kaz en distribuidora. Se reemplazan por la lista del proveedor aliado.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from decimal import Decimal as D
 
 from .domain import Customer, PriceTier, Product, Supplier, Zone
@@ -44,6 +45,10 @@ PILOT_PRODUCTS = [
     Product("LEJIA-GALON", "Lejía galón", "LIMPIEZA", "unidad", D("1"), D("60"),
             _tiers(("0", "6.50"), ("12", "5.80"))),
 ]
+
+# S-119: cada producto base queda con el proveedor aliado de ejemplo de su categoría.
+PILOT_PRODUCTS = [replace(p, supplier_id={"FRESCOS": "SUP-FRESCOS", "LIMPIEZA": "SUP-LIMPIEZA"}[p.category])
+                  for p in PILOT_PRODUCTS]
 
 PILOT_ZONES = [
     Zone("Z-LINCE-01", "Edificio Los Álamos", "Lince", "G-LINCE", D("40"), lat=-12.0860, lon=-77.0340),
