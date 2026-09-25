@@ -50,3 +50,18 @@ Escenario: 8 pedidos de Jesús María del ciclo 2026-W38 con la canasta de prueb
 ## Cambios en pruebas anteriores
 
 - CO-D, CO-E (`test_fulfillment`) y OA-11 (`test_web_operacion`) usaban el colchón sin indicar pedido. Por S-122, ahora indican un pedido con limpiatodo (con papa amarilla para llegar al mínimo). Los números que verifican no cambian.
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AR-06, S-121 | `fulfillment.pack_bag` | `test_gaps_packing.test_hc_a_*` |
+| CO-06, CO-07, S-122 | `buffer.use_buffer` (pedido, atención, lo ya repuesto) | `test_hc_c_*`, `test_hc_d_*`, `test_hc_e_*`, `test_fulfillment.test_co_d_*` |
+| CO-08 | `buffer.BufferUse`, `store.buffer_uses` · web `/admin/colchon` (campo pedido y tabla de reposiciones) | `test_hc_b_*`, `test_hc_f_*`, `test_web_operacion.test_oa11_*` |
+| CT-12, S-123 | `catalog.UNITS`, `catalog._check_product` | `test_hc_g_*` |
+| S-124 | sin código nuevo: el catálogo publicado no se vuelve a validar; CT-02 aplica al siguiente | `test_hc_h_*` |
+
+## Notas
+
+- Al escribir las pruebas, dos pedidos del escenario rompían reglas que ya existían: el pedido mínimo de S/ 50 y el máximo de 10 kg por producto por vecino. Se corrigió el escenario en la spec antes que las pruebas; el código no cambió por eso.
+- Sigue abierto el hueco 4 de la iteración 8: el valor que sale del colchón todavía no aparece como costo en el margen del pedido. Ahora ya se sabe a qué pedido fue (`buffer_uses`), así que se puede sumar cuando el equipo lo decida.

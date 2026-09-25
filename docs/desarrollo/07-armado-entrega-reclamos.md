@@ -132,8 +132,8 @@ No se implementó nada para estos casos; se describe cómo se comporta hoy el c�
 
 1. **Zona que no recibe.** Si la portería no está o no acepta las bolsas, no hay regla: la entrega simplemente no se registra y el pedido no puede reclamarse. Es el hueco H1.11 de `docs/analisis/03_huecos_negocio.md` (¿reintento?, ¿reembolso?).
 2. **Liquidación antes de la entrega.** `settle_cycle` no exige que la zona esté entregada; la spec de la liquidación dice "después de la entrega", pero no hay una regla que lo obligue.
-3. **Bolsas después de entregar.** Se pueden registrar bolsas de un pedido cuya zona ya se entregó.
-4. **Uso del colchón.** Al reponer con el colchón no se registra a qué pedido fue; tampoco hay una regla que diga si ese faltante repuesto se descuenta del acuerdo con el proveedor (punto 5 del análisis).
+3. *(Resuelto en la iteración 21 con S-121.)* **Bolsas después de entregar.** Se pueden registrar bolsas de un pedido cuya zona ya se entregó.
+4. *(Resuelto en parte en la iteración 21 con S-122: se registra el pedido. Falta decidir si se descuenta del acuerdo con el proveedor.)* **Uso del colchón.** Al reponer con el colchón no se registra a qué pedido fue; tampoco hay una regla que diga si ese faltante repuesto se descuenta del acuerdo con el proveedor (punto 5 del análisis).
 5. **Devolución por reclamo al medio de pago.** Lo aprobado va a saldo (C-05); el cliente puede pedirlo de vuelta con BS-12, pero no se decidió si un artículo dañado debería devolverse directo a Yape o Plin.
 
 ## Fuera de alcance (con motivo)

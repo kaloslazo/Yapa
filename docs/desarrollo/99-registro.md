@@ -153,3 +153,10 @@
 - Error encontrado al revisar: un paso de 0 dividía por cero. Se agregó S-120 a la spec, luego la prueba CW-I en rojo y después la corrección.
 - Resultado: 244 pruebas en verde.
 
+## Iteración 21 · Huecos del armado, el colchón y el catálogo (25/09/2026)
+
+- Spec: `21-huecos-armado-colchon.md` (S-121..S-124). Cierra los huecos 3 y 4 de la iteración 6 y los huecos 3 y 4 de la iteración 7 (este último, en parte).
+- Cambio de firma: `use_buffer` ahora pide el pedido y la hora. Se actualizaron CO-D, CO-E y OA-11 en un commit `test:`, y los números que verifican no cambiaron.
+- Datos del escenario corregidos antes del código: dos pedidos no respetaban el mínimo de S/ 50 ni el máximo de 10 kg por producto.
+- Resultado: 253 pruebas en verde.
+

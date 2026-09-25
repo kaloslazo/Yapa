@@ -85,6 +85,6 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 Salvo el primero, no se implementó nada para estos casos; se describe cómo se comporta hoy el código.
 
 1. **Editar un pedido que tiene un producto desactivado.** Resuelto con S-39 y CT-11 (criterio CT-M).
-2. **Desactivar un producto en un ciclo sin catálogo publicado.** Como el ciclo usa el catálogo base (S-37), `deactivate_product` responde `PRODUCT_NOT_AVAILABLE`. Falta decidir si el administrador puede retirar un producto del catálogo base.
-3. **Unidad y paso del producto.** La spec no valida la unidad (`kg` o `unidad`) ni que el paso sea mayor que 0. Un producto con otra unidad se publicaría y fallaría al cotizar.
-4. **Proveedor que deja de ser aliado a mitad de semana.** El catálogo ya publicado no cambia; no hay regla sobre qué pasa con sus productos.
+2. *(Resuelto en la iteración 20 con S-118.)* **Desactivar un producto en un ciclo sin catálogo publicado.** Como el ciclo usa el catálogo base (S-37), `deactivate_product` responde `PRODUCT_NOT_AVAILABLE`. Falta decidir si el administrador puede retirar un producto del catálogo base.
+3. *(Resuelto: el paso en la iteración 20 con S-120 y la unidad en la iteración 21 con S-123.)* **Unidad y paso del producto.** La spec no valida la unidad (`kg` o `unidad`) ni que el paso sea mayor que 0. Un producto con otra unidad se publicaría y fallaría al cotizar.
+4. *(Resuelto en la iteración 21 con S-124.)* **Proveedor que deja de ser aliado a mitad de semana.** El catálogo ya publicado no cambia; no hay regla sobre qué pasa con sus productos.
