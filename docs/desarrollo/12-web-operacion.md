@@ -165,6 +165,54 @@ Datos de partida:
   - → OP-10, WB-07, WB-08, S-72
 - **OA-15 · Celular.** `/zona`, `/reclamos`, `/admin/armado`, `/admin/reclamos`, `/admin/colchon` y `/admin/metricas` tienen `<meta name="viewport"`. → OP-10, WB-09
 
+## Cómo usarla
+
+```bash
+PYTHONPATH=src python -m yapa_sdd.web --ahora 2026-09-18T10:00:00-05:00
+# vecino: /cuenta → "Mi zona" y "Reclamos"; admin: /admin → armado, reclamos, colchón y métricas
+```
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_web_operacion.py`) |
+|---|---|---|
+| OP-01, OP-02, S-73 | `web/app.py`: `zona`, `zona_crear`, `zona_unirse`, `zona_activar`, `zona_unir`, `zona_aceptar`, `zona_separar`, `zona_transferir` · `views.zone_page` | `test_oa01_*`, `test_oa02_*`, `test_oa03_*`, `test_oa04_*` |
+| OP-03, S-79 | `web/app.py`: `reclamos`, `reclamar` · `views.claims_page` | `test_oa07_*` |
+| OP-04 | `web/app.py` `devolucion` · formulario en `views.account` | `test_oa06_*` |
+| OP-05, S-77 | `web/app.py`: `armado`, `bolsa`, `entrega`, `selected_cycle` · `views.packing` | `test_oa08_*`, `test_oa09_*` |
+| OP-06, S-80 | `web/app.py`: `admin_reclamos`, `revisar` · `views.admin_claims` | `test_oa10_*` |
+| OP-07 | `web/app.py`: `colchon`, `colchon_agregar`, `colchon_usar` · `views.buffer_page` | `test_oa11_*` |
+| OP-08, S-78 | `web/app.py` `metricas` · `views.metrics_page` | `test_oa12_*` |
+| OP-09 | `web/app.py` `routes` (rol por ruta) y `dispatch` (sesión, rol y CSRF, sin cambios) | `test_oa13_*` |
+| OP-10, S-72 | `views.photo` (la foto se muestra como texto) · `html.escape` en todas las vistas nuevas · `views.page` (viewport) | `test_oa14_*`, `test_oa15_*` |
+| S-76 | `web/app.py`: `_int`, `_float`, `_money`, `selected_cycle` y el formato `pedido:producto` en `reclamar` | `test_oa05_*`, `test_oa06_*`, `test_oa07_*` |
+| OP-11, S-75 | `zones.py` `_check_zone_location`, que se usa en `join_zone` y `_check_merge` | `test_oa03_*`, `test_oa04_*` |
+
+Todas las pruebas anteriores siguen en verde sin cambios.
+
+## Huecos encontrados al implementar (a decidir por el equipo)
+
+No se implementó nada para estos casos. Se describe cómo se comporta hoy el código.
+
+1. **No hay cómo registrar la ubicación del vecino.**
+   - Crear una zona y unirse a una necesitan la ubicación del vecino (ZN-01, ZN-03), pero ningún caso de uso la registra.
+   - Los vecinos del piloto no la tienen, así que **en la demo nadie puede crear una zona ni unirse a una**. Solo funciona con vecinos cargados con coordenadas, como en las pruebas.
+   - Hay que decidir cómo se pide la ubicación (¿dirección y geocodificación?, ¿el GPS del celular?) y si la valida alguien.
+2. **Las zonas del piloto no tienen ubicación.** Con S-75 ya no se cae nada, pero Z-LINCE-01, Z-LINCE-02, Z-JM-01 y Z-LV-01 no pueden recibir vecinos nuevos ni unirse a otras zonas hasta que se cargue su punto de recepción.
+3. **El admin de una zona se puede ir a otra.** `join_zone` no revisa si el vecino es admin, así que el admin puede unirse a otra zona y seguir administrando la primera, aunque S-29 dice que el admin es vecino de su zona.
+4. **Solicitudes de unión repetidas.** `request_merge` acepta la misma solicitud varias veces, y no hay forma de rechazar ni de retirar una solicitud: quedan pendientes para siempre.
+5. **Coordenadas sin rango.** `create_zone` acepta una latitud de 1000. La web solo exige que sea un número finito (S-76). ¿Se limita al área del piloto?
+6. **Devolución de saldo con céntimos partidos.**
+   - `request_withdrawal` acepta S/ 0.001 y, con un texto como `abc`, falla con un error interno.
+   - La web lo evita con S-76, pero cualquier otro que llame al caso de uso no está protegido.
+   - Se propone que el caso de uso exija montos en céntimos.
+7. **Liquidar un ciclo con un nombre inválido.**
+   - `/admin/liquidar` (iteración 9) acepta cualquier texto: al liquidar `abc`, ese "ciclo" queda liquidado y vacío.
+   - El tablero de métricas ya valida el formato del ciclo (S-76).
+   - Liquidar no lo valida, y en el dominio `repurchase_week4` fallaría con un error interno con ese ciclo.
+8. **La foto como texto no prueba nada.** Mientras no se suban los archivos (S-72), la "foto" de la bolsa, de la entrega o del reclamo es solo un texto. No sirve como evidencia en una disputa con la portería o con el vecino.
+9. **Pagar las devoluciones pendientes.** El vecino ya puede pedir su saldo, pero el administrador todavía no tiene pantalla para registrar el pago (`mark_refund_paid`). Por ahora solo se puede hacer desde el código.
+
 ## Fuera de alcance
 
 - **Subir archivos de foto** (S-72).
