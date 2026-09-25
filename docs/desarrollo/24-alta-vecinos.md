@@ -45,3 +45,18 @@ Base del piloto: clientes 101 a 105. Hora: miércoles 16/09/2026, 10:00.
 - **AV-E · Reiniciar el PIN.** Lucía se equivoca 5 veces y su cuenta se bloquea. El admin reinicia su PIN → con el nuevo entra enseguida, y con el anterior ya no. Reiniciar el PIN del cliente 999 → `CUSTOMER_NOT_FOUND`. → AV-07, S-137
 - **AV-F · Solo el admin.** Un vecino que abre `/admin/vecinos` o envía el alta recibe 403. → AV-01
 - **AV-G · Web.** Desde `/admin/vecinos`, el alta responde con "Cliente 106" y el PIN para enviar, y la lista muestra a Lucía con su celular. → AV-08
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AV-01 | `customers._check_admin` · control de rol de la web | `test_customers.test_av_b_*`, `test_av_e_*`, `test_av_f_*` |
+| AV-02..AV-05, S-133, S-134, S-138 | `customers.register_customer` · `Customer.phone`, `Customer.consent_at` | `test_av_b_*`, `test_av_c_*`, `test_av05_*` |
+| AV-06, S-135, S-136 | `customers.register_customer`, `customers.new_pin` (usa `auth._check_pin`) | `test_av_a_*`, `test_av06_*`, `test_av_d_*` |
+| AV-07, S-137 | `customers.reset_pin` → `auth.set_pin` (credencial nueva, sin bloqueo) | `test_av_e_*`, `test_av07_*` |
+| AV-08 | web `/admin/vecinos` → `views.customers_page` | `test_av_g_*` |
+
+## Notas
+
+- El PIN aparece **solo** en la respuesta del alta o del reinicio. Si el admin cierra esa página sin copiarlo, tiene que generar otro.
+- Queda para el equipo: si el vecino debe cambiar el PIN la primera vez que entra (hoy puede hacerlo, pero no está obligado), y cómo borrar los datos de un vecino que retira su consentimiento (derecho de cancelación de la Ley 29733).

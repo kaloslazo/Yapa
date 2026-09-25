@@ -173,3 +173,9 @@
 - Se unificó el cálculo por canasta de la iteración 22 (`_basket_reference`) y se corrigió el empate entre dos precios con la misma fecha: ahora gana el último registrado.
 - Resultado: 272 pruebas en verde.
 
+## Iteración 24 · Alta de vecinos y reinicio del PIN (25/09/2026)
+
+- Spec: `24-alta-vecinos.md` (S-133..S-138). El admin da de alta a un vecino en `/admin/vecinos` con nombre, celular, zona y consentimiento (Ley 29733). El sistema genera el PIN y lo muestra una sola vez. Si el vecino olvida el PIN, el admin genera uno nuevo, y eso también desbloquea la cuenta.
+- Cierra el hueco de S-65: el PIN inicial lo asignaba el admin "al dar de alta", pero no había alta.
+- Resultado: 282 pruebas en verde.
+
