@@ -52,3 +52,24 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (ciclo 2026-W38 abierto) y catálog
 - **WA-11 · Inyección de HTML.** Un cliente llamado `<script>alert(1)</script>` aparece escapado (`&lt;script&gt;`) en su cuenta. → WB-07
 - **WA-12 · Rutas y datos malos.** `/no-existe` → 404; `GET /pedidos` → 405; `cliente=abc` → error mostrado, sin caída. → WB-08
 - **WA-13 · Celular.** Todas las páginas incluyen `<meta name="viewport"`. → WB-09
+
+## Cómo usarla
+
+```bash
+PYTHONPATH=src python -m yapa_sdd.web --ahora 2026-09-16T10:00:00-05:00
+# abrir http://127.0.0.1:8000   (clientes de prueba: 101, 105; admin en /admin)
+```
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/web/`) | Prueba (`tests/test_web.py`) |
+|---|---|---|
+| WB-01 | `app.py` `home` (avance por tramo) · `views.home` | `test_wa01_*`, `test_wa02_*` |
+| WB-02 | `app.py` `cotizar`, `_lines` | `test_wa03_*`, `test_wa04_*` |
+| WB-03 | `app.py` `pedidos` (llama a `register_order`) | `test_wa05_*`, `test_wa06_*` |
+| WB-04, WB-05 | `app.py` `cuenta`, `cancelar` | `test_wa07_*`, `test_wa08_*` |
+| WB-06 | `app.py` `admin`, `verificar`, `liquidar` | `test_wa09_*`, `test_wa10_*` |
+| WB-07 | `views.py`: `html.escape` en todo texto variable | `test_wa11_*` |
+| WB-08 | `app.py` `app` (404/405/422), `_int` | `test_wa04_*`, `test_wa06_*`, `test_wa12_*` |
+| WB-09 | `views.page` (viewport) + CSS de una columna | `test_wa13_*` + revisión visual a 512 px |
+| S-40 | `__main__.py`: `make_server("127.0.0.1", ...)` | revisión de código |
