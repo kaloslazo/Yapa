@@ -213,6 +213,11 @@ class BufferSpecTests(FulfillmentBase):
     def add(self, product_id, quantity, by=ADMIN):
         return add_to_buffer(self.store, CYCLE, product_id, quantity, by=by)
 
+    def cleaning_order(self):
+        """Pedido con limpiatodo y lejía (más papa para el mínimo), en el grupo que se atiende."""
+        return self.s.order("Z-JM-01", lines=[("LIMPIATODO-GALON", "4"), ("LEJIA-GALON", "1"),
+                                                ("PAPA-AMARILLA", "5")]).order_id
+
     # CO-A
     def test_co_a_store_non_perishable_leftovers(self):
         stock = self.add("LIMPIATODO-GALON", "6")
@@ -237,17 +242,21 @@ class BufferSpecTests(FulfillmentBase):
     # CO-D
     def test_co_d_use_buffer_to_replace_missing_items(self):
         self.add("LIMPIATODO-GALON", "6")
-        stock = use_buffer(self.store, "LIMPIATODO-GALON", "2", by=ADMIN)
+        order = self.cleaning_order()  # S-122: cada uso indica el pedido
+        stock = use_buffer(self.store, "LIMPIATODO-GALON", "2", order_id=order, by=ADMIN, now=FRIDAY)
         self.assertEqual(stock.quantity, D("4"))
         self.assertEqual(buffer_value(self.store), D("31.60"))
-        self.assertRule("BUFFER_INSUFFICIENT", use_buffer, self.store, "LIMPIATODO-GALON", "5", by=ADMIN)
-        self.assertRule("BUFFER_INSUFFICIENT", use_buffer, self.store, "LEJIA-GALON", "1", by=ADMIN)
+        self.assertRule("BUFFER_INSUFFICIENT", use_buffer, self.store, "LIMPIATODO-GALON", "5", order_id=order,
+                        by=ADMIN, now=FRIDAY)
+        self.assertRule("BUFFER_INSUFFICIENT", use_buffer, self.store, "LEJIA-GALON", "1", order_id=order,
+                        by=ADMIN, now=FRIDAY)
 
     # CO-E
     def test_co_e_only_staff_uses_buffer(self):
         self.assertRule("NOT_AUTHORIZED", self.add, "LIMPIATODO-GALON", "6", by="vecino-1001")
         self.add("LIMPIATODO-GALON", "6")
-        self.assertRule("NOT_AUTHORIZED", use_buffer, self.store, "LIMPIATODO-GALON", "1", by="vecino-1001")
+        self.assertRule("NOT_AUTHORIZED", use_buffer, self.store, "LIMPIATODO-GALON", "1",
+                        order_id=self.cleaning_order(), by="vecino-1001", now=FRIDAY)
 
 
 if __name__ == "__main__":

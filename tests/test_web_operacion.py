@@ -281,7 +281,9 @@ class AdminOperationTests(WebOperationBase):
         status, _, html = self.admin.post("/admin/colchon/agregar", {"producto": "LIMPIATODO-GALON", "cantidad": "60"})
         self.assertEqual(status, 422)
         self.assertIn("BUFFER_LIMIT_EXCEEDED", html)
-        status, _, _ = self.admin.post("/admin/colchon/usar", {"producto": "LIMPIATODO-GALON", "cantidad": "4"})
+        cleaning = self.s.order("Z-JM-01", lines=[("LIMPIATODO-GALON", "4"), ("PAPA-AMARILLA", "5")])  # S-122: cada uso indica el pedido
+        status, _, _ = self.admin.post("/admin/colchon/usar", {"producto": "LIMPIATODO-GALON", "cantidad": "4",
+                                                               "pedido": str(cleaning.order_id)})
         self.assertEqual(status, 200)
         stock = self.store.buffer["LIMPIATODO-GALON"]
         self.assertEqual((stock.quantity, stock.value), (D("6"), D("47.40")))
