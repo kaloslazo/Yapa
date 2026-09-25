@@ -44,3 +44,17 @@ Al diseñar esta iteración apareció un hueco: **cuando se edita un pedido a la
   5. Ese vecino pide la devolución de S/ 5.00 de su saldo (tiene S/ 5.38: S/ 3.36 del ahorro más S/ 2.02 del reclamo) y el admin la paga con código. *(La primera versión pedía S/ 10; el sistema lo rechazó bien con `INSUFFICIENT_BALANCE` porque el vecino no tenía tanto saldo: el error era del escenario, no del código.)*
   6. El admin ve las métricas y la conciliación con diferencia 0.
 - **AU-D · Pantalla.** `/admin/conciliacion` muestra "Cuadra" con diferencia S/ 0.00. → AU-03
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AU-01, S-113, S-114 | `audit.CashEntry` · `store.cash_in` · `order_registration.verify_payment` (solo pagos externos no verificados) | `test_audit.test_au01_*`, `test_au_b_*` |
+| AU-02, S-115 | `audit.money_balance` | `test_audit.test_au_a_*`, `test_au_b_*` |
+| AU-03 | web `/admin/conciliacion` → `views.balance_page` | `test_e2e_week` (paso 6) |
+| AU-04 | todas las rutas de la web usadas en la semana | `test_e2e_week.test_au_c_whole_week` |
+
+## Notas
+
+- El registro de caja se guarda en la base SQLite sin cambios en `persistence.py`, porque esta guarda todos los campos del almacén.
+- Una base creada **antes** de esta iteración no tiene registro de caja, así que su conciliación no daría 0. Solo pasa con la base de demo. Para corregirlo, se borra `yapa.db` y se vuelve a crear.

@@ -35,12 +35,13 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```
 
-## Estado al 24/09/2026 (noche, 2)
+## Estado al 24/09/2026 (noche, 3)
 
-- Iteraciones 2 a 18 **completas y en verde** (226 pruebas). Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-112. **El siguiente libre es S-113.**
+- Iteraciones 2 a 19 **completas y en verde** (230 pruebas). Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-115. **El siguiente libre es S-116.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
+- `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
 - Tarea de campo pendiente: precios del mercado de barrio (`docs/desarrollo/kit-validacion-campo.md`).
 
 ## Levantar la web de demo

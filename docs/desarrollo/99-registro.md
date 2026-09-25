@@ -137,3 +137,12 @@
 - Ahora la demo sirve de punta a punta: el vecino registra su ubicación y las zonas del piloto tienen coordenadas, así que se pueden crear zonas y unirse a ellas.
 - Cambió el ejemplo de OA-03/OA-04 y el resultado esperado de WA-10. Se documentó en la spec y las pruebas se actualizaron **antes** del código.
 - Resultado: 226 pruebas en verde.
+
+## Iteración 19 · Conciliación del dinero y semana completa (24/09/2026)
+
+- Spec: `19-conciliacion-punta-a-punta.md` (S-113..S-115). Se agrega un registro de caja y la cuenta **recibido = en curso + retenido + deuda con clientes + devoluciones pagadas**. El admin la ve en `/admin/conciliacion`.
+- Hueco encontrado al diseñar: al editar un pedido a la baja, se perdía cuánto se había cobrado de verdad. Ahora lo guarda el registro de caja.
+- Nueva prueba de punta a punta: una semana completa por la web (pedidos, verificación, cancelación, armado, entrega, liquidación, reclamo, devolución). La diferencia es 0 después de cada paso.
+- Se corrigió el escenario de la prueba, no el código. El vecino pedía devolver S/ 10, pero solo tenía S/ 5.38, y el sistema lo rechazó como debía. Primero se cambió la spec y después la prueba.
+- Resultado: 230 pruebas en verde.
+
