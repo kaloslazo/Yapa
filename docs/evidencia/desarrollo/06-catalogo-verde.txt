@@ -1,5 +1,5 @@
-# Iteracion 6 - suite despues de implementar
-# 2026-09-24 22:40
+# Iteracion 6 - suite despues de implementar (incluye S-39 / CT-M)
+# 2026-09-24 22:49
 test_ct_a_orders_use_the_cycle_catalog (test_catalog.CatalogSpecTests.test_ct_a_orders_use_the_cycle_catalog) ... ok
 test_ct_b_only_admin_publishes (test_catalog.CatalogSpecTests.test_ct_b_only_admin_publishes) ... ok
 test_ct_c_supplier_must_be_allied (test_catalog.CatalogSpecTests.test_ct_c_supplier_must_be_allied) ... ok
@@ -12,6 +12,7 @@ test_ct_i_catalog_locked_once_cycle_opens (test_catalog.CatalogSpecTests.test_ct
 test_ct_j_deactivate_mid_week (test_catalog.CatalogSpecTests.test_ct_j_deactivate_mid_week) ... ok
 test_ct_k_stock_is_per_cycle (test_catalog.CatalogSpecTests.test_ct_k_stock_is_per_cycle) ... ok
 test_ct_l_settlement_uses_cycle_tiers (test_catalog.CatalogSpecTests.test_ct_l_settlement_uses_cycle_tiers) ... ok
+test_ct_m_edit_keeps_deactivated_product_without_increasing_it (test_catalog.CatalogSpecTests.test_ct_m_edit_keeps_deactivated_product_without_increasing_it) ... ok
 ----------------------------------------------------------------------
-Ran 106 tests in 0.031s
+Ran 107 tests in 0.047s
 OK

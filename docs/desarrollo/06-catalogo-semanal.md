@@ -77,6 +77,7 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 | CT-08, S-33 | `publish_catalog` + `cycle.opens_at` | `test_ct_i_*` |
 | CT-09, S-36 | `deactivate_product` (el producto queda `active=False`; la liquidación no mira `active`) | `test_ct_j_*` |
 | CT-10, S-37 | `store.catalog_for`; `quote_order(store, lines, cycle)`; `register_order`; `edit_order`; `settle_cycle` | `test_ct_a_*`, `test_ct_j_*`, `test_ct_l_*` |
+| CT-11, S-39 | `order_registration._product` y `quote_order(..., kept)`; `edit_order` pasa las cantidades que ya tenía el pedido | `test_ct_m_*` |
 | S-35 | `store.reserve / release / reserved_quantity` con ciclo; `register_order`, `cancel_order`, `edit_order` | `test_ct_k_*`, `test_ca10_*`, `test_ca15_*`, `test_cc01_*`, `test_ce_*` |
 
 ## Huecos encontrados al implementar (a decidir por el equipo)
