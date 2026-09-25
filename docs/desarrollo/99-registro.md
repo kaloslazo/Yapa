@@ -83,3 +83,14 @@
 - **Resultado con los costos documentados** (escenario MT-A, 8 pedidos): optimista **+S/ 3.31** por pedido; pesimista **−S/ 1.82** por pedido (los 8 pierden). La diferencia la hacen el cobro (Yape Empresa 2.95 % frente a Plin 0 %) y que el proveedor entregue o no.
 - No se decidió qué escenario es el real: eso lo decide el equipo. El código deja los escenarios como datos.
 - Resultado: la suite completa en verde.
+
+## Iteración 14 · Simulador de escenarios (24/09/2026)
+
+- Spec: `14-simulador-escenarios.md` (S-98, S-99). El simulador usa las reglas reales sobre un repositorio aparte.
+- **La prueba SA-02 desmintió una suposición de la propia spec** ("más pedidos, mejor margen"). En realidad el margen de Yapa baja con el volumen, porque todo el ahorro vuelve al cliente y la comisión es un % del precio final. Se corrigió la spec (commit `docs:`) y la prueba se reescribió según el comportamiento verdadero, sin debilitarla. Es un ejemplo claro de cómo SDD y las pruebas detectan un error de razonamiento de negocio antes de lanzar.
+- Hallazgos para el equipo:
+  - En el escenario pesimista no alcanza ni con 15 % de comisión.
+  - Con una parada de S/ 100, el mínimo optimista es 13 pedidos, no 8.
+
+  Se agregaron a las decisiones urgentes.
+- Resultado: la suite completa en verde.

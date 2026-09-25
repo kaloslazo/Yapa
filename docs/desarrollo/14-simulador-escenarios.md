@@ -58,3 +58,28 @@ El simulador arma un ciclo sintético con las **mismas reglas del sistema**: reg
 - **Opción C:** mantener el modelo y bajar costos: Plin en vez de Yape Empresa, y que el proveedor entregue. Con eso, el escenario optimista deja entre S/ 2.5 y S/ 3.3 por pedido.
 
 Con el simulador (`python -m yapa_sdd.simulator 40`) se puede probar cada opción cuando se decida.
+
+### Tabla completa (parada de S/ 40, salida de `python -m yapa_sdd.simulator 40`)
+
+```text
+OPTIMISTA           10 %      12 %      15 %
+      8             2.37      3.31      4.72
+     12             2.25      3.16      4.54
+     20             1.79      2.61      3.85
+PESIMISTA
+      8            -2.73     -1.82     -0.45
+     12            -2.85     -1.97     -0.64
+     20            -3.31     -2.52     -1.32
+```
+
+- **En el escenario pesimista no alcanza ni con 15 % de comisión.** El problema no es solo la comisión: es el costo del cobro (Yape Empresa) y del viaje de compra.
+- **El mínimo de pedidos depende del costo de la parada:** con una parada de S/ 40, el mínimo optimista es 8; con una de S/ 100, sube a **13** (`python -m yapa_sdd.simulator 100`). Esto responde la decisión urgente n.º 2: el mínimo de 8 (S-06) solo sirve para zonas cercanas.
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/simulator.py`) | Prueba (`tests/test_simulator.py`) |
+|---|---|---|
+| SM-01 | `simulate` (registro, liquidación y margen neto reales sobre un repositorio aparte) | `test_sa01_*`, `test_sa02_*` |
+| SM-02 | `_commission` (context manager que restaura la comisión) | `test_sa03_*` |
+| SM-03 | `break_even_orders` | `test_sa04_*` |
+| SM-04 | `decision_table`, `main` | `test_sa05_*` |
