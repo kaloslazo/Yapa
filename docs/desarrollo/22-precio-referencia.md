@@ -55,4 +55,5 @@ Canasta de prueba: 5 kg de papa amarilla, 10 kg de papa blanca y 10 kg de ceboll
   → RF-08, S-129
 - **RF-F · Sin canasta completa.** Si la cebolla no tiene precio de mercado, frente al mercado hay 0 canastas comparables y no hay porcentaje. → S-129
 - **RF-G · Pantalla del admin.** La papa amarilla muestra el precio máximo de Yapa S/ 4.03, ahorro frente al mercado 10.4 % con el aviso "menos de 15 %" y frente al supermercado 49.5 %. → RF-07, S-128
+- **RF-I · Se guardan en la base.** Después de registrar un precio, guardar y volver a abrir la base SQLite conserva el precio con su fecha. *(Se agregó al revisar el código: la base no sabía guardar una fecha sin hora y la web fallaba al guardar.)* → PS-01 (iteración 11)
 - **RF-H · Métricas en la web.** `/admin/metricas?ciclo=2026-W38` muestra "43.9 %" y "7.8 %". → RF-08
