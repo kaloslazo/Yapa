@@ -41,6 +41,6 @@ Al diseñar esta iteración apareció un hueco: **cuando se edita un pedido a la
   2. Sábado: el admin arma los 8 pedidos de Jesús María y entrega la zona.
   3. El admin liquida (`close_cycle`): Jesús María queda `LIQUIDADO` y Lince `NO_ATENDIDO`.
   4. Un vecino reclama 1 kg de cebolla faltante y el admin lo aprueba.
-  5. Ese vecino pide la devolución de S/ 10 de su saldo y el admin la paga con código.
+  5. Ese vecino pide la devolución de S/ 5.00 de su saldo (tiene S/ 5.38: S/ 3.36 del ahorro más S/ 2.02 del reclamo) y el admin la paga con código. *(La primera versión pedía S/ 10; el sistema lo rechazó bien con `INSUFFICIENT_BALANCE` porque el vecino no tenía tanto saldo: el error era del escenario, no del código.)*
   6. El admin ve las métricas y la conciliación con diferencia 0.
 - **AU-D · Pantalla.** `/admin/conciliacion` muestra "Cuadra" con diferencia S/ 0.00. → AU-03
