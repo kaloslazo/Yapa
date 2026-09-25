@@ -111,6 +111,15 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 53 | ¿Un admin de zona puede mudarse a otra zona? | Solo después de pasar el rol a otro vecino (S-110). | | | |
 | 54 | ¿Se puede rechazar o retirar una solicitud para unir zonas? | Sí (S-111). | | | |
 
+## E6. Iteraciones 19 y 20 (conciliación y catálogo desde la web)
+
+| # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
+|---|---|---|---|---|---|
+| 55 | ¿Cuándo cuenta un Yape/Plin como dinero recibido? | Cuando el admin lo verifica con su código. Lo pagado con saldo no es dinero nuevo (S-113, S-114). | | | |
+| 56 | ¿Cómo sabemos que no se pierde ni se inventa plata? | La pantalla de conciliación debe dar diferencia 0: lo recibido = pedidos sin liquidar + lo que se quedó Yapa + lo que debemos + lo ya devuelto (S-115). | | | |
+| 57 | ¿Cómo carga el admin la lista semanal del proveedor? | Pegándola desde Excel o Sheets, separada por comas y con punto decimal. La pantalla ya trae la lista de la semana para solo cambiar precios (S-116, S-117). | | | |
+| 58 | ¿Se puede retirar un producto en una semana sin catálogo propio? | Sí: se guarda una copia del catálogo base solo para esa semana (S-118). | | | |
+
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 
 S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas), S-62/S-63 (datos en memoria, hora fija para la demo), S-67 (hash del PIN), S-70/S-71 (contraseña de admin, protección de formularios), S-11 (orden de los errores), S-16/S-17 (saldo en pedidos no atendidos, liquidar una sola vez), S-21 (un código de operación no se reutiliza), S-24 (no se genera saldo con pagos sin confirmar: evita fraude), S-27 (distancia en línea recta), S-35 (stock por semana), S-37 (catálogo base si no se publicó uno), S-76/S-77 (formato de los datos y ciclo en las pantallas web), S-79/S-80 (listas de reclamos del vecino y del administrador).
