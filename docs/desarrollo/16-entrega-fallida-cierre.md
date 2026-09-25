@@ -47,3 +47,12 @@ Escenario: 8 pedidos en Jesús María (canasta de S/ 61.00), armados.
 ## Huecos que siguen abiertos
 
 - En las métricas (S-47), los pedidos `NO_ENTREGADO` no cuentan como compra, y **la merma de los frescos de una zona fallida todavía no aparece como pérdida en el margen**. Queda para una próxima iteración de métricas.
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_failed_delivery.py`) |
+|---|---|---|
+| EF-01..EF-03, S-102, S-105 | `fulfillment.register_failed_delivery`, `_ready_orders`; `deliver_zone` rechaza una zona fallida | `test_ef_a_*`, `test_ef_c_*` |
+| EF-04, S-103, S-104 | `settlement.settle_cycle` (zona fallida → todo "faltante", se cobra solo el envío real, abono `DEVOLUCION_NO_ENTREGADO`) | `test_ef_b_*` |
+| EF-05 | `claims.file_claim` (regla existente: sin entrega no hay reclamo) | `test_ef_d_*` |
+| EF-06, S-106 | `fulfillment.close_cycle` | `test_ef_e_*`, `test_ef_f_*` |

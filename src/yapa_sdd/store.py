@@ -26,6 +26,7 @@ class InMemoryStore:
         self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
         self.bags: dict = {}  # armado: bolsas por pedido
         self.deliveries: dict = {}  # entrega: (ciclo, zona) -> entrega
+        self.failed_deliveries: dict = {}  # entrega fallida: (ciclo, zona) -> falla (iteración 16)
         self.claims: dict = {}  # reclamos por artículo
         self.buffer: dict = {}  # colchón de reposición por producto
         self._next_claim_id = 1

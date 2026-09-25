@@ -100,3 +100,10 @@
 - Spec: `15-reparto-ahorro.md` (S-100, S-101). Un parámetro de la liquidación, que por defecto es 0 %: el modelo actual no cambia.
 - Resultado del simulador: retener el 25 % deja el peor escenario en −S/ 0.06 por pedido (antes −S/ 2.52), y el cliente sigue recuperando S/ 10.39 (antes S/ 12.86). Queda como dato para la decisión urgente n.º 5.
 - Resultado: 189 pruebas en verde.
+
+## Iteración 16 · Entrega fallida y cierre del ciclo (24/09/2026)
+
+- Spec: `16-entrega-fallida-cierre.md` (S-102..S-106). Responde la decisión urgente n.º 3 con las recomendaciones del cuestionario (sin reintento; se devuelve todo menos el envío real, como saldo). Queda para que el equipo lo valide.
+- Nuevo `close_cycle`: el ciclo solo se liquida cuando cada zona atendida se entregó o falló. Cierra el hueco 2 de la iteración 7. `settle_cycle` sigue siendo el cálculo puro.
+- Hueco abierto: la merma de los frescos de una zona fallida todavía no aparece como pérdida en las métricas.
+- Resultado: 196 pruebas en verde.

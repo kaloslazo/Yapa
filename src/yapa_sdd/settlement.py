@@ -140,17 +140,18 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
 
     # LQ-06..LQ-08: monto final y saldo a favor
     for order in attended.values():
+        failed = (cycle, order.zone_id) in store.failed_deliveries  # EF-04: solo se cobra el envío real
         lines = []
         amount = fee_by_zone[order.zone_id]
         for line in order.lines:
-            lost = missing_qty.get((order.order_id, line.product_id), ZERO)
+            lost = line.quantity if failed else missing_qty.get((order.order_id, line.product_id), ZERO)
             delivered = line.quantity - lost
             price = products[line.product_id].final_unit_price
             amount += price * delivered
             lines.append(SettledLine(line.product_id, line.quantity, lost, delivered, price))
         final_amount = floor_cents(amount)
         settled[order.order_id] = SettledOrder(
-            order.order_id, "LIQUIDADO", order.total, lines,
+            order.order_id, "NO_ENTREGADO" if failed else "LIQUIDADO", order.total, lines,
             delivery_fee=fee_by_zone[order.zone_id],
             final_amount=final_amount,
             refund_amount=order.total - final_amount,
@@ -164,13 +165,16 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
         reference = f"pedido {order.order_id}"
         if result.status == "LIQUIDADO":
             wallet.credit(store, order.customer_id, result.refund_amount, "ABONO_LIQUIDACION", at, reference)
+        if result.status == "NO_ENTREGADO":
+            wallet.credit(store, order.customer_id, result.refund_amount, "DEVOLUCION_NO_ENTREGADO", at, reference)
         wallet.credit(store, order.customer_id, result.returned_to_balance, "DEVOLUCION_A_SALDO", at, reference)
         if result.status == "NO_ATENDIDO" and result.refund_amount > 0:
             wallet.add_refund(store, order.customer_id, result.refund_amount, "ZONA_NO_ATENDIDA", at)
     store.settled_cycles.add(cycle)
 
     # LQ-09: resumen del ciclo
-    total_credited = sum((o.refund_amount for o in settled.values() if o.status == "LIQUIDADO"), ZERO)
+    total_credited = sum((o.refund_amount for o in settled.values() if o.status in ("LIQUIDADO", "NO_ENTREGADO")),
+                         ZERO)
     total_refunded = sum((o.refund_amount for o in settled.values() if o.status == "NO_ATENDIDO"), ZERO)
     ordered_ids = sorted(settled)
     result = CycleSettlement(

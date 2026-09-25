@@ -10,7 +10,11 @@ from datetime import datetime
 
 from . import cycle as cycles
 from .domain import MIN_ORDERS_PER_GROUP, BusinessRuleError, Order
+from .settlement import CycleSettlement, settle_cycle
 from .store import InMemoryStore
+
+
+FAILURE_REASONS = frozenset({"PORTERIA_CERRADA", "NADIE_RECIBE", "PORTERIA_RECHAZA"})  # S-105
 
 
 @dataclass(frozen=True)
@@ -32,6 +36,17 @@ class Delivery:
     reception_kind: str
     delivered_by: str
     delivered_at: datetime
+
+
+@dataclass(frozen=True)
+class FailedDelivery:
+    cycle: str
+    zone_id: str
+    order_ids: tuple[int, ...]
+    photo: str
+    reason: str
+    registered_by: str
+    registered_at: datetime
 
 
 def check_staff(store: InMemoryStore, by: str) -> None:
@@ -85,6 +100,8 @@ def deliver_zone(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, pho
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
     if (cycle, zone_id) in store.deliveries:
         raise BusinessRuleError("ZONE_ALREADY_DELIVERED", "Esta zona ya fue entregada en el ciclo.")
+    if (cycle, zone_id) in store.failed_deliveries:  # EF-03
+        raise BusinessRuleError("ZONE_ALREADY_CLOSED", "Esta zona ya tiene su entrega fallida registrada.")
     photo = check_photo(photo)  # EN-03
     receiver = (received_by or "").strip()
     if not receiver:
@@ -98,3 +115,38 @@ def deliver_zone(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, pho
                         zone.reception_kind, by, now)
     store.deliveries[(cycle, zone_id)] = delivery
     return delivery
+
+
+def _ready_orders(store: InMemoryStore, cycle: str, zone_id: str) -> list[Order]:
+    orders = [o for o in store.orders_in_cycle(cycle) if o.zone_id == zone_id and is_attended(store, o)]
+    if not orders:
+        raise BusinessRuleError("NOTHING_TO_DELIVER", "La zona no tiene pedidos para entregar.")
+    if any(not store.bags.get(order.order_id) for order in orders):
+        raise BusinessRuleError("ORDERS_NOT_PACKED", "Hay pedidos de la zona sin armar.")
+    return orders
+
+
+def register_failed_delivery(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, photo: str, reason: str,
+                             now: datetime) -> FailedDelivery:
+    """EF-01..EF-03: la portería no recibió; queda registrado con evidencia y sin reintento (S-102)."""
+    check_staff(store, by)
+    if zone_id not in store.zones:
+        raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
+    if (cycle, zone_id) in store.deliveries or (cycle, zone_id) in store.failed_deliveries:
+        raise BusinessRuleError("ZONE_ALREADY_CLOSED", "Esta zona ya se entregó o ya falló en el ciclo.")
+    photo = check_photo(photo)
+    if reason not in FAILURE_REASONS:
+        raise BusinessRuleError("INVALID_FAILURE_REASON", "Indica si la portería estaba cerrada, no había nadie o no aceptó.")
+    orders = _ready_orders(store, cycle, zone_id)  # EF-02
+    failure = FailedDelivery(cycle, zone_id, tuple(o.order_id for o in orders), photo, reason, by, now)
+    store.failed_deliveries[(cycle, zone_id)] = failure
+    return failure
+
+
+def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleSettlement:
+    """EF-06, S-106: se liquida solo cuando cada zona atendida se entregó o falló."""
+    zones = {o.zone_id for o in store.orders_in_cycle(cycle) if is_attended(store, o)}
+    pending = sorted(z for z in zones if (cycle, z) not in store.deliveries and (cycle, z) not in store.failed_deliveries)
+    if pending:
+        raise BusinessRuleError("ZONES_PENDING", "Falta entregar o registrar la falla de: " + ", ".join(pending) + ".")
+    return settle_cycle(store, cycle, missing, at=at)
