@@ -53,3 +53,34 @@ Catálogo de prueba para el ciclo 2026-W39 (abre el lunes 21/09): papa amarilla 
 - **CT-J · Desactivar a mitad de semana.** Con un pedido de papa amarilla ya registrado, el administrador la desactiva → un pedido nuevo con papa recibe `PRODUCT_NOT_AVAILABLE`, y el pedido anterior se liquida normal. → CT-09, S-36
 - **CT-K · Stock por ciclo.** 395 kg reservados en W38 no impiden pedir 6 kg en W39. → S-35
 - **CT-L · Liquidación con los tramos del ciclo.** En W39, con 200 kg pedidos entre todos (tramo desde 100), el precio final es 3.30 × 1.12 = S/ 3.696. → CT-10
+
+## Supuesto agregado al implementar (a validar por el equipo)
+
+| # | Supuesto | Valor |
+|---|---|---|
+| S-38 | Si un catálogo tiene varios errores, se informa el primero: primero quién publica (CT-01) y la fecha (CT-08); luego los productos en el orden de la lista y, dentro de cada producto, proveedor → tramos → stock → repetido → categoría (CT-02..CT-06). Es el mismo criterio de S-11. | — |
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_catalog.py`) |
+|---|---|---|
+| CT-01 | `catalog._check_admin` (en `publish_catalog` y `deactivate_product`); `store.admins`, seed `PILOT_ADMINS` | `test_ct_b_*`, `test_ct_j_*` |
+| CT-02 | `catalog._check_product`; `store.suppliers`, seed `PILOT_SUPPLIERS`; `Product.supplier_id` | `test_ct_c_*` |
+| CT-03, S-34 | `catalog._check_tiers` | `test_ct_d_*` |
+| CT-04 | `catalog._check_product` | `test_ct_e_*` |
+| CT-05 | `catalog._check_product` | `test_ct_f_*` |
+| CT-06 | `catalog._check_product` (categorías de `COMMISSION`) | `test_ct_g_*` |
+| CT-07 | `publish_catalog`: guarda en `store.catalogs` solo al final | `test_ct_h_*` |
+| CT-08, S-33 | `publish_catalog` + `cycle.opens_at` | `test_ct_i_*` |
+| CT-09, S-36 | `deactivate_product` (el producto queda `active=False`; la liquidación no mira `active`) | `test_ct_j_*` |
+| CT-10, S-37 | `store.catalog_for`; `quote_order(store, lines, cycle)`; `register_order`; `edit_order`; `settle_cycle` | `test_ct_a_*`, `test_ct_j_*`, `test_ct_l_*` |
+| S-35 | `store.reserve / release / reserved_quantity` con ciclo; `register_order`, `cancel_order`, `edit_order` | `test_ct_k_*`, `test_ca10_*`, `test_ca15_*`, `test_cc01_*`, `test_ce_*` |
+
+## Huecos encontrados al implementar (a decidir por el equipo)
+
+No se implementó nada para estos casos; se describe cómo se comporta hoy el código.
+
+1. **Editar un pedido que tiene un producto desactivado.** S-36 dice que el pedido se mantiene, pero si el vecino lo edita (aunque sea para cambiar otra línea), la cotización nueva rechaza el producto con `PRODUCT_NOT_AVAILABLE`. Falta decidir si la línea ya comprada se conserva al editar.
+2. **Desactivar un producto en un ciclo sin catálogo publicado.** Como el ciclo usa el catálogo base (S-37), `deactivate_product` responde `PRODUCT_NOT_AVAILABLE`. Falta decidir si el administrador puede retirar un producto del catálogo base.
+3. **Unidad y paso del producto.** La spec no valida la unidad (`kg` o `unidad`) ni que el paso sea mayor que 0. Un producto con otra unidad se publicaría y fallaría al cotizar.
+4. **Proveedor que deja de ser aliado a mitad de semana.** El catálogo ya publicado no cambia; no hay regla sobre qué pasa con sus productos.

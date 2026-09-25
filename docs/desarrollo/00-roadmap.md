@@ -20,7 +20,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 3 | **Billetera de saldo**: el saldo de la liquidación se guarda, se usa en la siguiente compra (combinado con Yape o Plin), no vence y se puede pedir de vuelta al medio de pago (hasta 30 días) | C-05, C-02 | ver `03-billetera-saldo.md` |
 | 4 | **Cancelar y editar el pedido antes del cierre**: devolución completa si todavía no se compró | Carlos 24/09 (cancelación con devolución antes de la compra) | pendiente |
 | 5 | **Zonas de vecinos**: crear zona con punto de recepción, radio máximo, unir zonas cercanas con dos admins, transferir el rol de admin | C-07 | pendiente |
-| 6 | **Catálogo semanal del proveedor aliado (CUN-01)**: lista con tramos, stock máximo y marca única; solo el administrador publica | C-11, C-12, RN-16 | pendiente |
+| 6 | **Catálogo semanal del proveedor aliado (CUN-01)**: lista con tramos, stock máximo y marca única; solo el administrador publica | C-11, C-12, RN-16 | completa, ver `06-catalogo-semanal.md` |
 | 7 | **Armado, entrega e incidencias por artículo**: foto por bolsa, foto de entrega en portería, reclamo por artículo en 24 h, colchón de reposición con tope | C-10, decisiones del 24/09 | pendiente |
 | 8 | **Métricas del piloto**: recompra en la semana 4, margen por pedido, ahorro entregado | lecciones de los antecedentes | pendiente |
 
