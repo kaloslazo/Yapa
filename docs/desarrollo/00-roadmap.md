@@ -22,7 +22,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 5 | **Zonas de vecinos**: crear zona con punto de recepción, radio máximo, unir zonas cercanas con dos admins, transferir el rol de admin | C-07 | pendiente |
 | 6 | **Catálogo semanal del proveedor aliado (CUN-01)**: lista con tramos, stock máximo y marca única; solo el administrador publica | C-11, C-12, RN-16 | completa, ver `06-catalogo-semanal.md` |
 | 7 | **Armado, entrega e incidencias por artículo**: foto por bolsa, foto de entrega en portería, reclamo por artículo en 24 h, colchón de reposición con tope | C-10, decisiones del 24/09 | completa, ver `07-armado-entrega-reclamos.md` |
-| 8 | **Métricas del piloto**: recompra en la semana 4, margen por pedido, ahorro entregado | lecciones de los antecedentes | pendiente |
+| 8 | **Métricas del piloto**: recompra en la semana 4, margen por pedido, ahorro entregado | lecciones de los antecedentes | completa, ver `08-metricas-piloto.md` |
 
 ## Registro
 

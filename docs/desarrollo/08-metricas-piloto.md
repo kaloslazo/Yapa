@@ -48,3 +48,20 @@ Escenario base: ciclo 2026-W38 con catálogo base. Cada pedido lleva la canasta 
 - **MT-F · Recompra que llega a la meta.** 8 vecinos compran por primera vez en W38 (además, un grupo de 7 pedidos de Lince no se atiende y no entra en la cohorte). En W41, 5 de esos 8 vuelven a comprar junto con 3 vecinos nuevos → cohorte 8, volvieron 5, **62.5 %**, llega a la meta. → MT-05, S-47
 - **MT-G · Recompra bajo la meta.** En W41 vuelven 3 de los 8, con 5 vecinos nuevos → **37.5 %**, no llega a la meta. → MT-05
 - **MT-H · Sin liquidar o sin cohorte.** Pedir el margen, el ahorro o la recompra de un ciclo sin liquidar → `CYCLE_NOT_SETTLED`; la recompra con W41 sin liquidar → `CYCLE_NOT_SETTLED`; la recompra de un ciclo liquidado sin compras → `EMPTY_COHORT`. → MT-01, MT-05
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/`) | Prueba (`tests/test_metrics.py`) |
+|---|---|---|
+| MT-01, S-52 | `metrics._settlement` (lee `store.settlements`, que guarda `settle_cycle`) | `test_mt_h_*` |
+| MT-02, S-47, S-49 | `metrics.order_margins`, `_liquidated` | `test_mt_a_*`, `test_mt_b_*`, `test_mt_c_*` |
+| MT-03, S-50 | `metrics.margin_alerts` | `test_mt_a_*`, `test_mt_b_*` |
+| MT-04, S-51 | `metrics.delivered_savings` | `test_mt_d_*`, `test_mt_e_*` |
+| MT-05, S-48 | `metrics.repurchase_week4`; `cycle.add_weeks` | `test_mt_f_*`, `test_mt_g_*`, `test_mt_h_*` |
+
+## Huecos encontrados al implementar (a decidir por el equipo)
+
+1. **Costos operativos fuera del margen.** El margen no descuenta armado, cobro (Yape Empresa cobra 2.95 %), atención ni el viaje de compra del jueves. Con los costos de `08_validacion_economica.md` (S/ 3.22 a S/ 12.69 por pedido), el margen de S/ 5.64 del escenario base podría ser negativo. Falta decidir qué costo por pedido se usa.
+2. **Ahorro frente al supermercado.** El "ahorro entregado" solo mide lo que vuelve por volumen y envío. Para decir "ahorraste X % frente a Plaza Vea" el catálogo necesitaría el precio de referencia del supermercado.
+3. **Vecino con un intento fallido.** Si alguien pidió en W37 y su zona no llegó al mínimo, su primera **compra** puede ser W38 y entra en la cohorte de W38 como nuevo. Falta decidir si la cohorte se arma por primera compra o por primer pedido.
+4. **Costo del colchón.** Lo que se guarda en el colchón (S/ 500 como máximo) es plata inmovilizada que no aparece en el margen de ningún ciclo.
