@@ -7,6 +7,7 @@ from test_settlement import Scenario
 from yapa_sdd.catalog import deactivate_product, publish_catalog
 from yapa_sdd.cycle import LIMA
 from yapa_sdd.domain import BusinessRuleError, Customer, PriceTier, Product
+from yapa_sdd.order_changes import edit_order
 from yapa_sdd.order_registration import quote_order, register_order, verify_payment
 from yapa_sdd.settlement import settle_cycle
 
@@ -129,6 +130,27 @@ class CatalogSpecTests(unittest.TestCase):
             self.order_w39(5200 + i, lines=[("PAPA-AMARILLA", "10"), ("LIMPIATODO-GALON", "2")])
         result = settle_cycle(self.store, W39)
         self.assertEqual(result.products["PAPA-AMARILLA"].final_unit_price, D("3.696"))
+
+    # CT-M
+    def test_ct_m_edit_keeps_deactivated_product_without_increasing_it(self):
+        self.publish(w39_catalog() + [product("CAMOTE", (("0", "1.20"),), "200")])
+        order = self.order_w39(5001)
+        deactivate_product(self.store, W39, "PAPA-AMARILLA", by=ADMIN)
+        deactivate_product(self.store, W39, "CAMOTE", by=ADMIN)
+
+        def edit(lines, code="", amount="0"):
+            return edit_order(self.store, order.order_id, customer_id=5001, lines=lines, now=MONDAY,
+                              payment_method="YAPE" if code else None, operation_code=code, amount=D(amount))
+
+        edited = edit([("PAPA-AMARILLA", "5"), ("LIMPIATODO-GALON", "5")], "W39-EDIT-1", "8.61")
+        self.assertEqual(edited.total, D("67.65"))
+        self.assertRule("PRODUCT_NOT_AVAILABLE", edit, [("PAPA-AMARILLA", "6"), ("LIMPIATODO-GALON", "5")],
+                        "W39-EDIT-2", "3.92")
+        self.assertRule("PRODUCT_NOT_AVAILABLE", edit,
+                        [("PAPA-AMARILLA", "5"), ("LIMPIATODO-GALON", "5"), ("CAMOTE", "2")], "W39-EDIT-3", "2.68")
+        edited = edit([("PAPA-AMARILLA", "3"), ("LIMPIATODO-GALON", "5")])
+        self.assertEqual(edited.lines[0].quantity, D("3"))
+        self.assertEqual(edited.total, D("59.81"))
 
 
 if __name__ == "__main__":
