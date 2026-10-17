@@ -156,6 +156,15 @@ class ApiSpecTests(unittest.TestCase):
         self.assertEqual(data["error"]["codigo"], "ORDER_NOT_FOUND")
         self.assertTrue(data["error"]["mensaje"])
 
+    # FE-F (iteración 29)
+    def test_fe_f_location_through_api(self):
+        client = self.neighbor(203, "Z-LINCE-01")
+        status, data, _ = client.post("/api/ubicacion", {"lat": "abc", "lon": LON})
+        self.assertEqual((status, data["error"]["codigo"]), (422, "INVALID_LOCATION"))
+        self.assertEqual(client.post("/api/ubicacion", {"lat": LAT, "lon": LON})[0], 200)
+        status, _, _ = client.post("/api/zonas", {"nombre": "Torre Luna", "distrito": "Lince", "lat": LAT, "lon": LON})
+        self.assertEqual(status, 201)
+
 
 if __name__ == "__main__":
     unittest.main()
