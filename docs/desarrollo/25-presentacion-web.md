@@ -55,3 +55,24 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (ciclo 2026-W38 abierto) y catálog
 PYTHONPATH=src python -m yapa_sdd.web --demo
 # abrir http://127.0.0.1:8000 · vecina Ana (101) y admin: credenciales impresas al arrancar
 ```
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_web_presentacion.py`) |
+|---|---|---|
+| PW-01 | `views.page` (`LOGO`, `NAV`, `CURRENT`) | `test_pw_a_*`, `test_pw_b_*` |
+| PW-02 | `views.HOW_IT_WORKS`, `views.home` sin sesión | `test_pw_a_*` |
+| PW-03 | `app.home` (`ordered`, `goal`) · `<progress>` en `views.home` | `test_pw_c_*` |
+| PW-04, S-139 | `views.savings_badge` (usa `reference.savings_percent`) | `test_pw_d_*`, `test_pw_i_*` |
+| PW-05 | `views.account` (`hero-balance`) | `test_pw_e_*`, `test_pw_i_*` |
+| PW-06 | `views.ADMIN_SECTIONS`, `views.admin` | `test_pw_f_*` |
+| PW-07, S-140 | `views.CSS` y `views.LOGO` sin enlaces externos | `test_pw_g_*` |
+| PW-08, S-141..S-143 | `demo.demo_store` · `web/__main__.py` (`--demo`) | `test_pw_h_*`, `test_pw_i_*` |
+
+Las 282 pruebas anteriores siguen en verde sin cambios: los textos que verifican (precios, "5 de 100 kg", "Saldo: S/ …", estados) se mantienen. Se revisó a mano en escritorio (1280 px) y celular (375 px): portada, catálogo, cotización, error, Mi cuenta, admin, armado, métricas y entrar.
+
+## Notas
+
+- El error de la spec en PW-D (49.6 % calculado con el precio redondeado) se corrigió primero en la spec y después en la prueba, antes del código.
+- En la semana de demo, la devolución por pedido es chica (S/ 0.56): con 9 pedidos ningún producto llega al siguiente tramo, y el ahorro sale solo del envío compartido. El ahorro grande es frente al supermercado (S/ 42.31 en el pedido de Ana). Es el resultado real del modelo con pocos pedidos, no un error.
+- Los estados (`LIQUIDADO`, `REGISTRADO`, …) se muestran como etiquetas de color, pero con el mismo texto; traducirlos a palabras del vecino queda para el equipo.

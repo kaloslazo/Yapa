@@ -1,6 +1,6 @@
 # Desarrollo de Yapa después del Lab 4
 
-Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `carlos/desarrollo`.
+Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `main` de `Raith726/yapa-desarrollo`.
 
 ## Método (el mismo del Lab 4)
 
@@ -39,6 +39,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 22 | **Precio de referencia y ahorro frente al mercado** (fuente y fecha, vigencia de 14 días, métrica por canasta) | hueco 2 de la iteración 8, kit de campo, Ley 29571 | completa, ver `22-precio-referencia.md` |
 | 23 | **"Te devolvemos" y el ahorro en Mi cuenta** (lo pagado, lo que costó, lo devuelto y la comparación por pedido) | C-05, recompra de la semana 4 (iteración 8) | completa, ver `23-mi-ahorro.md` |
 | 24 | **Alta de vecinos y reinicio del PIN** (celular, zona, consentimiento, PIN generado) | S-65 (iteración 10), Ley 29733 | completa, ver `24-alta-vecinos.md` |
+| 25 | **Presentación de la web y semana de demo** (portada, avance del tramo, ahorro frente al supermercado, `--demo`) | C-01, C-02, pregunta 64 | completa, ver `25-presentacion-web.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

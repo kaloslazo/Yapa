@@ -35,10 +35,10 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```
 
-## Estado al 25/09/2026 (madrugada)
+## Estado al 17/10/2026
 
-- Iteraciones 2 a 24 **completas y en verde** (282 pruebas). Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-138. **El siguiente libre es S-139.**
+- Iteraciones 2 a 25 **completas y en verde** (292 pruebas). Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-143. **El siguiente libre es S-144.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
 - `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
@@ -47,6 +47,7 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ## Levantar la web de demo
 
 ```bash
+PYTHONPATH=src python -m yapa_sdd.web --demo   # semana ya vivida, en memoria (iteración 25)
 PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --ahora 2026-09-16T10:00:00-05:00
 # credenciales de demo: se imprimen al arrancar (vecinos 101 y 105, admin admin-yapa)
 # vecinos nuevos: /admin/vecinos (el PIN se muestra una sola vez)

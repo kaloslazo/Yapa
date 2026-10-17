@@ -179,3 +179,10 @@
 - Cierra el hueco de S-65: el PIN inicial lo asignaba el admin "al dar de alta", pero no había alta.
 - Resultado: 282 pruebas en verde.
 
+
+## Iteración 25 · Presentación de la web y semana de demo (17/10/2026)
+
+- Spec: `25-presentacion-web.md` (S-139..S-143). Portada con "Cómo funciona" y la promesa del precio máximo, barra de avance hacia el siguiente tramo, distintivo "N % menos que en Plaza Vea", saldo destacado en Mi cuenta y panel del admin con accesos. Sin recursos de otros sitios.
+- `python -m yapa_sdd.web --demo` arranca con la semana 2026-W39 entregada y liquidada y la 2026-W40 abierta. Se arma solo con los casos de uso, y la conciliación da 0.
+- Error encontrado en la spec: PW-D decía 49.6 % porque se calculó con el precio redondeado. Se corrigió la spec, luego la prueba y después el código.
+- Resultado: 292 pruebas en verde.
