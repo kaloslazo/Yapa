@@ -66,3 +66,25 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (2026-W38), catálogo base del pilo
 - **WA-08:** Mi cuenta dice "Cancelado" (antes "CANCELADO_POR_CLIENTE").
 
 El resto de los criterios no cambia.
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_web_experiencia.py`) |
+|---|---|---|
+| EC-01, S-144, S-145 | `views.home`, `views._product_card` (botones − y +), `views.CART_SCRIPT` (barra del carrito) | `test_ec_a_*` |
+| EC-02, S-148 | `app.cotizar` (nombres, ahorro, saldo) · `views.cart` | `test_ec_b_*`, `test_ec_c_*`, `test_ec_d_*` |
+| EC-03 | `views.registered`, `views.NEXT_STEPS` | `test_ec_e_*` |
+| EC-04, S-146, S-147 | `app.cuenta` (`cancellable`, `saved`) · `views.account`, `views._order_card`, `views._tracker`, `views.STATUS_WORDS` | `test_ec_f_*`, `test_ec_g_*`, `test_web.test_wa05_*`, `test_wa08_*` |
+| EC-05 | `app.admin` (resumen) · `views.admin`, `views.kpis`, `views.cycle_select` | `test_ec_h_*` |
+| EC-06 | `views.simple(ok=...)`, `views.error_box` (enlace "Volver") · `app.dispatch` (404, 405, 403) | `test_ec_i_*` |
+| EC-07, S-149 | `app.known_cycles` · `views.cycle_select`, `_zone_options`, `buffer_page`, `customers_page`, `metrics_error` | `test_ec_j_*` |
+| EC-08, S-150 | `app.pedidos`, `app.payment_code` · `views.registered` (monto y código destacados) | `test_ec_d_*`, `test_ec_k_*` |
+| EC-09, S-151, S-152 | `app._form` (multipart), `app._save_photo` · formularios con `foto_archivo` · `ubicar()` en crear zona | `test_ec_l_*`, `test_ec_m_*` |
+
+## Notas
+
+- **S-150 cambia el flujo de pago** de la iteración 2 (antes: pagar y registrar con el código del Yape; ahora: registrar, pagar con el código de Yapa y verificar). Las reglas RP-xx no cambian: el código sigue siendo único y el admin sigue verificando antes del cierre. La API sigue aceptando `codigo` y `monto`, por eso WA-05, WA-06 y la semana completa por la web pasan sin cambios.
+- En Métricas, una semana sin liquidar sigue respondiendo 422 con su código, pero ahora deja el selector de semana a mano.
+- Revisado en pantalla: catálogo con carrito, carrito, confirmación, Mi cuenta, admin y portada.
+- Queda para la próxima: integrar el frontend que hizo el equipo aparte (cliente y admin) sobre estas mismas rutas.
+

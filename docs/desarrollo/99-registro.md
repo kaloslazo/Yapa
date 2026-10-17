@@ -186,3 +186,12 @@
 - `python -m yapa_sdd.web --demo` arranca con la semana 2026-W39 entregada y liquidada y la 2026-W40 abierta. Se arma solo con los casos de uso, y la conciliación da 0.
 - Error encontrado en la spec: PW-D decía 49.6 % porque se calculó con el precio redondeado. Se corrigió la spec, luego la prueba y después el código.
 - Resultado: 292 pruebas en verde.
+
+## Iteración 26 · Experiencia de compra (17/10/2026)
+
+- Spec: `26-experiencia-compra.md` (S-144..S-152). Catálogo con botones − y + y carrito fijo con el mínimo y el ahorro aproximado; página "Tu carrito"; confirmación con lo que sigue; Mi cuenta con tarjetas por pedido, avance, botones para cancelar y "Ahorraste S/ X frente al supermercado"; panel del admin con resumen de la semana.
+- Revisión del equipo: escribir lo menos posible. Ciclos, pedidos, zonas y vecinos se eligen de listas; las fotos se suben desde la cámara; la ubicación se toma con un botón.
+- Decisión de Carlos (S-150): el vecino ya no escribe el código de operación. Yapa genera un código de pago y le dice cuánto yapear.
+- Se ajustaron WA-05 y WA-08 (estados en palabras, S-146) en un commit `test:` antes del código.
+- Resultado: 305 pruebas en verde.
+

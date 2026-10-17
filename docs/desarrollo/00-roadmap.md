@@ -40,6 +40,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 23 | **"Te devolvemos" y el ahorro en Mi cuenta** (lo pagado, lo que costó, lo devuelto y la comparación por pedido) | C-05, recompra de la semana 4 (iteración 8) | completa, ver `23-mi-ahorro.md` |
 | 24 | **Alta de vecinos y reinicio del PIN** (celular, zona, consentimiento, PIN generado) | S-65 (iteración 10), Ley 29733 | completa, ver `24-alta-vecinos.md` |
 | 25 | **Presentación de la web y semana de demo** (portada, avance del tramo, ahorro frente al supermercado, `--demo`) | C-01, C-02, pregunta 64 | completa, ver `25-presentacion-web.md` |
+| 26 | **Experiencia de compra** (carrito, pedidos con botones, código de pago generado, listas en vez de escribir, fotos desde la cámara) | revisión del equipo del 17/10, S-150 | completa, ver `26-experiencia-compra.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro
