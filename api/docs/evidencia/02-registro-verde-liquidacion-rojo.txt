@@ -1,0 +1,56 @@
+# Ejecucion tras implementar registro de pedido (liquidacion aun sin codigo)
+# Fecha: 2026-09-24 09:15
+# Comando: PYTHONPATH=src python -m unittest discover -s tests -v
+
+test_ca01_registers_valid_order (test_order_registration.RegisterOrderSpecTests.test_ca01_registers_valid_order) ... ok
+test_ca02_rejects_suspended_customer (test_order_registration.RegisterOrderSpecTests.test_ca02_rejects_suspended_customer) ... ok
+test_ca02_rejects_unknown_customer (test_order_registration.RegisterOrderSpecTests.test_ca02_rejects_unknown_customer) ... ok
+test_ca03_rejects_zone_outside_pilot (test_order_registration.RegisterOrderSpecTests.test_ca03_rejects_zone_outside_pilot) ... ok
+test_ca03_rejects_zone_without_accepted_reception (test_order_registration.RegisterOrderSpecTests.test_ca03_rejects_zone_without_accepted_reception) ... ok
+test_ca04_accepts_monday_midnight (test_order_registration.RegisterOrderSpecTests.test_ca04_accepts_monday_midnight) ... ok
+test_ca04_accepts_one_second_before_close (test_order_registration.RegisterOrderSpecTests.test_ca04_accepts_one_second_before_close) ... ok
+test_ca04_rejects_exactly_at_close (test_order_registration.RegisterOrderSpecTests.test_ca04_rejects_exactly_at_close) ... ok
+test_ca04_rejects_thursday (test_order_registration.RegisterOrderSpecTests.test_ca04_rejects_thursday) ... ok
+test_ca05_rejects_second_order_in_cycle (test_order_registration.RegisterOrderSpecTests.test_ca05_rejects_second_order_in_cycle) ... ok
+test_ca06_rejects_empty_order (test_order_registration.RegisterOrderSpecTests.test_ca06_rejects_empty_order) ... ok
+test_ca07_merges_repeated_product_lines (test_order_registration.RegisterOrderSpecTests.test_ca07_merges_repeated_product_lines) ... ok
+test_ca08_rejects_inactive_product (test_order_registration.RegisterOrderSpecTests.test_ca08_rejects_inactive_product) ... ok
+test_ca08_rejects_product_not_in_catalog (test_order_registration.RegisterOrderSpecTests.test_ca08_rejects_product_not_in_catalog) ... ok
+test_ca09_accepts_garlic_in_quarter_kilos (test_order_registration.RegisterOrderSpecTests.test_ca09_accepts_garlic_in_quarter_kilos) ... ok
+test_ca09_rejects_invalid_quantities (test_order_registration.RegisterOrderSpecTests.test_ca09_rejects_invalid_quantities) ... ok
+test_ca10_accepts_exactly_remaining_stock_and_reserves_it (test_order_registration.RegisterOrderSpecTests.test_ca10_accepts_exactly_remaining_stock_and_reserves_it) ... ok
+test_ca10_rejects_quantity_above_supplier_stock (test_order_registration.RegisterOrderSpecTests.test_ca10_rejects_quantity_above_supplier_stock) ... ok
+test_ca11_accepts_subtotal_just_above_minimum (test_order_registration.RegisterOrderSpecTests.test_ca11_accepts_subtotal_just_above_minimum) ... ok
+test_ca11_minimum_uses_exact_subtotal (test_order_registration.RegisterOrderSpecTests.test_ca11_minimum_uses_exact_subtotal) ... ok
+test_ca12_rejects_amount_different_from_total (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_amount_different_from_total) ... ok
+test_ca12_rejects_payment_method_not_allowed (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_payment_method_not_allowed) ... ok
+test_ca12_rejects_reused_operation_code (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_reused_operation_code) ... ok
+test_ca12_requires_operation_code (test_order_registration.RegisterOrderSpecTests.test_ca12_requires_operation_code) ... ok
+test_ca13_prices_come_from_catalog (test_order_registration.RegisterOrderSpecTests.test_ca13_prices_come_from_catalog) ... ok
+test_ca14_admin_verifies_payment_before_close (test_order_registration.RegisterOrderSpecTests.test_ca14_admin_verifies_payment_before_close) ... ok
+test_ca14_rejects_unknown_order (test_order_registration.RegisterOrderSpecTests.test_ca14_rejects_unknown_order) ... ok
+test_ca14_rejects_verification_after_close (test_order_registration.RegisterOrderSpecTests.test_ca14_rejects_verification_after_close) ... ok
+test_ca15_quote_does_not_reserve_or_create_order (test_order_registration.RegisterOrderSpecTests.test_ca15_quote_does_not_reserve_or_create_order) ... ok
+test_plin_is_allowed (test_order_registration.RegisterOrderSpecTests.test_plin_is_allowed) ... ok
+test_settlement (unittest.loader._FailedTest.test_settlement) ... ERROR
+
+======================================================================
+ERROR: test_settlement (unittest.loader._FailedTest.test_settlement)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_settlement
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Dev\UTEC\Ciclo_8\DS\lab4\sdd-2026-exposicion\tests\test_settlement.py", line 9, in <module>
+    from yapa_sdd.settlement import settle_cycle
+ModuleNotFoundError: No module named 'yapa_sdd.settlement'
+
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.036s
+
+FAILED (errors=1)
+exit code: 1

@@ -1,0 +1,21 @@
+# Iteracion 24 - pruebas ANTES del codigo
+# 2026-09-24 23:47
+test_customers (unittest.loader._FailedTest.test_customers) ... ERROR
+
+======================================================================
+ERROR: test_customers (unittest.loader._FailedTest.test_customers)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_customers
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_customers.py", line 10, in <module>
+    from yapa_sdd.customers import register_customer, reset_pin
+ModuleNotFoundError: No module named 'yapa_sdd.customers'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

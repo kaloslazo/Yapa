@@ -1,0 +1,74 @@
+# Demo por consola (iteracion 2) - 2026-09-24 09:29
+
+$ python -m yapa_sdd.cli cotizar ejemplos/pedido_valido.json
+COTIZACION (precio maximo, nunca pagaras mas)
+  PAPA-AMARILLA                   5  x S/ 4.032  = S/ 20.160
+  CEBOLLA-ROJA                    3  x S/ 2.352  = S/ 7.056
+  LIMON                           2  x S/ 2.352  = S/ 4.704
+  AJO                             1  x S/ 5.376  = S/ 5.376
+  LIMPIATODO-GALON                2  x S/ 8.611  = S/ 17.222
+  Subtotal: S/ 54.518   Envio maximo: S/ 5.00
+  Total a yapear: S/ 59.51
+
+$ python -m yapa_sdd.cli registrar ejemplos/pedido_valido.json
+PEDIDO 1 REGISTRADO  (ciclo 2026-W38, zona Z-LINCE-01)
+  PAPA-AMARILLA                   5  x S/ 4.032  = S/ 20.160
+  CEBOLLA-ROJA                    3  x S/ 2.352  = S/ 7.056
+  LIMON                           2  x S/ 2.352  = S/ 4.704
+  AJO                             1  x S/ 5.376  = S/ 5.376
+  LIMPIATODO-GALON                2  x S/ 8.611  = S/ 17.222
+  Subtotal: S/ 54.518   Envio: S/ 5.00   Total: S/ 59.51
+  Pago YAPE op. 04512873: POR_VERIFICAR
+
+$ python -m yapa_sdd.cli registrar ejemplos/pedido_fuera_de_hora.json
+RECHAZADO CYCLE_CLOSED: El ciclo semanal está cerrado. Vuelve el lunes.
+
+$ python -m yapa_sdd.cli registrar ejemplos/pedido_bajo_minimo.json
+RECHAZADO SUBTOTAL_BELOW_MINIMUM: El pedido mínimo es S/ 50.00. Faltan S/ 25.14.
+
+$ python -m yapa_sdd.cli registrar ejemplos/pedido_zona_fuera.json
+RECHAZADO ZONE_NOT_AVAILABLE: Tu zona todavía no está disponible para pedidos.
+
+$ python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
+LIQUIDACION DEL CICLO 2026-W38
+
+Precio final por producto (tramo alcanzado entre todos):
+  PAPA-AMARILLA              total    100 kg     tramo desde  100  max S/ 4.0320 -> final S/ 3.7856
+  PAPA-BLANCA                total    180 kg     tramo desde  100  max S/ 1.2320 -> final S/ 1.0976
+  CEBOLLA-ROJA               total    180 kg     tramo desde   80  max S/ 2.3520 -> final S/ 2.0160
+  LIMON                      total      4 kg     tramo desde    0  max S/ 2.3520 -> final S/ 2.3520
+  LIMPIATODO-GALON           total      8 unidad tramo desde    0  max S/ 8.6110 -> final S/ 8.6110
+
+Pedidos:
+   id zona        estado         pagado  envio    final  devuelto  destino
+    1 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    2 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    3 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    4 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    5 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    6 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    7 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    8 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+    9 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   10 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   11 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   12 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   13 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   14 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   15 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   16 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   17 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   18 Z-JM-01     LIQUIDADO       61.00   2.00    52.06      8.94  SALDO
+   19 Z-JM-01     LIQUIDADO       64.30   2.00    57.72      6.58  SALDO
+   20 Z-JM-01     LIQUIDADO       64.30   2.00    60.07      4.23  SALDO
+   21 Z-JM-01     CANCELADO       61.00   0.00        0         0  -
+   22 Z-LINCE-01  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   23 Z-LINCE-01  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   24 Z-LINCE-01  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   25 Z-LINCE-01  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   26 Z-LINCE-01  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   27 Z-LINCE-02  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+   28 Z-LINCE-02  NO_ATENDIDO     58.28   0.00        0     58.28  MEDIO_DE_PAGO
+
+Total devuelto como saldo: S/ 171.73
+Total reembolsado al medio de pago: S/ 407.96

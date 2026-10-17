@@ -1,0 +1,22 @@
+# Iteracion 3 - suite completa despues de implementar
+# 2026-09-24 22:24
+test_cb02_partial_balance_plus_yape (test_wallet.WalletSpecTests.test_cb02_partial_balance_plus_yape) ... ok
+test_cb03_balance_covers_everything (test_wallet.WalletSpecTests.test_cb03_balance_covers_everything) ... ok
+test_cb04_rejects_more_than_available (test_wallet.WalletSpecTests.test_cb04_rejects_more_than_available) ... ok
+test_cb04_rejects_negative_balance_use (test_wallet.WalletSpecTests.test_cb04_rejects_negative_balance_use) ... ok
+test_cb05_rejects_balance_above_total (test_wallet.WalletSpecTests.test_cb05_rejects_balance_above_total) ... ok
+test_cb06_external_amount_must_be_the_rest (test_wallet.WalletSpecTests.test_cb06_external_amount_must_be_the_rest) ... ok
+test_cb07_balance_does_not_expire (test_wallet.WalletSpecTests.test_cb07_balance_does_not_expire) ... ok
+test_cb08_not_served_zone_splits_refund (test_wallet.WalletSpecTests.test_cb08_not_served_zone_splits_refund) ... ok
+test_cb09_cancelled_order_returns_balance_part (test_wallet.WalletSpecTests.test_cb09_cancelled_order_returns_balance_part) ... ok
+test_cb10_cycle_is_settled_only_once (test_wallet.WalletSpecTests.test_cb10_cycle_is_settled_only_once) ... ok
+test_cb11_withdrawal_request (test_wallet.WalletSpecTests.test_cb11_withdrawal_request) ... ok
+test_cb12_invalid_withdrawals (test_wallet.WalletSpecTests.test_cb12_invalid_withdrawals) ... ok
+test_cb13_admin_pays_refund_once (test_wallet.WalletSpecTests.test_cb13_admin_pays_refund_once) ... ok
+test_cb14_total_owed_to_customers (test_wallet.WalletSpecTests.test_cb14_total_owed_to_customers) ... ok
+test_cb15_settlement_is_all_or_nothing (test_wallet.WalletSpecTests.test_cb15_settlement_is_all_or_nothing) ... ok
+
+----------------------------------------------------------------------
+Ran 61 tests in 0.013s
+
+OK

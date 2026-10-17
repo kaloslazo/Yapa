@@ -1,0 +1,42 @@
+# Ejecucion de las pruebas ANTES de implementar (iteracion 2)
+# Fecha: 2026-09-24 09:14  |  commit de pruebas, sin codigo nuevo
+# Comando: PYTHONPATH=src python -m unittest discover -s tests -v
+
+test_order_registration (unittest.loader._FailedTest.test_order_registration) ... ERROR
+test_settlement (unittest.loader._FailedTest.test_settlement) ... ERROR
+
+======================================================================
+ERROR: test_order_registration (unittest.loader._FailedTest.test_order_registration)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_order_registration
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Dev\UTEC\Ciclo_8\DS\lab4\sdd-2026-exposicion\tests\test_order_registration.py", line 5, in <module>
+    from yapa_sdd.cycle import LIMA
+ModuleNotFoundError: No module named 'yapa_sdd.cycle'
+
+
+======================================================================
+ERROR: test_settlement (unittest.loader._FailedTest.test_settlement)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_settlement
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Dev\UTEC\Ciclo_8\DS\lab4\sdd-2026-exposicion\tests\test_settlement.py", line 5, in <module>
+    from yapa_sdd.cycle import LIMA
+ModuleNotFoundError: No module named 'yapa_sdd.cycle'
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (errors=2)
+exit code: 1

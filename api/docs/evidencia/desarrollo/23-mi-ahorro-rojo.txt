@@ -1,0 +1,21 @@
+# Iteracion 23 - pruebas ANTES del codigo
+# 2026-09-24 23:44
+test_my_savings (unittest.loader._FailedTest.test_my_savings) ... ERROR
+
+======================================================================
+ERROR: test_my_savings (unittest.loader._FailedTest.test_my_savings)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_my_savings
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_my_savings.py", line 10, in <module>
+    from yapa_sdd.reference import order_comparison, reference_savings
+ImportError: cannot import name 'order_comparison' from 'yapa_sdd.reference' (C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\src\yapa_sdd\reference.py)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

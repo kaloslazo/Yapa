@@ -1,0 +1,18 @@
+{
+  "requestedAt": "2026-09-16T10:00:00-05:00",
+  "groups": [
+    {"zoneId": "Z-JM-01", "count": 18, "verified": true,
+     "lines": [{"productId": "PAPA-AMARILLA", "quantity": "5"}, {"productId": "PAPA-BLANCA", "quantity": "10"}, {"productId": "CEBOLLA-ROJA", "quantity": "10"}]},
+    {"zoneId": "Z-JM-01", "count": 2, "verified": true,
+     "lines": [{"productId": "PAPA-AMARILLA", "quantity": "5"}, {"productId": "LIMON", "quantity": "2"}, {"productId": "LIMPIATODO-GALON", "quantity": "4"}]},
+    {"zoneId": "Z-JM-01", "count": 1, "verified": false,
+     "lines": [{"productId": "PAPA-AMARILLA", "quantity": "5"}, {"productId": "PAPA-BLANCA", "quantity": "10"}, {"productId": "CEBOLLA-ROJA", "quantity": "10"}]},
+    {"zoneId": "Z-LINCE-01", "count": 5, "verified": true,
+     "lines": [{"productId": "CAMOTE", "quantity": "5"}, {"productId": "ZANAHORIA", "quantity": "5"}, {"productId": "DETERGENTE-LIQUIDO-GALON", "quantity": "2"}, {"productId": "LEJIA-GALON", "quantity": "1"}]},
+    {"zoneId": "Z-LINCE-02", "count": 2, "verified": true,
+     "lines": [{"productId": "CAMOTE", "quantity": "5"}, {"productId": "ZANAHORIA", "quantity": "5"}, {"productId": "DETERGENTE-LIQUIDO-GALON", "quantity": "2"}, {"productId": "LEJIA-GALON", "quantity": "1"}]}
+  ],
+  "missing": [
+    {"orderId": 19, "productId": "LIMON", "quantity": "1"}
+  ]
+}

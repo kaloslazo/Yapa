@@ -1,0 +1,30 @@
+# Iteracion 7 - suite despues de implementar
+# 2026-09-24 22:54
+test_co_a_store_non_perishable_leftovers (test_fulfillment.BufferSpecTests.test_co_a_store_non_perishable_leftovers) ... ok
+test_co_b_buffer_has_amount_limit (test_fulfillment.BufferSpecTests.test_co_b_buffer_has_amount_limit) ... ok
+test_co_c_invalid_products_or_quantities (test_fulfillment.BufferSpecTests.test_co_c_invalid_products_or_quantities) ... ok
+test_co_d_use_buffer_to_replace_missing_items (test_fulfillment.BufferSpecTests.test_co_d_use_buffer_to_replace_missing_items) ... ok
+test_co_e_only_staff_uses_buffer (test_fulfillment.BufferSpecTests.test_co_e_only_staff_uses_buffer) ... ok
+test_rc_a_claim_in_time_is_pending (test_fulfillment.ClaimSpecTests.test_rc_a_claim_in_time_is_pending) ... ok
+test_rc_b_claim_window_is_24_hours (test_fulfillment.ClaimSpecTests.test_rc_b_claim_window_is_24_hours) ... ok
+test_rc_c_order_must_be_delivered_and_own (test_fulfillment.ClaimSpecTests.test_rc_c_order_must_be_delivered_and_own) ... ok
+test_rc_d_reason_and_photo (test_fulfillment.ClaimSpecTests.test_rc_d_reason_and_photo) ... ok
+test_rc_e_invalid_items (test_fulfillment.ClaimSpecTests.test_rc_e_invalid_items) ... ok
+test_en_a_zone_delivery_is_recorded (test_fulfillment.DeliverySpecTests.test_en_a_zone_delivery_is_recorded) ... ok
+test_en_b_all_or_nothing (test_fulfillment.DeliverySpecTests.test_en_b_all_or_nothing) ... ok
+test_en_c_delivery_requires_photo_and_receiver (test_fulfillment.DeliverySpecTests.test_en_c_delivery_requires_photo_and_receiver) ... ok
+test_en_d_zone_is_delivered_once (test_fulfillment.DeliverySpecTests.test_en_d_zone_is_delivered_once) ... ok
+test_en_e_invalid_zone_or_person (test_fulfillment.DeliverySpecTests.test_en_e_invalid_zone_or_person) ... ok
+test_ar_a_bags_are_numbered_with_their_photo (test_fulfillment.PackingSpecTests.test_ar_a_bags_are_numbered_with_their_photo) ... ok
+test_ar_b_bag_requires_photo (test_fulfillment.PackingSpecTests.test_ar_b_bag_requires_photo) ... ok
+test_ar_c_cannot_pack_before_close (test_fulfillment.PackingSpecTests.test_ar_c_cannot_pack_before_close) ... ok
+test_ar_d_only_attended_orders_are_packed (test_fulfillment.PackingSpecTests.test_ar_d_only_attended_orders_are_packed) ... ok
+test_ar_e_only_staff_packs (test_fulfillment.PackingSpecTests.test_ar_e_only_staff_packs) ... ok
+test_rv_a_approved_claim_returns_the_article_as_balance (test_fulfillment.ReviewSpecTests.test_rv_a_approved_claim_returns_the_article_as_balance) ... ok
+test_rv_b_rejected_claim_moves_no_money (test_fulfillment.ReviewSpecTests.test_rv_b_rejected_claim_moves_no_money) ... ok
+test_rv_c_approval_needs_settled_cycle (test_fulfillment.ReviewSpecTests.test_rv_c_approval_needs_settled_cycle) ... ok
+test_rv_d_invalid_reviews (test_fulfillment.ReviewSpecTests.test_rv_d_invalid_reviews) ... ok
+test_rv_e_missing_item_is_not_returned_twice (test_fulfillment.ReviewSpecTests.test_rv_e_missing_item_is_not_returned_twice) ... ok
+----------------------------------------------------------------------
+Ran 132 tests in 0.061s
+OK

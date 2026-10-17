@@ -1,0 +1,21 @@
+# Iteracion 22 - pruebas ANTES del codigo
+# 2026-09-24 23:41
+test_reference (unittest.loader._FailedTest.test_reference) ... ERROR
+
+======================================================================
+ERROR: test_reference (unittest.loader._FailedTest.test_reference)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_reference
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_reference.py", line 13, in <module>
+    from yapa_sdd.reference import current_references, reference_savings, register_reference
+ModuleNotFoundError: No module named 'yapa_sdd.reference'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

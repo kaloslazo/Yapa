@@ -1,0 +1,12 @@
+{
+  "customerId": 101,
+  "lines": [
+    {"productId": "PAPA-AMARILLA", "quantity": "5"},
+    {"productId": "CEBOLLA-ROJA", "quantity": "3"},
+    {"productId": "LIMON", "quantity": "2"},
+    {"productId": "AJO", "quantity": "1"},
+    {"productId": "LIMPIATODO-GALON", "quantity": "2"}
+  ],
+  "payment": {"method": "YAPE", "operationCode": "04512873", "amount": "59.51"},
+  "requestedAt": "2026-09-16T10:00:00-05:00"
+}

@@ -1,0 +1,19 @@
+Margen neto promedio por pedido (S/), parada de S/ 100, canasta de S/ 61
+
+OPTIMISTA
+pedidos        10 %      12 %      15 %
+      8       -5.13     -4.19     -2.78
+     12       -1.08     -0.17      1.21
+     16        1.00      1.91      3.29
+     20        1.79      2.61      3.85
+
+PESIMISTA
+pedidos        10 %      12 %      15 %
+      8      -10.23     -9.32     -7.95
+     12       -6.18     -5.30     -3.97
+     16       -4.10     -3.22     -1.88
+     20       -3.31     -2.52     -1.32
+
+Mínimo de pedidos por zona para no perder (comisión 12 %):
+  OPTIMISTA: 13
+  PESIMISTA: no alcanza ni con 60

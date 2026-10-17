@@ -1,0 +1,13 @@
+# Iteracion 8 - suite despues de implementar
+# 2026-09-24 22:58
+test_mt_a_margin_per_order (test_metrics.MetricsSpecTests.test_mt_a_margin_per_order) ... ok
+test_mt_b_negative_margin_is_alerted (test_metrics.MetricsSpecTests.test_mt_b_negative_margin_is_alerted) ... ok
+test_mt_c_missing_items_and_approved_claims (test_metrics.MetricsSpecTests.test_mt_c_missing_items_and_approved_claims) ... ok
+test_mt_d_savings_with_8_orders (test_metrics.MetricsSpecTests.test_mt_d_savings_with_8_orders) ... ok
+test_mt_e_savings_with_20_orders (test_metrics.MetricsSpecTests.test_mt_e_savings_with_20_orders) ... ok
+test_mt_f_repurchase_meets_target (test_metrics.MetricsSpecTests.test_mt_f_repurchase_meets_target) ... ok
+test_mt_g_repurchase_below_target (test_metrics.MetricsSpecTests.test_mt_g_repurchase_below_target) ... ok
+test_mt_h_needs_settled_cycles_and_cohort (test_metrics.MetricsSpecTests.test_mt_h_needs_settled_cycles_and_cohort) ... ok
+----------------------------------------------------------------------
+Ran 140 tests in 0.056s
+OK
