@@ -64,12 +64,12 @@ class WebSpecTests(unittest.TestCase):
         self.assertIn("Faltan S/", html)
         self.assertIn("SUBTOTAL_BELOW_MINIMUM", html)
 
-    # WA-05
+    # WA-05 (ajustado en la iteración 26, S-146)
     def test_wa05_register(self):
         status, _, html = self.register()
         self.assertEqual(status, 200)
         self.assertIn("Pedido 1", html)
-        self.assertIn("REGISTRADO", html)
+        self.assertIn("Registrado", html)
         self.assertEqual(self.store.orders[1].total, Decimal("59.51"))
 
     # WA-06
@@ -89,7 +89,7 @@ class WebSpecTests(unittest.TestCase):
         self.assertIn("Pedido 1", html)
         self.assertIn("Saldo: S/ 0.00", html)
 
-    # WA-08
+    # WA-08 (ajustado en la iteración 26, S-146)
     def test_wa08_cancel_to_balance(self):
         self.register()
         self.admin.post("/admin/verificar", {"pedido": "1"})
@@ -97,7 +97,7 @@ class WebSpecTests(unittest.TestCase):
         self.assertEqual(status, 200)
         html = self.web.get("/cuenta")[2]
         self.assertIn("Saldo: S/ 59.51", html)
-        self.assertIn("CANCELADO_POR_CLIENTE", html)
+        self.assertIn("Cancelado", html)
 
     # WA-09
     def test_wa09_admin_verifies(self):
