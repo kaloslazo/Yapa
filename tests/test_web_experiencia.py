@@ -113,6 +113,15 @@ class ShoppingExperienceSpecTests(unittest.TestCase):
         self.assertIn("SUBTOTAL_BELOW_MINIMUM", html)
         self.assertIn("Volver", html)
 
+    # EC-J
+    def test_ec_j_choose_from_lists(self):
+        self.register()
+        self.assertIn('<select name="ciclo">', self.admin.get("/admin/metricas?ciclo=2026-W38")[2])
+        self.assertIn('<select name="pedido">', self.admin.get("/admin/colchon")[2])
+        self.assertIn('<select name="cliente">', self.admin.get("/admin/vecinos")[2])
+        self.assertIn('<select name="zona">', self.web.get("/zona")[2])
+        self.assertIn("<details", self.web.get("/")[2])
+
 
 class DemoSavingsSpecTests(unittest.TestCase):
     # EC-G
