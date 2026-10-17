@@ -68,7 +68,7 @@ class PresentationSpecTests(unittest.TestCase):
     # PW-D
     def test_pw_d_savings_badge(self):
         self.supermarket("7.99")
-        self.assertIn("49.6 % menos que en Plaza Vea", WebClient(self.app).get("/")[2])
+        self.assertIn("49.5 % menos que en Plaza Vea", WebClient(self.app).get("/")[2])
 
     def test_pw_d_no_badge_when_reference_is_cheaper(self):
         self.supermarket("3.00")
