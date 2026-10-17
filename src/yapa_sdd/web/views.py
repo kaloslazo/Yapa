@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import ROUND_HALF_UP, Decimal
 from html import escape
 
+from ..domain import MIN_SUBTOTAL
 from ..reference import savings_percent
 
 
@@ -103,6 +104,84 @@ color:var(--tinta);box-shadow:0 1px 3px #1d2a2214}
 .tile span{display:block;color:var(--suave);font-size:.86rem;margin-top:2px}
 .login{max-width:420px;margin:0 auto}
 footer{max-width:760px;margin:0 auto;padding:10px 16px 30px;color:var(--suave);font-size:.8rem;text-align:center}
+details>summary{cursor:pointer;font-weight:700;color:var(--verde-osc);list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸";display:inline-block;width:1.1em;transition:transform .15s}
+details[open]>summary::before{transform:rotate(90deg)}
+.plegable>summary{padding:2px 0}
+.plegable[open]>summary{margin-bottom:8px}
+.mini{margin-top:6px}
+.mini>summary{font-size:.86rem;color:var(--verde);font-weight:600}
+.grupo{margin:8px 0 4px}
+.grupo>summary{font-size:1.15rem;padding:8px 0}
+.card.en-carrito{border-color:var(--hoja);box-shadow:0 0 0 2px #3fa66b55}
+.stepper{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.stepper button{width:40px;height:40px;padding:0;margin:0;border-radius:50%;font-size:1.3rem;line-height:1}
+.stepper button[data-delta="-1"]{background:var(--verde-claro);color:var(--verde-osc)}
+.stepper .qty{width:62px;flex:0 0 62px;margin:0;padding:8px 4px}
+.carrito{position:sticky;bottom:10px;z-index:4;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+background:var(--verde-osc);color:#fff;border-radius:18px;padding:12px 16px;margin-top:16px;
+box-shadow:0 8px 24px #14482f55}
+.carrito-info{flex:1 1 260px;min-width:0}
+.carrito progress{height:8px;margin:6px 0 4px;background:#ffffff33}
+.carrito progress::-webkit-progress-bar{background:#ffffff33}
+.carrito progress::-webkit-progress-value{background:var(--sol)}
+.carrito progress::-moz-progress-bar{background:var(--sol)}
+.carrito-meta{font-size:.86rem;color:#d7ecdf;display:flex;gap:10px;flex-wrap:wrap}
+.carrito-ahorro{color:var(--sol);font-weight:800}
+.carrito button{width:auto;flex:0 0 auto;background:var(--sol);color:var(--tinta);margin:0}
+.carrito button:disabled{opacity:.5;cursor:not-allowed}
+.carrito.vacio{opacity:.92}
+.total{font-size:1.5rem;font-weight:800;color:var(--verde-osc);margin:10px 0 4px}
+.resumen td{border:0;padding:3px 6px;color:var(--suave)}
+.resumen td:last-child{text-align:right}
+.celebra{background:linear-gradient(90deg,var(--sol-claro),#fff);border:2px solid var(--sol);border-radius:14px;
+padding:12px 14px;font-weight:700;color:#5e3d00;margin:10px 0}
+.grande-ahorro{font-size:1.3rem;text-align:center;padding:16px}
+.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px;align-items:end}
+.ok{text-align:center}
+.check{width:56px;height:56px;border-radius:50%;background:var(--verde);color:#fff;font-size:2rem;font-weight:800;
+display:flex;align-items:center;justify-content:center;margin:4px auto 8px}
+.aviso-titulo{font-size:1.15rem;font-weight:800;color:var(--verde-osc);margin-bottom:4px}
+.error .aviso-titulo{color:var(--rojo)}
+.aviso{background:var(--sol-claro);border-color:#f3dca7}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px #1d2a2214}
+.kpi span{display:block;color:var(--suave);font-size:.82rem;font-weight:600}
+.kpi strong{display:block;font-size:1.6rem;color:var(--verde-osc)}
+.pedido-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pedido-total{margin-left:auto;font-weight:800;font-size:1.1rem}
+.detalle{background:var(--verde-claro);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.92rem}
+.tracker{display:flex;list-style:none;padding:0;margin:12px 0 6px;counter-reset:paso}
+.tracker li{flex:1;text-align:center;font-size:.76rem;color:var(--suave);position:relative;counter-increment:paso}
+.tracker li::before{content:counter(paso);display:flex;width:26px;height:26px;margin:0 auto 4px;border-radius:50%;
+background:var(--linea);color:var(--suave);align-items:center;justify-content:center;font-weight:800;position:relative;
+z-index:1}
+.tracker li::after{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--linea)}
+.tracker li:first-child::after{display:none}
+.tracker li.hecho{color:var(--verde-osc);font-weight:700}
+.tracker li.hecho::before{content:"✓";background:var(--hoja);color:#fff}
+.tracker li.hecho::after{background:var(--hoja)}
+.acciones{margin-top:8px}
+.acciones button{flex:1 1 220px;font-size:.92rem}
+.hero-acciones{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.hero-acciones .btn{padding:9px 14px}
+.login-logo{text-align:center}
+.login-logo .logo{width:64px;height:64px}
+.pasos-tabla td:first-child{width:34px;font-weight:800;color:var(--verde)}
+code{background:var(--fondo);border-radius:6px;padding:2px 6px;font-size:.88rem}
+.medios{display:flex;gap:10px;margin:8px 0}
+.medio{flex:1;display:flex;align-items:center;gap:8px;border:2px solid var(--linea);border-radius:12px;padding:12px;
+margin:0;cursor:pointer}
+.medio:has(input:checked){border-color:var(--verde);background:var(--verde-claro)}
+.medio input,.casilla input{width:auto;margin:0}
+.casilla{display:flex;align-items:center;gap:8px;margin:10px 0 0}
+.pagar{text-align:center;border:2px solid var(--sol);background:var(--sol-claro)}
+.pagar-monto{font-size:2rem;font-weight:800;color:var(--verde-osc)}
+.codigo-pago{font-family:ui-monospace,Consolas,monospace;font-size:1.5rem;font-weight:800;letter-spacing:.06em;
+background:#fff;border:2px dashed var(--verde);border-radius:12px;padding:10px;margin:8px auto;max-width:360px;
+user-select:all}
+input[type=file]{padding:8px;background:var(--fondo)}
 """
 
 
@@ -159,17 +238,28 @@ def page(title: str, body: str, csrf: str | None = None) -> str:
     )
 
 
-def pill(status: str) -> str:
-    return f'<span class="pill pill-{escape(status)}">{escape(status)}</span>'
+STATUS_WORDS = {  # S-146: lo que ve el vecino
+    "REGISTRADO": "Registrado", "CANCELADO_POR_CLIENTE": "Cancelado", "CANCELADO": "Cancelado",
+    "LIQUIDADO": "Liquidado", "NO_ATENDIDO": "No se atendió", "NO_ENTREGADO": "No se entregó",
+    "POR_VERIFICAR": "Pago por verificar", "VERIFICADO": "Pago verificado", "PENDIENTE": "Pendiente",
+    "PAGADO": "Pagado", "APROBADO": "Aprobado", "RECHAZADO": "Rechazado",
+}
+
+
+def pill(status: str, words: bool = False) -> str:
+    text = STATUS_WORDS.get(status, status) if words else status
+    return f'<span class="pill pill-{escape(status)}">{escape(text)}</span>'
 
 
 def error_box(code: str, message: str) -> str:
-    return (f'<div class="card error" data-code="{escape(code)}"><strong>{escape(message)}</strong>'
-            f'<div class="muted">Código: {escape(code)}</div></div>')
+    return (f'<div class="card error" data-code="{escape(code)}"><div class="aviso-titulo">⚠️ {escape(message)}</div>'
+            f'<div class="muted">Código: {escape(code)}</div>'
+            '<p><a class="btn secundario" href="/" onclick="history.back();return false">Volver</a></p></div>')
 
 
 ICONS = {"PAPA": "🥔", "CEBOLLA": "🧅", "AJO": "🧄", "LIMON": "🍋", "CAMOTE": "🍠", "ZANAHORIA": "🥕",
          "PLATANO": "🍌", "NARANJA": "🍊", "ZAPALLO": "🎃"}
+CATEGORIES = {"FRESCOS": "🥬 Frescos de la semana", "LIMPIEZA": "🧴 Limpieza en galón"}
 
 
 def icon(product_id: str, unit: str) -> str:
@@ -201,73 +291,178 @@ HOW_IT_WORKS = (
     '<div class="paso"><b>1</b>Pides hasta el miércoles 20:00 y pagas con Yape o Plin el precio máximo.</div>'
     '<div class="paso"><b>2</b>Compramos juntos al por mayor: mientras más pedimos, más baja el precio.</div>'
     '<div class="paso"><b>3</b>Recibes el sábado en tu edificio y te devolvemos lo ahorrado como saldo.</div>'
-    "</div><h2>Lo de esta semana</h2>"
+    "</div>"
+    '<details class="card plegable"><summary>¿Por qué confiar en Yapa?</summary><table>'
+    "<tr><td>💰</td><td>Pagas como máximo el precio que ves. Nunca un cobro extra en la puerta.</td></tr>"
+    "<tr><td>↩️</td><td>Lo que ahorramos entre todos vuelve como saldo, y lo puedes pedir de vuelta a tu Yape o Plin."
+    "</td></tr>"
+    "<tr><td>📸</td><td>Foto de cada bolsa al armarla y foto de la entrega en tu portería.</td></tr>"
+    "<tr><td>🧾</td><td>Si algo falta o llega dañado, lo reclamas por artículo y se te devuelve.</td></tr>"
+    "<tr><td>🛑</td><td>Si tu grupo no llega al mínimo, te devolvemos el 100 %.</td></tr>"
+    "</table></details><h2>Lo de esta semana</h2>"
 )
+
+CART_SCRIPT = """<script>
+(function(){
+  var form=document.getElementById('pedido'); if(!form) return;
+  var bar=document.getElementById('carrito'), min=parseFloat(bar.dataset.minimo);
+  function money(v){return 'S/ '+v.toFixed(2);}
+  function update(){
+    var items=0,total=0,ref=0,yref=0;
+    form.querySelectorAll('.card[data-precio]').forEach(function(card){
+      var q=parseFloat(card.querySelector('.qty').value)||0, p=parseFloat(card.dataset.precio);
+      card.classList.toggle('en-carrito', q>0);
+      if(q>0){items++; total+=q*p; var r=parseFloat(card.dataset.ref); if(r){ref+=q*r; yref+=q*p;}}
+    });
+    bar.querySelector('[data-items]').textContent=items+(items==1?' producto':' productos');
+    bar.querySelector('[data-total]').textContent=money(total);
+    var falta=min-total, meta=bar.querySelector('[data-falta]');
+    meta.textContent= falta>0 ? 'Faltan '+money(falta)+' para el mínimo' : '✓ Llegaste al mínimo';
+    bar.querySelector('progress').value=Math.min(total,min);
+    var ah=bar.querySelector('[data-ahorro]');
+    ah.textContent= ref-yref>0 ? '🎉 Ahorras aprox. '+money(ref-yref)+' frente al supermercado' : '';
+    bar.classList.toggle('vacio', items==0);
+    bar.querySelector('button').disabled= falta>0;
+  }
+  form.addEventListener('click',function(e){
+    var b=e.target.closest('[data-delta]'); if(!b) return; e.preventDefault();
+    var input=b.parentNode.querySelector('.qty'), step=parseFloat(input.dataset.step);
+    var v=Math.max(0,(parseFloat(input.value)||0)+step*parseFloat(b.dataset.delta));
+    var max=parseFloat(input.max); if(max) v=Math.min(v,max);
+    input.value= v ? +v.toFixed(2) : ''; update();
+  });
+  form.addEventListener('input',update); update();
+})();
+</script>"""
+
+
+def _product_card(row: dict, shopping: bool) -> str:
+    supermarket = next((r.price for r in row.get("references", ()) if r.kind == "SUPERMERCADO"), "")
+    name = escape(row["name"])
+    stepper = (
+        f'<div class="stepper"><button type="button" data-delta="-1" aria-label="Quitar uno de {name}">−</button>'
+        f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" data-step="{qty(row["step"])}" '
+        f'max="{qty(row["max_quantity"])}" name="cant_{escape(row["product_id"])}" placeholder="0" '
+        f'aria-label="Cantidad de {name}">'
+        f'<button type="button" data-delta="1" aria-label="Agregar uno de {name}">+</button></div>'
+    ) if shopping else ""
+    references = "".join(f"<tr><td>{escape(r.source)}: {money(r.price)}</td>"
+                         f"<td class=muted>visto el {r.observed_on.strftime('%d/%m')}</td></tr>"
+                         for r in row.get("references", ()))
+    return (
+        f'<div class="card" data-precio="{row["max_price"]}" data-ref="{supermarket}"><div class="producto">'
+        f'<div class="icono" aria-hidden="true">{icon(row["product_id"], row["unit"])}</div><div class="info">'
+        f'<div class="nombre">{name}</div>'
+        f'<div class="precio">{money(row["max_price"])} <small>por {escape(row["unit"])} · hoy pagas máximo '
+        f'{money(row["max_price"])}</small></div>'
+        + savings_badge(row["max_price"], row.get("references", ()))
+        + f'<progress value="{qty(row["ordered"])}" max="{qty(row["goal"])}" '
+          f'aria-label="Avance hacia el siguiente descuento"></progress>'
+        f'<div class="muted">👥 {escape(row["progress"])}</div>'
+        + (f'<details class="mini"><summary>Comparar precios</summary><table>{references}</table></details>'
+           if references else "")
+        + "</div>" + stepper + "</div></div>"
+    )
+
+
+def _grouped(rows: list[dict], shopping: bool) -> str:
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(row.get("category", ""), []).append(row)
+    return "".join(
+        f'<details class="grupo" open><summary>{escape(CATEGORIES.get(cat, cat.title() or "Productos"))} '
+        f'<span class="muted">({len(items)})</span></summary>'
+        + "".join(_product_card(row, shopping) for row in items) + "</details>"
+        for cat, items in groups.items()
+    )
 
 
 def home(cycle_label: str, is_open: bool, rows: list[dict], csrf: str | None = None) -> str:
-    estado = "abierto hasta el miércoles 20:00" if is_open else "cerrado"
-    items = []
-    for row in rows:
-        items.append(
-            '<div class="card"><div class="producto">'
-            f'<div class="icono" aria-hidden="true">{icon(row["product_id"], row["unit"])}</div><div class="info">'
-            f'<div class="nombre">{escape(row["name"])}</div>'
-            f'<div class="precio">{money(row["max_price"])} <small>por {escape(row["unit"])}</small></div>'
-            f'<div class="muted">hoy pagas máximo {money(row["max_price"])}</div>'
-            + savings_badge(row["max_price"], row.get("references", ()))
-            + f'<progress value="{qty(row["ordered"])}" max="{qty(row["goal"])}" '
-              f'aria-label="Avance hacia el siguiente descuento"></progress>'
-            f'<div class="muted">{escape(row["progress"])}</div>'
-            + "".join(f'<div class="muted">{escape(r.source)}: {money(r.price)} (visto el '
-                      f'{r.observed_on.strftime("%d/%m")})</div>' for r in row.get("references", ()))
-            + '</div>'
-            + (f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" '
-               f'name="cant_{escape(row["product_id"])}" placeholder="0" '
-               f'aria-label="Cantidad de {escape(row["name"])}">' if csrf else "")
-            + '</div></div>'
-        )
-    ciclo = f'<div class="ciclo">🗓️ <span>Ciclo {escape(cycle_label)}: {estado}.</span></div>'
+    estado = "abierto · cierra el miércoles 20:00" if is_open else "cerrado"
+    ciclo = f'<div class="ciclo">🗓️ <span>Semana {escape(cycle_label)}: <strong>{estado}</strong></span></div>'
     if not csrf:
-        return page("Catálogo de la semana", HOW_IT_WORKS + ciclo + "".join(items))
-    form = (
-        '<form method="post" action="/cotizar">' + hidden(csrf)
-        + "".join(items)
-        + '<div class="card pago"><strong>Paga tu pedido</strong>'
-          '<p class="muted">Primero cotiza para saber cuánto yapear. Luego paga y registra con el código de '
-          'operación.</p><label>Medio <select name="metodo"><option>YAPE</option><option>PLIN</option>'
-          '</select></label><label>Código de operación <input name="codigo"></label>'
-          '<label>Monto yapeado <input name="monto" inputmode="decimal" placeholder="0.00"></label>'
-          '<label>Saldo a usar <input name="saldo" inputmode="decimal" placeholder="0.00"></label>'
-          '<div class="acciones"><button class="secundario">Cotizar</button>'
-          '<button formaction="/pedidos">Pagar y registrar</button></div></div></form>'
+        return page("Catálogo de la semana", HOW_IT_WORKS + ciclo + _grouped(rows, False))
+    bar = (
+        f'<div id="carrito" class="carrito vacio" data-minimo="{MIN_SUBTOTAL}">'
+        '<div class="carrito-info"><strong>🛒 Tu carrito</strong> · <span data-items>0 productos</span> · '
+        '<strong data-total>S/ 0.00</strong> <small>aprox.</small>'
+        f'<progress value="0" max="{MIN_SUBTOTAL}" aria-label="Avance hacia el pedido mínimo"></progress>'
+        f'<div class="carrito-meta"><span data-falta>Mínimo {money(MIN_SUBTOTAL)}</span> '
+        '<span data-ahorro class="carrito-ahorro"></span></div></div>'
+        '<button>Ver mi carrito →</button></div>'
     )
-    intro = (ciclo + '<p class="muted">Pagas el precio máximo; lo que ahorremos entre todos te lo devolvemos '
-             'como saldo después de la entrega.</p>')
-    return page("Catálogo de la semana", intro + form, csrf)
+    form = ('<form id="pedido" method="post" action="/cotizar">' + hidden(csrf)
+            + _grouped(rows, True) + bar + "</form>" + CART_SCRIPT)
+    return page("Catálogo de la semana", ciclo + form, csrf)
 
 
-def order_lines(lines) -> str:
+def order_lines(lines, names=None) -> str:
+    names = names or {}
     rows = "".join(
-        f"<tr><td>{escape(line.product_id)}</td><td>{qty(line.quantity)}</td>"
+        f"<tr><td>{escape(names.get(line.product_id, line.product_id))}</td><td>{qty(line.quantity)}</td>"
         f"<td>{money(line.max_unit_price)}</td><td>{money(line.max_total)}</td></tr>"
         for line in lines
     )
     return f"<table><tr><th>Producto</th><th>Cant.</th><th>Precio máx.</th><th>Total</th></tr>{rows}</table>"
 
 
-def quote(result, csrf: str | None = None) -> str:
-    body = (f'<div class="card">{order_lines(result.lines)}<p>Envío máximo: {money(result.delivery_fee)}</p>'
-            f'<p class="precio">Total a yapear: {money(result.total)}</p>'
-            '<p class="muted">Es lo máximo que pagas. Lo que ahorremos entre todos vuelve a tu saldo.</p>'
-            '<a href="/">Volver al catálogo</a></div>')
-    return page("Cotización", body, csrf)
+def cart(result, names, savings, balance, csrf: str | None = None) -> str:
+    """EC-02: el total que vale es este, calculado por el servidor (S-144)."""
+    use = min(balance, result.total) if balance > 0 else Decimal("0")  # S-148
+    keep = "".join(f'<input type="hidden" name="cant_{escape(line.product_id)}" value="{qty(line.quantity)}">'
+                   for line in result.lines)
+    saving = (f'<div class="celebra">🎉 Ahorras aprox. <strong>{money(savings)}</strong> frente al supermercado'
+              '</div>') if savings > 0 else ""
+    body = (
+        f'<div class="card">{order_lines(result.lines, names)}'
+        f'<table class="resumen"><tr><td>Subtotal</td><td>{money(result.subtotal)}</td></tr>'
+        f'<tr><td>Envío máximo</td><td>{money(result.delivery_fee)}</td></tr></table>'
+        f'<p class="total">Total a yapear: {money(result.total)}</p>{saving}'
+        '<details class="mini"><summary>¿Por qué "máximo"?</summary><p class="muted">Si entre todos llegamos al '
+        'siguiente descuento, la diferencia vuelve a tu saldo el sábado. Nunca pagas más de esto.</p></details>'
+        '<p><a href="/">← Seguir comprando</a></p></div>'
+        f'<form class="card pago" method="post" action="/pedidos">{hidden(csrf)}{keep}'
+        '<strong>💳 ¿Cómo pagas?</strong>'
+        '<div class="medios"><label class="medio"><input type="radio" name="metodo" value="YAPE" checked> Yape</label>'
+        '<label class="medio"><input type="radio" name="metodo" value="PLIN"> Plin</label></div>'
+        + (f'<label class="casilla"><input type="checkbox" name="usar_saldo" value="si" checked> Usar mi saldo '
+           f'({money(use)})</label><p class="muted">Con tu saldo yapeas {money(result.total - use)}.</p>'
+           if balance > 0 else "")
+        + '<button>Confirmar pedido</button><p class="muted">Al confirmar te damos el código para poner en el '
+          'mensaje de tu Yape o Plin.</p></form>'
+    )
+    return page("Tu carrito", body, csrf)
 
 
-def registered(order, csrf: str | None = None) -> str:
-    body = (f'<div class="card ok"><strong>Pedido {order.order_id}</strong> {pill(order.status)}'
-            f'<p>Total: {money(order.total)} · pago {pill(order.payment_status)}</p>'
-            f'{order_lines(order.lines)}<p><a href="/cuenta">Ver mi cuenta</a></p></div>')
+NEXT_STEPS = (
+    '<table class="pasos-tabla"><tr><td>1</td><td>Yapeas con tu código y verificamos el pago</td>'
+    '<td class="muted">hoy</td></tr>'
+    '<tr><td>2</td><td>Compramos al por mayor</td><td class="muted">jueves</td></tr>'
+    '<tr><td>3</td><td>Entregamos en tu portería, con foto</td><td class="muted">sábado</td></tr>'
+    '<tr><td>4</td><td>Te devolvemos lo ahorrado como saldo</td><td class="muted">al liquidar</td></tr></table>'
+)
+
+
+METHOD_NAMES = {"YAPE": "Yape", "PLIN": "Plin"}
+
+
+def registered(order, csrf: str | None = None, name: str = "", names=None) -> str:
+    first = escape(name.split()[0]) if name else ""
+    body = (f'<div class="card ok"><div class="check">✓</div>'
+            f'<div class="aviso-titulo">¡Listo{", " + first if first else ""}! Tu pedido quedó registrado</div>'
+            f'<p><strong>Pedido {order.order_id}</strong> {pill(order.status, True)} '
+            f'{pill(order.payment_status, True)}</p>'
+            f'<p class="total">Total máximo {money(order.total)}</p></div>'
+            + (f'<div class="card pagar"><div class="pagar-monto">Yapea {money(order.paid_external)}</div>'
+               f'<div class="muted">y escribe este código en el mensaje de tu {METHOD_NAMES.get(order.payment_method, "")}:</div>'
+               f'<div class="codigo-pago">{escape(order.operation_code)}</div>'
+               '<div class="muted">Con ese código verificamos tu pago.</div></div>'
+               if order.paid_external > 0 else
+               '<div class="celebra">💚 Tu saldo cubrió todo: no tienes que yapear.</div>')
+            + f'<div class="card"><strong>Qué sigue</strong>{NEXT_STEPS}</div>'
+            f'<details class="card plegable"><summary>Ver mis productos ({len(order.lines)})</summary>'
+            f'{order_lines(order.lines, names)}</details>'
+            '<p><a class="btn" href="/cuenta">Ir a mi cuenta</a></p>')
     return page("Pedido registrado", body, csrf)
 
 
@@ -292,48 +487,82 @@ def order_detail(settled, comparison) -> str:
     return "<br>".join(escape(line) for line in text)
 
 
-def account(customer, balance, orders, refunds, csrf: str | None = None, details=None, returned=None) -> str:
-    details = details or {}
-    rows = "".join(
-        f"<tr><td>Pedido {o.order_id}</td><td>{escape(o.cycle)}</td><td>{pill(o.status)}</td>"
-        f"<td>{money(o.total)}</td></tr>"
-        + (f'<tr><td colspan="4" class="muted">{order_detail(*details[o.order_id])}</td></tr>'
-           if o.order_id in details else "")
-        for o in orders
+def _tracker(order, delivered: bool) -> str:
+    if order.status not in ("REGISTRADO", "LIQUIDADO"):
+        return ""
+    steps = [("Pedido", True), ("Pago verificado", order.payment_status == "VERIFICADO"),
+             ("Entregado", delivered or order.status == "LIQUIDADO"), ("Liquidado", order.status == "LIQUIDADO")]
+    return '<ol class="tracker">' + "".join(
+        f'<li class="{"hecho" if done else ""}">{label}</li>' for label, done in steps) + "</ol>"
+
+
+def _order_card(order, csrf, detail, cancellable, delivered, names) -> str:
+    actions = ""
+    if cancellable:  # EC-04, S-147
+        actions = (f'<form method="post" action="/cuenta/cancelar" class="acciones">{hidden(csrf)}'
+                   f'<input type="hidden" name="pedido" value="{order.order_id}">'
+                   '<button class="secundario" name="destino" value="MEDIO_DE_PAGO">Cancelar y devolver a mi '
+                   'Yape/Plin</button><button class="secundario" name="destino" value="SALDO">Cancelar y pasar a mi '
+                   'saldo</button></form>')
+    return (
+        f'<div class="card pedido"><div class="pedido-cab"><strong>Pedido {order.order_id}</strong>'
+        f'<span class="muted">semana {escape(order.cycle)}</span>{pill(order.status, True)}'
+        f'<span class="pedido-total">{money(order.total)}</span></div>'
+        + _tracker(order, delivered)
+        + (f'<div class="detalle">💳 Falta tu pago: yapea <strong>{money(order.paid_external)}</strong> por '
+           f'{METHOD_NAMES.get(order.payment_method, "")} con el código <code>{escape(order.operation_code)}</code></div>'
+           if order.status == "REGISTRADO" and order.payment_status == "POR_VERIFICAR" and order.paid_external > 0
+           else "")
+        + (f'<div class="detalle">{detail}</div>' if detail else "")
+        + f'<details class="mini"><summary>Ver productos ({len(order.lines)})</summary>'
+          f'{order_lines(order.lines, names)}</details>' + actions + "</div>"
     )
+
+
+def account(customer, balance, orders, refunds, csrf: str | None = None, details=None, returned=None,
+            cancellable=(), delivered=(), names=None, saved=None) -> str:
+    details = details or {}
+    cards = "".join(
+        _order_card(o, csrf, order_detail(*details[o.order_id]) if o.order_id in details else "",
+                    o.order_id in cancellable, o.order_id in delivered, names)
+        for o in sorted(orders, key=lambda o: o.order_id, reverse=True)
+    ) or '<div class="card muted">Todavía no tienes pedidos. <a href="/">Haz el primero</a>.</div>'
     total_back = (f'<div class="devuelto">Con Yapa ya te devolvimos {money(returned)}</div>'
                   if returned else "")  # S-132
-    pending = "".join(f"<li>{money(r.amount)} · {escape(r.reason)} · {pill(r.status)}</li>" for r in refunds)
+    celebrate = (f'<div class="celebra grande-ahorro">🎉 Ahorraste {money(saved)} frente al supermercado</div>'
+                 if saved and saved > 0 else "")  # EC-04
+    pending = "".join(f"<tr><td>{money(r.amount)}</td><td>{escape(r.reason)}</td><td>{pill(r.status, True)}</td></tr>"
+                      for r in refunds)
     body = (f'<div class="hero-balance">Hola, <strong>{escape(customer.name)}</strong> · zona '
             f'{escape(customer.zone_id)}<div class="grande">Saldo: {money(balance)}</div>{total_back}'
-            '<p><a href="/">Hacer mi pedido</a> · <a href="/zona">Mi zona</a> · <a href="/reclamos">Reclamos</a>'
-            '</p></div><h2>Mis pedidos</h2>'
-            f'<div class="card"><table><tr><th>Pedido</th><th>Ciclo</th><th>Estado</th><th>Total</th></tr>{rows}'
-            f'</table></div><div class="card"><strong>Devoluciones pendientes</strong>'
-            f'<ul>{pending or "<li class=muted>No tienes.</li>"}</ul></div><h2>Opciones</h2>'
-            '<form class="card" method="post" action="/cuenta/devolucion">' + hidden(csrf) +
+            '<div class="hero-acciones"><a class="btn btn-sol" href="/">🛒 Hacer mi pedido</a>'
+            '<a href="/zona">Mi zona</a><a href="/reclamos">Reclamos</a></div></div>'
+            + celebrate + '<h2>Mis pedidos</h2>' + cards
+            + (f'<details class="card plegable" open><summary>Devoluciones pendientes ({len(refunds)})</summary>'
+               f'<table><tr><th>Monto</th><th>Motivo</th><th>Estado</th></tr>{pending}</table></details>'
+               if refunds else "")
+            + '<details class="card plegable"><summary>⚙️ Más opciones</summary>'
+            '<form method="post" action="/cuenta/devolucion">' + hidden(csrf) +
             '<label>Devolverme de mi saldo a mi Yape/Plin (S/) <input name="monto" inputmode="decimal" '
-            'placeholder="0.00"></label><button>Pedir devolución</button></form>'
-            '<form class="card" method="post" action="/cuenta/cancelar">' + hidden(csrf) +
-            '<label>Pedido a cancelar <input name="pedido"></label>'
-            '<label>Devolver a <select name="destino"><option value="MEDIO_DE_PAGO">Mi Yape/Plin</option>'
-            '<option value="SALDO">Mi saldo</option></select></label><button>Cancelar pedido</button></form>'
-            '<form class="card" method="post" action="/cuenta/pin">' + hidden(csrf) +
-            '<label>PIN actual <input name="actual" type="password" inputmode="numeric"></label>'
-            '<label>PIN nuevo (6 dígitos) <input name="nuevo" type="password" inputmode="numeric"></label>'
-            '<button>Cambiar PIN</button></form>')
+            f'value="{money(balance)[3:] if balance > 0 else ""}" placeholder="0.00"></label>'
+            '<button>Pedir devolución</button></form>'
+            '<form method="post" action="/cuenta/pin">' + hidden(csrf) +
+            '<div class="dos"><label>PIN actual <input name="actual" type="password" inputmode="numeric"></label>'
+            '<label>PIN nuevo (6 dígitos) <input name="nuevo" type="password" inputmode="numeric"></label></div>'
+            '<button class="secundario">Cambiar PIN</button></form></details>')
     return page("Mi cuenta", body, csrf)
 
 
 def login(error: str = "") -> str:
     body = ('<div class="login">' + error + '<form class="card" method="post" action="/entrar">'
-            '<p class="muted">Vecino: tu número de cliente y tu PIN de 6 dígitos. Si no tienes PIN, pídeselo '
-            'al admin de Yapa.</p>'
+            '<div class="login-logo">' + LOGO + '</div>'
             '<label>Soy <select name="tipo"><option value="vecino">Vecino</option>'
             '<option value="admin">Administrador</option></select></label>'
             '<label>Número de cliente o usuario <input name="usuario" autocomplete="username"></label>'
             '<label>PIN o contraseña <input name="secreto" type="password" autocomplete="current-password"></label>'
-            '<button>Entrar</button></form></div>')
+            '<button>Entrar</button>'
+            '<details class="mini"><summary>¿No tienes PIN?</summary><p class="muted">Pídeselo al admin de Yapa '
+            'por WhatsApp. Te lo envía una sola vez.</p></details></form></div>')
     return page("Entrar", body)
 
 
@@ -350,21 +579,39 @@ ADMIN_SECTIONS = [  # PW-06
 ]
 
 
-def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
+def cycle_select(cycles, selected: str) -> str:
+    """EC-07: el ciclo se elige de una lista."""
+    options = "".join(f'<option value="{escape(c)}"{" selected" if c == selected else ""}>{escape(c)}</option>'
+                      for c in cycles)
+    return f'<select name="ciclo">{options}</select>'
+
+
+def kpis(items) -> str:
+    return '<div class="kpis">' + "".join(
+        f'<div class="kpi"><span>{escape(label)}</span><strong>{escape(str(value))}</strong></div>'
+        for label, value in items) + "</div>"
+
+
+def admin(cycle_label: str, pending, csrf: str | None = None, stats=None, cycles=()) -> str:
     rows = "".join(
         f"<tr><td>{o.order_id}</td><td>{o.customer_id}</td><td>{money(o.total)}</td>"
-        f"<td>{escape(o.payment_method)} {escape(o.operation_code)}</td><td>"
-        f'<form method="post" action="/admin/verificar">{hidden(csrf)}<input type="hidden" name="pedido" value="{o.order_id}">'
-        "<button>Verificar</button></form></td></tr>" for o in pending
+        f"<td>{escape(o.payment_method)}</td><td><code>{escape(o.operation_code)}</code></td><td>"
+        f'<form method="post" action="/admin/verificar">{hidden(csrf)}'
+        f'<input type="hidden" name="pedido" value="{o.order_id}"><button>✓ Verificar</button></form></td></tr>'
+        for o in pending
     )
     tiles = "".join(f'<a class="tile" href="{path}"><strong>{title}</strong><span>{text}</span></a>'
                     for path, title, text in ADMIN_SECTIONS)
-    body = (f'<div class="tiles">{tiles}</div>'
-            f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
-            f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
+    pending_box = (f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Medio</th><th>Código</th><th></th>'
+                   f'</tr>{rows}</table>' if pending else '<p class="muted">✓ No hay pagos por verificar.</p>')
+    body = (f'<div class="ciclo">🗓️ <span>Semana <strong>{escape(cycle_label)}</strong></span></div>'
+            + kpis(stats or ())
+            + f'<div class="card"><strong>💳 Pagos por verificar ({len(pending)})</strong>{pending_box}</div>'
+            f'<div class="tiles">{tiles}</div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +
-            f'<label>Ciclo a liquidar <input name="ciclo" value="{escape(cycle_label)}"></label>'
-            '<button>Liquidar ciclo</button></form>')
+            '<strong>🧮 Liquidar una semana</strong><div class="dos"><label>Semana '
+            f'{cycle_select(cycles or [cycle_label], cycle_label)}</label>'
+            '<button>Liquidar</button></div></form>')
     return page("Administración", body, csrf)
 
 
@@ -374,20 +621,29 @@ def settlement(result, csrf: str | None = None) -> str:
         f"<td>{money(p.final_unit_price)}</td></tr>" for p in result.products.values()
     )
     orders = "".join(
-        f"<tr><td>{o.order_id}</td><td>{escape(o.status)}</td><td>{money(o.paid)}</td><td>{money(o.final_amount)}</td>"
+        f"<tr><td>{o.order_id}</td><td>{pill(o.status)}</td><td>{money(o.paid)}</td><td>{money(o.final_amount)}</td>"
         f"<td>{money(o.refund_amount)} {escape(o.refund_destination or '')}</td></tr>" for o in result.orders.values()
     )
-    body = (f'<div class="card"><table><tr><th>Producto</th><th>Total</th><th>Tramo</th><th>Precio final</th></tr>'
-            f'{products}</table></div><div class="card"><table><tr><th>Pedido</th><th>Estado</th><th>Pagado</th>'
-            f'<th>Final</th><th>Devuelto</th></tr>{orders}</table>'
-            f'<p>Devuelto como saldo: {money(result.total_credited)} · '
-            f'reembolsado: {money(result.total_refunded)}</p></div>')
+    settled = sum(1 for o in result.orders.values() if o.status == "LIQUIDADO")
+    body = (kpis([("Pedidos liquidados", settled), ("Devuelto como saldo", money(result.total_credited)),
+                  ("Reembolsado", money(result.total_refunded))])
+            + f'<details class="card plegable" open><summary>Pedidos ({len(result.orders)})</summary>'
+            f'<table><tr><th>Pedido</th><th>Estado</th><th>Pagado</th><th>Final</th><th>Devuelto</th></tr>{orders}'
+            '</table></details>'
+            f'<details class="card plegable"><summary>Precio final por producto ({len(result.products)})</summary>'
+            f'<table><tr><th>Producto</th><th>Total</th><th>Tramo</th><th>Precio final</th></tr>{products}</table>'
+            '</details>')
     return page(f"Liquidación {result.cycle}", body, csrf)
 
 
-def simple(title: str, message: str, csrf: str | None = None, back: str | None = None) -> str:
-    link = f'<p><a href="{escape(back)}">Volver</a></p>' if back else ""
-    return page(title, f'<div class="card">{escape(message)}{link}</div>', csrf)
+def simple(title: str, message: str, csrf: str | None = None, back: str | None = None, ok: bool = True) -> str:
+    """EC-06: lo que sale bien se ve como éxito; 404, 405 y 403 no."""
+    link = f'<p><a class="btn secundario" href="{escape(back)}">Volver</a></p>' if back else ""
+    if ok:
+        return page(title, f'<div class="card ok"><div class="check">✓</div>'
+                           f'<div class="aviso-titulo">{escape(message)}</div>{link}</div>', csrf)
+    return page(title, f'<div class="card aviso">{escape(message)}'
+                       '<p><a class="btn secundario" href="/">Ir al inicio</a></p></div>', csrf)
 
 
 # --- iteración 12: zonas, reclamos, armado, entrega, colchón y métricas ---
@@ -402,7 +658,12 @@ def photo(reference: str) -> str:
     return f'<span class="muted">foto: {escape(reference)}</span>'
 
 
-def _zone_admin_forms(zone, requests, csrf) -> str:
+def _zone_options(zones, exclude: str = "") -> str:
+    return "".join(f'<option value="{escape(z.zone_id)}">{escape(z.name)} · {escape(z.district)}</option>'
+                   for z in zones if z.zone_id != exclude)
+
+
+def _zone_admin_forms(zone, requests, csrf, zones=(), neighbors=()) -> str:
     zone_field = f'<input type="hidden" name="zona" value="{escape(zone.zone_id)}">'
     kinds = "".join(f'<option value="{value}">{label}</option>' for value, label in RECEPTION)
     received = "".join(
@@ -417,17 +678,21 @@ def _zone_admin_forms(zone, requests, csrf) -> str:
         f'<label>Quién recibe <select name="tipo">{kinds}</select></label>'
         '<label>Nombre de quien recibe <input name="contacto"></label><button>Activar zona</button></form>'
         f'<form class="card" method="post" action="/zona/unir">{hidden(csrf)}{zone_field}'
-        '<label>Unirme con la zona (código) <input name="destino"></label><button>Pedir unión</button></form>'
+        f'<label>Unirme con la zona <select name="destino">{_zone_options(zones, zone.zone_id)}</select></label>'
+        '<button>Pedir unión</button></form>'
         f'<div class="card"><strong>Solicitudes de unión</strong>{received or "<p class=muted>No hay.</p>"}</div>'
         f'<form class="card" method="post" action="/zona/separar">{hidden(csrf)}{zone_field}'
         '<button>Separar mi zona del grupo</button></form>'
         f'<form class="card" method="post" action="/zona/transferir">{hidden(csrf)}{zone_field}'
-        '<label>Número de cliente del nuevo admin <input name="nuevo" inputmode="numeric"></label>'
+        f'<label>Nuevo admin <select name="nuevo">'
+        + "".join(f'<option value="{c.customer_id}">{escape(c.name)} ({c.customer_id})</option>' for c in neighbors)
+        + '</select></label>'
         '<button>Transferir el rol</button></form>'
     )
 
 
-def zone_page(customer, my_zone, zones, admin_zone, requests, districts, csrf: str | None = None) -> str:
+def zone_page(customer, my_zone, zones, admin_zone, requests, districts, csrf: str | None = None,
+              neighbors=()) -> str:
     if my_zone:
         mine = (f'<div class="card"><strong>{escape(my_zone.name)}</strong> · {escape(my_zone.district)}'
                 f'<p>{escape(ZONE_STATUS.get(my_zone.status, my_zone.status))} · grupo {escape(my_zone.group_id)}</p>'
@@ -440,17 +705,24 @@ def zone_page(customer, my_zone, zones, admin_zone, requests, districts, csrf: s
     )
     options = "".join(f"<option>{escape(d)}</option>" for d in districts)
     body = (
-        mine + (_zone_admin_forms(admin_zone, requests, csrf) if admin_zone else "")
+        mine + (_zone_admin_forms(admin_zone, requests, csrf, zones, neighbors) if admin_zone else "")
         + f'<div class="card"><strong>Zonas</strong><table><tr><th>Código</th><th>Nombre</th><th>Distrito</th>'
           f'<th>Estado</th></tr>{rows}</table></div>'
         + f'<form class="card" method="post" action="/zona/unirse">{hidden(csrf)}'
-          '<label>Unirme a la zona (código) <input name="zona"></label><button>Unirme</button></form>'
-        + f'<form class="card" method="post" action="/zona/crear">{hidden(csrf)}'
+          f'<label>Unirme a la zona <select name="zona">{_zone_options(zones, customer.zone_id)}</select></label>'
+          '<button>Unirme</button></form>'
+        + '<details class="card plegable"><summary>➕ Crear una zona nueva</summary>'
+        + f'<form method="post" action="/zona/crear">{hidden(csrf)}'
           '<label>Nombre del edificio o barrio <input name="nombre"></label>'
           f'<label>Distrito <select name="distrito">{options}</select></label>'
-          '<label>Latitud del punto de recepción <input name="lat" inputmode="decimal" placeholder="-12.0850"></label>'
-          '<label>Longitud <input name="lon" inputmode="decimal" placeholder="-77.0350"></label>'
+          '<button type="button" class="secundario" onclick="ubicar(this.form)">📍 Usar mi ubicación</button>'
+          '<div class="dos"><label>Latitud <input name="lat" inputmode="decimal" readonly></label>'
+          '<label>Longitud <input name="lon" inputmode="decimal" readonly></label></div>'
+          '<script>function ubicar(f){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition('
+          'function(p){f.lat.value=p.coords.latitude.toFixed(5);f.lon.value=p.coords.longitude.toFixed(5);});}'
+          '</script>'
           '<button>Crear zona</button></form>'
+        + '</details>'
     )
     return page("Mi zona", body, csrf)
 
@@ -463,11 +735,11 @@ def claims_page(options, claims, csrf: str | None = None) -> str:
     )
     items = "".join(f'<option value="{escape(value)}">{escape(label)}</option>' for value, label in options)
     reasons = "".join(f'<option value="{value}">{label}</option>' for value, label in REASONS.items())
-    form = (f'<form class="card" method="post" action="/reclamos">{hidden(csrf)}'
+    form = (f'<form class="card" method="post" action="/reclamos" enctype="multipart/form-data">{hidden(csrf)}'
             f'<label>Artículo <select name="articulo">{items}</select></label>'
             '<label>Cantidad <input name="cantidad" inputmode="decimal"></label>'
             f'<label>Motivo <select name="motivo">{reasons}</select></label>'
-            '<label>Foto (ruta o enlace del archivo) <input name="foto"></label>'
+            '<label>📷 Foto <input type="file" name="foto_archivo" accept="image/*" capture="environment"></label>'
             '<button>Enviar reclamo</button></form>') if options else (
             '<div class="card muted">Todavía no tienes pedidos entregados para reclamar.</div>')
     body = (form + '<div class="card"><strong>Mis reclamos</strong><table><tr><th>#</th><th>Artículo</th>'
@@ -482,9 +754,9 @@ def packing(cycle_label: str, orders, bags, stops, csrf: str | None = None) -> s
         cards.append(
             f'<div class="card"><strong>Pedido {order.order_id}</strong> · cliente {order.customer_id} · '
             f'zona {escape(order.zone_id)}<ul>{listed}</ul>'
-            f'<form method="post" action="/admin/bolsa">{hidden(csrf)}'
+            f'<form method="post" action="/admin/bolsa" enctype="multipart/form-data">{hidden(csrf)}'
             f'<input type="hidden" name="pedido" value="{order.order_id}">'
-            '<label>Foto de la bolsa <input name="foto"></label><button>Registrar bolsa</button></form></div>'
+            '<label>📷 Foto de la bolsa <input type="file" name="foto_archivo" accept="image/*" capture="environment"></label><button>Registrar bolsa</button></form></div>'
         )
     deliveries = []
     for zone, delivery in stops:
@@ -494,20 +766,20 @@ def packing(cycle_label: str, orders, bags, stops, csrf: str | None = None) -> s
             form = ""
         else:
             state = "Sin entregar"
-            form = (f'<form method="post" action="/admin/entrega">{hidden(csrf)}'
+            form = (f'<form method="post" action="/admin/entrega" enctype="multipart/form-data">{hidden(csrf)}'
                     f'<input type="hidden" name="ciclo" value="{escape(cycle_label)}">'
                     f'<input type="hidden" name="zona" value="{escape(zone.zone_id)}">'
-                    '<label>Foto de la entrega <input name="foto"></label>'
+                    '<label>📷 Foto de la entrega <input type="file" name="foto_archivo" accept="image/*" capture="environment"></label>'
                     '<label>Nombre de quien recibe <input name="recibe"></label><button>Registrar entrega</button>'
                     '</form>'
-                    f'<form method="post" action="/admin/entrega-fallida">{hidden(csrf)}'
+                    f'<form method="post" action="/admin/entrega-fallida" enctype="multipart/form-data">{hidden(csrf)}'
                     f'<input type="hidden" name="ciclo" value="{escape(cycle_label)}">'
                     f'<input type="hidden" name="zona" value="{escape(zone.zone_id)}">'
                     '<label>Si no recibieron: motivo <select name="motivo">'
                     '<option value="PORTERIA_CERRADA">Portería cerrada</option>'
                     '<option value="NADIE_RECIBE">No había quién reciba</option>'
                     '<option value="PORTERIA_RECHAZA">La portería no aceptó</option></select></label>'
-                    '<label>Foto de evidencia <input name="foto"></label>'
+                    '<label>📷 Foto de evidencia <input type="file" name="foto_archivo" accept="image/*" capture="environment"></label>'
                     '<button>Registrar entrega fallida</button></form>')
         deliveries.append(f'<div class="card"><strong>{escape(zone.name)} ({escape(zone.zone_id)})</strong>'
                           f'<p>{state}</p>{form}</div>')
@@ -540,7 +812,7 @@ def admin_claims(claims, csrf: str | None = None) -> str:
     return page("Reclamos", body, csrf)
 
 
-def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=()) -> str:
+def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=(), orders=()) -> str:
     rows = "".join(f"<tr><td>{escape(s.product_id)}</td><td>{qty(s.quantity)}</td><td>{money(s.value)}</td></tr>"
                    for s in stocks)
     options = "".join(f'<option value="{escape(p.product_id)}">{escape(p.name)}</option>' for p in products)
@@ -551,7 +823,10 @@ def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=()
             '<label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Guardar en el colchón</button>'
             '</form>'
             f'<form class="card" method="post" action="/admin/colchon/usar">{hidden(csrf)}'
-            '<label>Pedido <input name="pedido" inputmode="numeric"></label>'
+            f'<label>Pedido <select name="pedido">'
+            + "".join(f'<option value="{o.order_id}">Pedido {o.order_id} · cliente {o.customer_id} · '
+                      f'{escape(o.cycle)}</option>' for o in orders)
+            + '</select></label>'
             f'<label>Producto <select name="producto">{options}</select></label>'
             '<label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Usar para reponer</button>'
             '</form>')
@@ -563,8 +838,16 @@ def buffer_page(stocks, total, limit, products, csrf: str | None = None, uses=()
     return page("Colchón de reposición", body, csrf)
 
 
+def metrics_error(cycle_label: str, cycles, error, csrf: str | None = None) -> str:
+    """EC-07: si la semana no se puede ver, el selector sigue a mano para elegir otra."""
+    body = (f'<form class="card dos" method="get" action="/admin/metricas"><label>Semana '
+            f'{cycle_select(cycles or [cycle_label], cycle_label)}</label><button>Ver</button></form>'
+            + error_box(error.code, str(error)))
+    return page(f"Métricas {cycle_label}", body, csrf)
+
+
 def metrics_page(cycle_label: str, margins, alerts, savings, repurchase, repurchase_error,
-                 csrf: str | None = None, compared=None) -> str:
+                 csrf: str | None = None, compared=None, cycles=()) -> str:
     rows = "".join(
         f"<tr><td>{m.order_id}</td><td>{money(m.revenue)}</td><td>{money(m.claims)}</td>"
         f"<td>{money(m.product_cost)}</td><td>{money(m.stop_cost)}</td><td>{money(m.margin)}"
@@ -579,8 +862,8 @@ def metrics_page(cycle_label: str, margins, alerts, savings, repurchase, repurch
                      f"{escape(repurchase.target_cycle)}: {rate} %, {verdict}.</p>")
     else:
         returning = error_box(repurchase_error.code, str(repurchase_error))
-    body = (f'<form class="card" method="get" action="/admin/metricas"><label>Ciclo '
-            f'<input name="ciclo" value="{escape(cycle_label)}"></label><button>Ver</button></form>'
+    body = (f'<form class="card dos" method="get" action="/admin/metricas"><label>Semana '
+            f'{cycle_select(cycles or [cycle_label], cycle_label)}</label><button>Ver</button></form>'
             f'<div class="card"><strong>Margen por pedido</strong> <span class="muted">(antes de costos operativos)'
             '</span><table><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th>'
             f'<th>Margen</th></tr>{rows}</table><p>Pedidos con margen negativo: {len(alerts)}</p></div>'
@@ -626,7 +909,8 @@ def balance_page(balance, csrf: str | None = None) -> str:
     return page("Conciliación del dinero", state + f'<div class="card"><table>{rows}</table></div>', csrf)
 
 
-def catalog_admin(cycle_label: str, published: bool, products, text: str, csrf: str | None = None) -> str:
+def catalog_admin(cycle_label: str, published: bool, products, text: str, csrf: str | None = None,
+                  cycles=()) -> str:
     """CW-01: catálogo del ciclo, lista para publicar (S-116, S-117) y desactivar productos."""
     rows = "".join(
         f"<tr><td>{escape(p.product_id)}</td><td>{escape(p.name)}</td><td>{money(p.max_unit_price())}</td>"
@@ -640,8 +924,8 @@ def catalog_admin(cycle_label: str, published: bool, products, text: str, csrf: 
         for p in products
     )
     state = "publicado" if published else "sin publicar: se usa el catálogo base"
-    body = (f'<form class="card" method="get" action="/admin/catalogo"><label>Ciclo '
-            f'<input name="ciclo" value="{escape(cycle_label)}"></label><button>Ver</button></form>'
+    body = (f'<form class="card dos" method="get" action="/admin/catalogo"><label>Semana '
+            f'{cycle_select(cycles or [cycle_label], cycle_label)}</label><button>Ver</button></form>'
             f'<div class="card"><strong>Ciclo {escape(cycle_label)} · {state}</strong>'
             '<table><tr><th>Código</th><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th>'
             f'<th>Máximo</th><th></th></tr>{rows}</table></div>'
@@ -694,6 +978,8 @@ def customers_page(customers, zone_ids, csrf: str | None = None) -> str:
         for c in customers
     )
     zones = "".join(f'<option value="{escape(z)}">{escape(z)}</option>' for z in zone_ids)
+    people = "".join(f'<option value="{c.customer_id}">{escape(c.name)} ({c.customer_id})</option>'
+                     for c in customers)
     body = (f'<form class="card" method="post" action="/admin/vecinos">{hidden(csrf)}'
             '<strong>Dar de alta</strong>'
             '<label>Nombre <input name="nombre"></label>'
@@ -703,7 +989,7 @@ def customers_page(customers, zone_ids, csrf: str | None = None) -> str:
             'que Yapa guarde su nombre y celular para sus pedidos</label>'
             '<button>Registrar y generar PIN</button></form>'
             f'<form class="card" method="post" action="/admin/vecinos/pin">{hidden(csrf)}'
-            '<strong>Olvidó su PIN</strong><label>Número de cliente <input name="cliente" inputmode="numeric">'
+            f'<strong>Olvidó su PIN</strong><label>Vecino <select name="cliente">{people}</select>'
             '</label><button>Generar PIN nuevo</button></form>'
             '<div class="card"><table><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th>'
             f'<th>Consentimiento</th></tr>{rows}</table></div>')

@@ -10,6 +10,9 @@ import math
 import re
 import secrets
 from dataclasses import dataclass
+from email.parser import BytesParser
+from email.policy import default as email_policy
+from pathlib import Path
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from http.cookies import SimpleCookie
@@ -17,7 +20,7 @@ from urllib.parse import parse_qs
 
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
-from ..domain import PILOT_DISTRICTS, BusinessRuleError
+from ..domain import MAX_QUANTITY, PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
@@ -50,13 +53,46 @@ def _redirect(location: str, headers=None) -> Response:
     return Response("303 See Other", "", [("Location", location)] + (headers or []))
 
 
-def _form(environ) -> dict[str, str]:
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
+PHOTO_TYPES = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
+
+
+def _form(environ) -> tuple[dict[str, str], dict[str, tuple[str, bytes]]]:
+    """Campos del formulario y, si es multipart (S-151), los archivos subidos."""
     try:
         length = int(environ.get("CONTENT_LENGTH") or 0)
     except ValueError:
         length = 0
-    raw = environ["wsgi.input"].read(length).decode("utf-8") if length else ""
-    return {key: values[0] for key, values in parse_qs(raw, keep_blank_values=True).items()}
+    raw = environ["wsgi.input"].read(length) if length else b""
+    content_type = environ.get("CONTENT_TYPE", "")
+    if not content_type.startswith("multipart/form-data"):
+        text = raw.decode("utf-8")
+        return {key: values[0] for key, values in parse_qs(text, keep_blank_values=True).items()}, {}
+    message = BytesParser(policy=email_policy).parsebytes(
+        b"Content-Type: " + content_type.encode("latin-1") + b"\r\n\r\n" + raw)
+    fields, files = {}, {}
+    for part in message.iter_parts():
+        name = part.get_param("name", header="content-disposition")
+        payload = part.get_payload(decode=True) or b""
+        if part.get_filename() is not None:
+            files[name] = (part.get_filename(), payload)
+        elif name:
+            fields[name] = payload.decode("utf-8")
+    return fields, files
+
+
+def _save_photo(folder: str, upload: tuple[str, bytes]) -> str:
+    """S-151: guarda la foto en la carpeta y devuelve la ruta que se registra (fotos/<nombre>)."""
+    filename, content = upload
+    if not content:
+        return ""
+    if len(content) > MAX_PHOTO_BYTES:
+        raise BusinessRuleError("PHOTO_TOO_LARGE", "La foto pesa más de 8 MB.")
+    suffix = Path(filename).suffix.lower()
+    name = f"{secrets.token_hex(8)}{suffix if suffix in PHOTO_TYPES else '.jpg'}"
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    (Path(folder) / name).write_bytes(content)
+    return f"fotos/{name}"
 
 
 def _int(value: str, what: str) -> int:
@@ -98,8 +134,8 @@ def _lines(form: dict[str, str]) -> list[tuple[str, str]]:
     return lines
 
 
-def create_app(store: InMemoryStore, clock=None, on_change=None):
-    """on_change(store) se llama después de cada POST que termina bien (PS-03)."""
+def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos"):
+    """on_change(store) se llama después de cada POST que termina bien (PS-03). Las fotos van a photo_dir."""
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     sessions: dict[str, Session] = {}
 
@@ -142,7 +178,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
             references = reference.current_references(store, product.product_id, cycle.to_lima(now).date())  # RF-06
             rows.append({"product_id": product.product_id, "name": product.name, "unit": product.unit,
                          "step": product.step, "max_price": product.max_unit_price(), "progress": progress,
-                         "ordered": total, "goal": goal,
+                         "ordered": total, "goal": goal, "category": product.category,
+                         "max_quantity": MAX_QUANTITY.get(product.unit, Decimal("0")),
                          "references": [references[k] for k in reference.KINDS if k in references]})
         csrf = session.csrf if session and session.role == "vecino" else None
         return views.home(cycle_id, cycle.is_open(now), rows, csrf)
@@ -165,38 +202,78 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
 
     # --- vecino (AC-04: el cliente siempre es el de la sesión) ---
 
+    def names_for(cycle_id: str) -> dict[str, str]:
+        return {p.product_id: p.name for p in store.catalog_for(cycle_id).values()}
+
     def cotizar(environ, form, session):
-        return views.quote(quote_order(store, _lines(form), cycle.cycle_id(clock())), session.csrf)
+        cycle_id = cycle.cycle_id(clock())
+        result = quote_order(store, _lines(form), cycle_id)
+        today = cycle.to_lima(clock()).date()
+        savings = Decimal("0")  # S-145: solo líneas con precio de supermercado vigente
+        for line in result.lines:
+            ref = reference.current_references(store, line.product_id, today).get("SUPERMERCADO")
+            if ref:
+                savings += line.quantity * ref.price - line.max_total
+        return views.cart(result, names_for(cycle_id), savings, wallet.balance(store, session.principal),
+                          session.csrf)
+
+    def payment_code(cycle_id: str, customer_id) -> str:
+        """S-150: código de pago único que el vecino pone en el mensaje del Yape o Plin."""
+        while True:
+            code = f"YP-{cycle_id.replace('-', '')}-{customer_id}-{secrets.token_hex(2).upper()}"
+            if code not in store.used_codes:
+                return code
 
     def pedidos(environ, form, session):
+        lines = _lines(form)
+        code, amount, use_balance = form.get("codigo") or None, form.get("monto"), form.get("saldo") or "0"
+        if not amount and not code:  # EC-08: desde el carrito; si llegan codigo y monto (API), se usan
+            cycle_id = cycle.cycle_id(clock())
+            total = quote_order(store, lines, cycle_id).total
+            if form.get("usar_saldo") == "si":  # S-148
+                use_balance = min(wallet.balance(store, session.principal), total)
+            due = total - Decimal(str(use_balance))
+            amount = due
+            code = payment_code(cycle_id, session.principal) if due > 0 else None
         order = register_order(
             store,
             customer_id=session.principal,
-            lines=_lines(form),
-            payment_method=form.get("metodo") or None,
-            operation_code=form.get("codigo") or None,
-            amount=form.get("monto") or "0",
-            use_balance=form.get("saldo") or "0",
+            lines=lines,
+            payment_method=(form.get("metodo") or None) if code else None,
+            operation_code=code,
+            amount=amount or "0",
+            use_balance=use_balance,
             now=clock(),
         )
-        return views.registered(order, session.csrf)
+        return views.registered(order, session.csrf, store.customers[session.principal].name,
+                                names_for(order.cycle))
 
     def cuenta(environ, form, session):
         customer_id = session.principal
         customer = store.customers[customer_id]
         orders = [o for o in store.orders.values() if o.customer_id == customer_id]
         refunds = [r for r in store.refunds.values() if r.customer_id == customer_id and r.status == "PENDIENTE"]
-        details, returned = {}, Decimal("0")
+        details, returned, saved = {}, Decimal("0"), Decimal("0")
         for order in orders:  # S-130..S-132
             result = store.settlements.get(order.cycle)
             settled = result.orders.get(order.order_id) if result else None
             if settled is None:
                 continue
-            details[order.order_id] = (settled, reference.order_comparison(store, order.order_id))
+            comparison = reference.order_comparison(store, order.order_id)
+            details[order.order_id] = (settled, comparison)
             if settled.status in ("LIQUIDADO", "NO_ATENDIDO", "NO_ENTREGADO"):
                 returned += settled.refund_amount + settled.returned_to_balance
+            if "SUPERMERCADO" in comparison:  # EC-04
+                saved += comparison["SUPERMERCADO"].savings
+        now = clock()
+        cancellable = {o.order_id for o in orders if o.status == "REGISTRADO" and cycle.is_open(now)
+                       and cycle.cycle_id(now) == o.cycle}  # S-147: mismas condiciones que CE-02 y CE-03
+        delivered = {order_id for d in store.deliveries.values() for order_id in d.order_ids}
+        names = {}
+        for order in orders:
+            names.update(names_for(order.cycle))
         return views.account(customer, wallet.balance(store, customer_id), orders, refunds, session.csrf,
-                             details, returned)
+                             details, returned, cancellable, delivered, names, saved)
 
     def cancelar(environ, form, session):
         order = cancel_order(store, _int(form.get("pedido", ""), "Número de pedido"),
@@ -212,9 +289,13 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
 
     def admin(environ, form, session):
         cycle_id = cycle.cycle_id(clock())
-        pending = [o for o in store.orders_in_cycle(cycle_id)
-                   if o.status == "REGISTRADO" and o.payment_status == "POR_VERIFICAR"]
-        return views.admin(cycle_id, pending, session.csrf)
+        in_cycle = [o for o in store.orders_in_cycle(cycle_id) if o.status != "CANCELADO_POR_CLIENTE"]
+        pending = [o for o in in_cycle if o.status == "REGISTRADO" and o.payment_status == "POR_VERIFICAR"]
+        verified = sum((o.total for o in in_cycle if o.payment_status == "VERIFICADO"), Decimal("0"))
+        stats = [("Pedidos de la semana", len(in_cycle)), ("Por verificar", len(pending)),
+                 ("Dinero verificado", views.money(verified)),
+                 ("Vecinos con pedido", len({o.customer_id for o in in_cycle}))]  # EC-05
+        return views.admin(cycle_id, pending, session.csrf, stats, known_cycles())
 
     def verificar(environ, form, session):
         order = verify_payment(store, _int(form.get("pedido", ""), "Número de pedido"), now=clock())
@@ -226,6 +307,13 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         result = fulfillment.close_cycle(store, (form.get("ciclo") or "").strip(), at=clock())
         return views.settlement(result, session.csrf)
 
+    def known_cycles(ahead: int = 0) -> list[str]:
+        """EC-07: los ciclos con pedidos o catálogo, el actual y los `ahead` siguientes."""
+        current = cycle.cycle_id(clock())
+        found = {o.cycle for o in store.orders.values()} | set(store.catalogs) | {current}
+        found |= {cycle.add_weeks(current, n) for n in range(1, ahead + 1)}
+        return sorted(found, reverse=True)
+
     def ubicacion(environ, form, session):
         zones.set_location(store, session.principal, _float(form.get("lat"), "Latitud"),
                            _float(form.get("lon"), "Longitud"))  # HR-01
@@ -236,7 +324,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         label = (_query(environ).get("ciclo") or "").strip() or cycle.add_weeks(cycle.cycle_id(clock()), 1)
         cycle.check_cycle_id(label)
         products = list(store.catalog_for(label).values())
-        return views.catalog_admin(label, label in store.catalogs, products, export_catalog(products), session.csrf)
+        return views.catalog_admin(label, label in store.catalogs, products, export_catalog(products), session.csrf,
+                                   known_cycles(ahead=2))
 
     def catalogo_publicar(environ, form, session):
         label = (form.get("ciclo") or "").strip()
@@ -317,8 +406,10 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         admin_zone = administered[0] if administered else None
         requests = [(merge_id, zone_id) for merge_id, (zone_id, target_id) in store.merge_requests.items()
                     if admin_zone and target_id == admin_zone.zone_id]
+        neighbors = [c for c in store.customers.values()
+                     if admin_zone and c.zone_id == admin_zone.zone_id and c.customer_id != session.principal]
         return views.zone_page(customer, store.zones.get(customer.zone_id), list(store.zones.values()), admin_zone,
-                               requests, sorted(PILOT_DISTRICTS), session.csrf)
+                               requests, sorted(PILOT_DISTRICTS), session.csrf, neighbors)
 
     def zona_crear(environ, form, session):
         zone = zones.create_zone(store, session.principal, name=form.get("nombre", "").strip(),
@@ -436,8 +527,10 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
 
     def colchon(environ, form, session):
         catalog = store.catalog_for(cycle.cycle_id(clock()))
+        orders = sorted((o for o in store.orders.values() if o.status != "CANCELADO_POR_CLIENTE"),
+                        key=lambda o: o.order_id, reverse=True)
         return views.buffer_page(list(store.buffer.values()), buffer.buffer_value(store), buffer.BUFFER_LIMIT,
-                                 [p for p in catalog.values() if p.active], session.csrf, store.buffer_uses)
+                                 [p for p in catalog.values() if p.active], session.csrf, store.buffer_uses, orders)
 
     def colchon_agregar(environ, form, session):
         stock = buffer.add_to_buffer(store, cycle.cycle_id(clock()), form.get("producto", ""),
@@ -454,7 +547,11 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
 
     def metricas(environ, form, session):
         cycle_id = selected_cycle(environ)
-        margins = metrics.order_margins(store, cycle_id)  # S-78: sin liquidar, 422
+        try:
+            margins = metrics.order_margins(store, cycle_id)  # S-78: sin liquidar, 422
+        except BusinessRuleError as error:
+            raise Response("422 Unprocessable Entity",
+                           views.metrics_error(cycle_id, known_cycles(), error, session.csrf))
         alerts = metrics.margin_alerts(store, cycle_id)
         savings = metrics.delivered_savings(store, cycle_id)
         try:
@@ -463,7 +560,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
             repurchase, repurchase_error = None, error
         compared = reference.reference_savings(store, cycle_id)  # RF-08
         return views.metrics_page(cycle_id, margins, alerts, savings, repurchase, repurchase_error, session.csrf,
-                                  compared)
+                                  compared, known_cycles())
 
     # ruta -> método -> (función, rol requerido)
     routes = {
@@ -514,19 +611,21 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
         method = environ.get("REQUEST_METHOD", "GET")
         methods = routes.get(path)
         if methods is None:  # WB-08
-            return "404 Not Found", views.simple("No encontrado", "Esa página no existe."), []
+            return "404 Not Found", views.simple("No encontrado", "Esa página no existe.", ok=False), []
         if method not in methods:
-            return "405 Method Not Allowed", views.simple("Método no permitido", "Usa el formulario."), []
+            return "405 Method Not Allowed", views.simple("Método no permitido", "Usa el formulario.", ok=False), []
         handler, role = methods[method]
         _, session = current_session(environ)
-        form = _form(environ) if method == "POST" else {}
+        form, files = _form(environ) if method == "POST" else ({}, {})
+        if files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151
+            form["foto"] = _save_photo(photo_dir, files["foto_archivo"])
         if role and session is None:  # AC-04, AC-05
             raise _redirect("/entrar")
         if role and session.role != role:
-            raise Response("403 Forbidden", views.simple("Sin permiso", "Esta página no es para tu tipo de cuenta."))
+            raise Response("403 Forbidden", views.simple("Sin permiso", "Esta página no es para tu tipo de cuenta.", ok=False))
         if method == "POST" and session and path != "/entrar":  # AC-06
             if not hmac.compare_digest(form.get("csrf", ""), session.csrf):
-                raise Response("403 Forbidden", views.simple("Formulario vencido", "Recarga la página e intenta de nuevo."))
+                raise Response("403 Forbidden", views.simple("Formulario vencido", "Recarga la página e intenta de nuevo.", ok=False))
         try:
             return "200 OK", handler(environ, form, session), []
         except BusinessRuleError as error:
