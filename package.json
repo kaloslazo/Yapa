@@ -10,7 +10,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "api": "cd api && python -m yapa_sdd.web --demo"
+    "api": "python api/tools/servir_demo.py"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",

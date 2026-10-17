@@ -18,7 +18,7 @@ Hace falta Python 3.11+ y Node 20+.
 
 ```bash
 npm install
-npm run api        # motor con una semana de demo ya vivida, en http://127.0.0.1:8000
+npm run api        # motor con una semana de demo ya vivida, en http://127.0.0.1:8000 (o: python api/tools/servir_demo.py)
 npm run dev        # en otra terminal: la tienda en http://localhost:5173
 ```
 
