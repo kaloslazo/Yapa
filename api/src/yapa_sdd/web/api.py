@@ -354,6 +354,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "codigo_referido": customers.referral_code(customer),
                 "radio_m": zones.MEMBER_RADIUS_M, "union_m": zones.MERGE_DISTANCE_M}
 
+    def ubicacion(environ, data, session):
+        customer = zones.set_location(store, session["principal"], data.get("lat"), data.get("lon"))  # FE-09, HR-01
+        return {"lat": customer.lat, "lon": customer.lon}
+
     def zona_crear(environ, data, session):
         zone = zones.create_zone(store, session["principal"], name=str(data.get("nombre", "")).strip(),
                                  district=data.get("distrito", ""), lat=data.get("lat"), lon=data.get("lon"), now=clock())
@@ -617,6 +621,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/pin", {"POST": (cambiar_pin, "vecino")}),
         (r"/api/reclamos", {"GET": (reclamos, "vecino"), "POST": (reclamar, "vecino")}),
         (r"/api/mi-zona", {"GET": (mi_zona, "vecino")}),
+        (r"/api/ubicacion", {"POST": (ubicacion, "vecino")}),
         (r"/api/zonas/([\w-]+)/unirme", {"POST": (zona_unirme, "vecino")}),
         (r"/api/zonas/([\w-]+)/activar", {"POST": (zona_activar, "vecino")}),
         (r"/api/zonas/([\w-]+)/unir", {"POST": (zona_unir, "vecino")}),
