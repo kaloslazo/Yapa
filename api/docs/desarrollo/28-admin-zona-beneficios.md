@@ -60,3 +60,7 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (2026-W38). Zona Z-JM-01 con 8 veci
 - **AZ-F · Premio.** Si el 808 fue referido por el 801, al liquidar la semana el 801 recibe S/ 3.00 más de saldo y el 808 también (kind `PREMIO_REFERIDO`). En una segunda semana liquidada del 808 no hay otro premio. → AZ-06
 - **AZ-G · Conciliación.** Después de AZ-A con AZ-F, `money_balance` da diferencia **0**. → AZ-07
 - **AZ-H · Panel del admin de zona.** Con 3 pedidos verificados en el grupo, `GET /api/mi-zona` del admin dice `avance` 3 de 8, lista a sus vecinos con `pidio` verdadero solo para los que tienen pedido en la semana, incluye las zonas a 500 m o menos con su distancia en metros, dice `envio_gratis` verdadero y da su `codigo_referido`. Un vecino que no es admin no recibe el bloque `administra`. → AZ-08
+
+## Hueco encontrado al implementar
+
+- `seed.pilot_store()` agregaba a cada repositorio **las mismas instancias** de `Zone` de `PILOT_ZONES`. Como `Zone` es mutable (`admin_id`, `group_id`, `created_cycle`), cambiar una zona en un repositorio la cambiaba en todos los que se crearan después. Regla nueva **AZ-09**: cada repositorio del piloto recibe **copias** de las zonas. Se detectó porque AZ-C y AZ-F fallaban solo cuando AZ-A corría antes.
