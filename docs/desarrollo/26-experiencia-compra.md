@@ -20,6 +20,7 @@ Como administrador, quiero abrir el panel y ver de un vistazo cómo va la semana
 | S-145 | El ahorro estimado del carrito compara contra el precio de supermercado vigente, solo en los productos que lo tienen, y se presenta como "aprox.". | — |
 | S-146 | Al vecino se le muestran los estados con palabras ("Registrado", "Cancelado", "Liquidado"...), no con el código interno. El administrador sigue viendo el código en la liquidación, porque lo usa para operar. | — |
 | S-147 | El botón de cancelar solo aparece en los pedidos que todavía se pueden cancelar (registrados y con el ciclo abierto, CE-02 y CE-03). Si igual llega una cancelación inválida, responde el error de siempre. | — |
+| S-149 | Pedido del equipo (17/10/2026): **escribir lo menos posible**. Cuando las opciones son conocidas (ciclos, pedidos, zonas, vecinos), se eligen de una lista. Solo se escribe lo que no se puede elegir: PIN, montos, códigos de operación, nombres y fotos. Las explicaciones largas van en secciones desplegables o en tablas. | — |
 | S-148 | En "Tu carrito", si el vecino tiene saldo, se propone usarlo (hasta el total) y el monto a yapear se propone como total menos saldo. El vecino puede cambiar ambos. | — |
 
 ## Reglas
@@ -31,6 +32,7 @@ Como administrador, quiero abrir el panel y ver de un vistazo cómo va la semana
 | EC-03 | Al registrar, la confirmación saluda al vecino por su nombre, muestra el número de pedido y lo que pasa después (verificación del pago, compra, entrega el sábado, devolución del ahorro). |
 | EC-04 | Mi cuenta muestra arriba el saldo, lo devuelto y **lo ahorrado frente al supermercado** en todos los pedidos liquidados. Cada pedido es una tarjeta con su estado en palabras (S-146), sus productos y su avance. Los pedidos cancelables tienen botones "Cancelar y devolver a mi Yape/Plin" y "Cancelar y pasar a mi saldo" (S-147). Pedir devolución y cambiar PIN quedan en "Más opciones". |
 | EC-05 | El panel del admin muestra el resumen de la semana (pedidos, pagos por verificar, dinero verificado, vecinos con pedido), los pagos por verificar con su botón, y la liquidación con una lista de los ciclos que tienen pedidos. |
+| EC-07 | Se elige de una lista (S-149): el ciclo en Métricas, Catálogo y Liquidar; el pedido en Colchón; el vecino al reiniciar el PIN; la zona al unirse, al pedir la unión y el nuevo admin al transferir. El catálogo agrupa los productos por categoría en secciones desplegables. |
 | EC-06 | Las acciones que salen bien se muestran como éxito (✓, en verde); los errores muestran el mensaje, el código y un enlace para volver. Las páginas de error (404, 405, 403) no se muestran como éxito. |
 
 ## Criterios de aceptación
@@ -46,6 +48,8 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (2026-W38), catálogo base del pilo
 - **EC-G · Ahorro acumulado.** En la semana de demo (30/09/2026), Mi cuenta de Ana muestra "Ahorraste S/ 42.31 frente al supermercado". → EC-04
 - **EC-H · Panel del admin.** Con un pedido por verificar de S/ 61.00, el panel muestra el resumen ("Pedidos de la semana" 1, "Por verificar" 1) y la liquidación como lista con la opción `2026-W38`. → EC-05
 - **EC-I · Mensajes.** Verificar un pago muestra la página de éxito (`class="card ok"`). Una ruta inexistente responde 404 sin `class="card ok"`. Un error de negocio muestra el código y un enlace "Volver". → EC-06
+
+- **EC-J · Listas en vez de escribir.** `/admin/metricas` tiene `<select name="ciclo">`; `/admin/colchon`, `<select name="pedido">`; `/admin/vecinos`, `<select name="cliente">`; `/zona`, `<select name="zona">` para unirse. El catálogo con sesión tiene `<details` por categoría. → EC-07, S-149
 
 ## Cambios en criterios anteriores (por S-146)
 
