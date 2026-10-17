@@ -1,200 +1,373 @@
-import { useEffect, useMemo, useState } from 'react';
-import { deliveryWindows, windowLabel, zoneById, zones } from '../data/catalog';
-import type { OrderRecord, Product } from '../types';
-import { Icon } from './Icon';
+import { useCallback, useEffect, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
+import { api } from '../services/api';
+import { toOrder, toZone } from '../services/mappers';
+import type { Order, Zone } from '../types';
+import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
 import { formatMoney } from '../utils/format';
-import { MIN_ORDERS_PER_GROUP, SUPPORTED_DISTRICTS, type CycleSettlement } from '../utils/domain';
+import { formatQuantity } from '../utils/cart';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Raw = Record<string, any>;
 
 interface AdminPanelProps {
-  products: Product[];
-  orders: OrderRecord[];
   adminName: string;
-  currentCycle: string;
-  cycleOpen: boolean;
-  localMode: boolean;
   onClose: () => void;
-  onProductUpdate: (id: string, patch: Partial<Pick<Product, 'price' | 'stock'>>) => void;
-  onVerify: (order: OrderRecord) => Promise<void>;
-  onSettle: (cycle: string) => Promise<CycleSettlement>;
-  onRefundPaid: (order: OrderRecord) => Promise<void>;
-  onSeedDemo: () => void;
+  onLogout: () => void;
+  notify: (message: string, tone?: 'neutral' | 'success' | 'warning') => void;
 }
 
-type StockFilter = 'all' | 'low';
+type Section = 'resumen' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos';
 
-const groups = [...new Set(zones.filter((zone) => zone.active).map((zone) => zone.groupId))];
+const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
+  { id: 'resumen', label: 'Resumen', icon: 'chart' },
+  { id: 'armado', label: 'Armado y entrega', icon: 'truck' },
+  { id: 'reclamos', label: 'Reclamos', icon: 'receipt' },
+  { id: 'devoluciones', label: 'Devoluciones', icon: 'undo' },
+  { id: 'conciliacion', label: 'Conciliación', icon: 'scale' },
+  { id: 'metricas', label: 'Métricas', icon: 'chart' },
+  { id: 'catalogo', label: 'Catálogo', icon: 'store' },
+  { id: 'referencias', label: 'Precios de referencia', icon: 'tag' },
+  { id: 'vecinos', label: 'Vecinos', icon: 'users' },
+];
 
-export function AdminPanel({ products, orders, adminName, currentCycle, cycleOpen, localMode, onClose, onProductUpdate, onVerify, onSettle, onRefundPaid, onSeedDemo }: AdminPanelProps) {
-  const [catalogQuery, setCatalogQuery] = useState('');
-  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
-  const cycles = useMemo(() => [...new Set([currentCycle, ...orders.map((order) => order.cycleId).filter(Boolean)])].sort().reverse(), [currentCycle, orders]);
-  const [cycle, setCycle] = useState(currentCycle);
-  const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [settlement, setSettlement] = useState<CycleSettlement | null>(null);
+const num = (value: unknown) => Number(value ?? 0);
+const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
+const FAILURES = [{ value: 'PORTERIA_CERRADA', label: 'Portería cerrada' }, { value: 'NADIE_RECIBE', label: 'No había quién reciba' }, { value: 'PORTERIA_RECHAZA', label: 'La portería no aceptó' }];
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, []);
-
-  useEffect(() => {
-    setConfirming(false);
-    setSettlement(null);
-  }, [cycle]);
-
-  const lowStock = products.filter((product) => product.stock < 15).length;
-  const cycleOrders = orders.filter((order) => order.cycleId === cycle);
-  const pending = cycleOrders.filter((order) => order.status === 'REGISTRADO');
-  const toVerify = pending.filter((order) => order.paymentStatus === 'POR_VERIFICAR');
-  const received = cycleOrders.filter((order) => order.paymentStatus === 'VERIFICADO').reduce((sum, order) => sum + order.paidExternal, 0);
-  const verifiedByGroup = (groupId: string) => pending.filter((order) => order.paymentStatus === 'VERIFICADO' && zoneById(order.zoneId)?.groupId === groupId).length;
-  const groupsReady = groups.filter((groupId) => verifiedByGroup(groupId) >= MIN_ORDERS_PER_GROUP).length;
-  const codeCount = new Map<string, number>();
-  for (const order of orders) if (order.operationCode) codeCount.set(order.operationCode, (codeCount.get(order.operationCode) ?? 0) + 1);
-  const refunds = orders.filter((order) => order.refundToMethod > 0 && !order.refundPaidAt);
-
-  const visibleProducts = useMemo(() => {
-    const normalizedQuery = catalogQuery.trim().toLowerCase();
-    return products.filter((product) => {
-      const matchesQuery = !normalizedQuery || `${product.name} ${product.category}`.toLowerCase().includes(normalizedQuery);
-      const matchesStock = stockFilter === 'all' || product.stock < 15;
-      return matchesQuery && matchesStock;
-    });
-  }, [catalogQuery, products, stockFilter]);
-
-  const settle = async () => {
-    setBusy(true);
+function useLoad<T>(path: string | null, notify: AdminPanelProps['notify']) {
+  const [data, setData] = useState<T | null>(null);
+  const reload = useCallback(async () => {
+    if (!path) return;
     try {
-      setSettlement(await onSettle(cycle));
-      setConfirming(false);
-    } finally {
-      setBusy(false);
+      setData(await api.get<T>(path));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No pudimos cargar los datos.', 'warning');
     }
-  };
+  }, [path, notify]);
+  useEffect(() => { void reload(); }, [reload]);
+  return { data, reload };
+}
 
-  const productName = (id: string) => products.find((product) => product.id === id)?.name ?? id;
-  const productUnit = (id: string) => products.find((product) => product.id === id)?.unit ?? '';
+function Card({ eyebrow, title, children, aside, id }: { eyebrow: string; title: string; children: ReactNode; aside?: ReactNode; id?: string }) {
+  return <section className="admin-card" id={id}><div className="admin-card-heading"><div><span className="admin-eyebrow">{eyebrow}</span><h2>{title}</h2></div>{aside}</div>{children}</section>;
+}
+
+function CycleSelect({ cycles, value, onChange }: { cycles: string[]; value: string; onChange: (cycle: string) => void }) {
+  return <label className="admin-filter"><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>Semana {c}</option>)}</select></label>;
+}
+
+function Empty({ icon, title, text }: { icon: IconName; title: string; text: string }) {
+  return <div className="admin-orders-empty"><span className="admin-empty-icon"><Icon name={icon} size={23} /></span><div><strong>{title}</strong><p>{text}</p></div></div>;
+}
+
+export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelProps) {
+  const [section, setSection] = useState<Section>('resumen');
+  const [cycle, setCycle] = useState('');
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [section]);
+
+  const run = useCallback(async (action: () => Promise<unknown>, success: string) => {
+    try {
+      await action();
+      notify(success, 'success');
+      return true;
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudo completar.', 'warning');
+      return false;
+    }
+  }, [notify]);
+
+  const current = SECTIONS.find((s) => s.id === section)!;
+  const props = { cycle, setCycle, run, notify };
 
   return (
     <div className="admin-view">
-      <a className="skip-link" href="#admin-overview">Saltar al contenido principal</a>
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Navegación de operaciones">
-          <a className="admin-brand" href="#admin-overview" aria-label="Yapa, centro de operaciones">
+          <a className="admin-brand" href="#admin" aria-label="Yapa, centro de operaciones" onClick={(event) => { event.preventDefault(); setSection('resumen'); }}>
             <img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" />
             <span><strong>yapa</strong><small>operaciones</small></span>
           </a>
-
           <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            <a className="admin-nav-link is-active" href="#admin-overview"><Icon name="box" size={18} weight="duotone" /><span>Resumen</span></a>
-            <a className="admin-nav-link" href="#admin-cycle"><Icon name="calendar" size={18} /><span>Ciclo</span><strong>{pending.length}</strong></a>
-            <a className="admin-nav-link" href="#admin-refunds"><Icon name="wallet" size={18} /><span>Devoluciones</span><strong>{refunds.length}</strong></a>
-            <a className="admin-nav-link" href="#admin-catalog"><Icon name="box" size={18} /><span>Catálogo</span><strong>{products.length}</strong></a>
+            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} onClick={() => setSection(s.id)}><Icon name={s.icon} size={18} /><span>{s.label}</span></button>)}
           </nav>
-
           <div className="admin-sidebar-spacer" />
-          <div className="admin-sidebar-note">
-            <span className="admin-sidebar-label">Ciclo actual</span>
-            <strong>{currentCycle}</strong>
-            <span>{cycleOpen ? 'Recibe pedidos hasta el miércoles 20:00' : 'Cerrado para pedidos'}</span>
-          </div>
-          <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Volver a la tienda</a>
-          <div className="admin-sidebar-user"><span className="admin-avatar"><Icon name="user" size={17} /></span><span><small>Sesión activa</small><strong>{adminName || 'Administración'}</strong></span></div>
+          <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
+          <div className="admin-sidebar-user"><span className="admin-avatar"><Icon name="user" size={17} /></span><span><small>Sesión activa</small><strong>{adminName}</strong></span><button className="icon-button" type="button" onClick={onLogout} aria-label="Salir"><Icon name="signout" size={17} /></button></div>
         </aside>
 
         <main className="admin-main" id="admin-overview">
           <header className="admin-topbar">
-            <div><span className="admin-eyebrow">Centro de operaciones</span><h1>Resumen</h1></div>
+            <div><span className="admin-eyebrow">Centro de operaciones</span><h1>{current.label}</h1></div>
             <div className="admin-top-actions"><a className="admin-store-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}>Tienda <Icon name="arrow" size={16} /></a></div>
           </header>
-
           <div className="admin-page-content">
-            <section className="admin-intro" aria-labelledby="admin-intro-title">
-              <div><span className="admin-eyebrow">Operativa de esta semana</span><h2 id="admin-intro-title">{cycleOpen ? 'El ciclo recibe pedidos hasta el miércoles 20:00' : 'El ciclo ya no recibe pedidos'}</h2><p>Verifica los códigos de Yape y Plin y, después de la entrega, liquida el ciclo para devolver el ahorro.</p></div>
-              <div className="admin-intro-note"><span className="admin-intro-icon"><Icon name="calendar" size={20} /></span><span><small>Ciclo</small><strong>{currentCycle}</strong></span></div>
-            </section>
-
-            <section className="admin-kpis" aria-label="Indicadores del ciclo">
-              <div className="admin-kpi"><span className="admin-kpi-label">Pedidos del ciclo</span><strong>{pending.length}</strong><small>sin liquidar</small></div>
-              <div className={`admin-kpi ${toVerify.length ? 'admin-kpi--attention' : ''}`}><span className="admin-kpi-label">Pagos por verificar</span><strong>{toVerify.length}</strong><small>{toVerify.length ? 'revisa los códigos' : 'todo verificado'}</small></div>
-              <div className="admin-kpi"><span className="admin-kpi-label">Grupos con mínimo</span><strong>{groupsReady} de {groups.length}</strong><small>{MIN_ORDERS_PER_GROUP} pedidos verificados</small></div>
-              <div className="admin-kpi"><span className="admin-kpi-label">Recibido por Yape y Plin</span><strong>{formatMoney(received)}</strong><small>pagos verificados</small></div>
-            </section>
-
-            <section className="admin-card admin-cycle-card" id="admin-cycle" aria-labelledby="admin-cycle-title">
-              <div className="admin-card-heading">
-                <div><span className="admin-eyebrow">Ciclo semanal</span><h2 id="admin-cycle-title">Pedidos y liquidación</h2><p>Solo cuentan los pagos verificados. Un grupo de zonas necesita {MIN_ORDERS_PER_GROUP} para que vaya el camión.</p></div>
-                <div className="admin-cycle-tools">
-                  {localMode ? <button className="secondary-button" type="button" onClick={onSeedDemo}>Cargar pedidos de demo</button> : null}
-                  <label className="admin-filter"><span className="sr-only">Ciclo</span><select value={cycle} onChange={(event) => setCycle(event.target.value)}>{cycles.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-                </div>
-              </div>
-
-              <div className="admin-groups">{groups.map((groupId) => {
-                const count = verifiedByGroup(groupId);
-                const groupZones = zones.filter((zone) => zone.groupId === groupId);
-                return <div className="admin-group" key={groupId}><div><strong>{groupZones.map((zone) => zone.name).join(' + ')}</strong><small>{groupZones[0].district} · {windowLabel(groupZones[0].deliveryWindow)}</small></div><div className="admin-group-count"><span className={count >= MIN_ORDERS_PER_GROUP ? 'is-ready' : ''}>{count} / {MIN_ORDERS_PER_GROUP}</span><div className="progress-track"><span style={{ width: `${Math.min(count / MIN_ORDERS_PER_GROUP, 1) * 100}%` }} /></div></div></div>;
-              })}</div>
-
-              {cycleOrders.length ? <div className="admin-table-wrap"><table className="admin-table admin-orders-table"><caption className="sr-only">Pedidos del ciclo {cycle}</caption><thead><tr><th scope="col">Pedido</th><th scope="col">Vecino</th><th scope="col">Zona</th><th scope="col">Pagó</th><th scope="col">Pago</th><th scope="col">Estado</th><th scope="col">Acción</th></tr></thead><tbody>{cycleOrders.map((order) => {
-                const repeated = order.operationCode && (codeCount.get(order.operationCode) ?? 0) > 1;
-                return <tr key={order.id}>
-                  <td><strong className="admin-order-code">{order.orderCode}</strong></td>
-                  <td>{order.customerName || order.userId.slice(0, 8)}</td>
-                  <td>{zoneById(order.zoneId)?.name ?? order.district}</td>
-                  <td><strong>{formatMoney(order.total)}</strong>{order.paidBalance ? <small className="admin-cell-note">{formatMoney(order.paidBalance)} con saldo</small> : null}</td>
-                  <td>{order.paymentMethod === 'SALDO' ? 'Saldo' : `${order.paymentMethod === 'PLIN' ? 'Plin' : 'Yape'} ${order.operationCode}`}{repeated ? <small className="admin-cell-warning">Código repetido</small> : null}</td>
-                  <td><span className={`admin-order-status admin-order-status--${order.status === 'REGISTRADO' ? order.paymentStatus.toLowerCase() : order.status.toLowerCase()}`}>{statusLabel(order)}</span>{order.status === 'LIQUIDADO' ? <small className="admin-cell-note">costó {formatMoney(order.finalTotal ?? 0)} · devuelto {formatMoney(order.refundToBalance)}</small> : null}</td>
-                  <td>{order.status === 'REGISTRADO' && order.paymentStatus === 'POR_VERIFICAR' ? <button className="admin-row-button" type="button" onClick={() => void onVerify(order)}>Verificar</button> : <span className="admin-muted">—</span>}</td>
-                </tr>;
-              })}</tbody></table></div> : <div className="admin-orders-empty"><span className="admin-empty-icon"><Icon name="truck" size={23} /></span><div><strong>Este ciclo todavía no tiene pedidos</strong><p>Cuando los vecinos paguen con Yape o Plin, aparecerán aquí para verificar el código.</p></div></div>}
-
-              <div className="admin-settle">
-                {settlement ? <div className="admin-settle-result">
-                  <strong>Ciclo {cycle} liquidado</strong>
-                  <p>Volvió a saldo {formatMoney(settlement.totalToBalance)} · a reembolsar por Yape o Plin {formatMoney(settlement.totalToMethod)}.</p>
-                  {settlement.products.length ? <ul>{settlement.products.map((item) => <li key={item.productId}>{productName(item.productId)}: {item.totalQuantity} {productUnit(item.productId)} entre todos · {item.tierFrom ? `tramo desde ${item.tierFrom}` : 'sin tramo'} · {formatMoney(item.finalPrice)}</li>)}</ul> : null}
-                </div> : pending.length ? <>
-                  <p>{cycleOpen && cycle === currentCycle ? 'El ciclo sigue abierto. Liquida después de la entrega del sábado.' : 'Liquidar calcula el precio final por tramo, el envío real por zona y devuelve el ahorro como saldo.'}</p>
-                  {confirming ? <div className="admin-settle-actions"><button className="primary-button" type="button" disabled={busy} onClick={() => void settle()}>{busy ? 'Liquidando…' : `Confirmar: liquidar ${pending.length} pedidos`}</button><button className="secondary-button" type="button" onClick={() => setConfirming(false)}>Cancelar</button></div> : <button className="primary-button" type="button" onClick={() => setConfirming(true)}>Liquidar ciclo {cycle} <Icon name="arrow" size={17} /></button>}
-                </> : <p>No quedan pedidos por liquidar en este ciclo.</p>}
-              </div>
-            </section>
-
-            <section className="admin-card" id="admin-refunds" aria-labelledby="admin-refunds-title">
-              <div className="admin-card-heading"><div><span className="admin-eyebrow">Devoluciones</span><h2 id="admin-refunds-title">Por devolver a Yape o Plin</h2><p>Zonas que no llegaron al mínimo y cancelaciones con devolución al medio de pago. Plazo: hasta 30 días.</p></div><span className="admin-order-count">{refunds.length} pendientes</span></div>
-              {refunds.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th scope="col">Pedido</th><th scope="col">Vecino</th><th scope="col">Motivo</th><th scope="col">Monto</th><th scope="col">Acción</th></tr></thead><tbody>{refunds.map((order) => <tr key={order.id}><td><strong className="admin-order-code">{order.orderCode}</strong></td><td>{order.customerName || order.userId.slice(0, 8)}</td><td>{order.status === 'NO_ATENDIDO' ? 'Zona sin mínimo' : 'Cancelación'}</td><td><strong>{formatMoney(order.refundToMethod)}</strong> a {order.paymentMethod === 'PLIN' ? 'Plin' : 'Yape'}</td><td><button className="admin-row-button" type="button" onClick={() => void onRefundPaid(order)}>Marcar devuelto</button></td></tr>)}</tbody></table></div> : <p className="admin-muted">No hay devoluciones pendientes.</p>}
-            </section>
-
-            <section className="admin-layout-grid" aria-label="Gestión de catálogo y operación">
-              <div className="admin-card admin-catalog-card" id="admin-catalog">
-                <div className="admin-card-heading"><div><span className="admin-eyebrow">Inventario</span><h2>Catálogo</h2><p>Precio máximo y lo que el proveedor puede vender este ciclo.</p></div><span className="admin-save-note"><span className="admin-save-dot" />Guardado automático</span></div>
-                <div className="admin-toolbar"><label className="admin-search"><Icon name="search" size={17} /><span className="sr-only">Buscar en el catálogo</span><input type="search" value={catalogQuery} onChange={(event) => setCatalogQuery(event.target.value)} placeholder="Buscar producto" autoComplete="off" /></label><label className="admin-filter"><span className="sr-only">Filtrar inventario</span><select value={stockFilter} onChange={(event) => setStockFilter(event.target.value as StockFilter)}><option value="all">Todos los productos</option><option value="low">Solo stock bajo</option></select></label></div>
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
-                    <caption className="sr-only">Catálogo editable de Yapa</caption>
-                    <thead><tr><th scope="col">Producto</th><th scope="col">Precio máximo</th><th scope="col">Tramos</th><th scope="col">Stock</th><th scope="col">Estado</th></tr></thead>
-                    <tbody>
-                      {visibleProducts.map((product) => {
-                        const isLowStock = product.stock < 15;
-                        return <tr key={product.id}><td><div className="admin-product-cell"><span className={`admin-product-art product-visual--${product.art}`}><img src={product.image} alt="" width="720" height="720" /></span><span><strong>{product.name}</strong><small>por {product.unit}</small></span></div></td><td><label className="admin-inline-field"><span className="sr-only">Precio de {product.name}</span><span>S/</span><input type="number" min="0" step="0.1" value={product.price} onChange={(event) => onProductUpdate(product.id, { price: Number(event.target.value) })} inputMode="decimal" /></label></td><td><small className="admin-tiers">{product.tiers.slice(1).map((tier) => `${tier.from}+ ${formatMoney(tier.price)}`).join(' · ') || '—'}</small></td><td><label className="admin-inline-field"><span className="sr-only">Stock de {product.name}</span><input type="number" min="0" step="1" value={product.stock} onChange={(event) => onProductUpdate(product.id, { stock: Number(event.target.value) })} inputMode="numeric" /></label></td><td><span className={`admin-stock-status ${isLowStock ? 'is-low' : 'is-ok'}`}><i aria-hidden="true" />{isLowStock ? 'Reponer' : 'Disponible'}</span></td></tr>;
-                      })}
-                    </tbody>
-                  </table>
-                  {!visibleProducts.length ? <div className="admin-table-empty"><Icon name="search" size={21} /><strong>No encontramos productos</strong><span>Prueba con otra búsqueda o cambia el filtro.</span></div> : null}
-                </div>
-              </div>
-
-              <aside className="admin-side-stack">
-                <section className="admin-card admin-operation-card"><div className="admin-card-heading"><div><span className="admin-eyebrow">Despacho</span><h2>Ventanas por zona</h2></div><Icon name="truck" size={21} /></div><div className="admin-operation-day"><strong>Sábado</strong><span>Yapa asigna la ventana; recibe la portería</span></div><div className="admin-window-list">{deliveryWindows.map((window) => <div key={window.code}><span>{window.label}</span><small>{zones.filter((zone) => zone.active && zone.deliveryWindow === window.code).map((zone) => zone.name).join(', ') || 'sin zonas'}</small></div>)}</div></section>
-                <section className="admin-card admin-coverage-card"><span className="admin-eyebrow">Cobertura piloto</span><h2>Distritos activos</h2><div className="admin-district-list">{SUPPORTED_DISTRICTS.map((district) => <span key={district}><Icon name="pin" size={14} />{district}</span>)}</div><p>Parada de S/ 40 por zona, repartida entre sus pedidos con tope de S/ 5.</p></section>
-              </aside>
-            </section>
+            {section === 'resumen' ? <Summary {...props} /> : null}
+            {section === 'armado' ? <Packing {...props} /> : null}
+            {section === 'reclamos' ? <Claims {...props} /> : null}
+            {section === 'devoluciones' ? <Refunds {...props} /> : null}
+            {section === 'conciliacion' ? <Balance {...props} /> : null}
+            {section === 'metricas' ? <Metrics {...props} /> : null}
+            {section === 'catalogo' ? <CatalogAdmin {...props} /> : null}
+            {section === 'referencias' ? <References {...props} /> : null}
+            {section === 'vecinos' ? <Neighbors {...props} /> : null}
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+interface SectionProps {
+  cycle: string;
+  setCycle: (cycle: string) => void;
+  run: (action: () => Promise<unknown>, success: string) => Promise<boolean>;
+  notify: AdminPanelProps['notify'];
+}
+
+function Summary({ cycle, setCycle, run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  const [confirming, setConfirming] = useState(false);
+  const [result, setResult] = useState<Raw | null>(null);
+  useEffect(() => { setConfirming(false); setResult(null); }, [cycle]);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const pending: Order[] = data.por_verificar.map(toOrder);
+  const orders: Order[] = data.pedidos.map(toOrder);
+  const k = data.indicadores;
+  const verify = (order: Order) => run(() => api.post(`/api/admin/pedidos/${order.id}/verificar`), `Pago del pedido ${order.id} verificado.`).then(() => reload());
+  const settle = async () => {
+    try {
+      setResult(await api.post<Raw>(`/api/admin/ciclos/${data.ciclo}/liquidar`));
+      notify(`Semana ${data.ciclo} liquidada.`, 'success');
+      setConfirming(false);
+      void reload();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudo liquidar.', 'warning');
+    }
+  };
+  return (
+    <>
+      <section className="admin-intro"><div><span className="admin-eyebrow">Semana {data.ciclo}</span><h2>{data.abierto ? 'El ciclo recibe pedidos hasta el miércoles 20:00' : 'El ciclo ya no recibe pedidos'}</h2><p>Verifica los pagos con el código YP que cada vecino pone en su Yape o Plin. Después de la entrega, liquida para devolver el ahorro.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <section className="admin-kpis" aria-label="Indicadores de la semana">
+        <div className="admin-kpi"><span className="admin-kpi-label">Pedidos de la semana</span><strong>{k.pedidos}</strong><small>sin cancelados</small></div>
+        <div className={`admin-kpi ${k.por_verificar ? 'admin-kpi--attention' : ''}`}><span className="admin-kpi-label">Pagos por verificar</span><strong>{k.por_verificar}</strong><small>{k.por_verificar ? 'busca el código YP en tu Yape' : 'todo verificado'}</small></div>
+        <div className="admin-kpi"><span className="admin-kpi-label">Dinero verificado</span><strong>{formatMoney(num(k.verificado))}</strong><small>Yape y Plin</small></div>
+        <div className="admin-kpi"><span className="admin-kpi-label">Vecinos con pedido</span><strong>{k.vecinos}</strong><small>esta semana</small></div>
+      </section>
+
+      <Card eyebrow="Mínimo de 8 por grupo" title="¿Qué grupos llegan?">
+        <div className="admin-groups">{data.grupos.map((g: Raw) => <div className="admin-group" key={g.grupo}><div><strong>{g.zonas.join(' + ')}</strong><small>{g.grupo}</small></div><div className="admin-group-count"><span className={g.verificados >= g.minimo ? 'is-ready' : ''}>{g.verificados} / {g.minimo}</span><div className="progress-track"><span style={{ width: `${Math.min(g.verificados / g.minimo, 1) * 100}%` }} /></div></div></div>)}</div>
+      </Card>
+
+      <Card eyebrow="Caja" title={`Pagos por verificar (${pending.length})`}>
+        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Yapea</th><th>Código en el mensaje</th><th /></tr></thead><tbody>{pending.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td><strong>{formatMoney(o.toPay)}</strong> <small>{o.method === 'PLIN' ? 'Plin' : 'Yape'}</small></td><td><code>{o.paymentCode}</code></td><td><button className="admin-row-button" type="button" onClick={() => void verify(o)}><Icon name="check" size={15} /> Verificar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todo verificado" text="Cuando un vecino pida, su código YP aparecerá aquí." />}
+      </Card>
+
+      <Card eyebrow="Semana" title={`Pedidos (${orders.length})`}>
+        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Zona</th><th>Pagó</th><th>Estado</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td>{o.zoneId}</td><td>{formatMoney(o.total)}{o.withBalance ? <small className="admin-cell-note">{formatMoney(o.withBalance)} con saldo</small> : null}</td><td><span className={`admin-order-status admin-order-status--${o.status === 'REGISTRADO' ? o.payment.toLowerCase() : o.status.toLowerCase()}`}>{o.status === 'REGISTRADO' && o.payment === 'POR_VERIFICAR' ? 'Por verificar' : statusLabel(o)}</span>{o.settlement ? <small className="admin-cell-note">costó {formatMoney(o.settlement.cost)} · devuelto {formatMoney(o.settlement.returned)}</small> : null}</td></tr>)}</tbody></table></div> : <Empty icon="truck" title="Esta semana todavía no tiene pedidos" text="Aparecerán apenas los vecinos confirmen." />}
+        <div className="admin-settle">
+          {result ? <div className="admin-settle-result"><strong>Semana {result.ciclo} liquidada</strong><p>Volvió a saldo {formatMoney(num(result.a_saldo))} · a reembolsar por Yape o Plin {formatMoney(num(result.reembolsado))}.</p><ul>{result.productos.map((p: Raw) => <li key={p.id}>{p.id}: {p.total} entre todos · tramo desde {p.tramo} · {formatMoney(num(p.precio_final))}</li>)}</ul></div>
+            : data.liquidado ? <p>Esta semana ya está liquidada.</p>
+              : confirming ? <div className="admin-settle-actions"><button className="primary-button" type="button" onClick={() => void settle()}>Sí, liquidar la semana {data.ciclo}</button><button className="secondary-button" type="button" onClick={() => setConfirming(false)}>Cancelar</button></div>
+                : <><p>Liquidar calcula el precio final por tramo, el envío real por zona, los beneficios del admin de zona y devuelve el ahorro como saldo. Exige que todas las zonas estén entregadas o marcadas como fallidas.</p><button className="primary-button" type="button" disabled={!orders.length} onClick={() => setConfirming(true)}>Liquidar semana {data.ciclo} <Icon name="arrow" size={17} /></button></>}
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function PhotoForm({ label, onSend, children }: { label: string; onSend: (form: FormData) => Promise<boolean>; children?: ReactNode }) {
+  const [busy, setBusy] = useState(false);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const element = event.currentTarget;
+    setBusy(true);
+    const ok = await onSend(new FormData(element));
+    setBusy(false);
+    if (ok) element.reset();
+  };
+  return <form className="photo-form" onSubmit={submit}>{children}<label className="photo-field"><Icon name="camera" size={18} /><span>Foto</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required /></label><button className="admin-row-button" type="submit" disabled={busy}>{busy ? 'Subiendo…' : label}</button></form>;
+}
+
+function Packing({ cycle, setCycle, run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>(`/api/admin/armado${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  const [failure, setFailure] = useState('PORTERIA_CERRADA');
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const orders: Order[] = data.pedidos.map(toOrder);
+  const send = (path: string, form: FormData, extra: Record<string, string>, success: string) => {
+    for (const [key, value] of Object.entries(extra)) form.set(key, value);
+    return run(() => api.post(path, form), success).then(async (ok) => { await reload(); return ok; });
+  };
+  return (
+    <>
+      <section className="admin-intro"><div><span className="admin-eyebrow">Sábado</span><h2>Foto de cada bolsa y de cada entrega</h2><p>Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <Card eyebrow="Paradas" title={`Entregas por zona (${data.paradas.length})`}>
+        {data.paradas.length ? <div className="stop-list">{data.paradas.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
+          <div className="stop-card" key={zone.id}>
+            <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
+            {!p.entrega && !p.fallida ? <div className="stop-actions">
+              <PhotoForm label="Registrar entrega" onSend={(form) => send('/api/admin/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.name} registrada.`)}><label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contact} required /></label></PhotoForm>
+              <details><summary>No pudimos entregar</summary><div className="segmented">{FAILURES.map((f) => <button key={f.value} type="button" className={failure === f.value ? 'is-active' : ''} onClick={() => setFailure(f.value)}>{f.label}</button>)}</div><PhotoForm label="Registrar entrega fallida" onSend={(form) => send('/api/admin/entregas-fallidas', form, { ciclo: data.ciclo, zona: zone.id, motivo: failure }, 'Entrega fallida registrada: se devuelve todo menos el envío.')} /></details>
+            </div> : null}
+          </div>); })}</div> : <Empty icon="truck" title="No hay zonas que se atiendan" text="Ningún grupo llegó al mínimo en esta semana." />}
+      </Card>
+      <Card eyebrow="Armado" title={`Bolsas por pedido (${orders.length})`}>
+        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Productos</th><th>Bolsas</th><th>Foto de bolsa</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}<small className="admin-cell-note">{o.zoneId}</small></td><td><small>{o.lines.map((l) => `${l.name} ${formatQuantity(l.quantity)}`).join(' · ')}</small></td><td>{o.bags?.length ? <span className="state-pill state-pill--ok">{o.bags.length}</span> : <span className="state-pill">0</span>}</td><td><PhotoForm label="Agregar bolsa" onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(o.id) }, `Bolsa del pedido ${o.id} registrada.`)} /></td></tr>)}</tbody></table></div> : <Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." />}
+      </Card>
+    </>
+  );
+}
+
+function Claims({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/reclamos', notify);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const review = (id: number, decision: 'aprobar' | 'rechazar') => run(() => api.post(`/api/admin/reclamos/${id}/revisar`, { decision }), `Reclamo ${id} ${decision === 'aprobar' ? 'aprobado: se devuelve como saldo' : 'rechazado'}.`).then(() => reload());
+  const pending = data.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE');
+  const done = data.reclamos.filter((c: Raw) => c.estado !== 'PENDIENTE');
+  return (
+    <>
+      <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
+        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th /></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><small>{c.foto}</small></td><td className="row-actions"><button className="admin-row-button" type="button" onClick={() => void review(c.id, 'aprobar')}>Aprobar</button><button className="text-button" type="button" onClick={() => void review(c.id, 'rechazar')}>Rechazar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
+      </Card>
+      {done.length ? <Card eyebrow="Historial" title="Revisados"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></Card> : null}
+    </>
+  );
+}
+
+function Refunds({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/devoluciones', notify);
+  const [codes, setCodes] = useState<Record<number, string>>({});
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const pay = (id: number) => run(() => api.post(`/api/admin/devoluciones/${id}/pagar`, { codigo: codes[id] ?? '' }), `Devolución ${id} marcada como pagada.`).then(() => reload());
+  return (
+    <Card eyebrow="Plazo: hasta 30 días" title={`Por devolver a Yape o Plin (${data.devoluciones.length})`}>
+      {data.devoluciones.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Motivo</th><th>Monto</th><th>Vence</th><th>Código de tu Yape</th><th /></tr></thead><tbody>{data.devoluciones.map((r: Raw) => <tr key={r.id}><td>{r.id}</td><td>{r.vecino}</td><td>{REASONS[r.motivo] ?? r.motivo}</td><td><strong>{formatMoney(num(r.monto))}</strong></td><td>{r.vence ?? '—'}</td><td><input className="admin-inline-input" value={codes[r.id] ?? ''} onChange={(event) => setCodes((c) => ({ ...c, [r.id]: event.target.value }))} placeholder="Ej. 04512873" inputMode="numeric" /></td><td><button className="admin-row-button" type="button" disabled={!codes[r.id]} onClick={() => void pay(r.id)}>Marcar pagado</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="No hay devoluciones pendientes" text="Zonas sin mínimo, cancelaciones y saldos pedidos de vuelta aparecen aquí." />}
+    </Card>
+  );
+}
+
+function Balance({ notify }: SectionProps) {
+  const { data } = useLoad<Raw>('/api/admin/conciliacion', notify);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const rows: Array<[string, string]> = [['Recibido por Yape y Plin', data.recibido], ['En curso (pedidos sin liquidar)', data.en_curso], ['Retenido por Yapa', data.retenido], ['Deuda con vecinos (saldos y devoluciones)', data.deuda], ['Devoluciones ya pagadas', data.devoluciones_pagadas]];
+  return (
+    <>
+      <section className={`balance-banner ${data.cuadra ? 'is-ok' : 'is-bad'}`}><Icon name={data.cuadra ? 'ok' : 'warning'} size={34} weight="duotone" /><div><strong>{data.cuadra ? 'El dinero cuadra al céntimo' : 'No cuadra: revisar antes de seguir'}</strong><span>recibido = en curso + retenido + deuda + devoluciones pagadas · diferencia {formatMoney(num(data.diferencia))}</span></div></section>
+      <Card eyebrow="Conciliación" title="De dónde viene y a dónde va"><table className="admin-table balance-table"><tbody>{rows.map(([label, value]) => <tr key={label}><td>{label}</td><td><strong>{formatMoney(num(value))}</strong></td></tr>)}<tr className="is-total"><td>Diferencia</td><td><strong>{formatMoney(num(data.diferencia))}</strong></td></tr></tbody></table></Card>
+    </>
+  );
+}
+
+function Metrics({ notify }: SectionProps) {
+  const [cycle, setCycle] = useState(''); // propio de Métricas: por defecto, la última semana cerrada
+  const [data, setData] = useState<Raw | null>(null);
+  const [error, setError] = useState('');
+  const [cycles, setCycles] = useState<string[]>([]);
+  useEffect(() => {
+    let active = true;
+    api.get<Raw>('/api/admin/resumen').then((s) => { if (active) { setCycles(s.ciclos); setCycle((c) => c || (s.ciclos.find((x: string) => x !== s.ciclo) ?? s.ciclo)); } }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!cycle) return;
+    api.get<Raw>(`/api/admin/metricas?ciclo=${cycle}`).then((d) => { setData(d); setError(''); }).catch((e) => { setData(null); setError(e instanceof Error ? e.message : 'Sin datos'); });
+  }, [cycle, notify]);
+  const margins = data?.margenes ?? [];
+  const avg = margins.length ? margins.reduce((s: number, m: Raw) => s + num(m.margen), 0) / margins.length : 0;
+  return (
+    <>
+      <section className="admin-intro"><div><span className="admin-eyebrow">Piloto</span><h2>¿El modelo se sostiene?</h2><p>Margen por pedido antes de costos operativos, ahorro entregado y recompra de la semana 4.</p></div><CycleSelect cycles={cycles} value={cycle} onChange={setCycle} /></section>
+      {error ? <Empty icon="info" title="Esta semana aún no tiene métricas" text={error} /> : data ? <>
+        <section className="admin-kpis">
+          <div className="admin-kpi"><span className="admin-kpi-label">Margen promedio</span><strong>{formatMoney(avg)}</strong><small>por pedido</small></div>
+          <div className="admin-kpi"><span className="admin-kpi-label">Ahorro entregado</span><strong>{formatMoney(num(data.ahorro.total))}</strong><small>volumen {formatMoney(num(data.ahorro.volumen))} · envío {formatMoney(num(data.ahorro.envio))}</small></div>
+          <div className="admin-kpi"><span className="admin-kpi-label">Frente al supermercado</span><strong>{data.frente_a.SUPERMERCADO?.porcentaje ? `${data.frente_a.SUPERMERCADO.porcentaje} %` : '—'}</strong><small>{data.frente_a.SUPERMERCADO?.canastas ?? 0} canastas comparadas</small></div>
+          <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? data.recompra.error.mensaje : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
+        </section>
+        <Card eyebrow="Por pedido" title="Margen antes de costos operativos"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th><th>Margen</th></tr></thead><tbody>{margins.map((m: Raw) => <tr key={m.pedido} className={m.negativo ? 'is-negative' : ''}><td>{m.pedido}</td><td>{formatMoney(num(m.cobrado))}</td><td>{formatMoney(num(m.reclamos))}</td><td>{formatMoney(num(m.proveedor))}</td><td>{formatMoney(num(m.parada))}</td><td><strong>{formatMoney(num(m.margen))}</strong></td></tr>)}</tbody></table></div></Card>
+      </> : <p className="admin-muted">Cargando…</p>}
+    </>
+  );
+}
+
+function CatalogAdmin({ run, notify }: SectionProps) {
+  const [week, setWeek] = useState(''); // por defecto, la semana siguiente (S-117)
+  const { data, reload } = useLoad<Raw>(`/api/admin/catalogo${week ? `?ciclo=${week}` : ''}`, notify);
+  const [text, setText] = useState('');
+  useEffect(() => { if (data) setText(data.lista); }, [data]);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const deactivate = (id: string) => run(() => api.post('/api/admin/catalogo/desactivar', { ciclo: data.ciclo, producto: id }), 'Producto desactivado para esa semana.').then(() => reload());
+  const publish = () => run(() => api.post('/api/admin/catalogo', { ciclo: data.ciclo, lista: text }), `Catálogo de la semana ${data.ciclo} publicado.`).then(() => reload());
+  return (
+    <>
+      <section className="admin-intro"><div><span className="admin-eyebrow">Proveedor aliado</span><h2>Semana {data.ciclo} · {data.publicado ? 'publicado' : 'usa el catálogo base'}</h2><p>Precio máximo = primer tramo del proveedor más la comisión. Se publica antes del lunes 00:00.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setWeek} /></section>
+      <Card eyebrow="Inventario" title={`Productos (${data.productos.length})`}>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th><th>Máximo</th><th>Estado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id} className={p.activo ? '' : 'is-muted'}><td><strong>{p.nombre}</strong><small className="admin-cell-note">{p.id} · por {p.unidad}</small></td><td>{formatMoney(num(p.precio_max))}</td><td><small className="admin-tiers">{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td><td>{p.maximo} {p.unidad}</td><td>{p.activo ? <button className="text-button" type="button" onClick={() => void deactivate(p.id)}>Desactivar</button> : <span className="state-pill">Desactivado</span>}</td></tr>)}</tbody></table></div>
+      </Card>
+      <details className="admin-card plegable"><summary>Publicar la lista del proveedor</summary><p className="admin-muted">Una línea por producto, separada por comas. Se publica todo o nada.</p><textarea className="admin-textarea" rows={10} value={text} onChange={(event) => setText(event.target.value)} /><button className="primary-button" type="button" onClick={() => void publish()}>Publicar semana {data.ciclo}</button></details>
+    </>
+  );
+}
+
+function References({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/referencias', notify);
+  const [product, setProduct] = useState('');
+  const [kind, setKind] = useState<'MERCADO' | 'SUPERMERCADO'>('MERCADO');
+  const [price, setPrice] = useState('');
+  const [source, setSource] = useState('');
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const save = (event: FormEvent) => { event.preventDefault(); void run(() => api.post('/api/admin/referencias', { producto: product || data.productos[0]?.id, tipo: kind, precio: price, fuente: source, fecha: date }), 'Precio de referencia guardado.').then((ok) => { if (ok) { setPrice(''); void reload(); } }); };
+  const cell = (ref: Raw | undefined) => ref ? <><strong>{formatMoney(num(ref.precio))}</strong><small className="admin-cell-note">{ref.fuente} · {ref.visto} · {Math.round(num(ref.ahorro))} % de ahorro</small></> : <span className="admin-muted">—</span>;
+  return (
+    <>
+      <Card eyebrow="Vigencia: 14 días" title="¿Cuánto costaría en otro lado?"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo Yapa</th><th>Mercado de barrio</th><th>Supermercado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id}><td><strong>{p.nombre}</strong></td><td>{formatMoney(num(p.precio_max))}</td><td>{cell(p.referencias.MERCADO)}</td><td>{cell(p.referencias.SUPERMERCADO)}</td></tr>)}</tbody></table></div></Card>
+      <form className="admin-card" onSubmit={save}><div className="admin-card-heading"><div><span className="admin-eyebrow">Trabajo de campo</span><h2>Registrar un precio visto</h2></div></div>
+        <div className="form-grid"><label className="checkout-field"><span>Producto</span><select value={product} onChange={(event) => setProduct(event.target.value)}>{data.productos.map((p: Raw) => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
+          <div className="checkout-field"><span>Dónde</span><div className="segmented">{(['MERCADO', 'SUPERMERCADO'] as const).map((k) => <button type="button" key={k} className={kind === k ? 'is-active' : ''} onClick={() => setKind(k)}>{k === 'MERCADO' ? 'Mercado de barrio' : 'Supermercado'}</button>)}</div></div>
+          <label className="checkout-field"><span>Precio (S/)</span><input value={price} onChange={(event) => setPrice(event.target.value)} inputMode="decimal" placeholder="0.00" required /></label>
+          <label className="checkout-field"><span>Fuente</span><input value={source} onChange={(event) => setSource(event.target.value)} placeholder="Ej. Mercado de Lince" required /></label>
+          <label className="checkout-field"><span>Fecha</span><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required /></label></div>
+        <button className="primary-button" type="submit">Guardar precio</button></form>
+    </>
+  );
+}
+
+function Neighbors({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/vecinos', notify);
+  const { data: zoneData } = useLoad<Raw>('/api/zonas', notify);
+  const [form, setForm] = useState({ nombre: '', celular: '', zona: '', referido: '', consentimiento: false });
+  const [created, setCreated] = useState<Raw | null>(null);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const zones: Zone[] = (zoneData?.zonas ?? []).map(toZone);
+  const register = async (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      const result = await api.post<Raw>('/api/admin/vecinos', { ...form, zona: form.zona || zones[0]?.id, celular: form.celular.replace(/\s/g, '') });
+      setCreated({ ...result, celular: form.celular.replace(/\s/g, '') });
+      setForm({ nombre: '', celular: '', zona: form.zona, referido: '', consentimiento: false });
+      notify(`Vecino ${result.id} registrado.`, 'success');
+      void reload();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudo registrar.', 'warning');
+    }
+  };
+  const resetPin = (id: number, celular: string | null) => run(async () => { const r = await api.post<Raw>(`/api/admin/vecinos/${id}/pin`); setCreated({ ...r, nombre: data.vecinos.find((v: Raw) => v.id === id)?.nombre, celular }); }, 'PIN nuevo generado.');
+  const welcome = (c: Raw) => `Hola ${String(c.nombre ?? '').split(' ')[0]}, ya estás en Yapa. Entra con tu número de cliente ${c.id} y tu PIN ${c.pin}. Te recomendamos cambiarlo al entrar.`;
+  return (
+    <>
+      {created ? <section className="pin-banner"><Icon name="ok" size={30} weight="duotone" /><div><strong>Cliente {created.id} · PIN {created.pin}</strong><span>Se muestra una sola vez. Envíaselo por WhatsApp.</span></div><a className="primary-button" href={`https://wa.me/${created.celular ? `51${created.celular}` : ''}?text=${encodeURIComponent(welcome(created))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Enviar</a><button className="icon-button" type="button" onClick={() => setCreated(null)} aria-label="Cerrar"><Icon name="close" size={18} /></button></section> : null}
+      <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><span className="admin-eyebrow">Ley 29733</span><h2>Dar de alta a un vecino</h2></div></div>
+        <div className="form-grid"><label className="checkout-field"><span>Nombre</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label>
+          <label className="checkout-field"><span>Celular</span><input value={form.celular} onChange={(event) => setForm({ ...form, celular: event.target.value.replace(/[^\d\s]/g, '') })} inputMode="numeric" placeholder="9XX XXX XXX" required /></label>
+          <label className="checkout-field"><span>Zona</span><select value={form.zona} onChange={(event) => setForm({ ...form, zona: event.target.value })}>{zones.map((z) => <option key={z.id} value={z.id}>{z.name} · {z.district}</option>)}</select></label>
+          <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
+        <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre y celular para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
+        <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
+      <Card eyebrow="Padrón" title={`Vecinos (${data.vecinos.length})`}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th /></tr></thead><tbody>{data.vecinos.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div></Card>
+    </>
   );
 }

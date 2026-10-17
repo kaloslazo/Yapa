@@ -15,7 +15,7 @@ export function HowItWorksSection() {
           </li>
           <li>
             <span className="step-number">2</span>
-            <div><h3>Paga con Yape o Plin</h3><p>Antes del miércoles a las 20:00, con el código de operación. Si tu zona no llega a 8 pedidos, te devolvemos el 100 %.</p></div>
+            <div><h3>Paga con Yape o Plin</h3><p>Antes del miércoles a las 20:00, con el código que te damos al confirmar. Si tu grupo no llega a 8 pedidos, te devolvemos el 100 %.</p></div>
           </li>
           <li>
             <span className="step-number">3</span>

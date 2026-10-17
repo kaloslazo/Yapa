@@ -1,365 +1,288 @@
-import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_ZONE_ID, products as initialCatalog, windowLabel, zoneById, zones } from './data/catalog';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthDialog, type AuthAudience } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
-import { CartPanel } from './components/CartPanel';
+import { CartPanel, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorksSection } from './components/EditorialSections';
 import { Icon } from './components/Icon';
-import { OrdersPage } from './components/OrdersPage';
-import { getCurrentAccount, getSessionAccount, isAdminAccount, saveAccountZone } from './services/auth';
-import { createOrder, loadCatalog, loadOrders, saveLocalCatalog, seedLocalDemo, updateOrder, updateProduct as persistProductUpdate, withTiers } from './services/database';
-import { persistenceMode, appwriteReady } from './services/appwrite';
-import type { AccountProfile, CartState, Category, OrderConfirmation, OrderRecord, OrderSelection, Product, RefundDestination } from './types';
-import { categories } from './types';
-import { balanceOf, cancelOrder, canCheckout, createOrderCode, cycleId, isCycleOpen, maxPerLine, MIN_SUBTOTAL, quoteOrder, settleCycle, validateCheckout } from './utils/domain';
-import { now } from './utils/clock';
+import { OrdersPage, type Claimable, type ClaimRecord, type MyOrders } from './components/OrdersPage';
+import { ZonePage, type MyZone } from './components/ZonePage';
+import { api, ApiError } from './services/api';
+import { toAccount, toCycle, toOrder, toProduct, toQuote, toZone } from './services/mappers';
+import type { Account, CartState, CycleState, Order, Product, Quote, RefundDestination, Zone } from './types';
+import { cartSubtotal, stepDown, stepUp } from './utils/cart';
+import { canOpenZonePanel, homeFor } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
-import { formatMoney } from './utils/format';
 import './styles.css';
 
-const DEFAULT_SELECTION: OrderSelection = {
-  zoneId: DEFAULT_ZONE_ID,
-  reference: '',
-  paymentMethod: 'YAPE',
-  operationCode: '',
-  useBalance: 0,
-};
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Raw = Record<string, any>;
+type View = 'store' | 'orders' | 'cart' | 'zone';
 
-type CustomerView = 'store' | 'orders' | 'cart';
-
-function initialCustomerView(): CustomerView {
-  if (window.location.hash === '#orders') return 'orders';
-  if (window.location.hash === '#cart') return 'cart';
-  return 'store';
-}
-
-function initialCategory(): Category {
-  const value = new URLSearchParams(window.location.search).get('category');
-  return value && categories.includes(value as Category) ? value as Category : 'Todos';
-}
+const viewFromHash = (): View => ({ '#orders': 'orders', '#cart': 'cart', '#zone': 'zone' } as Record<string, View>)[window.location.hash] ?? 'store';
 
 export default function App() {
-  const [category, setCategory] = useState<Category>(initialCategory);
-  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
-  const [catalog, setCatalog] = useState<Product[]>(() => readStored('yapa.catalog', initialCatalog).map(withTiers));
+  const [catalog, setCatalog] = useState<Product[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [state, setState] = useState<CycleState | null>(null);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [account, setAccount] = useState<Account | null>(null);
   const [cart, setCart] = useState<CartState>(() => readStored('yapa.cart', {}));
-  const [orders, setOrders] = useState<OrderRecord[]>([]);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
+  const [category, setCategory] = useState('Todos');
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<View>(viewFromHash);
   const [adminOpen, setAdminOpen] = useState(() => window.location.hash === '#admin');
-  const [customerView, setCustomerView] = useState<CustomerView>(initialCustomerView);
-  const [authAudience, setAuthAudience] = useState<AuthAudience>('user');
-  const [authReturnView, setAuthReturnView] = useState<CustomerView | null>(null);
-  const [confirmation, setConfirmation] = useState<OrderConfirmation | null>(null);
-  const [selection, setSelection] = useState<OrderSelection>(DEFAULT_SELECTION);
-  const [account, setAccount] = useState<AccountProfile | null>(() => appwriteReady ? null : getCurrentAccount());
-  const [dataReady, setDataReady] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authAudience, setAuthAudience] = useState<AuthAudience>('vecino');
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [confirmation, setConfirmation] = useState<Order | null>(null);
+  const [myOrders, setMyOrders] = useState<MyOrders | null>(null);
+  const [claimables, setClaimables] = useState<Claimable[]>([]);
+  const [claims, setClaims] = useState<ClaimRecord[]>([]);
+  const [myZone, setMyZone] = useState<MyZone | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: 'neutral' | 'success' | 'warning' } | null>(null);
+  const [offline, setOffline] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    Promise.all([loadCatalog(), getSessionAccount()]).then(([nextCatalog, nextAccount]) => {
-      if (!active) return;
-      setCatalog(nextCatalog);
-      setAccount(nextAccount);
-      setDataReady(true);
-    }).catch((error) => {
-      if (!active) return;
-      setDataReady(true);
-      setToast({ message: error instanceof Error ? error.message : 'No pudimos cargar la información de Yapa.', tone: 'warning' });
+  const notify = useCallback((message: string, tone: 'neutral' | 'success' | 'warning' = 'neutral') => setToast({ message, tone }), []);
+  const fail = useCallback((error: unknown) => notify(error instanceof Error ? error.message : 'Algo salió mal.', 'warning'), [notify]);
+
+  // --- carga ---
+
+  const loadPublic = useCallback(async () => {
+    const [estado, catalogo, zonas] = await Promise.all([api.get<Raw>('/api/estado'), api.get<Raw>('/api/catalogo'), api.get<Raw>('/api/zonas')]);
+    setState(toCycle(estado));
+    setDistricts(estado.distritos);
+    setCatalog(catalogo.productos.map(toProduct));
+    setZones(zonas.zonas.map(toZone));
+  }, []);
+
+  const loadAccount = useCallback(async () => {
+    try {
+      const me = toAccount(await api.get<Raw>('/api/sesion'));
+      api.setCsrf(me.csrf);
+      setAccount(me);
+      return me;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) { setAccount(null); return null; }
+      throw error;
+    }
+  }, []);
+
+  const loadOrders = useCallback(async () => {
+    const [mine, rec] = await Promise.all([api.get<Raw>('/api/mis-pedidos'), api.get<Raw>('/api/reclamos')]);
+    setMyOrders({ orders: mine.pedidos.map(toOrder), balance: Number(mine.saldo), returned: Number(mine.devuelto_total), supermarketSaving: Number(mine.ahorro_supermercado), refunds: mine.devoluciones.map((r: Raw) => ({ id: r.id, amount: Number(r.monto), reason: r.motivo, status: r.estado })) });
+    setClaimables(rec.reclamables.map((c: Raw) => ({ order: c.pedido, product: c.producto, name: c.nombre, quantity: Number(c.cantidad) })));
+    setClaims(rec.reclamos.map((c: Raw) => ({ id: c.id, order: c.pedido, product: c.producto, quantity: Number(c.cantidad), reason: c.motivo, status: c.estado, returned: Number(c.devuelto) })));
+  }, []);
+
+  const loadZone = useCallback(async () => {
+    const raw = await api.get<Raw>('/api/mi-zona');
+    const a = raw.administra;
+    setMyZone({
+      zone: raw.zona ? toZone(raw.zona) : null,
+      referralCode: raw.codigo_referido,
+      radius: raw.radio_m,
+      mergeDistance: raw.union_m,
+      admin: a ? {
+        ...toZone(a),
+        neighbors: a.vecinos.length, // en el panel, "vecinos" es la lista, no el número
+        progress: { verified: a.avance.verificados, minimum: a.avance.minimo, cycle: a.avance.ciclo },
+        neighborsList: a.vecinos.map((v: Raw) => ({ id: v.id, name: v.nombre, ordered: v.pidio })),
+        nearby: a.cercanas.map((z: Raw) => ({ ...toZone(z), distance: z.distancia_m, sameGroup: z.mismo_grupo })),
+        requests: a.solicitudes.map((r: Raw) => ({ id: r.id, zone: r.zona, name: r.nombre })),
+        benefits: { freeDelivery: a.beneficios.envio_gratis, discountPct: Number(a.beneficios.descuento_pct), discountActive: a.beneficios.descuento_activo, discountUntil: a.beneficios.descuento_hasta },
+        referralCode: a.codigo_referido,
+      } : null,
     });
-    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    if (!dataReady) return;
-    if (!account) {
-      setOrders([]);
-      return;
-    }
-    let active = true;
-    loadOrders(account.id, isAdminAccount(account)).then((nextOrders) => {
-      if (active) setOrders(nextOrders);
-    }).catch((error) => {
-      if (active) setToast({ message: error instanceof Error ? error.message : 'No pudimos cargar tus pedidos.', tone: 'warning' });
-    });
-    return () => { active = false; };
-  }, [account, dataReady]);
+    Promise.all([loadPublic(), loadAccount()]).then(() => setOffline(false)).catch((error) => { setOffline(true); fail(error); });
+  }, [loadPublic, loadAccount, fail]);
 
   useEffect(() => {
-    saveLocalCatalog(catalog);
-  }, [catalog]);
+    if (!account || account.role === 'admin') { setMyOrders(null); setMyZone(null); return; }
+    if (view === 'orders') loadOrders().catch(fail);
+    if (view === 'zone') loadZone().catch(fail);
+  }, [account, view, loadOrders, loadZone, fail]);
 
-  useEffect(() => {
-    writeStored('yapa.cart', cart);
-  }, [cart]);
-
+  useEffect(() => { writeStored('yapa.cart', cart); }, [cart]);
   useEffect(() => {
     if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(null), 2800);
+    const timeout = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(timeout);
   }, [toast]);
-
   useEffect(() => {
-    const syncViewFromUrl = () => {
-      const hash = window.location.hash;
-      setAdminOpen(hash === '#admin');
-      setCustomerView(hash === '#orders' ? 'orders' : hash === '#cart' ? 'cart' : 'store');
-    };
-    window.addEventListener('hashchange', syncViewFromUrl);
-    window.addEventListener('popstate', syncViewFromUrl);
-    return () => {
-      window.removeEventListener('hashchange', syncViewFromUrl);
-      window.removeEventListener('popstate', syncViewFromUrl);
-    };
+    const sync = () => { setAdminOpen(window.location.hash === '#admin'); setView(viewFromHash()); };
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => { window.removeEventListener('hashchange', sync); window.removeEventListener('popstate', sync); };
   }, []);
 
-  useEffect(() => {
-    if (!dataReady || !adminOpen || (account && isAdminAccount(account))) return;
-    setAdminOpen(false);
-    setCustomerView('store');
-    if (window.location.hash === '#admin') window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#catalog`);
-  }, [account, adminOpen, dataReady]);
+  // --- navegación ---
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (category === 'Todos') params.delete('category');
-    else params.set('category', category);
-    if (query) params.set('q', query);
-    else params.delete('q');
-    const search = params.toString();
-    window.history.replaceState(null, '', `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`);
-  }, [category, query]);
-
-  const visibleProducts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return catalog.filter((product) => {
-      const matchesCategory = category === 'Todos' || product.category === category;
-      const matchesQuery = !normalizedQuery || `${product.name} ${product.category} ${product.detail}`.toLowerCase().includes(normalizedQuery);
-      return matchesCategory && matchesQuery;
-    });
-  }, [catalog, category, query]);
-
-  const lines = useMemo(() => Object.entries(cart).flatMap(([id, quantity]) => {
-    const product = catalog.find((item) => item.id === id);
-    return product ? [{ product, quantity }] : [];
-  }), [cart, catalog]);
-  const quote = useMemo(() => quoteOrder(lines), [lines]);
-  const subtotal = quote.subtotal;
-  const clock = now();
-  const currentCycle = cycleId(clock);
-  const cycleOpen = isCycleOpen(clock);
-  const myOrders = useMemo(() => orders.filter((order) => order.userId === account?.id), [orders, account]);
-  const balance = balanceOf(myOrders);
-  const accountZone = zoneById(account?.zoneId);
-  const initialSelection = useMemo(() => ({ ...selection, zoneId: account?.zoneId ?? selection.zoneId }), [selection, account]);
-
-  const addProduct = (product: Product) => {
-    const currentQuantity = cart[product.id] || 0;
-    if (currentQuantity >= product.stock) {
-      setToast({ message: `${product.name} no tiene más stock disponible.`, tone: 'warning' });
-      return;
-    }
-    if (currentQuantity >= maxPerLine(product)) {
-      setToast({ message: `Puedes pedir hasta ${maxPerLine(product)} ${product.unit} de ${product.name}.`, tone: 'warning' });
-      return;
-    }
-    setCart((current) => ({ ...current, [product.id]: (current[product.id] || 0) + 1 }));
-    setToast({ message: `${product.name} se agregó a tu canasta.`, tone: 'success' });
-  };
-
-  const decreaseProduct = (product: Product) => {
-    setCart((current) => {
-      const next = { ...current };
-      const quantity = (next[product.id] || 0) - 1;
-      if (quantity <= 0) delete next[product.id];
-      else next[product.id] = quantity;
-      return next;
-    });
-  };
-
-  const openCheckout = () => {
-    if (!account) {
-      openAuth('user');
-      setToast({ message: 'Ingresa a tu cuenta para registrar el pedido.', tone: 'neutral' });
-      return;
-    }
-    if (!canCheckout(subtotal)) {
-      setToast({ message: `Te faltan ${formatMoney(MIN_SUBTOTAL - subtotal)} para llegar al mínimo de S/ 50.00.`, tone: 'warning' });
-      return;
-    }
-    if (!cycleOpen) {
-      setToast({ message: 'El ciclo está cerrado: los pedidos se reciben de lunes a miércoles hasta las 20:00.', tone: 'warning' });
-      return;
-    }
-    setConfirmation(null);
-    setCheckoutOpen(true);
-  };
-
-  const registerOrder = async (nextSelection: OrderSelection) => {
-    if (!account) {
-      openAuth('user');
-      return;
-    }
-    const moment = now();
-    const error = validateCheckout({
-      subtotal: quote.subtotal, total: quote.total, zone: zoneById(nextSelection.zoneId), now: moment, orders: myOrders,
-      paymentMethod: nextSelection.paymentMethod, operationCode: nextSelection.operationCode, useBalance: nextSelection.useBalance,
-    });
-    if (error) throw new Error(error);
-    const buyer = account.zoneId === nextSelection.zoneId ? account : await saveAccountZone(account, nextSelection.zoneId);
-    if (buyer !== account) setAccount(buyer);
-    const nextOrder = await createOrder({ account: buyer, selection: nextSelection, lines, quote, cycleId: cycleId(moment), orderCode: createOrderCode(Date.now() % 1000000) });
-    setSelection({ ...nextSelection, operationCode: '', useBalance: 0 });
-    setOrders((current) => [nextOrder, ...current]);
-    setConfirmation(nextOrder);
-    setCart({});
-  };
-
-  const applyPatch = async (order: OrderRecord, patch: Partial<OrderRecord>) => {
-    await updateOrder(order.id, patch);
-    setOrders((current) => current.map((item) => (item.id === order.id ? { ...item, ...patch } : item)));
-  };
-
-  const cancel = async (order: OrderRecord, destination: RefundDestination) => {
-    try {
-      await applyPatch(order, cancelOrder(order, destination));
-      setToast({ message: `Pedido ${order.orderCode} cancelado.`, tone: 'success' });
-    } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'No pudimos cancelar el pedido.', tone: 'warning' });
-    }
-  };
-
-  const verify = async (order: OrderRecord) => {
-    try {
-      await applyPatch(order, { paymentStatus: 'VERIFICADO' });
-      setToast({ message: `Pago del pedido ${order.orderCode} verificado.`, tone: 'success' });
-    } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'No pudimos verificar el pago.', tone: 'warning' });
-    }
-  };
-
-  // liquidación: se calcula todo primero y recién después se guarda cada pedido
-  const settle = async (cycle: string) => {
-    const result = settleCycle(orders, cycle, zones, catalog);
-    for (const item of result.orders) {
-      const order = orders.find((candidate) => candidate.id === item.orderId);
-      if (order) await updateOrder(order.id, { status: item.status, finalTotal: item.finalTotal, deliveryFinal: item.deliveryFinal, refundToBalance: item.refundToBalance, refundToMethod: item.refundToMethod });
-    }
-    const byId = new Map(result.orders.map((item) => [item.orderId, item]));
-    setOrders((current) => current.map((order) => (byId.has(order.id) ? { ...order, ...byId.get(order.id) } : order)));
-    setToast({ message: `Ciclo ${cycle} liquidado: ${formatMoney(result.totalToBalance)} volvió a saldo.`, tone: 'success' });
-    return result;
-  };
-
-  const markRefundPaid = async (order: OrderRecord) => {
-    try {
-      await applyPatch(order, { refundPaidAt: new Date().toISOString() });
-    } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'No pudimos registrar la devolución.', tone: 'warning' });
-    }
-  };
-
-  const seedDemo = () => {
-    setOrders(seedLocalDemo(catalog, currentCycle));
-    setToast({ message: 'Se cargaron 13 pedidos de demo en el ciclo actual.', tone: 'success' });
-  };
-
-  const closeCheckout = () => {
-    setCheckoutOpen(false);
-    setConfirmation(null);
-  };
-
-  const clearFilters = () => {
-    setCategory('Todos');
-    setQuery('');
-  };
-
-  const updateProduct = (id: string, patch: Partial<Pick<Product, 'price' | 'stock'>>) => {
-    const previous = catalog.find((product) => product.id === id);
-    setCatalog((current) => current.map((product) => product.id === id ? withTiers({ ...product, ...patch }) : product));
-    void persistProductUpdate(id, patch).catch((error) => {
-      if (previous) setCatalog((current) => current.map((product) => product.id === id ? previous : product));
-      setToast({ message: error instanceof Error ? error.message : 'No pudimos guardar el cambio.', tone: 'warning' });
-    });
-  };
-
-  const showInfo = (message: string) => setToast({ message, tone: 'neutral' });
-  const openAuth = (audience: AuthAudience = 'user', returnView: CustomerView | null = null) => {
-    setAuthAudience(audience);
-    setAuthReturnView(returnView);
-    setAuthOpen(true);
-  };
-  const openOrders = () => {
-    if (!account) {
-      openAuth('user', 'orders');
-      setToast({ message: 'Ingresa para ver tus pedidos.', tone: 'neutral' });
-      return;
-    }
-    setCustomerView('orders');
-    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#orders`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  const openCart = () => {
-    setCustomerView('cart');
-    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#cart`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  const goToStore = (anchor = 'catalog') => {
-    setAdminOpen(false);
-    setCustomerView('store');
-    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${anchor}`);
-    window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  const go = (hash: string) => { window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${hash}`); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const openAuth = (audience: AuthAudience = 'vecino') => { setAuthAudience(audience); setAuthOpen(true); };
+  const needAccount = (message: string) => { openAuth('vecino'); notify(message); };
+  const goStore = (anchor = 'catalog') => { setAdminOpen(false); setView('store'); go(anchor); window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
+  const openView = (next: View) => {
+    if ((next === 'orders' || next === 'zone') && !account) { needAccount('Entra a tu cuenta para continuar.'); return; }
+    setAdminOpen(false); setView(next); go(next);
   };
   const openAdmin = () => {
-    if (!account) {
-      openAuth('admin');
-      setToast({ message: 'Ingresa con una cuenta administradora para continuar.', tone: 'neutral' });
-      return;
-    }
-    if (!isAdminAccount(account)) {
-      setToast({ message: 'Esta sección está reservada para el equipo administrador.', tone: 'warning' });
-      return;
-    }
-    setAdminOpen(true);
-    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#admin`);
+    if (account?.role !== 'admin') { openAuth('admin'); return; }
+    setAdminOpen(true); go('admin');
   };
 
-  const closeAdmin = () => {
+  // --- carrito ---
+
+  const lines: CartLine[] = useMemo(() => Object.entries(cart).flatMap(([id, quantity]) => {
+    const product = catalog.find((item) => item.id === id);
+    return product && quantity > 0 ? [{ product, quantity }] : [];
+  }), [cart, catalog]);
+  const subtotal = cartSubtotal(lines);
+  const savings = lines.reduce((sum, { product, quantity }) => sum + (product.supermarket && product.supermarket.price > product.price ? (product.supermarket.price - product.price) * quantity : 0), 0);
+  const categories = useMemo(() => [...new Set(catalog.map((p) => p.category))], [catalog]);
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return catalog.filter((p) => (category === 'Todos' || p.category === category) && (!q || `${p.name} ${p.category} ${p.detail}`.toLowerCase().includes(q)));
+  }, [catalog, category, query]);
+
+  const addProduct = (product: Product) => {
+    const current = cart[product.id] || 0;
+    if (current >= product.maxPerOrder) { notify(`Puedes pedir hasta ${product.maxPerOrder} ${product.unit} de ${product.name}.`, 'warning'); return; }
+    setCart((c) => ({ ...c, [product.id]: stepUp(product, c[product.id] || 0) }));
+    if (!current) notify(`${product.name} se agregó a tu canasta.`, 'success');
+  };
+  const decreaseProduct = (product: Product) => setCart((c) => {
+    const next = { ...c };
+    const quantity = stepDown(product, next[product.id] || 0);
+    if (quantity <= 0) delete next[product.id]; else next[product.id] = quantity;
+    return next;
+  });
+  const cartBody = () => Object.fromEntries(lines.map(({ product, quantity }) => [product.id, String(quantity)]));
+
+  // --- pedido ---
+
+  const openCheckout = async () => {
+    if (!account) { needAccount('Entra a tu cuenta para registrar el pedido.'); return; }
+    if (account.role === 'admin') { notify('El equipo de Yapa no compra desde esta cuenta.', 'warning'); return; }
+    try {
+      setQuote(toQuote(await api.post<Raw>('/api/cotizar', { lineas: cartBody() })));
+      setConfirmation(null);
+      setCheckoutOpen(true);
+    } catch (error) { fail(error); }
+  };
+  const registerOrder = async (method: 'YAPE' | 'PLIN', useBalance: boolean) => {
+    const order = toOrder(await api.post<Raw>('/api/pedidos', { lineas: cartBody(), metodo: method, usar_saldo: useBalance }));
+    setConfirmation(order);
+    setCart({});
+    void loadPublic();
+    void loadAccount();
+  };
+  const cancelOrder = async (order: Order, destination: RefundDestination) => {
+    try {
+      await api.post(`/api/pedidos/${order.id}/cancelar`, { destino: destination });
+      notify(`Pedido ${order.id} cancelado.`, 'success');
+      await Promise.all([loadOrders(), loadAccount(), loadPublic()]);
+    } catch (error) { fail(error); }
+  };
+  const withdraw = async (amount: number) => {
+    try {
+      await api.post('/api/saldo/devolucion', { monto: amount.toFixed(2) });
+      notify('Listo: te devolvemos tu saldo a tu Yape o Plin en hasta 30 días.', 'success');
+      await Promise.all([loadOrders(), loadAccount()]);
+    } catch (error) { fail(error); }
+  };
+  const claim = async (form: FormData) => {
+    try {
+      await api.post('/api/reclamos', form);
+      await loadOrders();
+    } catch (error) { fail(error); throw error; }
+  };
+
+  // --- zona ---
+
+  const zoneAction = (action: () => Promise<unknown>, success: string) => async () => {
+    try {
+      await action();
+      notify(success, 'success');
+      await Promise.all([loadZone(), loadAccount(), loadPublic()]);
+    } catch (error) { fail(error); }
+  };
+
+  // --- sesión ---
+
+  const login = async (kind: AuthAudience, user: string, secret: string) => {
+    const me = toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret }));
+    api.setCsrf(me.csrf);
+    setAccount(me);
+    setAuthOpen(false);
+    notify(`Hola, ${me.name.split(' ')[0]}.`, 'success');
+    if (homeFor(me.role) === 'operaciones') { setAdminOpen(true); go('admin'); }
+    return me;
+  };
+  const logout = async () => {
+    try { await api.delete('/api/sesion'); } catch { /* la sesión ya no existe */ }
+    api.setCsrf('');
+    setAccount(null);
+    setAuthOpen(false);
     setAdminOpen(false);
-    window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#catalog`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setView('store');
+    go('catalog');
   };
 
-  const showAdminView = adminOpen && dataReady && Boolean(account && isAdminAccount(account));
+  const accountZone = zones.find((z) => z.id === account?.zoneId);
+  const showAdmin = adminOpen && account?.role === 'admin';
 
   return (
     <div className="app-shell">
-      {showAdminView ? <AdminPanel products={catalog} orders={orders} adminName={account?.name || ''} currentCycle={currentCycle} cycleOpen={cycleOpen} localMode={persistenceMode === 'local'} onClose={closeAdmin} onProductUpdate={updateProduct} onVerify={verify} onSettle={settle} onRefundPaid={markRefundPaid} onSeedDemo={seedDemo} /> : <>
+      {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} /> : <>
         <a className="skip-link" href="#catalog-title">Saltar al contenido principal</a>
         <header className="topbar">
-          <a className="brand" href="#catalog" aria-label="Yapa, inicio"><img className="brand-logo-mark" src="/images/brand/yapa-mark.png" alt="" width="512" height="512" fetchPriority="high" /><span>yapa</span></a>
-          <nav className="main-nav" aria-label="Navegación principal"><a className={`nav-link ${customerView === 'store' ? 'is-active' : ''}`} href="#catalog" onClick={(event) => { event.preventDefault(); goToStore('catalog'); }}>Comprar</a><a className={`nav-link ${customerView === 'store' && window.location.hash === '#how-it-works' ? 'is-active' : ''}`} href="#how-it-works" onClick={(event) => { event.preventDefault(); goToStore('how-it-works'); }}>Cómo funciona</a><button className={`nav-link ${customerView === 'orders' ? 'is-active' : ''}`} type="button" onClick={openOrders}>Mis pedidos</button><button className={`nav-link ${customerView === 'cart' ? 'is-active' : ''}`} type="button" onClick={openCart}>Canasta</button></nav>
-          <div className="topbar-actions"><button className="location-button" type="button" onClick={() => showInfo(accountZone ? `Tu zona: ${accountZone.name}. Entrega el sábado de ${windowLabel(accountZone.deliveryWindow)}.` : 'Zonas activas en Lince y Jesús María; La Victoria muy pronto.')}><Icon name="pin" size={16} /><span>{accountZone?.district ?? 'Lima'} · <strong>{accountZone?.name ?? 'Elige tu zona'}</strong></span><Icon name="chevron" size={15} /></button><button className="account-button" type="button" onClick={() => openAuth('user')}><Icon name="user" size={17} /><span>{account?.name || 'Ingresar'}</span></button></div>
+          <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.png" alt="" width="512" height="512" fetchPriority="high" /><span>yapa</span></a>
+          <nav className="main-nav" aria-label="Navegación principal">
+            <a className={`nav-link ${view === 'store' ? 'is-active' : ''}`} href="#catalog" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}>Comprar</a>
+            <button className={`nav-link ${view === 'orders' ? 'is-active' : ''}`} type="button" onClick={() => openView('orders')}>Mis pedidos</button>
+            <button className={`nav-link ${view === 'zone' ? 'is-active' : ''}`} type="button" onClick={() => openView('zone')}>{account && canOpenZonePanel(account.role) ? <><Icon name="crown" size={15} /> Mi zona</> : 'Mi zona'}</button>
+            <button className={`nav-link ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')}>Canasta{lines.length ? <span className="nav-badge">{lines.length}</span> : null}</button>
+          </nav>
+          <div className="topbar-actions">
+            <button className="location-button" type="button" onClick={() => (account ? openView('zone') : notify('Zonas activas en Lince y Jesús María; La Victoria muy pronto.'))}><Icon name="pin" size={16} /><span>{accountZone?.district ?? 'Lima'} · <strong>{accountZone?.name ?? 'Elige tu zona'}</strong></span><Icon name="chevron" size={15} /></button>
+            <button className="account-button" type="button" onClick={() => openAuth('vecino')}><Icon name="user" size={17} /><span>{account ? account.name.split(' ')[0] : 'Ingresar'}</span>{account?.balance ? <span className="balance-chip">{`S/ ${account.balance.toFixed(2)}`}</span> : null}</button>
+          </div>
         </header>
 
-        {customerView === 'orders' ? <OrdersPage orders={myOrders} balance={balance} now={clock} onBack={() => goToStore('catalog')} onCancel={cancel} /> : customerView === 'cart' ? <CartPage lines={lines} subtotal={subtotal} delivery={quote.delivery} total={quote.total} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onBack={() => goToStore('catalog')} /> : <main id="catalog" className="page-content">
-          <section className="welcome-row hero-banner" aria-labelledby="page-title"><div className="welcome-copy"><h1 id="page-title">Compra mejor para tu semana</h1><p>Del mayorista a tu mesa, con precios que rinden y entrega en tu zona.</p><div className="hero-actions"><button className="primary-button" type="button" onClick={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver catálogo <Icon name="arrow" size={17} /></button><a className="text-button" href="#how-it-works" onClick={(event) => { event.preventDefault(); goToStore('how-it-works'); }}>Cómo funciona</a></div></div><div className="hero-side"><div className="hero-illustration" role="img" aria-label="Agricultora peruana con una canasta de productos frescos"><span className="hero-note"><Icon name="pin" size={14} /> Del campo a tu canasta</span><img src="/images/brand/yapa-farmer-banner.png" alt="Agricultora con una canasta de arroz, tomates, plátanos y papas" width="760" height="694" fetchPriority="high" /></div></div></section>
-          <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>Ciclo {currentCycle} · próxima entrega</small><strong>Sábado</strong><span>{cycleOpen ? 'Pedidos hasta el miércoles a las 20:00' : 'Cerrado para pedidos: vuelve el lunes'}</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="pin" size={19} /></span><div><small>Cobertura actual</small><strong>Lince, Jesús María y La Victoria</strong><span>La ventana la asigna Yapa a cada zona</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago por adelantado</small><strong>Yape o Plin</strong><span>Lo que ahorremos te vuelve como saldo</span></div></div></div></section>
+        {offline ? <div className="offline-banner"><Icon name="warning" size={18} /> No hay conexión con el motor de Yapa. Levántalo con <code>python -m yapa_sdd.web --demo</code> en la carpeta <code>api</code>.</div> : null}
 
-          <div className="workspace-grid"><Catalog products={visibleProducts} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onClearFilters={clearFilters} /><CartPanel lines={lines} cart={cart} subtotal={subtotal} delivery={quote.delivery} total={quote.total} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
-          <HowItWorksSection />
-        </main>}
+        {view === 'orders' ? <OrdersPage data={myOrders} claimables={claimables} claims={claims} onBack={() => goStore('catalog')} onCancel={cancelOrder} onWithdraw={withdraw} onClaim={claim} />
+          : view === 'zone' ? <ZonePage data={myZone} zones={zones} userId={Number(account?.user ?? 0)} districts={districts} onBack={() => goStore('catalog')}
+            onJoin={(zoneId) => zoneAction(() => api.post(`/api/zonas/${zoneId}/unirme`), 'Te uniste a la zona.')()}
+            onLocate={async (lat, lon) => { try { await api.post('/api/ubicacion', { lat, lon }); notify('Ubicación guardada.', 'success'); } catch (error) { fail(error); throw error; } }}
+            onCreate={(name, district, lat, lon) => zoneAction(() => api.post('/api/zonas', { nombre: name, distrito: district, lat, lon }), '¡Creaste tu zona! Ahora eres su admin.')()}
+            onActivate={(zoneId, kind, contact) => zoneAction(() => api.post(`/api/zonas/${zoneId}/activar`, { tipo: kind, contacto: contact }), 'Tu zona ya recibe pedidos.')()}
+            onRequestMerge={(zoneId, target) => zoneAction(() => api.post(`/api/zonas/${zoneId}/unir`, { destino: target }), 'Solicitud enviada: falta que el admin de la otra zona acepte.')()}
+            onAnswerMerge={(id, accept) => zoneAction(() => api.post(`/api/solicitudes/${id}/${accept ? 'aceptar' : 'rechazar'}`), accept ? 'Zonas unidas: ahora suman juntas para el mínimo.' : 'Solicitud rechazada.')()}
+            onLeaveGroup={(zoneId) => zoneAction(() => api.post(`/api/zonas/${zoneId}/separar`), 'Tu zona vuelve a contar sola.')()}
+            onTransfer={(zoneId, newAdmin) => zoneAction(() => api.post(`/api/zonas/${zoneId}/transferir`, { nuevo: newAdmin }), 'Rol transferido. ¡Gracias por organizar tu edificio!')()} />
+            : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
+              : <main id="catalog" className="page-content">
+                <section className="welcome-row hero-banner" aria-labelledby="page-title"><div className="welcome-copy"><span className="hero-promise"><Icon name="ok" size={16} /> Nunca pagas más del precio que ves</span><h1 id="page-title">Compra mejor para tu semana</h1><p>Del mercado mayorista a tu portería. Pagas el precio máximo y lo que ahorramos entre vecinos te vuelve como saldo.</p><div className="hero-actions"><button className="primary-button" type="button" onClick={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver catálogo <Icon name="arrow" size={17} /></button><a className="text-button" href="#how-it-works" onClick={(event) => { event.preventDefault(); goStore('how-it-works'); }}>Cómo funciona</a></div></div><div className="hero-side"><div className="hero-illustration" role="img" aria-label="Agricultora peruana con una canasta de productos frescos"><span className="hero-note"><Icon name="leaf" size={14} /> Del campo a tu canasta</span><img src="/images/brand/yapa-farmer-banner.png" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div></div></section>
+                <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>Semana {state?.cycle ?? '—'} · próxima entrega</small><strong>Sábado</strong><span>{state?.open ? 'Pedidos hasta el miércoles a las 20:00' : 'Cerrado para pedidos: vuelve el lunes'}</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="users" size={19} /></span><div><small>Compramos entre vecinos</small><strong>{state?.minimumGroup ?? 8} pedidos por grupo</strong><span>Si tu grupo no llega, te devolvemos el 100 %</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago por adelantado</small><strong>Yape o Plin</strong><span>Con el código que te damos; sin escribir nada</span></div></div></div></section>
+                <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
+                <HowItWorksSection />
+              </main>}
 
-        <footer className="site-footer"><span>Yapa · compras que rinden</span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Panel admin</button><span>{persistenceMode === 'appwrite' ? 'Datos conectados · pagos simulados' : 'Modo local · pagos simulados'}</span></div></footer>
+        <footer className="site-footer"><span>Yapa · compras que rinden · Diseño de Software, UTEC 2026-2</span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Centro de operaciones</button><span>Pagos con Yape y Plin verificados por el equipo</span></div></footer>
       </>}
-      <div className="toast-region" aria-live="polite" aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : 'box'} size={18} /><span>{toast.message}</span></div> : null}</div>
-      {!showAdminView ? <><AuthDialog open={authOpen} currentAccount={account} initialAudience={authAudience} onClose={() => { setAuthOpen(false); setAuthReturnView(null); }} onSignedOut={() => { setAccount(null); setOrders([]); setCustomerView('store'); setAuthReturnView(null); }} onOpenAdmin={openAdmin} onAuthenticated={(nextAccount, audience) => { setAccount(nextAccount); setToast({ message: `Listo, ${nextAccount.name}. Tu cuenta de Yapa está preparada.`, tone: 'success' }); if (audience === 'admin' && isAdminAccount(nextAccount)) { setAdminOpen(true); window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#admin`); } else if (authReturnView) { const nextView = authReturnView; setAuthOpen(false); setAuthReturnView(null); setCustomerView(nextView); window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${nextView}`); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} />
-        <CheckoutDialog open={checkoutOpen} subtotal={subtotal} delivery={quote.delivery} total={quote.total} balance={balance} cycleOpen={cycleOpen} confirmation={confirmation} initialSelection={initialSelection} onClose={closeCheckout} onSubmit={registerOrder} />
-        </> : null}
+      <div className="toast-region" aria-live="polite" aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} /><span>{toast.message}</span></div> : null}</div>
+      {!showAdmin ? <>
+        <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
+        <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
+      </> : null}
     </div>
   );
 }

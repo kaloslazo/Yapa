@@ -1,112 +1,122 @@
-export const categories = ['Todos', 'Despensa', 'Frutas', 'Verduras', 'Lácteos'] as const;
-export type Category = (typeof categories)[number];
+// tipos de la tienda; los datos vienen de la API del motor (api/, iteración 27)
 
-// precio por tramo: desde `from` unidades pedidas entre todos, el precio baja a `price`
+export type ProductArtName = 'rice' | 'oil' | 'banana' | 'tomato' | 'potato' | 'milk';
+export type CartState = Record<string, number>;
+
 export interface PriceTier {
   from: number;
   price: number;
 }
 
+export interface ReferencePrice {
+  kind: 'MERCADO' | 'SUPERMERCADO';
+  source: string;
+  price: number;
+  seen: string;
+}
+
 export interface Product {
   id: string;
   name: string;
-  category: Exclude<Category, 'Todos'>;
-  price: number; // precio máximo (primer tramo), lo que se paga al pedir
+  category: string; // nombre para mostrar: Frescos, Limpieza
+  price: number; // precio máximo, lo que se paga al pedir (C-01)
   unit: string;
+  step: number;
+  maxPerOrder: number;
+  ordered: number; // lo pedido entre todos en el ciclo
+  nextTier: PriceTier | null;
+  tiers: PriceTier[];
+  references: ReferencePrice[];
+  supermarket: ReferencePrice | null;
+  supermarketSaving: number | null; // % de ahorro del precio máximo frente al supermercado
   detail: string;
   art: ProductArtName;
-  image: string;
-  stock: number; // lo máximo que el proveedor puede vender este ciclo (C-12)
-  tiers: PriceTier[];
+  image: string | null;
+  emoji: string;
 }
 
-export type ProductArtName = 'rice' | 'oil' | 'banana' | 'tomato' | 'potato' | 'milk';
-export type CartState = Record<string, number>;
+export type Role = 'vecino' | 'admin_zona' | 'admin';
 
-export type DeliveryWindowCode = 'SAT_09_12' | 'SAT_12_15' | 'SAT_15_18';
-
-export interface DeliveryWindow {
-  code: DeliveryWindowCode;
-  label: string;
+export interface Account {
+  user: string | number;
+  name: string;
+  role: Role;
+  csrf: string;
+  zoneId?: string;
+  balance?: number;
+  referralCode?: string;
 }
 
-// zona = punto de recepción (portería o encargado); las zonas de un grupo suman para el mínimo (C-07)
 export interface Zone {
   id: string;
   name: string;
   district: string;
-  groupId: string;
-  stopCost: number;
-  deliveryWindow: DeliveryWindowCode;
-  active: boolean;
-  coordinates: { lat: number; lng: number };
+  group: string;
+  status: 'ACTIVA' | 'PENDIENTE_RECEPCION';
+  lat: number | null;
+  lon: number | null;
+  admin: number | null;
+  neighbors: number;
+  reception: string;
+  contact: string;
 }
-
-export type PaymentMethodValue = 'YAPE' | 'PLIN';
-
-export interface PaymentMethod {
-  value: PaymentMethodValue;
-  label: string;
-}
-
-export type AccountRole = 'customer' | 'admin';
-
-export interface AccountProfile {
-  id: string;
-  name: string;
-  phone: string;
-  district: string;
-  zoneId: string;
-  email: string;
-  role: AccountRole;
-}
-
-export interface OrderSelection {
-  zoneId: string;
-  reference: string;
-  paymentMethod: PaymentMethodValue;
-  operationCode: string;
-  useBalance: number;
-}
-
-export type OrderStatus = 'REGISTRADO' | 'CANCELADO' | 'ANULADO' | 'LIQUIDADO' | 'NO_ATENDIDO';
-export type PaymentStatus = 'POR_VERIFICAR' | 'VERIFICADO';
-export type RefundDestination = 'SALDO' | 'MEDIO_DE_PAGO';
 
 export interface OrderLine {
-  productId: string;
-  productName: string;
+  id: string;
+  name: string;
   quantity: number;
   maxPrice: number;
+  total: number;
 }
 
-export interface OrderRecord {
-  id: string;
-  userId: string;
-  customerName?: string;
-  orderCode: string;
-  cycleId: string;
+export interface Settlement {
+  status: string;
+  paid: number;
+  cost: number;
+  returned: number;
+  destination: string | null;
+  benefit: number;
+  comparison: Partial<Record<'MERCADO' | 'SUPERMERCADO', { before: number; saving: number }>>;
+}
+
+export interface Order {
+  id: number;
+  cycle: string;
   zoneId: string;
-  district: string;
-  reference: string;
-  deliveryWindow: DeliveryWindowCode;
-  paymentMethod: PaymentMethodValue | 'SALDO';
-  operationCode: string;
-  paymentStatus: PaymentStatus;
-  maxSubtotal: number;
-  deliveryCharged: number;
-  total: number; // lo que pagó al pedir: precio máximo más envío máximo
-  paidExternal: number; // por Yape o Plin
-  paidBalance: number; // con su saldo
-  status: OrderStatus;
-  itemCount: number;
-  createdAt: string;
+  customer: number;
+  customerName?: string;
+  status: string;
+  payment: 'POR_VERIFICAR' | 'VERIFICADO';
+  method: string;
+  paymentCode: string;
+  total: number;
+  subtotal: number;
+  delivery: number;
+  withBalance: number;
+  toPay: number;
+  delivered: boolean;
+  cancellable: boolean;
   lines: OrderLine[];
-  finalTotal?: number; // lo que costó de verdad, al liquidar
-  deliveryFinal?: number;
-  refundToBalance: number; // lo que volvió a su saldo
-  refundToMethod: number; // lo que se le devuelve a su Yape o Plin
-  refundPaidAt?: string;
+  settlement: Settlement | null;
+  bags?: Array<{ number: number; photo: string }>;
 }
 
-export type OrderConfirmation = OrderRecord;
+export interface Quote {
+  lines: OrderLine[];
+  subtotal: number;
+  delivery: number;
+  total: number;
+  supermarketSaving: number;
+  balance: number;
+}
+
+export interface CycleState {
+  cycle: string;
+  open: boolean;
+  closes: string;
+  delivery: string;
+  minimumOrder: number;
+  minimumGroup: number;
+}
+
+export type RefundDestination = 'SALDO' | 'MEDIO_DE_PAGO';
