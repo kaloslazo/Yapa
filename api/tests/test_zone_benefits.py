@@ -113,6 +113,13 @@ class ZoneBenefitSpecTests(unittest.TestCase):
         settle_cycle(self.store, "2026-W38")
         self.assertEqual(money_balance(self.store).difference, D("0"))
 
+    # AZ-09
+    def test_az09_each_store_gets_its_own_zones(self):
+        other = pilot_store()
+        self.store.zones["Z-JM-01"].admin_id = 801
+        self.assertIsNone(other.zones["Z-JM-01"].admin_id)
+        self.assertIsNone(pilot_store().zones["Z-JM-01"].admin_id)
+
 
 class ZoneAdminPanelSpecTests(unittest.TestCase):
     # AZ-H
