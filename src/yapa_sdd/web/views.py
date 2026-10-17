@@ -5,26 +5,104 @@ from __future__ import annotations
 from decimal import ROUND_HALF_UP, Decimal
 from html import escape
 
+from ..reference import savings_percent
+
 
 CSS = """
-body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f6f8f7;color:#1f2a24}
-main{max-width:720px;margin:0 auto;padding:16px}
-header{background:#1f3d2b;color:#fff;padding:12px 16px}
-header a{color:#cfe3d6;margin-right:14px;text-decoration:none}
-h1{font-size:1.4rem;margin:.4rem 0}
-.card{background:#fff;border-radius:10px;padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px #0001}
-.muted{color:#5f6f66;font-size:.9rem}
-.ok{border-left:0;background:#e6f1ea}
-.error{background:#fbeadb}
-table{width:100%;border-collapse:collapse;font-size:.92rem}
-td,th{padding:6px 4px;border-bottom:1px solid #e3e8e5;text-align:left}
-input,select,button{font-size:1rem;padding:8px;margin:4px 0;width:100%;box-sizing:border-box}
-button{background:#2e7d4f;color:#fff;border:0;border-radius:8px}
+:root{--verde:#1e6b45;--verde-osc:#14482f;--verde-claro:#e5f3ea;--hoja:#3fa66b;--sol:#f4b63f;--sol-claro:#fff4dc;
+--tinta:#1d2a22;--suave:#5c6b62;--linea:#e2e8e3;--fondo:#f6f7f2;--rojo:#b3401f;--rojo-claro:#fcebe4}
 *{box-sizing:border-box}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.row>div{flex:1;min-width:0;overflow-wrap:anywhere}
-.qty{width:80px;flex:0 0 80px}
-.card{overflow-x:auto}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--fondo);
+color:var(--tinta);line-height:1.45}
+a{color:var(--verde)}
+header{background:#fff;border-bottom:1px solid var(--linea);position:sticky;top:0;z-index:5}
+.bar{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--verde-osc);font-weight:800;
+font-size:1.25rem;margin-right:auto}
+.logo{width:34px;height:34px}
+nav{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+nav a{text-decoration:none;color:var(--suave);padding:6px 12px;border-radius:999px;font-weight:600;font-size:.95rem}
+nav a:hover{background:var(--verde-claro);color:var(--verde-osc)}
+nav a[aria-current=page]{background:var(--verde);color:#fff}
+nav form{display:inline;margin:0}
+nav button{width:auto;margin:0;padding:6px 12px;font-size:.95rem;background:transparent;color:var(--suave);
+border:1px solid var(--linea)}
+main{max-width:760px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:1.6rem;margin:.3rem 0 .8rem;color:var(--verde-osc)}
+h2{font-size:1.15rem;margin:1.4rem 0 .4rem;color:var(--verde-osc)}
+.card{background:#fff;border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 3px #1d2a2214;
+border:1px solid var(--linea);overflow-x:auto}
+.muted{color:var(--suave);font-size:.9rem}
+.ok{background:var(--verde-claro);border-color:#bfe0cb}
+.error{background:var(--rojo-claro);border-color:#f2c6b5;border-left:5px solid var(--rojo)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+td,th{padding:8px 6px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+th{color:var(--suave);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+td{white-space:nowrap}
+td[colspan]{white-space:normal}
+td button,td input{width:auto;margin:2px 0}
+td button{padding:8px 14px}
+label{display:block;font-weight:600;font-size:.92rem;margin-top:6px}
+input,select,textarea,button{font:inherit;font-size:1rem;padding:10px;margin:4px 0;width:100%;
+border:1px solid #cdd6cf;border-radius:10px;background:#fff;color:var(--tinta)}
+input:focus,select:focus,textarea:focus{border-color:var(--hoja);outline:3px solid #3fa66b33}
+button,.btn{background:var(--verde);color:#fff;border:0;border-radius:10px;font-weight:700;cursor:pointer;
+display:inline-block;text-align:center;text-decoration:none;padding:11px 16px}
+button:hover,.btn:hover{background:var(--verde-osc)}
+button.secundario{background:#fff;color:var(--verde);border:2px solid var(--verde)}
+.btn-sol{background:var(--sol);color:var(--tinta)}
+.btn-sol:hover{background:#e5a52c}
+:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+.hero{background:linear-gradient(135deg,var(--verde-osc),var(--verde) 60%,var(--hoja));color:#fff;
+border-radius:18px;padding:24px 20px;margin:4px 0 18px}
+.hero h2{color:#fff;font-size:1.5rem;margin:0 0 6px}
+.hero p{margin:6px 0 14px;color:#e3f2e8}
+.promesa{display:inline-block;background:var(--sol);color:var(--tinta);font-weight:800;border-radius:999px;
+padding:6px 14px;margin-bottom:12px}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0 6px}
+.paso{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px}
+.paso b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--sol-claro);
+color:var(--verde-osc);align-items:center;justify-content:center;margin-right:6px}
+.ciclo{display:flex;align-items:center;gap:8px;background:var(--sol-claro);border:1px solid #f3dca7;
+border-radius:12px;padding:10px 14px;margin:6px 0 4px;font-size:.95rem}
+.producto{display:flex;gap:12px;align-items:flex-start}
+.icono{font-size:1.9rem;line-height:1;width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;
+justify-content:center;background:var(--verde-claro);border-radius:12px}
+.producto .info{flex:1;min-width:0;overflow-wrap:anywhere}
+.nombre{font-weight:700;font-size:1.05rem}
+.precio{font-size:1.25rem;font-weight:800;color:var(--verde-osc)}
+.precio small{font-size:.8rem;font-weight:600;color:var(--suave)}
+.ahorro{display:inline-block;background:var(--sol-claro);color:#7a4f00;border:1px solid #f3dca7;border-radius:999px;
+padding:2px 10px;font-size:.82rem;font-weight:700;margin:4px 0}
+progress{width:100%;height:10px;margin:6px 0 2px;appearance:none;-webkit-appearance:none;border:0;
+border-radius:999px;background:var(--linea);overflow:hidden}
+progress::-webkit-progress-bar{background:var(--linea);border-radius:999px}
+progress::-webkit-progress-value{background:linear-gradient(90deg,var(--hoja),var(--verde));border-radius:999px}
+progress::-moz-progress-bar{background:var(--hoja);border-radius:999px}
+.qty{width:84px;flex:0 0 84px;text-align:center;font-weight:700}
+.pago{border:2px solid var(--verde-claro)}
+.acciones{display:flex;gap:8px;flex-wrap:wrap}
+.acciones button{flex:1 1 160px}
+.hero-balance{background:linear-gradient(135deg,var(--verde-osc),var(--verde));color:#fff;border-radius:18px;
+padding:20px;margin:4px 0 14px}
+.hero-balance .grande{font-size:2rem;font-weight:800;margin:4px 0}
+.hero-balance .devuelto{display:inline-block;background:var(--sol);color:var(--tinta);border-radius:999px;
+padding:4px 12px;font-weight:700;margin:4px 0}
+.hero-balance a{color:#fff;font-weight:600}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:.78rem;font-weight:700;
+background:var(--linea);color:var(--tinta);white-space:nowrap}
+.pill-LIQUIDADO,.pill-VERIFICADO,.pill-APROBADO,.pill-PAGADO,.pill-Activa{background:var(--verde-claro);color:var(--verde-osc)}
+.pill-REGISTRADO,.pill-POR_VERIFICAR,.pill-PENDIENTE{background:var(--sol-claro);color:#7a4f00}
+.pill-CANCELADO_POR_CLIENTE,.pill-NO_ATENDIDO,.pill-NO_ENTREGADO,.pill-RECHAZADO{background:var(--rojo-claro);color:var(--rojo)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:8px 0 14px}
+.tile{display:block;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;text-decoration:none;
+color:var(--tinta);box-shadow:0 1px 3px #1d2a2214}
+.tile:hover{border-color:var(--hoja);background:var(--verde-claro)}
+.tile strong{display:block;color:var(--verde-osc);font-size:1.02rem}
+.tile span{display:block;color:var(--suave);font-size:.86rem;margin-top:2px}
+.login{max-width:420px;margin:0 auto}
+footer{max-width:760px;margin:0 auto;padding:10px 16px 30px;color:var(--suave);font-size:.8rem;text-align:center}
 """
 
 
@@ -47,20 +125,42 @@ def hidden(csrf: str | None) -> str:
     return f'<input type="hidden" name="csrf" value="{escape(csrf)}">' if csrf else ""
 
 
+# S-140: el logo se dibuja aquí mismo (una bolsa de compras con hojas), sin cargar archivos de otro sitio
+LOGO = ('<svg class="logo" viewBox="0 0 40 40" aria-hidden="true">'
+        '<path d="M19 17c-1-6-6-9-11-8 0 5 4 9 11 8z" fill="#3fa66b"/>'
+        '<path d="M21 17c1-7 6-11 12-10 0 6-5 11-12 10z" fill="#1e6b45"/>'
+        '<path d="M6 16h28l-3 19a3 3 0 0 1-3 2.5H12A3 3 0 0 1 9 35z" fill="#f4b63f"/>'
+        '<path d="M13 22h14" stroke="#14482f" stroke-width="2.2" stroke-linecap="round"/></svg>')
+
+# PW-01: qué enlace corresponde a cada página
+NAV = [("/", "Catálogo"), ("/cuenta", "Mi cuenta"), ("/admin", "Admin")]
+CURRENT = {"Catálogo de la semana": "/", "Mi cuenta": "/cuenta", "Administración": "/admin"}
+
+
 def page(title: str, body: str, csrf: str | None = None) -> str:
     if csrf:
-        session_link = ('<form method="post" action="/salir" style="display:inline">' + hidden(csrf)
-                        + '<button style="width:auto;padding:4px 10px;margin:0">Salir</button></form>')
+        session_link = ('<form method="post" action="/salir">' + hidden(csrf) + '<button>Salir</button></form>')
     else:
         session_link = '<a href="/entrar">Entrar</a>'
+    links = "".join(
+        f'<a href="{path}" aria-current="page">{label}</a>' if CURRENT.get(title) == path
+        else f'<a href="{path}">{label}</a>'
+        for path, label in NAV
+    )
     return (
         '<!doctype html><html lang="es"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>{escape(title)} · Yapa</title><style>{CSS}</style></head><body>"
-        '<header><strong>Yapa</strong> &nbsp; <a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a>'
-        f'<a href="/admin">Admin</a>{session_link}</header>'
-        f"<main><h1>{escape(title)}</h1>{body}</main></body></html>"
+        f'<header><div class="bar"><a class="brand" href="/">{LOGO}Yapa</a>'
+        f'<nav>{links}{session_link}</nav></div></header>'
+        f"<main><h1>{escape(title)}</h1>{body}</main>"
+        "<footer>Yapa · compras de la semana entre vecinos de Lince, Jesús María y La Victoria · "
+        "Diseño de Software, UTEC 2026-2</footer></body></html>"
     )
+
+
+def pill(status: str) -> str:
+    return f'<span class="pill pill-{escape(status)}">{escape(status)}</span>'
 
 
 def error_box(code: str, message: str) -> str:
@@ -68,36 +168,82 @@ def error_box(code: str, message: str) -> str:
             f'<div class="muted">Código: {escape(code)}</div></div>')
 
 
+ICONS = {"PAPA": "🥔", "CEBOLLA": "🧅", "AJO": "🧄", "LIMON": "🍋", "CAMOTE": "🍠", "ZANAHORIA": "🥕",
+         "PLATANO": "🍌", "NARANJA": "🍊", "ZAPALLO": "🎃"}
+
+
+def icon(product_id: str, unit: str) -> str:
+    for prefix, emoji in ICONS.items():
+        if product_id.startswith(prefix):
+            return emoji
+    return "🧴" if unit == "unidad" else "🧺"
+
+
+def savings_badge(max_price, references) -> str:
+    """PW-04, S-139: solo si la referencia es más cara que el precio máximo (el peor caso de Yapa)."""
+    best = None
+    for r in references:
+        saving = savings_percent(max_price, r.price)
+        if saving > 0 and (best is None or saving > best[0]):
+            best = (saving, r.source)
+    if best is None:
+        return ""
+    return f'<div class="ahorro">{percent(best[0])} menos que en {escape(best[1])}</div>'
+
+
+HOW_IT_WORKS = (
+    '<div class="hero"><div class="promesa">Nunca pagas más del precio que ves</div>'
+    "<h2>Las compras de la semana, juntos y más baratas</h2>"
+    "<p>Los vecinos de tu edificio piden juntos, Yapa compra al por mayor y lo que ahorramos vuelve a ti.</p>"
+    '<a class="btn btn-sol" href="/entrar">Entrar para pedir</a></div>'
+    "<h2>Cómo funciona</h2>"
+    '<div class="pasos">'
+    '<div class="paso"><b>1</b>Pides hasta el miércoles 20:00 y pagas con Yape o Plin el precio máximo.</div>'
+    '<div class="paso"><b>2</b>Compramos juntos al por mayor: mientras más pedimos, más baja el precio.</div>'
+    '<div class="paso"><b>3</b>Recibes el sábado en tu edificio y te devolvemos lo ahorrado como saldo.</div>'
+    "</div><h2>Lo de esta semana</h2>"
+)
+
+
 def home(cycle_label: str, is_open: bool, rows: list[dict], csrf: str | None = None) -> str:
     estado = "abierto hasta el miércoles 20:00" if is_open else "cerrado"
     items = []
     for row in rows:
         items.append(
-            '<div class="card"><div class="row"><div>'
-            f'<strong>{escape(row["name"])}</strong><div class="muted">por {escape(row["unit"])} · '
-            f'hoy pagas máximo {money(row["max_price"])}</div>'
+            '<div class="card"><div class="producto">'
+            f'<div class="icono" aria-hidden="true">{icon(row["product_id"], row["unit"])}</div><div class="info">'
+            f'<div class="nombre">{escape(row["name"])}</div>'
+            f'<div class="precio">{money(row["max_price"])} <small>por {escape(row["unit"])}</small></div>'
+            f'<div class="muted">hoy pagas máximo {money(row["max_price"])}</div>'
+            + savings_badge(row["max_price"], row.get("references", ()))
+            + f'<progress value="{qty(row["ordered"])}" max="{qty(row["goal"])}" '
+              f'aria-label="Avance hacia el siguiente descuento"></progress>'
             f'<div class="muted">{escape(row["progress"])}</div>'
             + "".join(f'<div class="muted">{escape(r.source)}: {money(r.price)} (visto el '
                       f'{r.observed_on.strftime("%d/%m")})</div>' for r in row.get("references", ()))
             + '</div>'
             + (f'<input class="qty" type="number" min="0" step="{qty(row["step"])}" '
-               f'name="cant_{escape(row["product_id"])}" placeholder="0">' if csrf else "")
+               f'name="cant_{escape(row["product_id"])}" placeholder="0" '
+               f'aria-label="Cantidad de {escape(row["name"])}">' if csrf else "")
             + '</div></div>'
         )
+    ciclo = f'<div class="ciclo">🗓️ <span>Ciclo {escape(cycle_label)}: {estado}.</span></div>'
     if not csrf:
-        entrar = '<p><a href="/entrar"><button>Entrar para pedir</button></a></p>'
-        return page("Catálogo de la semana", entrar + "".join(items))
+        return page("Catálogo de la semana", HOW_IT_WORKS + ciclo + "".join(items))
     form = (
         '<form method="post" action="/cotizar">' + hidden(csrf)
         + "".join(items)
-        + '<div class="card"><label>Medio <select name="metodo"><option>YAPE</option><option>PLIN</option>'
+        + '<div class="card pago"><strong>Paga tu pedido</strong>'
+          '<p class="muted">Primero cotiza para saber cuánto yapear. Luego paga y registra con el código de '
+          'operación.</p><label>Medio <select name="metodo"><option>YAPE</option><option>PLIN</option>'
           '</select></label><label>Código de operación <input name="codigo"></label>'
-          '<label>Monto yapeado <input name="monto" placeholder="0.00"></label>'
-          '<label>Saldo a usar <input name="saldo" placeholder="0.00"></label>'
-          '<button>Cotizar</button> <button formaction="/pedidos">Pagar y registrar</button></div></form>'
+          '<label>Monto yapeado <input name="monto" inputmode="decimal" placeholder="0.00"></label>'
+          '<label>Saldo a usar <input name="saldo" inputmode="decimal" placeholder="0.00"></label>'
+          '<div class="acciones"><button class="secundario">Cotizar</button>'
+          '<button formaction="/pedidos">Pagar y registrar</button></div></div></form>'
     )
-    intro = (f'<p class="muted">Ciclo {escape(cycle_label)}: {estado}. Pagas el precio máximo; lo que ahorremos '
-             'entre todos te lo devolvemos como saldo después de la entrega.</p>')
+    intro = (ciclo + '<p class="muted">Pagas el precio máximo; lo que ahorremos entre todos te lo devolvemos '
+             'como saldo después de la entrega.</p>')
     return page("Catálogo de la semana", intro + form, csrf)
 
 
@@ -112,14 +258,16 @@ def order_lines(lines) -> str:
 
 def quote(result, csrf: str | None = None) -> str:
     body = (f'<div class="card">{order_lines(result.lines)}<p>Envío máximo: {money(result.delivery_fee)}</p>'
-            f'<p><strong>Total a yapear: {money(result.total)}</strong></p></div>')
+            f'<p class="precio">Total a yapear: {money(result.total)}</p>'
+            '<p class="muted">Es lo máximo que pagas. Lo que ahorremos entre todos vuelve a tu saldo.</p>'
+            '<a href="/">Volver al catálogo</a></div>')
     return page("Cotización", body, csrf)
 
 
 def registered(order, csrf: str | None = None) -> str:
-    body = (f'<div class="card ok"><strong>Pedido {order.order_id} · {escape(order.status)}</strong>'
-            f'<p>Total: {money(order.total)} · pago {escape(order.payment_status)}</p>'
-            f'{order_lines(order.lines)}</div>')
+    body = (f'<div class="card ok"><strong>Pedido {order.order_id}</strong> {pill(order.status)}'
+            f'<p>Total: {money(order.total)} · pago {pill(order.payment_status)}</p>'
+            f'{order_lines(order.lines)}<p><a href="/cuenta">Ver mi cuenta</a></p></div>')
     return page("Pedido registrado", body, csrf)
 
 
@@ -147,22 +295,25 @@ def order_detail(settled, comparison) -> str:
 def account(customer, balance, orders, refunds, csrf: str | None = None, details=None, returned=None) -> str:
     details = details or {}
     rows = "".join(
-        f"<tr><td>Pedido {o.order_id}</td><td>{escape(o.cycle)}</td><td>{escape(o.status)}</td>"
+        f"<tr><td>Pedido {o.order_id}</td><td>{escape(o.cycle)}</td><td>{pill(o.status)}</td>"
         f"<td>{money(o.total)}</td></tr>"
         + (f'<tr><td colspan="4" class="muted">{order_detail(*details[o.order_id])}</td></tr>'
            if o.order_id in details else "")
         for o in orders
     )
-    total_back = f"<p>Con Yapa ya te devolvimos {money(returned)}</p>" if returned else ""  # S-132
-    pending = "".join(f"<li>{money(r.amount)} · {escape(r.reason)} · {escape(r.status)}</li>" for r in refunds)
-    body = (f'<div class="card"><strong>{escape(customer.name)}</strong> · zona {escape(customer.zone_id)}'
-            f'<p><strong>Saldo: {money(balance)}</strong></p>{total_back}'
-            '<p><a href="/zona">Mi zona</a> · <a href="/reclamos">Reclamos</a></p></div>'
+    total_back = (f'<div class="devuelto">Con Yapa ya te devolvimos {money(returned)}</div>'
+                  if returned else "")  # S-132
+    pending = "".join(f"<li>{money(r.amount)} · {escape(r.reason)} · {pill(r.status)}</li>" for r in refunds)
+    body = (f'<div class="hero-balance">Hola, <strong>{escape(customer.name)}</strong> · zona '
+            f'{escape(customer.zone_id)}<div class="grande">Saldo: {money(balance)}</div>{total_back}'
+            '<p><a href="/">Hacer mi pedido</a> · <a href="/zona">Mi zona</a> · <a href="/reclamos">Reclamos</a>'
+            '</p></div><h2>Mis pedidos</h2>'
+            f'<div class="card"><table><tr><th>Pedido</th><th>Ciclo</th><th>Estado</th><th>Total</th></tr>{rows}'
+            f'</table></div><div class="card"><strong>Devoluciones pendientes</strong>'
+            f'<ul>{pending or "<li class=muted>No tienes.</li>"}</ul></div><h2>Opciones</h2>'
             '<form class="card" method="post" action="/cuenta/devolucion">' + hidden(csrf) +
             '<label>Devolverme de mi saldo a mi Yape/Plin (S/) <input name="monto" inputmode="decimal" '
             'placeholder="0.00"></label><button>Pedir devolución</button></form>'
-            f'<div class="card"><table><tr><th>Pedido</th><th>Ciclo</th><th>Estado</th><th>Total</th></tr>{rows}'
-            f'</table></div><div class="card"><strong>Devoluciones pendientes</strong><ul>{pending}</ul></div>'
             '<form class="card" method="post" action="/cuenta/cancelar">' + hidden(csrf) +
             '<label>Pedido a cancelar <input name="pedido"></label>'
             '<label>Devolver a <select name="destino"><option value="MEDIO_DE_PAGO">Mi Yape/Plin</option>'
@@ -175,13 +326,28 @@ def account(customer, balance, orders, refunds, csrf: str | None = None, details
 
 
 def login(error: str = "") -> str:
-    body = (error + '<form class="card" method="post" action="/entrar">'
+    body = ('<div class="login">' + error + '<form class="card" method="post" action="/entrar">'
+            '<p class="muted">Vecino: tu número de cliente y tu PIN de 6 dígitos. Si no tienes PIN, pídeselo '
+            'al admin de Yapa.</p>'
             '<label>Soy <select name="tipo"><option value="vecino">Vecino</option>'
             '<option value="admin">Administrador</option></select></label>'
             '<label>Número de cliente o usuario <input name="usuario" autocomplete="username"></label>'
             '<label>PIN o contraseña <input name="secreto" type="password" autocomplete="current-password"></label>'
-            '<button>Entrar</button></form>')
+            '<button>Entrar</button></form></div>')
     return page("Entrar", body)
+
+
+ADMIN_SECTIONS = [  # PW-06
+    ("/admin/armado", "📦 Armado y entrega", "Foto de cada bolsa y de la entrega en la portería"),
+    ("/admin/reclamos", "🧾 Reclamos", "Faltantes y productos dañados, por artículo"),
+    ("/admin/devoluciones", "💸 Devoluciones", "Saldo que los vecinos piden de vuelta a su Yape o Plin"),
+    ("/admin/conciliacion", "⚖️ Conciliación", "Que el dinero recibido cuadre al céntimo"),
+    ("/admin/metricas", "📈 Métricas", "Margen por pedido, ahorro entregado y recompra"),
+    ("/admin/catalogo", "🥔 Catálogo", "Lista semanal del proveedor aliado"),
+    ("/admin/referencias", "🏷️ Precios de referencia", "Mercado de barrio y supermercado, con fecha"),
+    ("/admin/colchon", "🧺 Colchón", "Sobrantes guardados para reponer faltantes"),
+    ("/admin/vecinos", "👥 Vecinos", "Alta con consentimiento y reinicio del PIN"),
+]
 
 
 def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
@@ -191,10 +357,9 @@ def admin(cycle_label: str, pending, csrf: str | None = None) -> str:
         f'<form method="post" action="/admin/verificar">{hidden(csrf)}<input type="hidden" name="pedido" value="{o.order_id}">'
         "<button>Verificar</button></form></td></tr>" for o in pending
     )
-    body = ('<div class="card"><a href="/admin/armado">Armado y entrega</a> · <a href="/admin/reclamos">Reclamos</a>'
-            ' · <a href="/admin/colchon">Colchón</a> · <a href="/admin/metricas">Métricas</a>'
-            ' · <a href="/admin/devoluciones">Devoluciones</a> · <a href="/admin/conciliacion">Conciliación</a>'
-            ' · <a href="/admin/catalogo">Catálogo</a> · <a href="/admin/referencias">Precios de referencia</a> · <a href="/admin/vecinos">Vecinos</a></div>'
+    tiles = "".join(f'<a class="tile" href="{path}"><strong>{title}</strong><span>{text}</span></a>'
+                    for path, title, text in ADMIN_SECTIONS)
+    body = (f'<div class="tiles">{tiles}</div>'
             f'<div class="card"><strong>Pagos por verificar · ciclo {escape(cycle_label)}</strong>'
             f'<table><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th></th></tr>{rows}</table></div>'
             '<form class="card" method="post" action="/admin/liquidar">' + hidden(csrf) +

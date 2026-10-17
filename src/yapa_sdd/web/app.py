@@ -134,11 +134,15 @@ def create_app(store: InMemoryStore, clock=None, on_change=None):
                 progress = (f"{views.qty(total)} de {views.qty(tier.min_quantity)} {product.unit} · desde "
                             f"{views.qty(tier.min_quantity)} {product.unit} baja a "
                             f"{views.money(product.price_with_commission(tier.base_price))}")
+                goal = tier.min_quantity
             else:
                 progress = f"{views.qty(total)} {product.unit} pedidos · ya estamos en el mejor precio"
+                goal = total if total > 0 else Decimal("1")  # PW-03: barra llena
+                total = goal
             references = reference.current_references(store, product.product_id, cycle.to_lima(now).date())  # RF-06
             rows.append({"product_id": product.product_id, "name": product.name, "unit": product.unit,
                          "step": product.step, "max_price": product.max_unit_price(), "progress": progress,
+                         "ordered": total, "goal": goal,
                          "references": [references[k] for k in reference.KINDS if k in references]})
         csrf = session.csrf if session and session.role == "vecino" else None
         return views.home(cycle_id, cycle.is_open(now), rows, csrf)

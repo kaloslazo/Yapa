@@ -1,10 +1,11 @@
-"""Servidor de demo: PYTHONPATH=src python -m yapa_sdd.web [--puerto 8000] [--ahora 2026-09-16T10:00:00-05:00]"""
+"""Servidor de demo: PYTHONPATH=src python -m yapa_sdd.web [--puerto 8000] [--ahora 2026-09-16T10:00:00-05:00] [--demo]"""
 
 import argparse
 from datetime import datetime
 from wsgiref.simple_server import make_server
 
 from .. import auth, persistence
+from ..demo import DEMO_NOW, demo_store
 from ..seed import pilot_store
 from .app import create_app
 
@@ -31,12 +32,20 @@ def main() -> None:
     parser.add_argument("--puerto", type=int, default=8000)
     parser.add_argument("--ahora", help="fija la hora (S-63), p. ej. 2026-09-16T10:00:00-05:00")
     parser.add_argument("--base", help="archivo SQLite donde se guardan los datos (PS-04); sin esto, solo memoria")
+    parser.add_argument("--demo", action="store_true", help="arranca con una semana de demo ya vivida (PW-08)")
     args = parser.parse_args()
+    if args.demo and args.base:  # S-143
+        parser.error("--demo trabaja en memoria; no se combina con --base")
     clock = None
-    if args.ahora:
-        fixed = datetime.fromisoformat(args.ahora)
+    if args.ahora or args.demo:
+        fixed = datetime.fromisoformat(args.ahora) if args.ahora else DEMO_NOW
         clock = lambda: fixed  # noqa: E731
-    if args.base:
+    if args.demo:
+        store = demo_store()
+        _demo_credentials(store)
+        app = create_app(store, clock)
+        print("Semana de demo: 2026-W39 entregada y liquidada, 2026-W40 abierta (miércoles 30/09, 10:00)")
+    elif args.base:
         store = persistence.open_store(args.base)
         _demo_credentials(store)
         persistence.save(store, args.base)
