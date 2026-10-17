@@ -7,6 +7,7 @@ from wsgiref.simple_server import make_server
 from .. import auth, persistence
 from ..demo import DEMO_NOW, demo_store
 from ..seed import pilot_store
+from .api import create_api
 from .app import create_app
 
 
@@ -40,20 +41,24 @@ def main() -> None:
     if args.ahora or args.demo:
         fixed = datetime.fromisoformat(args.ahora) if args.ahora else DEMO_NOW
         clock = lambda: fixed  # noqa: E731
+    on_change = None
     if args.demo:
         store = demo_store()
-        _demo_credentials(store)
-        app = create_app(store, clock)
         print("Semana de demo: 2026-W39 entregada y liquidada, 2026-W40 abierta (miércoles 30/09, 10:00)")
     elif args.base:
         store = persistence.open_store(args.base)
-        _demo_credentials(store)
-        persistence.save(store, args.base)
-        app = create_app(store, clock, on_change=lambda s: persistence.save(s, args.base))
+        on_change = lambda s: persistence.save(s, args.base)  # noqa: E731
     else:
         store = pilot_store()
-        _demo_credentials(store)
-        app = create_app(store, clock)
+    _demo_credentials(store)
+    if args.base:
+        persistence.save(store, args.base)
+    html = create_app(store, clock, on_change=on_change)
+    api = create_api(store, clock, on_change=on_change)  # S-153: la API JSON en /api del mismo servidor
+
+    def app(environ, start_response):
+        target = api if (environ.get("PATH_INFO") or "").startswith("/api/") else html
+        return target(environ, start_response)
     with make_server("127.0.0.1", args.puerto, app) as server:  # S-61: solo esta máquina
         print(f"Yapa en http://127.0.0.1:{args.puerto}  (Ctrl+C para salir)")
         server.serve_forever()
