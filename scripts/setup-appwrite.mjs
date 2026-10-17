@@ -176,21 +176,43 @@ const createColumn = {
   datetime: (base) => tables.createDatetimeColumn(base),
 };
 
-// las tablas creadas antes no reciben columnas nuevas solas: se agregan las que falten
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Appwrite crea las columnas en segundo plano: se espera a que estén listas antes de escribir filas.
+// Si la API key no puede leer columnas (falta columns.read), se espera un rato fijo.
+async function waitForColumns(tableId, keys) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    let columns;
+    try {
+      ({ columns } = await tables.listColumns({ databaseId, tableId }));
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 401) {
+        await sleep(8000);
+        return;
+      }
+      throw error;
+    }
+    if (keys.every((key) => columns.some((item) => item.key === key && item.status === 'available'))) return;
+    await sleep(1000);
+  }
+}
+
+// las tablas creadas antes no reciben columnas nuevas solas: se intenta crear cada una y,
+// si ya existe (409), se salta; así no hace falta permiso de lectura sobre tablas ni columnas
 async function syncTable(table) {
   await tables.updateTable({ databaseId, tableId: table.id, name: table.name, permissions: table.permissions, rowSecurity: table.rowSecurity, enabled: true });
-  const existing = await tables.listColumns({ databaseId, tableId: table.id });
-  const keys = new Set(existing.columns.map((column) => column.key));
-  const missing = table.columns.filter((column) => !keys.has(column.key));
-  for (const column of missing) {
-    await createColumn[column.type]({ databaseId, tableId: table.id, key: column.key, required: column.required }, column);
-    console.log(`✓ columna ${table.id}.${column.key}`);
+  const created = [];
+  for (const column of table.columns) {
+    try {
+      await createColumn[column.type]({ databaseId, tableId: table.id, key: column.key, required: column.required }, column);
+      created.push(column.key);
+      console.log(`✓ columna ${table.id}.${column.key}`);
+    } catch (error) {
+      if (!isConflict(error)) throw error;
+    }
   }
-  for (let attempt = 0; missing.length && attempt < 30; attempt += 1) {
-    const { columns } = await tables.listColumns({ databaseId, tableId: table.id });
-    if (missing.every((column) => columns.some((item) => item.key === column.key && item.status === 'available'))) break;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
+  if (created.length) await waitForColumns(table.id, created);
+  console.log(`✓ tabla ${table.id} al día`);
 }
 
 for (const table of tableDefinitions) {
