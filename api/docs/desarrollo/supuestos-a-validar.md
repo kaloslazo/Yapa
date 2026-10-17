@@ -148,4 +148,6 @@ S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas)
 | 66 | ¿El admin de zona tiene envío gratis todas las semanas? | Sí, mientras su zona se atienda. Cuesta S/ 5 por semana y zona (S-158). | | | |
 | 67 | ¿Cuánto y por cuánto tiempo es el descuento temporal? | 5 % las primeras 4 semanas de la zona, unos S/ 10.56 en total (S-159). | | | |
 | 68 | ¿Cuánto vale un referido? | S/ 3.00 para cada uno al liquidar el primer pedido del invitado (S-163). | | | |
+| 69 | ¿Está bien que Yapa dé el código de pago y el vecino lo ponga en el mensaje del Yape? | Sí: el vecino no escribe nada y el admin lo encuentra en su Yape (S-150). | Sí (17/10) | | |
+| 70 | ¿Hay registro libre por correo o el alta la hace el equipo? | El alta la hace el equipo con el consentimiento del vecino, y puede traer un código de referido (S-167). | | | |
 

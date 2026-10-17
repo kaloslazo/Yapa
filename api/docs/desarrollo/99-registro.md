@@ -208,3 +208,10 @@
 - Error encontrado al implementar (AZ-09): `pilot_store()` compartía las mismas zonas entre repositorios. Primero la spec, luego la prueba en rojo, luego la corrección.
 - Resultado: 324 pruebas en verde.
 
+## Iteración 29 · Frontend de Kalos conectado al motor: vecino, admin de zona y admin de Yapa (17/10/2026)
+
+- Spec: `29-frontend-tres-roles.md` (S-166..S-169). La tienda de Kalos ya no calcula reglas: todo viene de la API. Se agregaron el panel del admin de zona y el centro de operaciones completo, y el pago sin escribir códigos.
+- Se retiró Appwrite y la copia en TypeScript de las reglas (S-168); quedan en el historial.
+- Errores de la spec corregidos antes del código: FE-E (55.95, no 56.00) y FE-09 (faltaba la ruta para guardar la ubicación).
+- Resultado: 325 pruebas del motor y 6 del frontend en verde; typecheck y build sin errores.
+

@@ -45,3 +45,30 @@ Como admin de Yapa, quiero operar la semana completa desde el panel de Kalos: ve
 - **FE-C · Cliente de la API.** Un `POST` manda la cabecera `X-Yapa-CSRF` con el token de la sesión y la cookie (`credentials: 'include'`). Una respuesta 422 se convierte en un error con el `codigo` y el `mensaje` de la API.
 - **FE-D · Rol.** `admin` abre el panel de operaciones; `admin_zona` puede abrir el panel de zona y la tienda; `vecino` abre la tienda.
 - **FE-E · Total aproximado del carrito.** 5 kg de papa amarilla a 4.03, 10 de papa blanca a 1.23 y 10 de cebolla a 2.35 suman **55.95** aprox. con los precios redondeados que se ven; el servidor, con los precios sin redondear (4.032…), da un subtotal de S/ 56.00 y un total de S/ 61.00 con el envío. Por eso el carrito dice "aprox." y el total que vale es el de `POST /api/cotizar`.
+
+## Trazabilidad
+
+| Regla | Código (`src/`) | Prueba |
+|---|---|---|
+| FE-01, S-166 | `services/api.ts` (cookie, `X-Yapa-CSRF`, errores), `services/mappers.ts`, `vite.config.ts` (proxy `/api`) | `services/api.test.ts` (FE-A, FE-C) |
+| FE-02, S-167 | `components/AuthDialog.tsx`, `utils/roles.ts`, `App.tsx` (`login`, `logout`) | `utils/cart.test.ts` (FE-D) |
+| FE-03, S-169 | `components/Catalog.tsx` (avance del tramo, distintivo de ahorro, − y +), `data/presentation.ts`, `utils/cart.ts` | `utils/cart.test.ts` (FE-B, FE-E) |
+| FE-04 | `components/CheckoutDialog.tsx` (medio, saldo, código de pago para copiar) | API-D (`api/tests/test_api.py`) |
+| FE-05 | `components/OrdersPage.tsx` (avance, cancelar, lo devuelto, ahorro, beneficio, reclamos con foto, devolución de saldo) | API-E, EC-L |
+| FE-06, FE-07 | `components/ZonePage.tsx` (vecino y panel del admin de zona: anillo de avance, mapa, vecinos, beneficios, uniones, transferencia) | API-H, AZ-H |
+| FE-08 | `components/AdminPanel.tsx` (resumen, armado y entrega, reclamos, devoluciones, conciliación, métricas, catálogo, referencias, vecinos) | API-F, API-G |
+| FE-09 | `api/src/yapa_sdd/web/api.py` `ubicacion` | FE-F (`api/tests/test_api.py`) |
+| S-168 | se retiran `services/appwrite.ts`, `auth.ts`, `database.ts`, `utils/domain.ts`, sus pruebas, `scripts/setup-appwrite.mjs` y `supabase/schema.sql` | — |
+
+## Revisión manual (17/10/2026, semana de demo)
+
+Motor con `python -m yapa_sdd.web --demo` y tienda con `npx vite preview`. Capturas con sesión iniciada en escritorio (1400 px) y celular (390 px): tienda con carrito, checkout, confirmación con código, mis pedidos, panel del admin de zona y centro de operaciones.
+
+- Pedido real desde la interfaz: Ana pidió 5 kg de papa amarilla, 10 de papa blanca y 10 de cebolla, usó su saldo de S/ 0.56 y recibió el pedido 19 con el código `YP-2026W40-101-XXXX` para yapear S/ 60.44. El avance de la papa amarilla subió de 33 a 38 kg.
+- Errores encontrados al revisar y corregidos: el panel de zona se caía porque la API usa `vecinos` para la lista y no para el número; la columna de Mis pedidos se desbordaba; el panel de operaciones decía "Falta tu pago" (texto del vecino) en vez de "Por verificar"; la canasta vacía mostraba el envío.
+
+## Notas
+
+- El ahorro aproximado del carrito (S/ 46.80) y el del servidor (S/ 46.75) difieren en céntimos por el redondeo de los precios que se ven; por eso el carrito dice "aprox." (FE-E).
+- Las fotos se guardan en `api/fotos/` y el panel muestra su nombre, no la imagen (S-72).
+
