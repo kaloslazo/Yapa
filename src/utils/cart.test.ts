@@ -21,7 +21,7 @@ describe('FE-E · total aproximado del carrito', () => {
       { product: { price: 4.03 }, quantity: 5 },
       { product: { price: 1.23 }, quantity: 10 },
       { product: { price: 2.35 }, quantity: 10 },
-    ])).toBeCloseTo(56.0, 2);
+    ])).toBeCloseTo(55.95, 2);
   });
 });
 
