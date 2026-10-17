@@ -33,9 +33,12 @@ Como admin de Yapa, quiero operar la semana completa desde el panel de Kalos: ve
 | FE-05 | Mis pedidos: avance, cancelar con botones, lo devuelto, el ahorro frente al supermercado, el beneficio de admin de zona, y reclamos con foto en los pedidos entregados. |
 | FE-06 | Mi zona (vecino): su zona, unirse a otra de una lista, crear una con el botón de ubicación, y su código de referido con enlace para compartir por WhatsApp. |
 | FE-07 | Panel del admin de zona: avance del grupo, vecinos con "ya pidió", beneficios, código de referido, mapa con el radio de 300 m y las zonas a 500 m, unir, aceptar o rechazar solicitudes, transferir el rol y activar la recepción. |
+| FE-09 | Hueco de la API (iteración 27): faltaba guardar la ubicación del vecino (HR-01), que necesitan unirse y crear zona. `POST /api/ubicacion` con `lat` y `lon` llama a `zones.set_location`. |
 | FE-08 | Panel de operaciones (admin de Yapa): resumen con indicadores y grupos, verificar pagos, liquidar con confirmación, armado y entrega con foto, reclamos, devoluciones, conciliación, métricas, catálogo, precios de referencia y vecinos (alta con consentimiento y referido, reinicio de PIN). |
 
-## Criterios de aceptación (pruebas de `src/**/*.test.ts`)
+## Criterios de aceptación (pruebas de `src/**/*.test.ts` y `api/tests/test_api.py`)
+
+- **FE-F · Ubicación por la API.** Un vecino sin ubicación hace `POST /api/ubicacion` con lat -12.0850 y lon -77.0350 → 200, y después puede crear una zona en Lince. Con lat `"abc"` → 422 `INVALID_LOCATION`.
 
 - **FE-A · Producto desde la API.** Un producto de la API con `precio_max` `"4.03"`, `paso` `"1"`, `pedido_total` `"27"` y siguiente tramo desde `"100"` a `"3.79"` se muestra con precio 4.03, avance 27 de 100 y "baja a 3.79". Con referencia de supermercado a `"7.99"`, el ahorro es 49.5 %.
 - **FE-B · Paso y tope del carrito.** El ajo (paso 0.25, máximo 10) sube de 0 a 0.25 y a 0.5; desde 10 no sube más; al bajar de 0.25 sale del carrito. La papa (paso 1) sube de 1 en 1.
