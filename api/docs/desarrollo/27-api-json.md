@@ -45,3 +45,20 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (2026-W38), catálogo base del pilo
 - **API-G · Semana completa por la API.** Con 8 vecinos de Jesús María que piden y pagan, el admin arma las bolsas, entrega con foto y liquida → los pedidos quedan `LIQUIDADO` y `GET /api/admin/conciliacion` da diferencia `"0.00"`.
 - **API-H · Zona.** Un vecino crea una zona en Lince y queda como su admin (`rol` `admin_zona`); `GET /api/mi-zona` lo dice. Otro vecino a 100 m se une. Transferir el rol a ese vecino → el primero vuelve a `vecino`.
 - **API-I · Errores.** Ruta inexistente → 404 en JSON; error de negocio → 422 con `codigo` y `mensaje`.
+
+## Trazabilidad
+
+| Regla | Código (`src/yapa_sdd/web/api.py`) | Prueba (`tests/test_api.py`) |
+|---|---|---|
+| API-01 | `estado`, `catalogo`, `zonas` | `test_api_a_*` |
+| API-02, S-155, S-157 | `sesion_entrar`, `sesion_ver`, `sesion_salir`, `role_of`, chequeo CSRF en `dispatch` | `test_api_b_*`, `test_api_c_*`, `test_api_h_*` |
+| API-03, S-150 | `cotizar`, `pedidos`, `payment_code`, `mis_pedidos`, `cancelar`, `devolucion`, `cambiar_pin` | `test_api_d_*`, `test_api_e_*` |
+| API-04, S-151 | `reclamos`, `reclamar` (`_body` acepta multipart con `foto_archivo`) | revisión manual (la regla ya está en `test_web_experiencia.test_ec_l_*`) |
+| API-05 | `mi_zona`, `zona_*`, `solicitud_*` | `test_api_h_*` |
+| API-06 | `admin_*` | `test_api_f_*`, `test_api_g_*` |
+| API-07 | `dispatch` (401, 403 por rol) | `test_api_b_*`, `test_api_f_*` |
+| S-153 | `web/__main__.py`: `/api/` va a la API, el resto a la web HTML | servidor levantado a mano |
+| S-154, S-156 | `money`, `qty`, `app` (errores en JSON) | `test_api_a_*`, `test_api_i_*` |
+
+Además de las pruebas, se recorrieron todas las rutas `GET` sobre la semana de demo (18 rutas, todas 200) y un pedido con saldo (`YP-2026W40-101-XXXX`, yapea S/ 60.44, usa S/ 0.56).
+

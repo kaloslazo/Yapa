@@ -195,3 +195,9 @@
 - Se ajustaron WA-05 y WA-08 (estados en palabras, S-146) en un commit `test:` antes del código.
 - Resultado: 305 pruebas en verde.
 
+## Iteración 27 · API JSON para el frontend (17/10/2026)
+
+- Decisión del equipo: la app React de Kalos (`kaloslazo/Yapa`) es el frontend y este motor es el backend. El motor entró al repo de Kalos en `api/` con su historial (`git subtree`), en la rama `carlos/motor-y-roles`.
+- Spec: `27-api-json.md` (S-153..S-157). `/api/...` con sesión, CSRF por cabecera, errores en JSON y roles `vecino`, `admin_zona` y `admin`.
+- Resultado: 314 pruebas en verde.
+
