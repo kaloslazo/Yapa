@@ -63,12 +63,18 @@ class ShoppingExperienceSpecTests(unittest.TestCase):
         self.assertIn("frente al supermercado", html)
         self.assertIn("S/ 19.79", html)
 
-    # EC-D
-    def test_ec_d_balance_is_proposed(self):
+    # EC-D (S-148: casilla, sin escribir montos)
+    def test_ec_d_balance_with_checkbox(self):
         wallet.credit(self.store, 101, D("10.00"), "AJUSTE_PRUEBA", NOW)
         html = self.web.post("/cotizar", dict(BASKET))[2]
-        self.assertIn('name="saldo" inputmode="decimal" value="10.00"', html)
-        self.assertIn('name="monto" inputmode="decimal" value="51.00"', html)
+        self.assertIn('name="usar_saldo"', html)
+        self.assertIn("Usar mi saldo (S/ 10.00)", html)
+        self.assertNotIn('name="codigo"', html)
+        self.assertNotIn('name="monto"', html)
+        status, _, html = self.web.post("/pedidos", dict(BASKET, metodo="YAPE", usar_saldo="si"))
+        self.assertEqual(status, 200)
+        self.assertEqual(self.store.orders[1].paid_with_balance, D("10.00"))
+        self.assertIn("Yapea S/ 51.00", html)
 
     # EC-E
     def test_ec_e_confirmation(self):
@@ -121,6 +127,46 @@ class ShoppingExperienceSpecTests(unittest.TestCase):
         self.assertIn('<select name="cliente">', self.admin.get("/admin/vecinos")[2])
         self.assertIn('<select name="zona">', self.web.get("/zona")[2])
         self.assertIn("<details", self.web.get("/")[2])
+
+    # EC-K
+    def test_ec_k_payment_code_is_generated(self):
+        status, _, html = self.web.post("/pedidos", dict(BASKET, metodo="YAPE"))
+        self.assertEqual(status, 200)
+        code = self.store.orders[1].operation_code
+        self.assertRegex(code, r"^YP-2026W38-101-[A-Z0-9]{4}$")
+        self.assertIn(code, html)
+        self.assertIn("Yapea S/ 61.00", html)
+        self.assertIn(code, self.admin.get("/admin")[2])
+
+    # EC-M
+    def test_ec_m_location_button(self):
+        self.assertIn("Usar mi ubicación", self.web.get("/zona")[2])
+
+
+class PhotoUploadSpecTests(unittest.TestCase):
+    # EC-L
+    def test_ec_l_claim_photo_as_file(self):
+        import tempfile
+        from pathlib import Path
+
+        fast_hashing(self)
+        from yapa_sdd.demo import demo_store
+
+        store = demo_store()
+        set_pin(store, 101, PIN)
+        folder = tempfile.mkdtemp()
+        saturday_noon = datetime(2026, 9, 26, 12, 0, tzinfo=LIMA)
+        web = WebClient(create_app(store, clock=lambda: saturday_noon, photo_dir=folder))
+        web.login(101, PIN)
+        html = web.get("/reclamos")[2]
+        self.assertIn('enctype="multipart/form-data"', html)
+        self.assertIn('<input type="file" name="foto_archivo"', html)
+        status, _, _ = web.post("/reclamos", {"articulo": "1:PAPA-AMARILLA", "cantidad": "1", "motivo": "FALTANTE"},
+                                files={"foto_archivo": ("cebolla.jpg", b"\xff\xd8foto-de-prueba")})
+        self.assertEqual(status, 200)
+        claim = next(iter(store.claims.values()))
+        self.assertTrue(claim.photo.startswith("fotos/") and claim.photo.endswith(".jpg"))
+        self.assertEqual((Path(folder) / Path(claim.photo).name).read_bytes(), b"\xff\xd8foto-de-prueba")
 
 
 class DemoSavingsSpecTests(unittest.TestCase):

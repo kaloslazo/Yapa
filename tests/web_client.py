@@ -20,16 +20,29 @@ class WebClient:
         self.cookie = None
         self.csrf = None
 
-    def request(self, method, path, data=None, with_csrf=True):
+    def request(self, method, path, data=None, with_csrf=True, files=None):
         environ = {}
         setup_testing_defaults(environ)
         path, _, query = path.partition("?")
         if data is not None and with_csrf and self.csrf:
             data = dict(data, csrf=self.csrf)
-        body = urlencode(data or {}).encode("utf-8")
+        if files:  # S-151: formulario con archivos
+            boundary = "yapa-prueba-1234"
+            parts = []
+            for key, value in (data or {}).items():
+                parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'
+                             .encode("utf-8"))
+            for key, (filename, content) in files.items():
+                parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"; filename="{filename}"'
+                             f'\r\nContent-Type: image/jpeg\r\n\r\n'.encode("utf-8") + content + b"\r\n")
+            body = b"".join(parts) + f"--{boundary}--\r\n".encode("utf-8")
+            content_type = f"multipart/form-data; boundary={boundary}"
+        else:
+            body = urlencode(data or {}).encode("utf-8")
+            content_type = "application/x-www-form-urlencoded"
         environ.update({
             "REQUEST_METHOD": method, "PATH_INFO": path, "QUERY_STRING": query,
-            "CONTENT_TYPE": "application/x-www-form-urlencoded", "CONTENT_LENGTH": str(len(body)),
+            "CONTENT_TYPE": content_type, "CONTENT_LENGTH": str(len(body)),
             "wsgi.input": io.BytesIO(body),
         })
         if self.cookie:
@@ -53,8 +66,8 @@ class WebClient:
     def get(self, path):
         return self.request("GET", path)
 
-    def post(self, path, data=None, with_csrf=True):
-        return self.request("POST", path, data or {}, with_csrf)
+    def post(self, path, data=None, with_csrf=True, files=None):
+        return self.request("POST", path, data or {}, with_csrf, files)
 
     def login(self, user, secret, kind="vecino"):
         status, headers, html = self.post("/entrar", {"tipo": kind, "usuario": str(user), "secreto": secret},
