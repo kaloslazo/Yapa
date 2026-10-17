@@ -140,3 +140,12 @@ S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas)
 - **Precios del mercado de barrio.** Es el competidor real en frescos y no está medido. Ver `kit-validacion-campo.md`.
 - **Precio del galón de Exlim** y de otras marcas emergentes de limpieza.
 - **Confirmar con un proveedor aliado real** que aceptaría respetar su lista semanal y declarar su stock máximo.
+
+## Iteración 28 · Beneficios del admin de zona y referidos (17/10/2026)
+
+| # | Pregunta | Propuesta | Carlos | Kalos | Aaron |
+|---|---|---|---|---|---|
+| 66 | ¿El admin de zona tiene envío gratis todas las semanas? | Sí, mientras su zona se atienda. Cuesta S/ 5 por semana y zona (S-158). | | | |
+| 67 | ¿Cuánto y por cuánto tiempo es el descuento temporal? | 5 % las primeras 4 semanas de la zona, unos S/ 10.56 en total (S-159). | | | |
+| 68 | ¿Cuánto vale un referido? | S/ 3.00 para cada uno al liquidar el primer pedido del invitado (S-163). | | | |
+

@@ -201,3 +201,10 @@
 - Spec: `27-api-json.md` (S-153..S-157). `/api/...` con sesión, CSRF por cabecera, errores en JSON y roles `vecino`, `admin_zona` y `admin`.
 - Resultado: 314 pruebas en verde.
 
+## Iteración 28 · Admin de zona: beneficios, referidos y su panel (17/10/2026)
+
+- Spec: `28-admin-zona-beneficios.md` (S-158..S-165). Envío gratis y 5 % las primeras 4 semanas para el admin de zona, código de referido `NOMBRE+número`, premio de S/ 3.00 + S/ 3.00 al liquidar el primer pedido del invitado, y el panel del admin de zona en `/api/mi-zona` (avance del grupo, vecinos que ya pidieron, zonas cercanas para unir, beneficios y código).
+- Costo de cada beneficio en la spec, para que el equipo decida con números (lección L2 de los antecedentes).
+- Error encontrado al implementar (AZ-09): `pilot_store()` compartía las mismas zonas entre repositorios. Primero la spec, luego la prueba en rojo, luego la corrección.
+- Resultado: 324 pruebas en verde.
+

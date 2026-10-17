@@ -64,3 +64,18 @@ Hora fija: miércoles 16/09/2026 a las 10:00 (2026-W38). Zona Z-JM-01 con 8 veci
 ## Hueco encontrado al implementar
 
 - `seed.pilot_store()` agregaba a cada repositorio **las mismas instancias** de `Zone` de `PILOT_ZONES`. Como `Zone` es mutable (`admin_id`, `group_id`, `created_cycle`), cambiar una zona en un repositorio la cambiaba en todos los que se crearan después. Regla nueva **AZ-09**: cada repositorio del piloto recibe **copias** de las zonas. Se detectó porque AZ-C y AZ-F fallaban solo cuando AZ-A corría antes.
+
+## Trazabilidad
+
+| Regla | Código | Prueba (`tests/test_zone_benefits.py`) |
+|---|---|---|
+| AZ-01, AZ-02, AZ-03, S-158..S-160 | `settlement.settle_cycle` (envío 0 y 5 % para el admin), `_in_discount_weeks`, `SettledOrder.benefit`, `Zone.created_cycle` (lo pone `zones.create_zone`) | `test_az_a_*`, `test_az_b_*`, `test_az_c_*` |
+| AZ-04, S-161 | `customers.referral_code` | `test_az_d_*` |
+| AZ-05, S-162 | `customers.find_by_referral`, `register_customer(referral=...)`, `Customer.referred_by` | `test_az_e_*` |
+| AZ-06, S-163 | `settlement._reward_referral` (`PREMIO_REFERIDO`) | `test_az_f_*` |
+| AZ-07, S-164 | `audit.money_balance` resta los premios de lo retenido | `test_az_g_*` |
+| AZ-08, S-165 | `web/api.py` `zone_admin_panel`, `mi_zona`; `codigo_referido` en `GET /api/sesion` | `test_az_h_*` |
+| AZ-09 | `seed.pilot_store` agrega copias de las zonas | `test_az09_*` |
+
+La semana de demo ahora tiene a Ana (101) como admin de Los Álamos desde la 2026-W40 (envío gratis y 5 % hasta la 2026-W43) y a Diana Rojas (115), invitada por Ana, con su primer pedido en la W40.
+
