@@ -68,6 +68,7 @@ const tableDefinitions = [
       { key: 'name', type: 'string', size: 128, required: true },
       { key: 'phone', type: 'string', size: 32, required: true },
       { key: 'district', type: 'string', size: 64, required: true },
+      { key: 'zoneId', type: 'string', size: 32, required: false },
       { key: 'role', type: 'string', size: 32, required: true },
       { key: 'createdAt', type: 'datetime', required: true },
     ],
@@ -88,6 +89,7 @@ const tableDefinitions = [
       { key: 'image', type: 'string', size: 512, required: true },
       { key: 'stock', type: 'integer', required: true },
       { key: 'active', type: 'boolean', required: true },
+      { key: 'tiers', type: 'string', size: 512, required: false },
       { key: 'updatedAt', type: 'datetime', required: true },
     ],
   },
@@ -109,7 +111,7 @@ const tableDefinitions = [
   {
     id: 'orders',
     name: 'Pedidos',
-    permissions: [userCreate, adminRead],
+    permissions: [userCreate, adminRead, adminUpdate],
     rowSecurity: true,
     columns: [
       { key: 'userId', type: 'string', size: 36, required: true },
@@ -125,6 +127,19 @@ const tableDefinitions = [
       { key: 'total', type: 'double', required: true },
       { key: 'itemCount', type: 'integer', required: true },
       { key: 'createdAt', type: 'datetime', required: true },
+      { key: 'cycleId', type: 'string', size: 16, required: false },
+      { key: 'zoneId', type: 'string', size: 32, required: false },
+      { key: 'operationCode', type: 'string', size: 64, required: false },
+      { key: 'paymentStatus', type: 'string', size: 32, required: false },
+      { key: 'maxSubtotal', type: 'double', required: false },
+      { key: 'deliveryCharged', type: 'double', required: false },
+      { key: 'paidExternal', type: 'double', required: false },
+      { key: 'paidBalance', type: 'double', required: false },
+      { key: 'finalTotal', type: 'double', required: false },
+      { key: 'deliveryFinal', type: 'double', required: false },
+      { key: 'refundToBalance', type: 'double', required: false },
+      { key: 'refundToMethod', type: 'double', required: false },
+      { key: 'refundPaidAt', type: 'datetime', required: false },
     ],
   },
   {
@@ -152,6 +167,32 @@ try {
   await ensure(`base de datos ${databaseId}`, () => tables.create({ databaseId, name: 'Yapa', enabled: true }));
 }
 
+const createColumn = {
+  string: (base, column) => tables.createStringColumn({ ...base, size: column.size }),
+  email: (base) => tables.createEmailColumn(base),
+  double: (base) => tables.createFloatColumn(base),
+  integer: (base) => tables.createIntegerColumn(base),
+  boolean: (base) => tables.createBooleanColumn(base),
+  datetime: (base) => tables.createDatetimeColumn(base),
+};
+
+// las tablas creadas antes no reciben columnas nuevas solas: se agregan las que falten
+async function syncTable(table) {
+  await tables.updateTable({ databaseId, tableId: table.id, name: table.name, permissions: table.permissions, rowSecurity: table.rowSecurity, enabled: true });
+  const existing = await tables.listColumns({ databaseId, tableId: table.id });
+  const keys = new Set(existing.columns.map((column) => column.key));
+  const missing = table.columns.filter((column) => !keys.has(column.key));
+  for (const column of missing) {
+    await createColumn[column.type]({ databaseId, tableId: table.id, key: column.key, required: column.required }, column);
+    console.log(`✓ columna ${table.id}.${column.key}`);
+  }
+  for (let attempt = 0; missing.length && attempt < 30; attempt += 1) {
+    const { columns } = await tables.listColumns({ databaseId, tableId: table.id });
+    if (missing.every((column) => columns.some((item) => item.key === column.key && item.status === 'available'))) break;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+
 for (const table of tableDefinitions) {
   await ensure(`tabla ${table.id}`, () => tables.createTable({
     databaseId,
@@ -162,24 +203,27 @@ for (const table of tableDefinitions) {
     enabled: true,
     columns: table.columns,
   }));
+  await syncTable(table);
 }
 
+// precios de ejemplo: el primero es el máximo; `tiers` son los tramos que bajan con el volumen de todos
 const products = [
-  ['arroz-extra', 'Arroz extra', 'Despensa', 4.8, 'kg', 'Grano largo, calidad mayorista', 'rice', '/images/products/arroz-extra.png', 28],
-  ['aceite-vegetal', 'Aceite vegetal', 'Despensa', 8.9, 'L', 'Botella familiar de 1 litro', 'oil', '/images/products/aceite-vegetal.png', 16],
-  ['platano-seda', 'Plátano de seda', 'Frutas', 3.9, 'kg', 'Dulce y listo para la semana', 'banana', '/images/products/platano-seda.png', 22],
-  ['tomate-italiano', 'Tomate italiano', 'Verduras', 5.6, 'kg', 'Cosecha seleccionada del día', 'tomato', '/images/products/tomate-italiano.png', 18],
-  ['papa-amarilla', 'Papa amarilla', 'Verduras', 4.2, 'kg', 'Textura cremosa para guisos', 'potato', '/images/products/papa-amarilla.png', 31],
-  ['leche-pack', 'Leche evaporada', 'Lácteos', 21.6, 'pack x 6', 'Seis latas para la despensa', 'milk', '/images/products/leche-pack.png', 12],
+  ['arroz-extra', 'Arroz extra', 'Despensa', 4.8, 'kg', 'Grano largo, calidad mayorista', 'rice', '/images/products/arroz-extra.png', 300, [[100, 4.5], [250, 4.3]]],
+  ['aceite-vegetal', 'Aceite vegetal', 'Despensa', 8.9, 'L', 'Botella familiar de 1 litro', 'oil', '/images/products/aceite-vegetal.png', 120, [[24, 8.4]]],
+  ['platano-seda', 'Plátano de seda', 'Frutas', 3.9, 'kg', 'Dulce y listo para la semana', 'banana', '/images/products/platano-seda.png', 150, [[60, 3.5]]],
+  ['tomate-italiano', 'Tomate italiano', 'Verduras', 5.6, 'kg', 'Cosecha seleccionada del día', 'tomato', '/images/products/tomate-italiano.png', 200, [[80, 4.9]]],
+  ['papa-amarilla', 'Papa amarilla', 'Verduras', 4.2, 'kg', 'Textura cremosa para guisos', 'potato', '/images/products/papa-amarilla.png', 400, [[100, 3.9], [250, 3.7]]],
+  ['leche-pack', 'Leche evaporada', 'Lácteos', 21.6, 'pack x 6', 'Seis latas para la despensa', 'milk', '/images/products/leche-pack.png', 60, [[12, 20.4]]],
 ];
 
 const now = new Date().toISOString();
-for (const [id, name, category, price, unit, detail, art, image, stock] of products) {
+for (const [id, name, category, price, unit, detail, art, image, stock, tierPairs] of products) {
+  const tiers = JSON.stringify(tierPairs.map(([from, tierPrice]) => ({ from, price: tierPrice })));
   await tables.upsertRow({
     databaseId,
     tableId: 'products',
     rowId: id,
-    data: { id, name, category, price, unit, detail, art, image, stock, active: true, updatedAt: now },
+    data: { id, name, category, price, unit, detail, art, image, stock, tiers, active: true, updatedAt: now },
   });
 }
 console.log(`✓ ${products.length} productos iniciales listos`);

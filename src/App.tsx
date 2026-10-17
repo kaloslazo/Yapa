@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { products as initialCatalog } from './data/catalog';
+import { DEFAULT_ZONE_ID, products as initialCatalog, windowLabel, zoneById, zones } from './data/catalog';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthDialog, type AuthAudience } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
@@ -9,23 +9,23 @@ import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorksSection } from './components/EditorialSections';
 import { Icon } from './components/Icon';
 import { OrdersPage } from './components/OrdersPage';
-import { getCurrentAccount, getSessionAccount, isAdminAccount } from './services/auth';
-import { createOrder, loadCatalog, loadOrders, saveLocalCatalog, updateProduct as persistProductUpdate } from './services/database';
+import { getCurrentAccount, getSessionAccount, isAdminAccount, saveAccountZone } from './services/auth';
+import { createOrder, loadCatalog, loadOrders, saveLocalCatalog, seedLocalDemo, updateOrder, updateProduct as persistProductUpdate, withTiers } from './services/database';
 import { persistenceMode, appwriteReady } from './services/appwrite';
-import type { AccountProfile, CartState, Category, OrderConfirmation, OrderRecord, OrderSelection, Product } from './types';
+import type { AccountProfile, CartState, Category, OrderConfirmation, OrderRecord, OrderSelection, Product, RefundDestination } from './types';
 import { categories } from './types';
-import { canCheckout, createOrderCode, calculateDeliveryFee, FREE_DELIVERY_FROM, MIN_SUBTOTAL } from './utils/domain';
+import { balanceOf, cancelOrder, canCheckout, createOrderCode, cycleId, isCycleOpen, maxPerLine, MIN_SUBTOTAL, quoteOrder, settleCycle, validateCheckout } from './utils/domain';
+import { now } from './utils/clock';
 import { readStored, writeStored } from './utils/storage';
 import { formatMoney } from './utils/format';
 import './styles.css';
 
 const DEFAULT_SELECTION: OrderSelection = {
-  district: 'Lince',
-  deliveryWindow: 'SAT_09_12',
-  paymentMethod: 'BILLETERA_DIGITAL',
-  addressLine: '',
+  zoneId: DEFAULT_ZONE_ID,
   reference: '',
-  coordinates: { lat: -12.0841, lng: -77.0317 },
+  paymentMethod: 'YAPE',
+  operationCode: '',
+  useBalance: 0,
 };
 
 type CustomerView = 'store' | 'orders' | 'cart';
@@ -44,7 +44,7 @@ function initialCategory(): Category {
 export default function App() {
   const [category, setCategory] = useState<Category>(initialCategory);
   const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
-  const [catalog, setCatalog] = useState<Product[]>(() => readStored('yapa.catalog', initialCatalog));
+  const [catalog, setCatalog] = useState<Product[]>(() => readStored('yapa.catalog', initialCatalog).map(withTiers));
   const [cart, setCart] = useState<CartState>(() => readStored('yapa.cart', {}));
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -98,10 +98,6 @@ export default function App() {
   }, [cart]);
 
   useEffect(() => {
-    if (persistenceMode === 'local') writeStored('yapa.orders', orders);
-  }, [orders]);
-
-  useEffect(() => {
     if (!toast) return;
     const timeout = window.setTimeout(() => setToast(null), 2800);
     return () => window.clearTimeout(timeout);
@@ -151,13 +147,24 @@ export default function App() {
     const product = catalog.find((item) => item.id === id);
     return product ? [{ product, quantity }] : [];
   }), [cart, catalog]);
-  const subtotal = useMemo(() => lines.reduce((sum, line) => sum + line.product.price * line.quantity, 0), [lines]);
-  const deliveryFee = calculateDeliveryFee(subtotal);
+  const quote = useMemo(() => quoteOrder(lines), [lines]);
+  const subtotal = quote.subtotal;
+  const clock = now();
+  const currentCycle = cycleId(clock);
+  const cycleOpen = isCycleOpen(clock);
+  const myOrders = useMemo(() => orders.filter((order) => order.userId === account?.id), [orders, account]);
+  const balance = balanceOf(myOrders);
+  const accountZone = zoneById(account?.zoneId);
+  const initialSelection = useMemo(() => ({ ...selection, zoneId: account?.zoneId ?? selection.zoneId }), [selection, account]);
 
   const addProduct = (product: Product) => {
     const currentQuantity = cart[product.id] || 0;
     if (currentQuantity >= product.stock) {
       setToast({ message: `${product.name} no tiene más stock disponible.`, tone: 'warning' });
+      return;
+    }
+    if (currentQuantity >= maxPerLine(product)) {
+      setToast({ message: `Puedes pedir hasta ${maxPerLine(product)} ${product.unit} de ${product.name}.`, tone: 'warning' });
       return;
     }
     setCart((current) => ({ ...current, [product.id]: (current[product.id] || 0) + 1 }));
@@ -184,6 +191,10 @@ export default function App() {
       setToast({ message: `Te faltan ${formatMoney(MIN_SUBTOTAL - subtotal)} para llegar al mínimo de S/ 50.00.`, tone: 'warning' });
       return;
     }
+    if (!cycleOpen) {
+      setToast({ message: 'El ciclo está cerrado: los pedidos se reciben de lunes a miércoles hasta las 20:00.', tone: 'warning' });
+      return;
+    }
     setConfirmation(null);
     setCheckoutOpen(true);
   };
@@ -193,11 +204,68 @@ export default function App() {
       openAuth('user');
       return;
     }
-    const nextOrder = await createOrder({ account, selection: nextSelection, lines, total: subtotal + deliveryFee, orderCode: createOrderCode(Date.now() % 1000000) });
-    setSelection(nextSelection);
+    const moment = now();
+    const error = validateCheckout({
+      subtotal: quote.subtotal, total: quote.total, zone: zoneById(nextSelection.zoneId), now: moment, orders: myOrders,
+      paymentMethod: nextSelection.paymentMethod, operationCode: nextSelection.operationCode, useBalance: nextSelection.useBalance,
+    });
+    if (error) throw new Error(error);
+    const buyer = account.zoneId === nextSelection.zoneId ? account : await saveAccountZone(account, nextSelection.zoneId);
+    if (buyer !== account) setAccount(buyer);
+    const nextOrder = await createOrder({ account: buyer, selection: nextSelection, lines, quote, cycleId: cycleId(moment), orderCode: createOrderCode(Date.now() % 1000000) });
+    setSelection({ ...nextSelection, operationCode: '', useBalance: 0 });
     setOrders((current) => [nextOrder, ...current]);
     setConfirmation(nextOrder);
     setCart({});
+  };
+
+  const applyPatch = async (order: OrderRecord, patch: Partial<OrderRecord>) => {
+    await updateOrder(order.id, patch);
+    setOrders((current) => current.map((item) => (item.id === order.id ? { ...item, ...patch } : item)));
+  };
+
+  const cancel = async (order: OrderRecord, destination: RefundDestination) => {
+    try {
+      await applyPatch(order, cancelOrder(order, destination));
+      setToast({ message: `Pedido ${order.orderCode} cancelado.`, tone: 'success' });
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'No pudimos cancelar el pedido.', tone: 'warning' });
+    }
+  };
+
+  const verify = async (order: OrderRecord) => {
+    try {
+      await applyPatch(order, { paymentStatus: 'VERIFICADO' });
+      setToast({ message: `Pago del pedido ${order.orderCode} verificado.`, tone: 'success' });
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'No pudimos verificar el pago.', tone: 'warning' });
+    }
+  };
+
+  // liquidación: se calcula todo primero y recién después se guarda cada pedido
+  const settle = async (cycle: string) => {
+    const result = settleCycle(orders, cycle, zones, catalog);
+    for (const item of result.orders) {
+      const order = orders.find((candidate) => candidate.id === item.orderId);
+      if (order) await updateOrder(order.id, { status: item.status, finalTotal: item.finalTotal, deliveryFinal: item.deliveryFinal, refundToBalance: item.refundToBalance, refundToMethod: item.refundToMethod });
+    }
+    const byId = new Map(result.orders.map((item) => [item.orderId, item]));
+    setOrders((current) => current.map((order) => (byId.has(order.id) ? { ...order, ...byId.get(order.id) } : order)));
+    setToast({ message: `Ciclo ${cycle} liquidado: ${formatMoney(result.totalToBalance)} volvió a saldo.`, tone: 'success' });
+    return result;
+  };
+
+  const markRefundPaid = async (order: OrderRecord) => {
+    try {
+      await applyPatch(order, { refundPaidAt: new Date().toISOString() });
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'No pudimos registrar la devolución.', tone: 'warning' });
+    }
+  };
+
+  const seedDemo = () => {
+    setOrders(seedLocalDemo(catalog, currentCycle));
+    setToast({ message: 'Se cargaron 13 pedidos de demo en el ciclo actual.', tone: 'success' });
   };
 
   const closeCheckout = () => {
@@ -212,7 +280,7 @@ export default function App() {
 
   const updateProduct = (id: string, patch: Partial<Pick<Product, 'price' | 'stock'>>) => {
     const previous = catalog.find((product) => product.id === id);
-    setCatalog((current) => current.map((product) => product.id === id ? { ...product, ...patch } : product));
+    setCatalog((current) => current.map((product) => product.id === id ? withTiers({ ...product, ...patch }) : product));
     void persistProductUpdate(id, patch).catch((error) => {
       if (previous) setCatalog((current) => current.map((product) => product.id === id ? previous : product));
       setToast({ message: error instanceof Error ? error.message : 'No pudimos guardar el cambio.', tone: 'warning' });
@@ -270,19 +338,19 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {showAdminView ? <AdminPanel products={catalog} orders={orders} adminName={account?.name || ''} onClose={closeAdmin} onProductUpdate={updateProduct} /> : <>
+      {showAdminView ? <AdminPanel products={catalog} orders={orders} adminName={account?.name || ''} currentCycle={currentCycle} cycleOpen={cycleOpen} localMode={persistenceMode === 'local'} onClose={closeAdmin} onProductUpdate={updateProduct} onVerify={verify} onSettle={settle} onRefundPaid={markRefundPaid} onSeedDemo={seedDemo} /> : <>
         <a className="skip-link" href="#catalog-title">Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio"><img className="brand-logo-mark" src="/images/brand/yapa-mark.png" alt="" width="512" height="512" fetchPriority="high" /><span>yapa</span></a>
           <nav className="main-nav" aria-label="Navegación principal"><a className={`nav-link ${customerView === 'store' ? 'is-active' : ''}`} href="#catalog" onClick={(event) => { event.preventDefault(); goToStore('catalog'); }}>Comprar</a><a className={`nav-link ${customerView === 'store' && window.location.hash === '#how-it-works' ? 'is-active' : ''}`} href="#how-it-works" onClick={(event) => { event.preventDefault(); goToStore('how-it-works'); }}>Cómo funciona</a><button className={`nav-link ${customerView === 'orders' ? 'is-active' : ''}`} type="button" onClick={openOrders}>Mis pedidos</button><button className={`nav-link ${customerView === 'cart' ? 'is-active' : ''}`} type="button" onClick={openCart}>Canasta</button></nav>
-          <div className="topbar-actions"><button className="location-button" type="button" onClick={() => showInfo('La cobertura actual incluye Lince, Jesús María y La Victoria.')}><Icon name="pin" size={16} /><span>Lima · <strong>{account?.district || 'Lince'}</strong></span><Icon name="chevron" size={15} /></button><button className="account-button" type="button" onClick={() => openAuth('user')}><Icon name="user" size={17} /><span>{account?.name || 'Ingresar'}</span></button></div>
+          <div className="topbar-actions"><button className="location-button" type="button" onClick={() => showInfo(accountZone ? `Tu zona: ${accountZone.name}. Entrega el sábado de ${windowLabel(accountZone.deliveryWindow)}.` : 'Zonas activas en Lince y Jesús María; La Victoria muy pronto.')}><Icon name="pin" size={16} /><span>{accountZone?.district ?? 'Lima'} · <strong>{accountZone?.name ?? 'Elige tu zona'}</strong></span><Icon name="chevron" size={15} /></button><button className="account-button" type="button" onClick={() => openAuth('user')}><Icon name="user" size={17} /><span>{account?.name || 'Ingresar'}</span></button></div>
         </header>
 
-        {customerView === 'orders' ? <OrdersPage orders={orders} onBack={() => goToStore('catalog')} /> : customerView === 'cart' ? <CartPage lines={lines} subtotal={subtotal} deliveryFee={deliveryFee} freeDeliveryFrom={FREE_DELIVERY_FROM} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onBack={() => goToStore('catalog')} /> : <main id="catalog" className="page-content">
+        {customerView === 'orders' ? <OrdersPage orders={myOrders} balance={balance} now={clock} onBack={() => goToStore('catalog')} onCancel={cancel} /> : customerView === 'cart' ? <CartPage lines={lines} subtotal={subtotal} delivery={quote.delivery} total={quote.total} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onBack={() => goToStore('catalog')} /> : <main id="catalog" className="page-content">
           <section className="welcome-row hero-banner" aria-labelledby="page-title"><div className="welcome-copy"><h1 id="page-title">Compra mejor para tu semana</h1><p>Del mayorista a tu mesa, con precios que rinden y entrega en tu zona.</p><div className="hero-actions"><button className="primary-button" type="button" onClick={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver catálogo <Icon name="arrow" size={17} /></button><a className="text-button" href="#how-it-works" onClick={(event) => { event.preventDefault(); goToStore('how-it-works'); }}>Cómo funciona</a></div></div><div className="hero-side"><div className="hero-illustration" role="img" aria-label="Agricultora peruana con una canasta de productos frescos"><span className="hero-note"><Icon name="pin" size={14} /> Del campo a tu canasta</span><img src="/images/brand/yapa-farmer-banner.png" alt="Agricultora con una canasta de arroz, tomates, plátanos y papas" width="760" height="694" fetchPriority="high" /></div></div></section>
-          <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>Próxima entrega</small><strong>Sábado</strong><span>Elige tu ventana al registrar el pedido.</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="pin" size={19} /></span><div><small>Cobertura actual</small><strong>Lince, Jesús María y La Victoria</strong></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago sencillo</small><strong>Yape, Plin o contraentrega</strong></div></div></div></section>
+          <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>Ciclo {currentCycle} · próxima entrega</small><strong>Sábado</strong><span>{cycleOpen ? 'Pedidos hasta el miércoles a las 20:00' : 'Cerrado para pedidos: vuelve el lunes'}</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="pin" size={19} /></span><div><small>Cobertura actual</small><strong>Lince, Jesús María y La Victoria</strong><span>La ventana la asigna Yapa a cada zona</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago por adelantado</small><strong>Yape o Plin</strong><span>Lo que ahorremos te vuelve como saldo</span></div></div></div></section>
 
-          <div className="workspace-grid"><Catalog products={visibleProducts} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onClearFilters={clearFilters} /><CartPanel lines={lines} cart={cart} subtotal={subtotal} deliveryFee={deliveryFee} freeDeliveryFrom={FREE_DELIVERY_FROM} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
+          <div className="workspace-grid"><Catalog products={visibleProducts} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onClearFilters={clearFilters} /><CartPanel lines={lines} cart={cart} subtotal={subtotal} delivery={quote.delivery} total={quote.total} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={openCheckout} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
           <HowItWorksSection />
         </main>}
 
@@ -290,7 +358,7 @@ export default function App() {
       </>}
       <div className="toast-region" aria-live="polite" aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : 'box'} size={18} /><span>{toast.message}</span></div> : null}</div>
       {!showAdminView ? <><AuthDialog open={authOpen} currentAccount={account} initialAudience={authAudience} onClose={() => { setAuthOpen(false); setAuthReturnView(null); }} onSignedOut={() => { setAccount(null); setOrders([]); setCustomerView('store'); setAuthReturnView(null); }} onOpenAdmin={openAdmin} onAuthenticated={(nextAccount, audience) => { setAccount(nextAccount); setToast({ message: `Listo, ${nextAccount.name}. Tu cuenta de Yapa está preparada.`, tone: 'success' }); if (audience === 'admin' && isAdminAccount(nextAccount)) { setAdminOpen(true); window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#admin`); } else if (authReturnView) { const nextView = authReturnView; setAuthOpen(false); setAuthReturnView(null); setCustomerView(nextView); window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${nextView}`); window.scrollTo({ top: 0, behavior: 'smooth' }); } }} />
-        <CheckoutDialog open={checkoutOpen} subtotal={subtotal} deliveryFee={deliveryFee} confirmation={confirmation} initialSelection={selection} onClose={closeCheckout} onSubmit={registerOrder} />
+        <CheckoutDialog open={checkoutOpen} subtotal={subtotal} delivery={quote.delivery} total={quote.total} balance={balance} cycleOpen={cycleOpen} confirmation={confirmation} initialSelection={initialSelection} onClose={closeCheckout} onSubmit={registerOrder} />
         </> : null}
     </div>
   );

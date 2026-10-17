@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Icon } from './Icon';
 import { authMode, localDemoAdmin, loginAccount, registerAccount, requestPasswordReset, signOutAccount } from '../services/auth';
 import type { AccountProfile } from '../types';
+import { DEFAULT_ZONE_ID, zoneById, zones } from '../data/catalog';
 import { validateAuthInput } from '../utils/domain';
 
 type AuthMode = 'login' | 'register';
@@ -26,7 +27,7 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
   const [feedback, setFeedback] = useState<{ tone: 'error' | 'notice'; message: string } | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [district, setDistrict] = useState('Lince');
+  const [zoneId, setZoneId] = useState(DEFAULT_ZONE_ID);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +45,7 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
       setFeedback(null);
       setName('');
       setPhone('');
-      setDistrict('Lince');
+      setZoneId(DEFAULT_ZONE_ID);
       setEmail('');
       setPassword('');
     }
@@ -81,7 +82,7 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
     setSubmitting(true);
     try {
       const profile = mode === 'register'
-        ? await registerAccount({ name: formName, phone: formPhone.replace(/\s/g, ''), district, email: formEmail, password: formPassword })
+        ? await registerAccount({ name: formName, phone: formPhone.replace(/\s/g, ''), district: zoneById(zoneId)?.district ?? 'Lince', zoneId, email: formEmail, password: formPassword })
         : await loginAccount(formEmail, formPassword);
 
       if (audience === 'admin' && profile.role !== 'admin') {
@@ -137,7 +138,7 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
           <div className="auth-account-avatar"><Icon name="user" size={26} /></div>
                     <h2 id="auth-title">Hola, {activeAccountForView.name}</h2>
           <p>Tu cuenta ya está abierta en este dispositivo. Elige a dónde quieres ir.</p>
-          <div className="auth-account-detail"><strong>{activeAccountForView.email}</strong><span>{activeAccountForView.role === 'admin' ? 'Equipo administrador' : `Compras en ${activeAccountForView.district}`}</span></div>
+          <div className="auth-account-detail"><strong>{activeAccountForView.email}</strong><span>{activeAccountForView.role === 'admin' ? 'Equipo administrador' : `Compras en ${zoneById(activeAccountForView.zoneId)?.name ?? activeAccountForView.district}`}</span></div>
           <div className="auth-account-actions"><button className="primary-button" type="button" onClick={close}>Comprar como usuario <Icon name="arrow" size={17} /></button>{activeAccountForView.role === 'admin' ? <button className="secondary-button" type="button" onClick={() => { close(); onOpenAdmin?.(); }}>Ir al panel admin <Icon name="arrow" size={16} /></button> : null}</div>
           <button className="auth-link auth-switch-account" type="button" onClick={handleSignOut} disabled={signingOut}>{signingOut ? 'Cerrando sesión…' : 'Salir y usar otra cuenta'}</button>
           {feedback ? <p className={`auth-feedback auth-feedback--${feedback.tone}`} role="alert">{feedback.message}</p> : null}
@@ -152,13 +153,13 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
       ) : (
         <>
           <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Compra con tu cuenta'}</h2><p>{audience === 'admin' ? 'Ingresa con una cuenta autorizada para gestionar Yapa.' : 'Guarda tu distrito y vuelve más rápido a tu canasta.'}</p></div>
+            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Compra con tu cuenta'}</h2><p>{audience === 'admin' ? 'Ingresa con una cuenta autorizada para gestionar Yapa.' : 'Guarda tu zona y vuelve más rápido a tu canasta.'}</p></div>
             <button className="icon-button" type="button" onClick={close} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
           </div>
           <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar a Yapa"><button className={audience === 'user' ? 'is-active' : ''} type="button" aria-pressed={audience === 'user'} onClick={() => selectAudience('user')}><Icon name="box" size={15} />Comprar como usuario</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => selectAudience('admin')}><Icon name="user" size={15} />Entrar como admin</button></div>
           {audience === 'user' ? <div className="auth-switch" role="tablist" aria-label="Tipo de acceso"><button className={mode === 'login' ? 'is-active' : ''} type="button" role="tab" aria-selected={mode === 'login'} onClick={() => selectMode('login')}>Ingresar</button><button className={mode === 'register' ? 'is-active' : ''} type="button" role="tab" aria-selected={mode === 'register'} onClick={() => selectMode('register')}>Crear cuenta</button></div> : <p className="auth-access-note">Acceso protegido · solo cuentas administradoras</p>}
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            {mode === 'register' && audience === 'user' ? <><label className="auth-field"><span>¿Cómo te llamas?</span><input name="name" type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Andrea Quispe" autoComplete="name" required /></label><div className="auth-grid"><label className="auth-field"><span>Celular</span><div className="phone-input"><strong>+51</strong><input name="phone" type="tel" inputMode="numeric" value={phone} onChange={(event) => setPhone(event.target.value.replace(/[^\d\s]/g, ''))} placeholder="987 654 321" autoComplete="tel" required /></div></label><label className="auth-field"><span>Distrito</span><select name="district" value={district} onChange={(event) => setDistrict(event.target.value)}><option>Lince</option><option>Jesús María</option><option>La Victoria</option></select></label></div></> : null}
+            {mode === 'register' && audience === 'user' ? <><label className="auth-field"><span>¿Cómo te llamas?</span><input name="name" type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Andrea Quispe" autoComplete="name" required /></label><div className="auth-grid"><label className="auth-field"><span>Celular</span><div className="phone-input"><strong>+51</strong><input name="phone" type="tel" inputMode="numeric" value={phone} onChange={(event) => setPhone(event.target.value.replace(/[^\d\s]/g, ''))} placeholder="987 654 321" autoComplete="tel" required /></div></label><label className="auth-field"><span>Tu zona</span><select name="zone" value={zoneId} onChange={(event) => setZoneId(event.target.value)}>{zones.map((zone) => <option key={zone.id} value={zone.id} disabled={!zone.active}>{zone.name} · {zone.district}{zone.active ? '' : ' (pronto)'}</option>)}</select></label></div></> : null}
             <label className="auth-field"><span>Correo electrónico</span><input name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@correo.com" autoComplete="email" required /></label>
             <label className="auth-field"><span>Contraseña</span><input name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} required /></label>
             {mode === 'login' ? <><button className="auth-link" type="button" onClick={handleForgotPassword}>¿Olvidaste tu contraseña?</button>{authMode === 'local' ? <p className="auth-hint">Demo admin local: {localDemoAdmin.email} · {localDemoAdmin.password}</p> : null}</> : <p className="auth-hint">Usaremos tu número solo para coordinar la entrega.</p>}

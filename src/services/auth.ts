@@ -1,6 +1,7 @@
 import { ID } from 'appwrite';
 import { adminLabel, appwriteAccount, appwriteReady, appwriteTables, databaseId, profilePermissions, tableIds } from './appwrite';
 import { readStored, writeStored } from '../utils/storage';
+import { DEFAULT_ZONE_ID, zoneById, zones } from '../data/catalog';
 import type { AccountProfile } from '../types';
 
 interface AccountRecord extends AccountProfile {
@@ -16,12 +17,19 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+// perfiles antiguos sin zona: la primera zona activa de su distrito
+function zoneFor(zoneId: string | undefined, district: string | undefined) {
+  return zoneById(zoneId) ?? zones.find((zone) => zone.active && zone.district === district) ?? zoneById(DEFAULT_ZONE_ID)!;
+}
+
 function toProfile(record: Partial<AccountRecord> & { id: string; email: string }): AccountProfile {
+  const zone = zoneFor(record.zoneId, record.district);
   return {
     id: record.id,
     name: record.name || record.email.split('@')[0],
     phone: record.phone || '',
-    district: record.district || 'Lince',
+    district: zone.district,
+    zoneId: zone.id,
     email: normalizeEmail(record.email),
     role: record.role === 'admin' ? 'admin' : 'customer',
   };
@@ -37,6 +45,7 @@ function getLocalAccounts() {
     name: 'Admin Yapa',
     phone: '',
     district: 'Lince',
+    zoneId: DEFAULT_ZONE_ID,
     email: DEMO_ADMIN_EMAIL,
     role: 'admin',
     password: DEMO_ADMIN_PASSWORD,
@@ -69,6 +78,7 @@ async function readAppwriteProfile(userId: string, fallback: AccountProfile): Pr
     name: String(data.name || fallback.name),
     phone: String(data.phone || fallback.phone),
     district: String(data.district || fallback.district),
+    zoneId: String(data.zoneId || fallback.zoneId),
     email: fallback.email,
   });
 }
@@ -90,6 +100,7 @@ async function readOrCreateProfile(userId: string, fallback: AccountProfile): Pr
         name: fallback.name,
         phone: fallback.phone,
         district: fallback.district,
+        zoneId: fallback.zoneId,
         role: 'customer',
         createdAt: new Date().toISOString(),
       },
@@ -165,6 +176,7 @@ export async function loginAccount(emailInput: string, password: string): Promis
           name: activeUser.name || email.split('@')[0],
           phone: '',
           district: 'Lince',
+          zoneId: DEFAULT_ZONE_ID,
           email: activeUser.email || email,
           role: accountRole(activeUser),
         });
@@ -178,6 +190,7 @@ export async function loginAccount(emailInput: string, password: string): Promis
         name: user.name || email.split('@')[0],
         phone: '',
         district: 'Lince',
+        zoneId: DEFAULT_ZONE_ID,
         email: user.email || email,
         role: accountRole(user),
       });
@@ -207,6 +220,7 @@ export async function getSessionAccount(): Promise<AccountProfile | null> {
     name: user.name || user.email?.split('@')[0] || 'Amigo',
     phone: '',
     district: 'Lince',
+    zoneId: DEFAULT_ZONE_ID,
     email: user.email || '',
     role: accountRole(user),
   });
@@ -240,6 +254,19 @@ export async function requestPasswordReset(emailInput: string): Promise<void> {
   } catch (error) {
     throw new Error(appwriteErrorMessage(error, 'No pudimos enviar el correo de recuperación.'));
   }
+}
+
+// el vecino cambia de zona desde el checkout (S-30: solo sin pedido en curso, lo valida quien llama)
+export async function saveAccountZone(account: AccountProfile, zoneId: string): Promise<AccountProfile> {
+  const zone = zoneFor(zoneId, account.district);
+  const next = { ...account, zoneId: zone.id, district: zone.district };
+  if (appwriteReady && appwriteTables) {
+    await appwriteTables.updateRow({ databaseId, tableId: tableIds.profiles, rowId: account.id, data: { zoneId: zone.id, district: zone.district } });
+  } else {
+    writeStored(ACCOUNTS_KEY, getLocalAccounts().map((record) => (record.id === account.id ? { ...record, zoneId: zone.id, district: zone.district } : record)));
+  }
+  writeStored(CURRENT_ACCOUNT_KEY, next);
+  return next;
 }
 
 export function isAdminAccount(account: AccountProfile | null) {

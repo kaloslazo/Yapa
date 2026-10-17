@@ -38,7 +38,12 @@ export function userRowPermissions(userId: string) {
   ];
 }
 
+// el vecino puede actualizar su pedido para cancelarlo antes del cierre
 export function orderRowPermissions(userId: string) {
+  return [Permission.read(Role.user(userId)), Permission.update(Role.user(userId))];
+}
+
+export function itemRowPermissions(userId: string) {
   return [Permission.read(Role.user(userId))];
 }
 

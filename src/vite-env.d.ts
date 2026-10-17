@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_APPWRITE_ORDERS_TABLE_ID?: string;
   readonly VITE_APPWRITE_ORDER_ITEMS_TABLE_ID?: string;
   readonly VITE_APPWRITE_ADMIN_LABEL?: string;
+  readonly VITE_YAPA_AHORA?: string;
 }
 
 interface ImportMeta {
