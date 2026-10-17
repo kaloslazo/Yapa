@@ -40,6 +40,7 @@ class SettledOrder:
     refund_amount: Decimal = ZERO
     refund_destination: str | None = None
     returned_to_balance: Decimal = ZERO
+    benefit: Decimal = ZERO  # AZ-03: lo que bajó por ser admin de zona
 
 
 @dataclass(frozen=True)
@@ -75,6 +76,35 @@ def _missing_by_order(missing: Iterable, attended: dict[int, Order]) -> dict[tup
             )
         result[key] = total
     return result
+
+
+ZONE_ADMIN_DISCOUNT = Decimal("0.05")  # S-159
+ZONE_ADMIN_DISCOUNT_WEEKS = 4  # S-159
+REFERRAL_REWARD = Decimal("3.00")  # S-163
+
+
+def _in_discount_weeks(created_cycle: str | None, cycle: str) -> bool:
+    """S-159: la semana de creación cuenta como la 1."""
+    if not created_cycle:
+        return False
+    return any(cycles.add_weeks(created_cycle, n) == cycle for n in range(ZONE_ADMIN_DISCOUNT_WEEKS))
+
+
+def _reward_referral(store: InMemoryStore, order: Order, at) -> None:
+    """AZ-06, S-163: premio una sola vez, al liquidar el primer pedido del invitado."""
+    customer = store.customers.get(order.customer_id)
+    if customer is None or customer.referred_by is None:
+        return
+    reference = f"referido {customer.customer_id}"
+    if any(m.kind == "PREMIO_REFERIDO" and m.reference == reference for m in store.movements):
+        return
+    if any(o.customer_id == customer.customer_id and o.status == "LIQUIDADO" and o.order_id != order.order_id
+           for o in store.orders.values()):
+        return
+    wallet.credit(store, customer.customer_id, REFERRAL_REWARD, "PREMIO_REFERIDO", at, reference)
+    referrer = store.customers.get(customer.referred_by)
+    if referrer is not None and not referrer.suspended:
+        wallet.credit(store, referrer.customer_id, REFERRAL_REWARD, "PREMIO_REFERIDO", at, reference)
 
 
 def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=None,
@@ -144,20 +174,28 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
     for order in attended.values():
         failed = (cycle, order.zone_id) in store.failed_deliveries  # EF-04: solo se cobra el envío real
         lines = []
-        amount = fee_by_zone[order.zone_id]
+        goods = ZERO
         for line in order.lines:
             lost = line.quantity if failed else missing_qty.get((order.order_id, line.product_id), ZERO)
             delivered = line.quantity - lost
             price = products[line.product_id].final_unit_price
-            amount += price * delivered
+            goods += price * delivered
             lines.append(SettledLine(line.product_id, line.quantity, lost, delivered, price))
-        final_amount = floor_cents(amount)
+        fee = fee_by_zone[order.zone_id]
+        normal_amount = floor_cents(fee + goods)
+        zone = store.zones[order.zone_id]
+        if zone.admin_id is not None and zone.admin_id == order.customer_id:  # AZ-01, AZ-02, S-160
+            fee = ZERO
+            if _in_discount_weeks(zone.created_cycle, cycle):
+                goods = goods * (1 - ZONE_ADMIN_DISCOUNT)
+        final_amount = floor_cents(fee + goods)
         settled[order.order_id] = SettledOrder(
             order.order_id, "NO_ENTREGADO" if failed else "LIQUIDADO", order.total, lines,
-            delivery_fee=fee_by_zone[order.zone_id],
+            delivery_fee=fee,
             final_amount=final_amount,
             refund_amount=order.total - final_amount,
             refund_destination="SALDO",
+            benefit=normal_amount - final_amount,
         )
 
     # Recién aquí, con todo validado, se aplican los efectos (estados, billetera, reembolsos).
@@ -167,6 +205,7 @@ def settle_cycle(store: InMemoryStore, cycle: str, missing: Iterable = (), at=No
         reference = f"pedido {order.order_id}"
         if result.status == "LIQUIDADO":
             wallet.credit(store, order.customer_id, result.refund_amount, "ABONO_LIQUIDACION", at, reference)
+            _reward_referral(store, order, at)
         if result.status == "NO_ENTREGADO":
             wallet.credit(store, order.customer_id, result.refund_amount, "DEVOLUCION_NO_ENTREGADO", at, reference)
         wallet.credit(store, order.customer_id, result.returned_to_balance, "DEVOLUCION_A_SALDO", at, reference)

@@ -77,8 +77,14 @@ def demo_store() -> InMemoryStore:
                              received_by="Portería Los Álamos", now=W39_SATURDAY)
     fulfillment.close_cycle(store, "2026-W39", at=W39_SATURDAY)
 
+    # Desde la 2026-W40, Ana (101) organiza Los Álamos (AZ-01, AZ-02) e invitó a Diana (AZ-06)
+    alamos = store.zones["Z-LINCE-01"]
+    alamos.admin_id, alamos.created_cycle = 101, "2026-W40"
+    alamos.reception_kind, alamos.reception_contact = "PORTERIA", "Portería Los Álamos"
+    store.add_customer(Customer(115, "Diana Rojas", "Z-LINCE-01", referred_by=101))
+
     # Semana 2026-W40, abierta: Ana (101) queda libre para pedir en vivo
-    for i, customer_id in enumerate([105, 106, 107, 108, 109, 110]):
+    for i, customer_id in enumerate([105, 106, 107, 108, 109, 110, 115]):
         order = _order(store, customer_id, BASKETS[(i + 1) % len(BASKETS)], DEMO_NOW)
         if i < 4:
             verify_payment(store, order.order_id, now=DEMO_NOW)

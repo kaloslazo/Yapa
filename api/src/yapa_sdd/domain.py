@@ -86,6 +86,7 @@ class Zone:
     admin_id: int | None = None
     reception_kind: str = ""
     reception_contact: str = ""
+    created_cycle: str | None = None  # S-159: semana en que se creó la zona
 
     @property
     def status(self) -> str:
@@ -102,6 +103,7 @@ class Customer:
     lon: float | None = None
     phone: str | None = None  # S-134
     consent_at: datetime | None = None  # S-133, Ley 29733
+    referred_by: int | None = None  # S-162: quién lo invitó
 
 
 @dataclass(frozen=True)

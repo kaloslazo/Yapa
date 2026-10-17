@@ -85,7 +85,7 @@ def pilot_store() -> InMemoryStore:
     for product in PILOT_PRODUCTS:
         store.add_product(product)
     for zone in PILOT_ZONES:
-        store.add_zone(zone)
+        store.add_zone(replace(zone))  # AZ-09: copia, porque Zone es mutable
     for customer in PILOT_CUSTOMERS:
         store.add_customer(customer)
     return store

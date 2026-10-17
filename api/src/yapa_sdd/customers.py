@@ -6,6 +6,7 @@ Spec: docs/desarrollo/24-alta-vecinos.md (S-133..S-138).
 from __future__ import annotations
 
 import re
+import unicodedata
 import secrets
 from datetime import datetime
 
@@ -30,8 +31,24 @@ def new_pin() -> str:
             continue
 
 
+def referral_code(customer: Customer) -> str:
+    """S-161: primer nombre en mayúsculas, sin tildes, y el número de cliente (Ana Torres, 101 -> ANA101)."""
+    first = (customer.name.split() or [""])[0]
+    plain = "".join(ch for ch in unicodedata.normalize("NFKD", first) if not unicodedata.combining(ch))
+    return re.sub(r"[^A-Z]", "", plain.upper()) + str(customer.customer_id)
+
+
+def find_by_referral(store: InMemoryStore, code: str) -> Customer:
+    """AZ-05, S-162."""
+    wanted = (code or "").strip().upper()
+    for customer in store.customers.values():
+        if referral_code(customer) == wanted:
+            return customer
+    raise BusinessRuleError("REFERRAL_NOT_FOUND", "Ese código de referido no existe.")
+
+
 def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str, consent: bool, *, by: str,
-                      now: datetime) -> tuple[Customer, str]:
+                      now: datetime, referral: str = "") -> tuple[Customer, str]:
     """AV-02..AV-06. Devuelve el cliente y su PIN inicial, que no se guarda."""
     _check_admin(store, by)
     name = (name or "").strip()
@@ -46,8 +63,9 @@ def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str,
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
     if not consent:  # AV-05, S-133 (Ley 29733)
         raise BusinessRuleError("CONSENT_REQUIRED", "Sin el consentimiento del vecino no se guardan sus datos.")
+    referred_by = find_by_referral(store, referral).customer_id if (referral or "").strip() else None  # AZ-05
     customer_id = max(store.customers, default=0) + 1  # S-135
-    customer = Customer(customer_id, name, zone_id, phone=phone, consent_at=now)
+    customer = Customer(customer_id, name, zone_id, phone=phone, consent_at=now, referred_by=referred_by)
     store.add_customer(customer)
     pin = new_pin()
     set_pin(store, customer_id, pin)

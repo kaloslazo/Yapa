@@ -46,6 +46,7 @@ def money_balance(store: InMemoryStore) -> MoneyBalance:
     kept = sum((settled.final_amount for result in store.settlements.values()
                 for settled in result.orders.values() if settled.status in ("LIQUIDADO", "NO_ENTREGADO")), ZERO)
     kept -= sum((claim.refund_amount for claim in store.claims.values() if claim.status == "APROBADO"), ZERO)
+    kept -= sum((m.amount for m in store.movements if m.kind == "PREMIO_REFERIDO"), ZERO)  # AZ-07, S-164
     owed = amount_owed(store)
     refunds_paid = sum((refund.amount for refund in store.refunds.values() if refund.status == "PAGADO"), ZERO)
     difference = received - in_flight - kept - owed - refunds_paid

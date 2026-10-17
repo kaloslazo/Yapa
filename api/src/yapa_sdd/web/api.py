@@ -17,6 +17,7 @@ from urllib.parse import parse_qs
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import MAX_QUANTITY, MIN_ORDERS_PER_GROUP, MIN_SUBTOTAL, PILOT_DISTRICTS, BusinessRuleError
+from ..settlement import ZONE_ADMIN_DISCOUNT, ZONE_ADMIN_DISCOUNT_WEEKS, _in_discount_weeks
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
@@ -132,7 +133,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             data["liquidacion"] = {
                 "estado": settled.status, "pagado": money(settled.paid), "costo": money(settled.final_amount),
                 "devuelto": money(settled.refund_amount + settled.returned_to_balance),
-                "destino": settled.refund_destination,
+                "destino": settled.refund_destination, "beneficio": money(settled.benefit),
                 "comparacion": {kind: {"costaba": money(c.reference_total), "ahorro": money(c.savings)}
                                 for kind, c in comparison.items()},
             }
@@ -198,7 +199,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         if session["kind"] == "vecino":
             customer = store.customers[session["principal"]]
             data.update({"nombre": customer.name, "zona": customer.zone_id,
-                         "saldo": money(wallet.balance(store, customer.customer_id))})
+                         "saldo": money(wallet.balance(store, customer.customer_id)),
+                         "codigo_referido": customers.referral_code(customer)})
         else:
             data.update({"nombre": "Equipo Yapa"})
         return data
@@ -310,18 +312,46 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     # --- zona (API-05) ---
 
+    def zone_admin_panel(zone) -> dict:
+        """AZ-08: lo que ve el admin de su zona (S-165: nombres y si pidió, sin montos ni ubicaciones)."""
+        current = cycle.cycle_id(clock())
+        in_cycle = [o for o in store.orders_in_cycle(current) if o.status != "CANCELADO_POR_CLIENTE"]
+        group = {z.zone_id for z in store.zones.values() if z.group_id == zone.group_id}
+        verified = sum(1 for o in in_cycle if o.zone_id in group and o.payment_status == "VERIFICADO")
+        ordered = {o.customer_id for o in in_cycle}
+        nearby = []
+        if zone.lat is not None and zone.lon is not None:
+            for other in store.zones.values():
+                if other.zone_id == zone.zone_id or other.lat is None or other.lon is None:
+                    continue
+                meters = zones.distance_m(zone.lat, zone.lon, other.lat, other.lon)
+                if meters <= zones.MERGE_DISTANCE_M:
+                    nearby.append(zone_json(other) | {"distancia_m": round(meters),
+                                                      "mismo_grupo": other.group_id == zone.group_id})
+        discount = _in_discount_weeks(zone.created_cycle, current)
+        last_week = cycle.add_weeks(zone.created_cycle, ZONE_ADMIN_DISCOUNT_WEEKS - 1) if zone.created_cycle else None
+        requests = [{"id": mid, "zona": zid, "nombre": store.zones[zid].name if zid in store.zones else zid}
+                    for mid, (zid, target) in store.merge_requests.items() if target == zone.zone_id]
+        admin = store.customers[zone.admin_id]
+        return zone_json(zone) | {
+            "avance": {"verificados": verified, "minimo": MIN_ORDERS_PER_GROUP, "ciclo": current},
+            "vecinos": [{"id": c.customer_id, "nombre": c.name, "pidio": c.customer_id in ordered}
+                        for c in sorted(store.customers.values(), key=lambda c: c.customer_id)
+                        if c.zone_id == zone.zone_id],
+            "cercanas": sorted(nearby, key=lambda z: z["distancia_m"]),
+            "solicitudes": requests,
+            "beneficios": {"envio_gratis": True, "descuento_pct": money(ZONE_ADMIN_DISCOUNT * 100),
+                           "descuento_activo": discount, "descuento_hasta": last_week if discount else None},
+            "codigo_referido": customers.referral_code(admin),
+        }
+
     def mi_zona(environ, data, session):
         customer = store.customers[session["principal"]]
         zone = store.zones.get(customer.zone_id)
         administered = next((z for z in store.zones.values() if z.admin_id == session["principal"]), None)
-        requests = [{"id": mid, "zona": zid, "nombre": store.zones[zid].name if zid in store.zones else zid}
-                    for mid, (zid, target) in store.merge_requests.items()
-                    if administered and target == administered.zone_id]
-        members = ([{"id": c.customer_id, "nombre": c.name} for c in store.customers.values()
-                    if c.zone_id == administered.zone_id] if administered else [])
         return {"zona": zone_json(zone) if zone else None,
-                "administra": zone_json(administered) if administered else None,
-                "solicitudes": requests, "vecinos": members,
+                "administra": zone_admin_panel(administered) if administered else None,
+                "codigo_referido": customers.referral_code(customer),
                 "radio_m": zones.MEMBER_RADIUS_M, "union_m": zones.MERGE_DISTANCE_M}
 
     def zona_crear(environ, data, session):
@@ -560,7 +590,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def admin_vecino_alta(environ, data, session):
         customer, pin = customers.register_customer(store, data.get("nombre", ""), data.get("celular", ""),
                                                     str(data.get("zona", "")), bool(data.get("consentimiento")),
-                                                    by=session["principal"], now=clock())
+                                                    by=session["principal"], now=clock(),
+                                                    referral=str(data.get("referido", "")))
         return {"id": customer.customer_id, "nombre": customer.name, "pin": pin}, [], "201 Created"
 
     def admin_vecino_pin(environ, data, session, customer_id):

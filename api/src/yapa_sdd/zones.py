@@ -100,7 +100,7 @@ def create_zone(store: InMemoryStore, admin_id: int, *, name: str, district: str
     _check_can_move(store, admin_id)
     zone_id = store.next_zone_id()
     zone = Zone(zone_id, name, district, f"G-{zone_id}", NEW_ZONE_STOP_COST, reception_accepted=False,
-                lat=lat, lon=lon, admin_id=admin_id)
+                lat=lat, lon=lon, admin_id=admin_id, created_cycle=cycle.cycle_id(now))
     store.add_zone(zone)
     store.add_customer(replace(admin, zone_id=zone_id))
     return zone
