@@ -48,7 +48,7 @@ def find_by_referral(store: InMemoryStore, code: str) -> Customer:
 
 
 def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str, consent: bool, *, by: str,
-                      now: datetime, referral: str = "") -> tuple[Customer, str]:
+                      now: datetime, email: str = "", referral: str = "") -> tuple[Customer, str]:
     """AV-02..AV-06. Devuelve el cliente y su PIN inicial, que no se guarda."""
     _check_admin(store, by)
     name = (name or "").strip()
@@ -59,13 +59,14 @@ def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str,
         raise BusinessRuleError("INVALID_PHONE", "El celular debe tener 9 dígitos y empezar con 9.")
     if any(c.phone == phone for c in store.customers.values()):
         raise BusinessRuleError("PHONE_ALREADY_REGISTERED", "Ese celular ya está registrado.")
+    email = normalize_email(email, store)
     if zone_id not in store.zones:  # AV-04, S-138
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
     if not consent:  # AV-05, S-133 (Ley 29733)
         raise BusinessRuleError("CONSENT_REQUIRED", "Sin el consentimiento del vecino no se guardan sus datos.")
     referred_by = find_by_referral(store, referral).customer_id if (referral or "").strip() else None  # AZ-05
     customer_id = max(store.customers, default=0) + 1  # S-135
-    customer = Customer(customer_id, name, zone_id, phone=phone, consent_at=now, referred_by=referred_by)
+    customer = Customer(customer_id, name, zone_id, phone=phone, consent_at=now, referred_by=referred_by, email=email)
     store.add_customer(customer)
     pin = new_pin()
     set_pin(store, customer_id, pin)
@@ -75,12 +76,33 @@ def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str,
 PIN_REQUEST_LIMIT = 100  # S-197
 
 
+EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+
+
+def normalize_email(email, store: InMemoryStore, *, except_id: int | None = None) -> str:
+    """CR-01: formato, largo y unicidad sin importar mayúsculas."""
+    text = (email or "").strip()
+    if not text:
+        raise BusinessRuleError("EMAIL_REQUIRED", "Escribe el correo del vecino.")
+    if len(text) > 120 or not EMAIL_PATTERN.fullmatch(text):
+        raise BusinessRuleError("INVALID_EMAIL", "Escribe un correo válido, por ejemplo nombre@gmail.com.")
+    text = text.lower()
+    if any(c.email == text and c.customer_id != except_id for c in store.customers.values()):
+        raise BusinessRuleError("EMAIL_ALREADY_REGISTERED", "Ese correo ya está registrado.")
+    return text
+
+
+def parse_customer_number(user) -> int:
+    """OP-05: solo se revisa el formato, no si el número existe."""
+    text = str(user or "").strip()
+    if not (text.isascii() and text.isdigit() and len(text) <= 9):
+        raise BusinessRuleError("INVALID_INPUT", "Escribe tu número de cliente.")
+    return int(text)
+
+
 def request_pin_help(store: InMemoryStore, user, now: datetime) -> None:
     """OP-02..OP-05, S-196: no dice si el número existe; solo guarda la solicitud si corresponde."""
-    text = str(user or "").strip()
-    if not (text.isascii() and text.isdigit() and len(text) <= 9):  # OP-05: solo se revisa el formato
-        raise BusinessRuleError("INVALID_INPUT", "Escribe tu número de cliente.")
-    customer_id = int(text)
+    customer_id = parse_customer_number(user)
     already_open = any(customer == customer_id for customer, _ in store.pin_requests.values())
     if customer_id not in store.customers or already_open or len(store.pin_requests) >= PIN_REQUEST_LIMIT:
         return

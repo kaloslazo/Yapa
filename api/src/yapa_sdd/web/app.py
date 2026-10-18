@@ -366,7 +366,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def vecino_alta(environ, form, session):
         customer, pin = customers.register_customer(store, form.get("nombre", ""), form.get("celular", ""),
                                                     form.get("zona", "").strip(), form.get("consentimiento") == "si",
-                                                    by=session.principal, now=clock())
+                                                    by=session.principal, now=clock(), email=form.get("correo", ""))
         return views.simple("Vecino registrado", f"Cliente {customer.customer_id} · PIN: {pin}. Envíaselo por "
                             "WhatsApp; no se vuelve a mostrar.", session.csrf, back="/admin/vecinos")
 

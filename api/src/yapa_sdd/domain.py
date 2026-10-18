@@ -112,6 +112,8 @@ class Customer:
     phone: str | None = None  # S-134
     consent_at: datetime | None = None  # S-133, Ley 29733
     referred_by: int | None = None  # S-162: quién lo invitó
+    email: str | None = None  # S-201: obligatorio en el alta
+    email_verified_at: datetime | None = None  # S-202: solo un correo verificado sirve para recuperar
 
 
 @dataclass(frozen=True)

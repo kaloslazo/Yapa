@@ -60,7 +60,8 @@ class ApiHardeningTests(unittest.TestCase):
 
     def test_ad_d_celular_como_numero(self):
         status, data, _ = self.admin().post("/api/admin/vecinos", {"nombre": "Vecino Nuevo", "celular": 999888777,
-                                                                    "zona": "Z-LINCE-01", "consentimiento": True})
+                                                                    "zona": "Z-LINCE-01", "consentimiento": True,
+                                                                    "correo": "vecino.nuevo@correo.pe"})
         self.assertEqual(status, 201)
 
     def test_ad_d_motivo_como_lista(self):

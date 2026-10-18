@@ -16,7 +16,8 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, reference, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, recovery, reference, wallet, zones
+from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import MAX_QUANTITY, MIN_ORDERS_PER_GROUP, MIN_SUBTOTAL, PILOT_DISTRICTS, BusinessRuleError
 from ..settlement import ZONE_ADMIN_DISCOUNT, ZONE_ADMIN_DISCOUNT_WEEKS, _in_discount_weeks
@@ -96,8 +97,9 @@ def _body(environ) -> tuple[dict, dict]:
     return _form(environ)  # multipart con fotos (S-151) o formulario simple
 
 
-def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos"):
+def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
+    mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
 
     # --- ayudas ---
@@ -220,7 +222,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             customer = store.customers[session["principal"]]
             data.update({"nombre": customer.name, "zona": customer.zone_id,
                          "saldo": money(wallet.balance(store, customer.customer_id)),
-                         "codigo_referido": customers.referral_code(customer)})
+                         "codigo_referido": customers.referral_code(customer),
+                         "correo": recovery.mask_email(customer.email),  # CR-08
+                         "correo_verificado": customer.email_verified_at is not None})
         else:
             data.update({"nombre": "Equipo Yapa"})
         return data
@@ -640,6 +644,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         customer, pin = customers.register_customer(store, data.get("nombre", ""), data.get("celular", ""),
                                                     str(data.get("zona", "")), bool(data.get("consentimiento")),
                                                     by=session["principal"], now=clock(),
+                                                    email=str(data.get("correo", "")),
                                                     referral=str(data.get("referido", "")))
         return {"id": customer.customer_id, "nombre": customer.name, "pin": pin}, [], "201 Created"
 
@@ -647,10 +652,37 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         pin = customers.reset_pin(store, _int(customer_id, "Vecino"), by=session["principal"])
         return {"id": int(customer_id), "pin": pin}
 
+    def send_code(to: str, subject: str, intro: str, code: str) -> None:
+        mailer.send(to, subject, f"{intro}\n\nTu código es {code}. Vale 10 minutos.\nSi no lo pediste tú, ignora este mensaje: nadie puede entrar a tu cuenta sin él.\n\nYapa")
+
     def pin_olvide(environ, data, session):
-        """OP-01, S-196: siempre la misma respuesta, exista o no el número."""
-        customers.request_pin_help(store, data.get("usuario"), clock())
-        return {"mensaje": "Si tu número está registrado, el equipo de Yapa te escribirá por WhatsApp al celular que registraste."}
+        """OP-01, CR-05, S-196, S-205: siempre la misma respuesta, exista o no el número y tenga o no correo verificado."""
+        sent = recovery.request_pin_reset(store, data.get("usuario"), clock())
+        if sent:
+            try:
+                send_code(sent[0], "Recupera tu PIN de Yapa", "Pediste cambiar tu PIN.", sent[1])
+            except MailError:
+                traceback.print_exc(file=environ.get("wsgi.errors"))  # CR-09: la respuesta no cambia
+        return {"mensaje": "Si tu número está registrado, te mandaremos las instrucciones al correo que verificaste o, si no tienes, el equipo de Yapa te escribirá por WhatsApp al celular que registraste."}
+
+    def pin_restablecer(environ, data, session):
+        """CR-06."""
+        recovery.reset_pin_with_code(store, data.get("usuario"), data.get("codigo"), data.get("pin"), clock())
+        return {"mensaje": "Listo: ya puedes entrar con tu PIN nuevo."}
+
+    def cuenta_correo(environ, data, session):
+        """CR-02, CR-09."""
+        email, code = recovery.start_email_verification(store, session["principal"], data.get("correo"), clock())
+        try:
+            send_code(email, "Verifica tu correo en Yapa", "Estás agregando este correo a tu cuenta de Yapa.", code)
+        except MailError:
+            raise BusinessRuleError("EMAIL_SEND_FAILED", "No pudimos enviar el correo. Revisa que esté bien escrito e inténtalo de nuevo.") from None
+        return {"enviado": True}
+
+    def cuenta_correo_verificar(environ, data, session):
+        """CR-03."""
+        recovery.confirm_email(store, session["principal"], data.get("codigo"), clock())
+        return {"correo_verificado": True}
 
     def admin_pin_solicitudes(environ, data, session):
         """OP-06, OP-09: nunca lleva un PIN."""
@@ -711,6 +743,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/vecinos", {"GET": (admin_vecinos, "admin"), "POST": (admin_vecino_alta, "admin")}),
         (r"/api/admin/vecinos/(\d+)/pin", {"POST": (admin_vecino_pin, "admin")}),
         (r"/api/pin/olvide", {"POST": (pin_olvide, None)}),
+        (r"/api/pin/restablecer", {"POST": (pin_restablecer, None)}),
+        (r"/api/cuenta/correo", {"POST": (cuenta_correo, "vecino")}),
+        (r"/api/cuenta/correo/verificar", {"POST": (cuenta_correo_verificar, "vecino")}),
         (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),
         (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, "admin")}),
         (r"/api/admin/colchon", {"GET": (admin_colchon, "admin")}),

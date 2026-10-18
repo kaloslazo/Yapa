@@ -83,12 +83,12 @@ class ZoneBenefitSpecTests(unittest.TestCase):
     # AZ-E
     def test_az_e_register_with_referral(self):
         lucia, _ = customers.register_customer(self.store, "Lucía Ramos", "987654321", "Z-LINCE-01", True, by=ADMIN,
-                                               now=NOW, referral="ANA101")
+                                               now=NOW, email="lucia@correo.pe", referral="ANA101")
         self.assertEqual(lucia.referred_by, 101)
         before = len(self.store.customers)
         with self.assertRaises(BusinessRuleError) as raised:
             customers.register_customer(self.store, "Otro Vecino", "987654322", "Z-LINCE-01", True, by=ADMIN, now=NOW,
-                                        referral="NOEXISTE9")
+                                        email="otro@correo.pe", referral="NOEXISTE9")
         self.assertEqual(raised.exception.code, "REFERRAL_NOT_FOUND")
         self.assertEqual(len(self.store.customers), before)
 

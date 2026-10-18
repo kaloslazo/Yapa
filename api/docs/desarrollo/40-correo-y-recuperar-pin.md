@@ -65,6 +65,7 @@ Decisión del equipo (18/10/2026): el correo y el celular son obligatorios, y la
 | CR-V | Falla el envío | el correo falla en `olvide` | misma respuesta; en `cuenta/correo` da `EMAIL_SEND_FAILED` |
 | CR-W | Roles | sin sesión o admin en `cuenta/correo` | `LOGIN_REQUIRED` o `FORBIDDEN` |
 | CR-Y | Cambiar el correo | un vecino con correo verificado pone otro | queda sin verificar y "Olvidé mi PIN" va a la cola del equipo |
+| CR-Z | Se guarda y se carga | verificar el correo, pedir un código, guardar la base y cargarla | el correo sigue verificado y el código pedido sigue sirviendo |
 | CR-X | Envío en consola | sin credenciales | el código se imprime en el aviso del motor |
 
 Las reglas de pantalla (CR-10) se verifican en el navegador.

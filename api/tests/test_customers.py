@@ -24,8 +24,8 @@ class CustomerBase(unittest.TestCase):
         fast_hashing(self)
         self.store = pilot_store()
 
-    def register(self, name="Lucía Ramos", phone=PHONE, zone_id="Z-LINCE-01", consent=True, by=ADMIN):
-        return register_customer(self.store, name, phone, zone_id, consent, by=by, now=NOW)
+    def register(self, name="Lucía Ramos", phone=PHONE, zone_id="Z-LINCE-01", consent=True, by=ADMIN, email=None):
+        return register_customer(self.store, name, phone, zone_id, consent, by=by, now=NOW, email=email or f"{phone}@correo.pe")
 
     def assertRule(self, expected, fn, *args, **kwargs):
         with self.assertRaises(BusinessRuleError) as raised:
@@ -102,7 +102,7 @@ class CustomerWebTests(CustomerBase):
         self.admin.login(ADMIN, ADMIN_PASS, kind="admin")
 
     def post_register(self, client=None, **overrides):
-        data = {"nombre": "Lucía Ramos", "celular": PHONE, "zona": "Z-LINCE-01", "consentimiento": "si"}
+        data = {"nombre": "Lucía Ramos", "celular": PHONE, "zona": "Z-LINCE-01", "consentimiento": "si", "correo": "lucia@correo.pe"}
         data.update(overrides)
         return (client or self.admin).post("/admin/vecinos", data)
 

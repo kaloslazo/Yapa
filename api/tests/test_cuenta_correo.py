@@ -265,8 +265,10 @@ class RecoveryTests(AccountBase):
     # CR-R
     def test_cr_r_los_errores_son_iguales(self):
         self.verify_email()
-        answers = [self.reset(user="987654", code="123456"), self.reset(user="104", code="123456"),
-                   self.reset(user="101", code="123456")]
+        self.ask()  # hay un código vigente: el malo falla por ser malo, no por faltar
+        wrong = "123456" if self.mailer.last_code() != "123456" else "654321"
+        answers = [self.reset(user="987654", code=wrong), self.reset(user="104", code=wrong),
+                   self.reset(user="101", code=wrong)]
         self.assertEqual({(s, b["error"]["codigo"], b["error"]["mensaje"]) for s, b, _ in answers},
                          {(422, "INVALID_CODE", answers[0][1]["error"]["mensaje"])})
 
@@ -315,6 +317,25 @@ class RecoveryTests(AccountBase):
         again = self.ask()
         self.assertEqual((first[0], first[1]), (again[0], again[1]))
         self.assertEqual(len(self.mailer.sent), 1)
+
+
+class PersistenceTests(AccountBase):
+    # CR-Z
+    def test_cr_z_se_guarda_y_se_carga(self):
+        import os
+        import tempfile
+        from yapa_sdd import persistence
+        self.verify_email()
+        self.anonymous("/api/pin/olvide", {"usuario": "101"})
+        code = self.mailer.last_code()
+        path = os.path.join(tempfile.mkdtemp(), "yapa.db")
+        persistence.save(self.store, path)
+        loaded = persistence.load(path)
+        self.assertEqual(loaded.customers[101].email, EMAIL)
+        self.assertIsNotNone(loaded.customers[101].email_verified_at)
+        api = create_api(loaded, clock=lambda: self.clock[0], mailer=self.mailer)
+        status, body, _ = ApiClient(api).post("/api/pin/restablecer", {"usuario": "101", "codigo": code, "pin": NEW_PIN}, with_csrf=False)
+        self.assertEqual(status, 200, body)
 
 
 class ConsoleTests(unittest.TestCase):
