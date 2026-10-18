@@ -16,7 +16,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, reference, wallet, zones
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import MAX_QUANTITY, MIN_ORDERS_PER_GROUP, MIN_SUBTOTAL, PILOT_DISTRICTS, BusinessRuleError
 from ..settlement import ZONE_ADMIN_DISCOUNT, ZONE_ADMIN_DISCOUNT_WEEKS, _in_discount_weeks
@@ -424,6 +424,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         cycle.check_cycle_id(value)  # AD-06
         return value
 
+    def admin_analisis(environ, data, session):
+        """AN-01..AN-07: zonas, uniones posibles y propuestas; solo lee."""
+        result = insights.analysis(store, query_cycle(environ), clock())
+        for row in result["zonas"]:
+            row["margen"] = money(row["margen"]) if row["margen"] is not None else None
+        return result
+
     def admin_foto(environ, data, session):
         """FA-01..FA-04, S-179, S-180: entrega una foto guardada solo si la ruta tiene la forma exacta que escribe el motor."""
         route = (parse_qs(environ.get("QUERY_STRING", "")).get("ruta") or [""])[0]
@@ -674,6 +681,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/devoluciones/(\d+)/pagar", {"POST": (admin_devolucion_pagar, "admin")}),
         (r"/api/admin/conciliacion", {"GET": (admin_conciliacion, "admin")}),
         (r"/api/admin/metricas", {"GET": (admin_metricas, "admin")}),
+        (r"/api/admin/analisis", {"GET": (admin_analisis, "admin")}),
         (r"/api/admin/catalogo", {"GET": (admin_catalogo, "admin"), "POST": (admin_catalogo_publicar, "admin")}),
         (r"/api/admin/catalogo/desactivar", {"POST": (admin_catalogo_desactivar, "admin")}),
         (r"/api/admin/referencias", {"GET": (admin_referencias, "admin"), "POST": (admin_referencia_registrar, "admin")}),

@@ -11,7 +11,7 @@ from decimal import Decimal as D
 
 from . import fulfillment, reference
 from .cycle import LIMA
-from .domain import Customer
+from .domain import Customer, Zone
 from .order_registration import quote_order, register_order, verify_payment
 from .seed import pilot_store
 from .store import InMemoryStore
@@ -82,6 +82,12 @@ def demo_store() -> InMemoryStore:
     alamos.admin_id, alamos.created_cycle = 101, "2026-W40"
     alamos.reception_kind, alamos.reception_contact = "PORTERIA", "Portería Los Álamos"
     store.add_customer(Customer(115, "Diana Rojas", "Z-LINCE-01", referred_by=101))
+
+    # S-188: otro edificio de Lince con su propio admin (Marta, 116), a 391 m de Los Álamos y 455 m de Las Palmeras
+    arenales = Zone("Z-LINCE-03", "Edificio Arenales", "Lince", "G-LINCE-3", D("40"), lat=-12.0852, lon=-77.0375,
+                    admin_id=116, reception_kind="PORTERIA", reception_contact="Portería Arenales", created_cycle="2026-W40")
+    store.zones[arenales.zone_id] = arenales
+    store.add_customer(Customer(116, "Marta Quispe", "Z-LINCE-03"))
 
     # Semana 2026-W40, abierta: Ana (101) queda libre para pedir en vivo
     for i, customer_id in enumerate([105, 106, 107, 108, 109, 110, 115]):

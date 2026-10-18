@@ -11,7 +11,7 @@ from .api import create_api
 from .app import create_app
 
 
-DEMO_PINS = {101: "482915", 105: "739104"}
+DEMO_PINS = {101: "482915", 105: "739104", 116: "260318"}
 DEMO_ADMIN = ("admin-yapa", "yapa-admin-2026")
 
 

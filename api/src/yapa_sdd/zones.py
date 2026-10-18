@@ -152,6 +152,16 @@ def _check_merge(store: InMemoryStore, zone: Zone, target: Zone) -> None:
         raise BusinessRuleError("ZONES_TOO_FAR", "Las zonas están muy lejos para compartir camión.")
 
 
+def merge_blocker(store: InMemoryStore, zone: Zone, target: Zone, now: datetime) -> str | None:
+    """AN-08: código que impide unir hoy a A con el grupo de B, o None si se puede (mismas reglas que pedir y aceptar)."""
+    try:
+        _check_open(now)
+        _check_merge(store, zone, target)
+    except BusinessRuleError as error:
+        return error.code
+    return None
+
+
 def request_merge(store: InMemoryStore, zone_id: str, target_zone_id: str, admin_id: int, *, now: datetime) -> int:
     """ZN-04: el admin de A pide unirse al grupo de B."""
     zone = _admin_zone(store, zone_id, admin_id)

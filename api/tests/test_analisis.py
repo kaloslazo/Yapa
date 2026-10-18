@@ -72,7 +72,7 @@ class AnalysisBase(unittest.TestCase):
 class ZoneAnalysisTests(AnalysisBase):
     def setUp(self):
         super().setUp()
-        self.alamos = self.neighbors(ALAMOS, 901, 7)
+        self.alamos = self.neighbors(ALAMOS, 901, 6)  # con los 3 del piloto son 9
         self.arenales = self.neighbors(ARENALES, 911, 5)
         for customer_id in self.alamos[:5]:
             self.order(customer_id, verified=customer_id < 905)  # 5 pidieron, 4 pagaron verificado
@@ -91,7 +91,7 @@ class ZoneAnalysisTests(AnalysisBase):
     # AN-B
     def test_an_b_datos_de_la_zona(self):
         zone = self.zone(self.analysis(), ALAMOS)
-        self.assertEqual((zone["vecinos"], zone["pedidos"], zone["verificados"], zone["adopcion"]), (7, 5, 4, 71))
+        self.assertEqual((zone["vecinos"], zone["pedidos"], zone["verificados"], zone["adopcion"]), (9, 5, 4, 56))
 
     # AN-C
     def test_an_c_margen_sin_liquidar_es_nulo(self):
@@ -122,8 +122,8 @@ class ZoneAnalysisTests(AnalysisBase):
 
     # AN-I
     def test_an_i_propone_recordar(self):
-        proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "RECORDAR" and p["zonas"] == [ARENALES])
-        self.assertEqual(proposal["datos"]["sin_pedir"], 1)
+        proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "RECORDAR" and p["zonas"] == [ALAMOS])
+        self.assertEqual(proposal["datos"]["sin_pedir"], 4)
 
     # AN-J
     def test_an_j_propone_invitar_a_una_zona_chica(self):
@@ -166,7 +166,7 @@ class FewOrdersTests(AnalysisBase):
     # AN-O
     def test_an_o_ciclo_invalido(self):
         status, body, _ = self.admin().get("/api/admin/analisis?ciclo=hola")
-        self.assertEqual((status, body["error"]["codigo"]), (422, "INVALID_INPUT"))
+        self.assertEqual((status, body["error"]["codigo"]), (422, "INVALID_CYCLE"))
 
 
 class SettledWeekTests(AnalysisBase):

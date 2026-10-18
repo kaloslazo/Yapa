@@ -30,31 +30,31 @@ Pedido del equipo (18/10/2026): ver el panel de admin "como empresa": ganancias 
 | AN-03 | `uniones` lista cada par de zonas de grupos distintos a 500 m o menos, con la distancia en metros y `motivo`: vacío si se puede unir hoy, o el código que la bloquea (`CYCLE_CLOSED`, `ZONES_TOO_FAR`, `LOCATION_REQUIRED`). Las zonas sin ubicación no entran. | — |
 | AN-04 | `propuestas` sigue S-183 a S-187. Cada propuesta trae `tipo` (`UNIR`, `RECORDAR`, `INVITAR`, `REVISAR_COSTO`, `REACTIVAR`), las zonas que involucra, un `titulo`, un `detalle` en palabras y los `datos` que la originan. | — |
 | AN-05 | Orden de las propuestas: primero las que ayudan a llegar al mínimo (UNIR, RECORDAR, INVITAR), luego REVISAR_COSTO y REACTIVAR. Dentro de cada tipo, por nombre de zona. | — |
-| AN-06 | Sin pedidos ni ventas esa semana el análisis responde igual (zonas con ceros, sin propuestas de dinero). Un ciclo con formato inválido da `INVALID_INPUT`. | `INVALID_INPUT` |
+| AN-06 | Sin pedidos ni ventas esa semana el análisis responde igual (zonas con ceros, sin propuestas de dinero). Un ciclo con formato inválido da el mismo error que las demás pantallas del admin. | `INVALID_CYCLE` |
 | AN-07 | Consultar el análisis no cambia nada: no mueve dinero ni zonas. | — |
 | AN-08 | `merge_blocker(store, zona, destino, ahora)` devuelve el código que impide unir hoy o `None`. Usa las mismas reglas que pedir y aceptar la unión (no las duplica). | — |
 
 ## Criterios de aceptación (`tests/test_analisis.py`)
 
-Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del piloto más un edificio extra en Lince a 391 m de Los Álamos.
+Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del piloto (Los Álamos ya trae 3 vecinos) más un edificio extra en Lince a 391 m de Los Álamos. La propuesta de invitar y la de recordar se calculan por grupo de zonas unidas.
 
 | # | Criterio | Entrada | Resultado |
 |---|---|---|---|
 | AN-A | Solo el admin | vecino 101 o sin sesión | 403 `FORBIDDEN` y 401 `LOGIN_REQUIRED` |
-| AN-B | Datos de zona | Los Álamos con 7 vecinos, 5 pidieron y 4 pagaron verificado | pedidos 5, verificados 4, adopción 71 |
+| AN-B | Datos de zona | Los Álamos con 9 vecinos, 5 pidieron y 4 pagaron verificado | pedidos 5, verificados 4, adopción 56 |
 | AN-C | Margen sin liquidar | semana abierta | `margen` es `null` |
 | AN-D | Unión posible | Arenales (grupo propio) y Los Álamos a 391 m, ciclo abierto | par con distancia 391 y motivo vacío |
 | AN-E | Unión bloqueada por ciclo | mismo par, sábado 19/09 | motivo `CYCLE_CLOSED` |
 | AN-F | Sin pares lejanos | Miraflores a más de 500 m | no aparece en `uniones` |
 | AN-G | Propuesta de unir | Álamos con 4 verificados y Arenales con 4 verificados | propuesta `UNIR` con 8 en total |
 | AN-H | No se propone si juntas no llegan | 2 y 3 verificados | sin propuesta `UNIR` |
-| AN-I | Recordar | Álamos con 4 verificados y 4 vecinos sin pedir | propuesta `RECORDAR` |
+| AN-I | Recordar | Álamos con 4 verificados y 4 vecinos sin pedir | propuesta `RECORDAR` con 4 sin pedir |
 | AN-J | Invitar | zona activa con 5 vecinos | propuesta `INVITAR` con el dato 5 vecinos |
 | AN-K | Costo | semana liquidada con una zona de margen negativo | propuesta `REVISAR_COSTO` con el margen |
 | AN-L | Reactivar | 3 vecinos recibieron en W37 y no piden en W38 | propuesta `REACTIVAR` con 3 |
 | AN-M | Orden | hay UNIR y REACTIVAR a la vez | UNIR sale antes |
 | AN-N | Sin datos | ciclo sin pedidos | 200, zonas con ceros |
-| AN-O | Ciclo inválido | `?ciclo=hola` | 422 `INVALID_INPUT` |
+| AN-O | Ciclo inválido | `?ciclo=hola` | 422 `INVALID_CYCLE` |
 | AN-P | No cambia nada | consultar dos veces | las zonas y el dinero (`money_balance`) quedan igual |
 | AN-Q | Demo | `demo_store()` | existe `Z-LINCE-03` con admin 116 a 391 m de `Z-LINCE-01`, y los números de la semana no cambian |
 
