@@ -1,0 +1,144 @@
+FFFFFFFFFF
+======================================================================
+FAIL: test_op_a_misma_respuesta_exista_o_no (test_pin_olvidado.ForgottenPinTests.test_op_a_misma_respuesta_exista_o_no)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 42, in test_op_a_misma_respuesta_exista_o_no
+    self.assertEqual(known[0], 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_op_b_se_crea_y_el_admin_la_ve (test_pin_olvidado.ForgottenPinTests.test_op_b_se_crea_y_el_admin_la_ve)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 48, in test_op_b_se_crea_y_el_admin_la_ve
+    [request] = self.open_requests()
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_op_c_no_se_duplica (test_pin_olvidado.ForgottenPinTests.test_op_c_no_se_duplica)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 55, in test_op_c_no_se_duplica
+    self.assertEqual(len(self.open_requests()), 1)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_op_d_tope_de_solicitudes_abiertas (test_pin_olvidado.ForgottenPinTests.test_op_d_tope_de_solicitudes_abiertas)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 62, in test_op_d_tope_de_solicitudes_abiertas
+    self.assertEqual(len(self.open_requests()), 100)
+                         ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_op_e_formato (test_pin_olvidado.ForgottenPinTests.test_op_e_formato)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 72, in test_op_e_formato
+    self.assertEqual((status, body["error"]["codigo"]), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_op_f_solo_admin (test_pin_olvidado.ForgottenPinTests.test_op_f_solo_admin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 77, in test_op_f_solo_admin
+    self.assertEqual((status, body["error"]["codigo"]), (401, "LOGIN_REQUIRED"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (401, 'LOGIN_REQUIRED')
+
+First differing element 0:
+404
+401
+
+- (404, 'NOT_FOUND')
++ (401, 'LOGIN_REQUIRED')
+
+======================================================================
+FAIL: test_op_g_un_pin_nuevo_cierra_la_solicitud (test_pin_olvidado.ForgottenPinTests.test_op_g_un_pin_nuevo_cierra_la_solicitud)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 88, in test_op_g_un_pin_nuevo_cierra_la_solicitud
+    self.assertEqual(self.open_requests(), [])
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_op_h_descartar_no_cambia_el_pin (test_pin_olvidado.ForgottenPinTests.test_op_h_descartar_no_cambia_el_pin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 96, in test_op_h_descartar_no_cambia_el_pin
+    [request] = self.open_requests()
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_op_i_descartar_inexistente (test_pin_olvidado.ForgottenPinTests.test_op_i_descartar_inexistente)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 106, in test_op_i_descartar_inexistente
+    self.assertEqual((status, body["error"]["codigo"]), (422, "PIN_REQUEST_NOT_FOUND"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'PIN_REQUEST_NOT_FOUND')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'PIN_REQUEST_NOT_FOUND')
+
+======================================================================
+FAIL: test_op_j_ninguna_respuesta_lleva_el_pin (test_pin_olvidado.ForgottenPinTests.test_op_j_ninguna_respuesta_lleva_el_pin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 111, in test_op_j_ninguna_respuesta_lleva_el_pin
+    texts = [str(self.ask("101")[1]), str(self.open_requests())]
+                                          ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_pin_olvidado.py", line 35, in open_requests
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.021s
+
+FAILED (failures=10)
+......F
+======================================================================
+FAIL: test_ph_a_accion_que_falla_no_deja_la_foto (test_api_fotos.PhotoTests.test_ph_a_accion_que_falla_no_deja_la_foto)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 99, in test_ph_a_accion_que_falla_no_deja_la_foto
+    self.assertEqual(list(Path(self.folder).iterdir()), [])
+AssertionError: Lists differ: [WindowsPath('C:/Users/Lenovo/AppData/Loca[37 chars]pg')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+WindowsPath('C:/Users/Lenovo/AppData/Local/Temp/tmp95oss0j8/2b511bf321e765b3.jpg')
+
+- [WindowsPath('C:/Users/Lenovo/AppData/Local/Temp/tmp95oss0j8/2b511bf321e765b3.jpg')]
++ []
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.079s
+
+FAILED (failures=1)

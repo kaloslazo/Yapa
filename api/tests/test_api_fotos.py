@@ -92,5 +92,12 @@ class PhotoTests(unittest.TestCase):
         self.assertEqual((status, body), (200, JPEG))
 
 
+    # PH-A
+    def test_ph_a_accion_que_falla_no_deja_la_foto(self):
+        status, body = self.admin().post_file("/api/admin/bolsas", {"pedido": "999"}, {"foto_archivo": ("bolsa.jpg", JPEG)})
+        self.assertEqual(status, 422)
+        self.assertEqual(list(Path(self.folder).iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()
