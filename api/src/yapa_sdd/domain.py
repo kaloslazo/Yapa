@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal, ROUND_DOWN, ROUND_UP
+from decimal import Decimal, InvalidOperation, ROUND_DOWN, ROUND_UP
 
 
 PILOT_DISTRICTS = frozenset({"Lince", "Jesús María", "La Victoria"})  # S-01
@@ -22,6 +22,14 @@ class BusinessRuleError(ValueError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+def is_multiple(value: Decimal, step: Decimal) -> bool:
+    """AD-03: un número tan grande que no cabe en la división no es múltiplo de nada."""
+    try:
+        return value % step == 0
+    except InvalidOperation:
+        return False
 
 
 def floor_cents(value: Decimal) -> Decimal:

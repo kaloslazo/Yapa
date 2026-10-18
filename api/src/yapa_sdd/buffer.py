@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from .domain import BusinessRuleError
+from .domain import BusinessRuleError, is_multiple
 from .fulfillment import check_staff, is_attended
 from .order_registration import _to_quantity
 from .store import InMemoryStore
@@ -46,7 +46,7 @@ def buffer_value(store: InMemoryStore) -> Decimal:
 def _quantity(quantity, step: Decimal) -> Decimal:
     """CO-03: mayor que cero y en el paso del producto."""
     value = _to_quantity(quantity)
-    if value <= 0 or value % step != 0:
+    if value <= 0 or not is_multiple(value, step):
         raise BusinessRuleError("INVALID_QUANTITY", f"Cantidad no válida: {quantity}.")
     return value
 

@@ -97,10 +97,12 @@ def create_zone(store: InMemoryStore, admin_id: int, *, name: str, district: str
     _check_coordinates(lat, lon)  # HR-02
     if district not in PILOT_DISTRICTS:
         raise BusinessRuleError("DISTRICT_NOT_IN_PILOT", "Por ahora solo Lince, Jesús María y La Victoria.")
+    if not (name or "").strip():  # AD-02, S-170
+        raise BusinessRuleError("NAME_REQUIRED", "Escribe el nombre de la zona.")
     _check_can_move(store, admin_id)
     zone_id = store.next_zone_id()
-    zone = Zone(zone_id, name, district, f"G-{zone_id}", NEW_ZONE_STOP_COST, reception_accepted=False,
-                lat=lat, lon=lon, admin_id=admin_id, created_cycle=cycle.cycle_id(now))
+    zone = Zone(zone_id, name.strip(), district, f"G-{zone_id}", NEW_ZONE_STOP_COST, reception_accepted=False,
+                lat=float(lat), lon=float(lon), admin_id=admin_id, created_cycle=cycle.cycle_id(now))
     store.add_zone(zone)
     store.add_customer(replace(admin, zone_id=zone_id))
     return zone

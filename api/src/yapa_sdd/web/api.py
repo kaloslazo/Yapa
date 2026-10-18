@@ -9,6 +9,7 @@ import hmac
 import json
 import re
 import secrets
+import traceback
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from http.cookies import SimpleCookie
@@ -61,6 +62,22 @@ def _money_in(value, what: str) -> Decimal:
     return amount
 
 
+FLAGS = ("usar_saldo", "consentimiento")  # los únicos datos de sí o no
+
+
+def _scalars(data: dict) -> dict:
+    """AD-04, S-171: los datos son texto, número o sí/no; un número se lee como su texto."""
+    clean = {}
+    for key, value in data.items():
+        if key == "lineas" or key in FLAGS or value is None or isinstance(value, str):
+            clean[key] = value
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            clean[key] = str(value)
+        else:
+            raise BusinessRuleError("INVALID_INPUT", f"El dato '{key}' no es válido.")
+    return clean
+
+
 def _body(environ) -> tuple[dict, dict]:
     if environ.get("CONTENT_TYPE", "").startswith("application/json"):
         try:
@@ -72,7 +89,7 @@ def _body(environ) -> tuple[dict, dict]:
             data = json.loads(raw.decode("utf-8")) if raw else {}
         except ValueError:
             raise ApiError("400 Bad Request", "INVALID_JSON", "El cuerpo no es JSON válido.")
-        return (data if isinstance(data, dict) else {}), {}
+        return (_scalars(data) if isinstance(data, dict) else {}), {}
     return _form(environ)  # multipart con fotos (S-151) o formulario simple
 
 
@@ -401,8 +418,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         value = (parse_qs(environ.get("QUERY_STRING", "")).get("ciclo", [""])[0]).strip()
         if not value:
             return cycle.cycle_id(clock())
-        if not re.fullmatch(r"\d{4}-W\d{2}", value):
-            raise BusinessRuleError("INVALID_INPUT", "Ciclo no válido; usa el formato 2026-W38.")
+        cycle.check_cycle_id(value)  # AD-06
         return value
 
     def admin_resumen(environ, data, session):
@@ -688,6 +704,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                                                             "mensaje": str(error)}}, []
         except ApiError as error:
             status, body, headers = error.status, {"error": {"codigo": error.code, "mensaje": error.message}}, []
+        except Exception:  # AD-05: el frontend siempre recibe JSON
+            traceback.print_exc(file=environ.get("wsgi.errors"))
+            status, body, headers = "500 Internal Server Error", {"error": {
+                "codigo": "INTERNAL_ERROR", "mensaje": "Algo salió mal de nuestro lado. Intenta de nuevo."}}, []
         if on_change and environ.get("REQUEST_METHOD") in ("POST", "DELETE") and status[:1] == "2":
             on_change(store)
         raw = json.dumps(body, ensure_ascii=False).encode("utf-8")

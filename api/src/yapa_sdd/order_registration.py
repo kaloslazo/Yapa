@@ -27,6 +27,7 @@ from .domain import (
     Zone,
     ceil_cents,
     floor_cents,
+    is_multiple,
 )
 from .store import InMemoryStore
 from . import wallet
@@ -94,7 +95,7 @@ def _product(catalog: dict[str, Product], product_id: str, quantity: Decimal, ke
 
 def _check_quantity(product: Product, quantity: Decimal) -> None:
     """RP-07: mayor que cero, múltiplo del paso y dentro del tope por línea."""
-    if quantity <= 0 or quantity % product.step != 0 or quantity > MAX_QUANTITY[product.unit]:
+    if quantity <= 0 or not is_multiple(quantity, product.step) or quantity > MAX_QUANTITY[product.unit]:
         raise BusinessRuleError(
             "INVALID_QUANTITY",
             f"{product.name}: se pide en pasos de {product.step} {product.unit}, "
@@ -217,6 +218,8 @@ def verify_payment(store: InMemoryStore, order_id: int, *, now: datetime) -> Ord
     order = store.orders.get(order_id)
     if order is None:
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
+    if order.status == "CANCELADO_POR_CLIENTE":  # AD-01
+        raise BusinessRuleError("ORDER_CANCELLED", "El pedido fue cancelado; no hay pago que verificar.")
     if not cycle.is_open(now) or cycle.cycle_id(now) != order.cycle:
         raise BusinessRuleError("CYCLE_CLOSED", "El ciclo ya cerró; el pago no puede verificarse.")
     from .audit import CashEntry  # evita importación circular

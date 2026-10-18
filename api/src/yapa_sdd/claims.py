@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from . import wallet
-from .domain import BusinessRuleError, Order, ceil_cents
+from .domain import BusinessRuleError, Order, ceil_cents, is_multiple
 from .fulfillment import check_photo, check_staff
 from .store import InMemoryStore
 
@@ -51,7 +51,7 @@ def _claim_quantity(store: InMemoryStore, order: Order, product_id: str, quantit
     if valid:
         step = store.catalog_for(order.cycle)[product_id].step
         already = _claimed(store, order.order_id, product_id, ("PENDIENTE", "APROBADO"))
-        valid = value % step == 0 and already + value <= ordered[product_id]
+        valid = is_multiple(value, step) and already + value <= ordered[product_id]
     if not valid:
         raise BusinessRuleError("INVALID_CLAIM_ITEM", f"Reclamo no válido: {product_id}, {quantity}.")
     return value

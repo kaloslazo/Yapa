@@ -59,7 +59,7 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertRule("INVALID_QUANTITY", quote_order, self.store, [("LIMON", "1e999")])
 
     def test_ad_c_cantidad_enorme_en_un_reclamo(self):
-        order = self.order([("LIMON", "10"), ("PAPA-AMARILLA", "5")])
+        order = self.order([("LIMON", "10"), ("PAPA-AMARILLA", "7")])
         self.assertRule("INVALID_CLAIM_ITEM", _claim_quantity, self.store, order, "LIMON", "1e999")
 
     def test_ad_c_cantidad_enorme_en_el_colchon(self):
