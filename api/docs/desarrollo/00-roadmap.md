@@ -45,6 +45,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 28 | **Admin de zona: beneficios, referidos y su panel** | pedido de Carlos del 17/10, doc 07 | completa, ver `28-admin-zona-beneficios.md` (beneficios a validar con su costo) |
 | 29 | **Frontend de Kalos conectado al motor** (vecino, admin de zona, admin de Yapa) | decisión del equipo del 17/10 | completa, ver `29-frontend-tres-roles.md` |
 | 30 | **Auditoría módulo por módulo y endurecimiento** (pedido cancelado, coordenadas, cantidades enormes, entradas de la API) | auditoría del 17/10 | completa, ver `30-auditoria-endurecimiento.md` |
+| 31 | **Pulido de la tienda** (confirmación al devolver dinero, barra de canasta en el celular, botones de 44 px) | auditoría de diseño del 18/10 | completa, ver `31-pulido-vecino-dinero.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

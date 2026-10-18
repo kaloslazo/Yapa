@@ -221,3 +221,10 @@
 - Huecos corregidos: verificar el pago de un pedido cancelado metía plata a la caja sin dueño; una zona creada con coordenadas en texto rompía la unión de vecinos y el panel; `1e999` tumbaba pedido, reclamo y colchón; la API caía con PIN, celular o lista como número, o con listas donde iba texto; las caídas respondían texto en vez de JSON; el admin podía consultar semanas que no existen.
 - Queda para decisión del equipo: devolver el pago externo de un pedido cancelado antes de verificarse (S-20), limpiar sesiones, cookie `Secure` al publicar con HTTPS, y el bloqueo de cuenta por fuerza bruta.
 - Resultado: 340 pruebas del motor en verde (15 nuevas), 6 del frontend sin cambios.
+
+## Iteración 31 · Pulido de la tienda: dinero con confirmación y compra en el celular (18/10/2026)
+
+- Spec: `31-pulido-vecino-dinero.md` (S-172..S-174). Sale de la auditoría de diseño del 18/10 por tipo de usuario (vecino, admin de zona, admin de Yapa) con revisión de código y recorrido en navegador a 390 px.
+- Cancelar un pedido y devolver el saldo a Yape o Plin ahora piden confirmar y dicen el plazo con palabras. En el celular hay una barra fija con el total y lo que falta para el mínimo, botones de al menos 44 px y el menú con pista de que se desliza.
+- Queda para la iteración 32: ver la foto del reclamo (hace falta un endpoint solo para el admin), confirmaciones del admin de zona y de Yapa. Accesibilidad (foco, grises, enlace de salto) en una iteración propia.
+- Resultado: 13 pruebas del frontend en verde (antes 6), typecheck y build sin errores; el motor no cambió.

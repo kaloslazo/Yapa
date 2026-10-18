@@ -55,3 +55,17 @@ Auditoría de diseño del 18/10/2026 sobre la tienda (tres roles, revisión de c
 | UI-G | Medio Plin | destino MEDIO_DE_PAGO, medio PLIN | el texto dice "Plin" |
 
 Las reglas de pantalla (UI-01..UI-05, UI-08, UI-09) se verifican en el navegador a 390 px y a escritorio; el resultado queda en el registro.
+
+## Trazabilidad (regla → código → prueba)
+
+| Regla | Código | Prueba |
+|---|---|---|
+| UI-01, UI-03 | `CancelActions` en `src/components/OrdersPage.tsx` | navegador a 390 px (pedido 12 de Carmen) |
+| UI-02 | `confirmingWithdraw` en `OrdersPage` | navegador a 390 px (saldo de S/ 0.56) |
+| UI-04, UI-05 | `MobileCartBar` en `src/components/CartPanel.tsx`, `App.tsx`, bloque de la iteración 31 en `styles.css` | navegador: con 1 producto dice "Te faltan S/ 45.97" y el botón "Ver canasta"; en escritorio la barra no se muestra |
+| UI-06 | `minimumGap` en `src/utils/cart.ts` | UI-A..UI-D en `src/utils/refund.test.ts` |
+| UI-07 | `refundPromise` en `src/utils/refund.ts` | UI-E..UI-G |
+| UI-08 | `min-height: 44px` y zona de toque ampliada en `styles.css` | revisión de CSS; quedan fuera los enlaces de texto sueltos (accesibilidad, iteración propia) |
+| UI-09 | degradado a la derecha del menú en `styles.css` | navegador: "Canasta" se ve difuminada, con pista de que hay más |
+
+Evidencia: `docs/evidencia/desarrollo/31-pulido-rojo.txt` y `31-pulido-verde.txt` (13 pruebas del frontend, antes 6). Tipos y build sin errores. El motor no cambió (340 pruebas).
