@@ -647,6 +647,21 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         pin = customers.reset_pin(store, _int(customer_id, "Vecino"), by=session["principal"])
         return {"id": int(customer_id), "pin": pin}
 
+    def pin_olvide(environ, data, session):
+        """OP-01, S-196: siempre la misma respuesta, exista o no el número."""
+        customers.request_pin_help(store, data.get("usuario"), clock())
+        return {"mensaje": "Si tu número está registrado, el equipo de Yapa te escribirá por WhatsApp al celular que registraste."}
+
+    def admin_pin_solicitudes(environ, data, session):
+        """OP-06, OP-09: nunca lleva un PIN."""
+        return {"solicitudes": [{"id": rid, "cliente": cid, "vecino": store.customers[cid].name,
+                                 "celular": store.customers[cid].phone, "hora": at.isoformat()}
+                                for rid, (cid, at) in sorted(store.pin_requests.items(), key=lambda item: item[1][1])]}
+
+    def admin_pin_descartar(environ, data, session, request_id):
+        customers.dismiss_pin_request(store, _int(request_id, "Solicitud"), by=session["principal"])
+        return {"descartada": True}
+
     def admin_colchon(environ, data, session):
         return {"valor": money(buffer.buffer_value(store)), "tope": money(buffer.BUFFER_LIMIT),
                 "stock": [{"producto": s.product_id, "cantidad": qty(s.quantity), "valor": money(s.value)}
@@ -695,6 +710,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/referencias", {"GET": (admin_referencias, "admin"), "POST": (admin_referencia_registrar, "admin")}),
         (r"/api/admin/vecinos", {"GET": (admin_vecinos, "admin"), "POST": (admin_vecino_alta, "admin")}),
         (r"/api/admin/vecinos/(\d+)/pin", {"POST": (admin_vecino_pin, "admin")}),
+        (r"/api/pin/olvide", {"POST": (pin_olvide, None)}),
+        (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),
+        (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, "admin")}),
         (r"/api/admin/colchon", {"GET": (admin_colchon, "admin")}),
     ]
     compiled = [(re.compile(pattern + r"/?"), methods) for pattern, methods in routes]
@@ -720,9 +738,15 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
+        saved = ""
         if files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151
-            data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
-        result = handler(environ, data, session, *match.groups())
+            saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
+        try:
+            result = handler(environ, data, session, *match.groups())
+        except Exception:
+            if saved:  # PH-01, PH-03: la foto de una acción que falló no se queda sin dueño
+                (Path(photo_dir) / saved.split("/", 1)[1]).unlink(missing_ok=True)
+            raise
         if isinstance(result, tuple):
             body, headers, *status = result
             return (status[0] if status else "200 OK"), body, headers

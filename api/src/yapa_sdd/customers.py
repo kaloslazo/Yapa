@@ -72,6 +72,29 @@ def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str,
     return customer, pin
 
 
+PIN_REQUEST_LIMIT = 100  # S-197
+
+
+def request_pin_help(store: InMemoryStore, user, now: datetime) -> None:
+    """OP-02..OP-05, S-196: no dice si el número existe; solo guarda la solicitud si corresponde."""
+    text = str(user or "").strip()
+    if not (text.isascii() and text.isdigit() and len(text) <= 9):  # OP-05: solo se revisa el formato
+        raise BusinessRuleError("INVALID_INPUT", "Escribe tu número de cliente.")
+    customer_id = int(text)
+    already_open = any(customer == customer_id for customer, _ in store.pin_requests.values())
+    if customer_id not in store.customers or already_open or len(store.pin_requests) >= PIN_REQUEST_LIMIT:
+        return
+    store.pin_requests[max(store.pin_requests, default=0) + 1] = (customer_id, now)
+
+
+def dismiss_pin_request(store: InMemoryStore, request_id: int, *, by: str) -> None:
+    """OP-08, S-198."""
+    _check_admin(store, by)
+    if request_id not in store.pin_requests:
+        raise BusinessRuleError("PIN_REQUEST_NOT_FOUND", "Esa solicitud ya no está.")
+    del store.pin_requests[request_id]
+
+
 def reset_pin(store: InMemoryStore, customer_id: int, *, by: str) -> str:
     """AV-07, S-137: PIN nuevo; una credencial nueva también quita el bloqueo."""
     _check_admin(store, by)
@@ -79,4 +102,6 @@ def reset_pin(store: InMemoryStore, customer_id: int, *, by: str) -> str:
         raise BusinessRuleError("CUSTOMER_NOT_FOUND", "El cliente no está registrado.")
     pin = new_pin()
     set_pin(store, customer_id, pin)
+    for request_id in [r for r, (customer, _) in store.pin_requests.items() if customer == customer_id]:  # OP-07
+        del store.pin_requests[request_id]
     return pin

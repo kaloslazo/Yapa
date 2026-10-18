@@ -23,6 +23,7 @@ class InMemoryStore:
         self.refunds: dict = {}
         self.settled_cycles: set[str] = set()
         self.merge_requests: dict = {}  # zonas (iteración 5)
+        self.pin_requests: dict = {}  # "Olvidé mi PIN": id -> (cliente, hora) (iteración 39, S-199)
         self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
         self.bags: dict = {}  # armado: bolsas por pedido
         self.deliveries: dict = {}  # entrega: (ciclo, zona) -> entrega
