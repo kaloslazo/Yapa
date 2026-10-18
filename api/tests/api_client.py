@@ -51,3 +51,43 @@ class ApiClient:
         if status == 200:
             self.csrf = data["csrf"]
         return status, data, headers
+
+    def get_raw(self, path):
+        """GET que devuelve el cuerpo tal cual (fotos): (estado, bytes, cabeceras)."""
+        environ = {}
+        setup_testing_defaults(environ)
+        path, _, query = path.partition("?")
+        environ.update({"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": query})
+        if self.cookie:
+            environ["HTTP_COOKIE"] = f"yapa_api={self.cookie}"
+        result = {}
+
+        def start_response(status, headers):
+            result["status"] = int(status.split()[0])
+            result["headers"] = dict(headers)
+
+        body = b"".join(self.app(environ, start_response))
+        return result["status"], body, result["headers"]
+
+    def post_file(self, path, data, files):
+        """POST multipart con archivos (S-151) y token CSRF."""
+        environ = {}
+        setup_testing_defaults(environ)
+        boundary = "yapa-prueba-api"
+        parts = [f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode("utf-8")
+                 for k, v in data.items()]
+        for key, (filename, content) in files.items():
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"; filename="{filename}"'
+                         f'\r\nContent-Type: image/jpeg\r\n\r\n'.encode("utf-8") + content + b"\r\n")
+        body = b"".join(parts) + f"--{boundary}--\r\n".encode("utf-8")
+        environ.update({"REQUEST_METHOD": "POST", "PATH_INFO": path, "QUERY_STRING": "",
+                        "CONTENT_TYPE": f"multipart/form-data; boundary={boundary}",
+                        "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body),
+                        "HTTP_COOKIE": f"yapa_api={self.cookie}", "HTTP_X_YAPA_CSRF": self.csrf})
+        result = {}
+
+        def start_response(status, headers):
+            result["status"] = int(status.split()[0])
+
+        text = b"".join(self.app(environ, start_response)).decode("utf-8")
+        return result["status"], json.loads(text) if text else None
