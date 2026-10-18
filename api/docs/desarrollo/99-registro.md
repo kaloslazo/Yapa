@@ -266,7 +266,7 @@
 
 ## Iteración 37 · Análisis por zona y propuestas del sistema (18/10/2026)
 
-- Spec:  (S-182..S-189, a validar). Nuevo : por zona, pedidos, avance, adopción y margen; los pares de zonas que se pueden unir (con el motivo si hoy no) y propuestas del sistema: unir, recordar, invitar, revisar costo y reactivar.
--  reutiliza las reglas de pedir y aceptar la unión, sin duplicarlas.
+- Spec: `37-analisis-zonas-propuestas.md` (S-182..S-189, a validar). Nuevo `GET /api/admin/analisis`: por zona, pedidos, avance, adopción y margen; los pares de zonas que se pueden unir (con el motivo si hoy no) y propuestas del sistema: unir, recordar, invitar, revisar costo y reactivar.
+- `merge_blocker` reutiliza las reglas de pedir y aceptar la unión, sin duplicarlas.
 - La demo suma el Edificio Arenales con su admin (Marta, cliente 116) a 391 m de Los Álamos, para ver la unión con acuerdo de los dos admins.
 - Resultado: 364 pruebas del motor (18 nuevas). Solo lee: no mueve dinero ni zonas.

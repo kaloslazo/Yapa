@@ -62,13 +62,13 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 
 | Regla | Código | Prueba |
 |---|---|---|
-| AN-01, AN-07 |  en ,  | AN-A, AN-P |
-| AN-02 |  en  | AN-B, AN-C |
-| AN-03 |  | AN-D, AN-E, AN-F |
-| AN-04, AN-05 | , , , orden en  | AN-G..AN-M |
-| AN-06 |  (ya existente) y ceros sin pedidos | AN-N, AN-O |
-| AN-08 |  en  | AN-D, AN-E |
-| S-188 | zona y vecino nuevos en , PIN de demo en  | AN-Q |
+| AN-01, AN-07 | `admin_analisis` en `src/yapa_sdd/web/api.py`, `insights.analysis` | AN-A, AN-P |
+| AN-02 | `_zone_rows` en `src/yapa_sdd/insights.py` | AN-B, AN-C |
+| AN-03 | `_unions` | AN-D, AN-E, AN-F |
+| AN-04, AN-05 | `_propose_merges`, `_propose_for_groups`, `_propose_money`, orden en `analysis` | AN-G..AN-M |
+| AN-06 | `query_cycle` (ya existente) y ceros sin pedidos | AN-N, AN-O |
+| AN-08 | `merge_blocker` en `src/yapa_sdd/zones.py` | AN-D, AN-E |
+| S-188 | zona y vecino nuevos en `src/yapa_sdd/demo.py`, PIN de demo en `web/__main__.py` | AN-Q |
 
-Evidencia:  (17 fallas y 1 error antes del código) y  (364 pruebas, 18 nuevas).
+Evidencia: `docs/evidencia/desarrollo/37-analisis-rojo.txt` (17 fallas y 1 error antes del código) y `37-analisis-verde.txt` (364 pruebas, 18 nuevas).
 Cuenta demo nueva: Marta Quispe, cliente 116, PIN 260318 (solo demo local).
