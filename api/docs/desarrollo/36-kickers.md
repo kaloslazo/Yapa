@@ -10,7 +10,7 @@ Se quitan las etiquetas que solo repiten el título o la sección ("Tu cuenta", 
 
 ## Resultado
 
-De 25 etiquetas quedan 11. Sin cambios de reglas ni de datos; se verifica en el navegador.
+Se quitaron 16 etiquetas; las demás se mantienen. Sin cambios de reglas ni de datos; se verifica en el navegador.
 
 ## Trazabilidad
 
