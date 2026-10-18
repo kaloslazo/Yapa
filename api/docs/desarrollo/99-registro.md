@@ -236,3 +236,11 @@
 - Las pruebas de accesibilidad leen la hoja de estilos y comprueban contraste y foco: si alguien oscurece o aclara un color por error, falla.
 - Queda: foto del reclamo y confirmaciones del admin (iteración 33), kickers sobre los títulos, bordes de campos y fotos reales de productos.
 - Resultado: 27 pruebas del frontend en verde (antes 13), typecheck y build sin errores; el motor no cambió.
+
+## Iteración 33 · El admin ve la foto del reclamo y confirma lo que mueve dinero o zonas (18/10/2026)
+
+- Spec: `33-admin-foto-confirmaciones.md` (S-179..S-181). El admin de Yapa decidía reclamos sin ver la foto, porque la API guardaba las fotos pero no las entregaba.
+- Nuevo `GET /api/admin/foto?ruta=...`: solo admin, solo rutas con la forma exacta que escribe el motor (nada de `..`, rutas absolutas ni otros tipos), con `nosniff` y sin caché. Nueve rutas hostiles probadas.
+- En pantalla: miniatura de la foto en cada reclamo y confirmación corta al aprobar o rechazar (dice el efecto), al verificar un pago (muestra monto y código) y al pedir unión o separar la zona.
+- Pregunta para el equipo: las fotos de reclamos fallidos quedan guardadas (huérfanas).
+- Resultado: 346 pruebas del motor (6 nuevas) y 32 del frontend (5 nuevas), typecheck y build sin errores.

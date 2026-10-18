@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+
+ Test Files  5 passed (5)
+      Tests  32 passed (32)
+   Start at  03:23:07
+   Duration  219ms (transform 72%, import 16%, tests 8%, worker 4%)
+

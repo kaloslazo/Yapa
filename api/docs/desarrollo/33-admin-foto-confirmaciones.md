@@ -55,3 +55,20 @@ Las reglas FA-05 a FA-08 de pantalla se verifican en el navegador y quedan en el
 ## Fuera de esta iteración
 
 Ventana de entrega del sábado y avisos por WhatsApp (regla de negocio del equipo), contadores y búsqueda del admin de Yapa, lista de invitados del admin de zona.
+
+## Trazabilidad (regla → código → prueba)
+
+| Regla | Código | Prueba |
+|---|---|---|
+| FA-01..FA-04 | `admin_foto` y `PHOTO_PATH` en `src/yapa_sdd/web/api.py`; el cuerpo en bytes se entrega con sus cabeceras | `tests/test_api_fotos.py` (FA-A, B, C, D, G, I) |
+| FA-03 | `PHOTO_PATH.fullmatch`: solo `fotos/<16 hex>.<jpg, jpeg, png, webp, heic>` | `test_fa_d_rutas_invalidas` (9 rutas: `..`, `.txt`, vacía, absoluta, Windows, barra extra, NUL, otra carpeta, mayúsculas) |
+| FA-05 | `ClaimPhoto` en `src/components/AdminPanel.tsx`, `photoUrl` en `src/utils/admin.ts` | FA-J (`src/utils/admin.test.ts`); la miniatura con un reclamo real no se pudo ver en la demo (ver abajo) |
+| FA-06 | `ConfirmAction` en reclamos, `claimEffect` | FA-K |
+| FA-07 | `ConfirmAction` en "Verificar" | navegador: "¿Ya viste S/ 72.76 con el código DEMO-40-109 en tu Yape?" |
+| FA-08 | `ConfirmAction` en `ZonePage.tsx` | revisión de código; mismo componente |
+
+Lo que no se pudo ver: la semana de demo ya cerró el plazo de 24 horas para reclamar (`CLAIM_WINDOW_CLOSED`), así que no hay un reclamo real con foto para mirar la miniatura. Se comprobó la foto por la API a través del proxy (200, `image/png`, `nosniff`, `no-store`) y la ruta completa subida → guardada → vista en la prueba FA-I.
+
+Detalle encontrado: si un reclamo falla por una regla, la foto igual se guarda antes (hábito de la iteración 26, S-151). Queda como pregunta para el equipo (limpiar fotos huérfanas). Se agregó `fotos/` al `.gitignore` para que las fotos de vecinos no lleguen al repositorio.
+
+Evidencia: `33-fotos-rojo.txt`, `33-fotos-front-rojo.txt`, `33-fotos-verde.txt` (346 pruebas del motor) y `33-fotos-front-verde.txt` (32 del frontend). Tipos y build sin errores.

@@ -47,6 +47,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 30 | **Auditoría módulo por módulo y endurecimiento** (pedido cancelado, coordenadas, cantidades enormes, entradas de la API) | auditoría del 17/10 | completa, ver `30-auditoria-endurecimiento.md` |
 | 31 | **Pulido de la tienda** (confirmación al devolver dinero, barra de canasta en el celular, botones de 44 px) | auditoría de diseño del 18/10 | completa, ver `31-pulido-vecino-dinero.md` |
 | 32 | **Accesibilidad y lenguaje claro** (foco, contraste, enlace de salto, aviso de conexión) | auditoría de diseño del 18/10 | completa, ver `32-accesibilidad-lenguaje.md` |
+| 33 | **Foto del reclamo y confirmaciones del admin** (`GET /api/admin/foto`, confirmar pago, reclamo, unión y separación) | auditoría de diseño del 18/10 | completa, ver `33-admin-foto-confirmaciones.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro
