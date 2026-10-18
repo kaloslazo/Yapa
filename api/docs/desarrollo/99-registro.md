@@ -270,3 +270,13 @@
 - `merge_blocker` reutiliza las reglas de pedir y aceptar la unión, sin duplicarlas.
 - La demo suma el Edificio Arenales con su admin (Marta, cliente 116) a 391 m de Los Álamos, para ver la unión con acuerdo de los dos admins.
 - Resultado: 364 pruebas del motor (18 nuevas). Solo lee: no mueve dinero ni zonas.
+
+## Iteración 38 · Mapa real de zonas, sección Zonas del admin y unión visible (18/10/2026)
+
+- Spec: `38-mapa-zonas-fusion.md` (S-190..S-193, a validar). Mapa real con Leaflet y mosaicos de OpenStreetMap: cada zona es un círculo de 300 m del color de su grupo, las uniones posibles son líneas verdes con su distancia y las bloqueadas, grises con el motivo en palabras.
+- Admin de Yapa: sección **Zonas** con el mapa, las propuestas del sistema y la tabla por zona (vecinos, pedidos, verificados, adopción y margen). El menú muestra cuántas propuestas hay.
+- Admin de zona: el mapa esquemático se reemplazó por el real. Cada zona cercana dice si hoy se puede pedir la unión; una unión pedida muestra "Esperando a su admin" con Retirar; la zona que la recibe ve "Te pidió unirse" y acepta.
+- Motor (iteración 37, completada aquí): `motivo` en las cercanas, `enviadas`, `POST /api/solicitudes/<id>/retirar`, propuestas solo para el piloto, singular y plural correctos.
+- Recorrido en el navegador con la demo: Marta (Edificio Arenales) pide unirse a Los Álamos, Ana acepta y las tres zonas quedan unidas con el mismo color.
+- Errores propios corregidos en el camino: el mapa dejaba la app en blanco por usar `getBounds` de un círculo antes de tener vista (ahora se calcula directo y un fallo del mapa no tumba la pantalla); mis datos de prueba no contaban los 3 vecinos que ya trae el piloto; la spec decía 403 donde el motor responde 422.
+- Resultado: 372 pruebas del motor (26 nuevas) y 55 del frontend (15 nuevas), typecheck y build sin errores.

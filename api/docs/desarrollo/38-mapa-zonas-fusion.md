@@ -31,7 +31,7 @@ Pedido del equipo (18/10/2026): ver las zonas por perímetros en un mapa real y 
 | MP-08 | El menú muestra el número de propuestas junto a **Zonas**. |
 | MP-09 | En Mi zona (admin de zona) el mapa esquemático se reemplaza por el mapa real con su zona resaltada y las cercanas; la lista de "Pedir unión" y las solicitudes siguen igual. |
 | MP-10 | En Mi zona, cada zona cercana sin unir dice si hoy se puede pedir la unión; si no, el motivo en palabras. |
-| MP-11 | En Mi zona, una unión ya pedida muestra "Esperando a su admin" con la opción de retirarla; cuando el otro admin acepta, las dos zonas pasan a "Unidas". |
+| MP-11 | En Mi zona, una unión ya pedida muestra "Esperando a su admin" con la opción de retirarla; cuando el otro admin acepta, las dos zonas pasan a "Unidas". En la zona que recibe la solicitud, la fila de la otra zona dice "Te pidió unirse" en vez de ofrecer pedir la unión. |
 | MP-12 | Los conteos de vecinos usan singular y plural correctos. |
 
 ## Criterios de aceptación (`src/utils/zoneMap.test.ts`)
@@ -57,4 +57,17 @@ Las reglas de pantalla (MP-01..MP-05, MP-07..MP-10) se verifican en el navegador
 
 ## Trazabilidad
 
-Se completa al terminar la implementación.
+| Regla | Código | Prueba |
+|---|---|---|
+| MP-01..MP-05 | `src/components/ZonesMap.tsx` (Leaflet; `try/catch` para que un fallo del mapa no tumbe la pantalla), `drawableZones` y `focusZoneIds` en `src/utils/zoneMap.ts` | MP-D, MP-K..MP-M; navegador: mapa con calles, círculos, líneas y botón "Ver todas las zonas" |
+| MP-02, MP-06 | `unionLabel` y `unionReason` | MP-E..MP-H |
+| MP-07, MP-08 | sección `Zones` en `AdminPanel.tsx` y número de propuestas en el menú | navegador (escritorio y 390 px: sin desbordes ni botones de menos de 40 px) |
+| MP-07 (margen) | `marginLabel` | MP-I, MP-J |
+| MP-09, MP-10 | `ZonePage.tsx` (mapa real, `motivo` de cada cercana, AN-12 del motor) | AN-U; navegador |
+| MP-11 | `enviadas` y "Retirar" (AN-13 y AN-14 del motor), "Te pidió unirse" | AN-V..AN-Y; navegador: Marta pide, Ana ve "Te pidió unirse" y acepta, las tres zonas quedan "Unidas" con el mismo color |
+| MP-12 | `neighborsLabel` | MP-N |
+| S-190 | `leaflet` 1.9.4 y `@types/leaflet` en `package.json` | — |
+
+Evidencia: `docs/evidencia/desarrollo/38-mapa-rojo.txt` (módulo inexistente al escribir las pruebas) y `38-mapa-verde.txt` (55 pruebas del frontend, 15 nuevas en esta iteración). En el motor, la iteración 37 queda en 372 pruebas.
+
+Nota: `npm audit` marca 1 alerta alta en `source-map-js` (herramienta de desarrollo); ya existía antes de agregar Leaflet.

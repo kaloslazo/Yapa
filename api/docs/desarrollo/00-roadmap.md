@@ -52,6 +52,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 35 | **Contadores y búsqueda del admin** (pendientes en el menú, buscador de vecinos) | recorrido visual del 18/10 | completa, ver `35-admin-contadores-busqueda.md` |
 | 36 | **Menos etiquetas sobre los títulos** | auditoría de diseño del 18/10 | completa, ver `36-kickers.md` |
 | 37 | **Análisis por zona y propuestas del sistema** (`GET /api/admin/analisis`, uniones posibles, demo con dos admins) | pedido del equipo 18/10 | completa, ver `37-analisis-zonas-propuestas.md` |
+| 38 | **Mapa real de zonas, sección Zonas y unión visible** (Leaflet, propuestas, Esperando/Te pidió unirse/Retirar) | pedido del equipo 18/10 | completa, ver `38-mapa-zonas-fusion.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

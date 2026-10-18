@@ -82,7 +82,11 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-13 | El panel del admin de zona (`/api/mi-zona`) trae `enviadas`: las solicitudes de unión que su zona pidió y esperan respuesta, con el nombre de la zona de destino. | — |
 | AN-14 | `POST /api/solicitudes/<id>/retirar`: el admin que pidió la unión la retira (HR-04 del motor). Otra persona recibe `NOT_ZONE_ADMIN` y una solicitud inexistente `MERGE_REQUEST_NOT_FOUND`. | `NOT_ZONE_ADMIN`, `MERGE_REQUEST_NOT_FOUND` |
 | AN-08 | `merge_blocker` en `src/yapa_sdd/zones.py` | AN-D, AN-E |
+| AN-09 | `radio_m`, `union_m` y `ciclos` en `admin_analisis` | AN-R |
+| AN-10, AN-11 | `PILOT_DISTRICTS` y `_neighbors` en `insights.py` | AN-S, AN-T |
+| AN-12 | `motivo` de cada cercana en `zone_admin_panel` | AN-U |
+| AN-13, AN-14 | `enviadas` en `zone_admin_panel` y `solicitud_retirar` (`/api/solicitudes/<id>/retirar`) | AN-V, AN-W, AN-X, AN-Y |
 | S-188 | zona y vecino nuevos en `src/yapa_sdd/demo.py`, PIN de demo en `web/__main__.py` | AN-Q |
 
-Evidencia: `docs/evidencia/desarrollo/37-analisis-rojo.txt` (17 fallas y 1 error antes del código) y `37-analisis-verde.txt` (364 pruebas, 18 nuevas).
+Evidencia: `docs/evidencia/desarrollo/37-analisis-rojo.txt` (17 fallas y 1 error antes del código) y `37-analisis-verde.txt` (372 pruebas, 26 nuevas).
 Cuenta demo nueva: Marta Quispe, cliente 116, PIN 260318 (solo demo local).
