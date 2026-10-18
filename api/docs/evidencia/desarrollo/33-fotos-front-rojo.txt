@@ -1,0 +1,24 @@
+
+ RUN  v5.0.1 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/utils/admin.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/admin.test.ts [ src/utils/admin.test.ts ]
+Error: Cannot find module './admin' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/utils/admin.test.ts
+ ❯ src/utils/admin.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { claimEffect, photoUrl } from './admin';
+       | ^
+      3|
+      4| describe('FA-J · dirección de la foto', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  27 passed (27)
+   Start at  03:21:20
+   Duration  208ms (transform 72%, import 14%, tests 9%, worker 5%)
+
