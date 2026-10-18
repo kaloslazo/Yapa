@@ -13,6 +13,7 @@ import traceback
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from http.cookies import SimpleCookie
+from pathlib import Path
 from urllib.parse import parse_qs
 
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
@@ -25,6 +26,8 @@ from ..store import InMemoryStore
 from .app import _form, _save_photo
 
 
+PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
+PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
 COOKIE = "yapa_api"
 SESSION_TIME = timedelta(hours=8)  # S-69
 WINDOWS = ["09:00 – 12:00", "12:00 – 15:00", "15:00 – 18:00"]
@@ -421,6 +424,18 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         cycle.check_cycle_id(value)  # AD-06
         return value
 
+    def admin_foto(environ, data, session):
+        """FA-01..FA-04, S-179, S-180: entrega una foto guardada solo si la ruta tiene la forma exacta que escribe el motor."""
+        route = (parse_qs(environ.get("QUERY_STRING", "")).get("ruta") or [""])[0]
+        match = PHOTO_PATH.fullmatch(route)
+        if not match:
+            raise BusinessRuleError("INVALID_INPUT", "La ruta de la foto no es válida.")
+        file = Path(photo_dir) / route.split("/", 1)[1]
+        if not file.is_file():
+            raise ApiError("404 Not Found", "PHOTO_NOT_FOUND", "Esa foto no existe.")
+        return file.read_bytes(), [("Content-Type", PHOTO_MIME[match.group(1)]), ("X-Content-Type-Options", "nosniff"),
+                                   ("Cache-Control", "private, no-store")]
+
     def admin_resumen(environ, data, session):
         cycle_id = query_cycle(environ)
         now = clock()
@@ -646,6 +661,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/solicitudes/(\d+)/aceptar", {"POST": (solicitud_aceptar, "vecino")}),
         (r"/api/solicitudes/(\d+)/rechazar", {"POST": (solicitud_rechazar, "vecino")}),
         (r"/api/admin/resumen", {"GET": (admin_resumen, "admin")}),
+        (r"/api/admin/foto", {"GET": (admin_foto, "admin")}),
         (r"/api/admin/pedidos/(\d+)/verificar", {"POST": (admin_verificar, "admin")}),
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
         (r"/api/admin/armado", {"GET": (admin_armado, "admin")}),
@@ -710,6 +726,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "codigo": "INTERNAL_ERROR", "mensaje": "Algo salió mal de nuestro lado. Intenta de nuevo."}}, []
         if on_change and environ.get("REQUEST_METHOD") in ("POST", "DELETE") and status[:1] == "2":
             on_change(store)
+        if isinstance(body, bytes):  # fotos: se entregan tal cual, con las cabeceras del manejador
+            start_response(status, [("Content-Length", str(len(body)))] + headers)
+            return [body]
         raw = json.dumps(body, ensure_ascii=False).encode("utf-8")
         start_response(status, [("Content-Type", "application/json; charset=utf-8"),
                                 ("Content-Length", str(len(raw))), ("Cache-Control", "no-store")] + headers)
