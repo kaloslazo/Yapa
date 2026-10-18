@@ -215,3 +215,9 @@
 - Errores de la spec corregidos antes del código: FE-E (55.95, no 56.00) y FE-09 (faltaba la ruta para guardar la ubicación).
 - Resultado: 325 pruebas del motor y 6 del frontend en verde; typecheck y build sin errores.
 
+## Iteración 30 · Auditoría módulo por módulo y endurecimiento (17/10/2026)
+
+- Spec: `30-auditoria-endurecimiento.md` (S-170, S-171). Se sondearon todos los módulos con entradas hostiles y con una simulación de 600 semanas al azar que comprueba la conciliación en cada paso. **El dinero resistió las 600 semanas** (diferencia 0, ningún saldo negativo, guardar y cargar sin pérdidas).
+- Huecos corregidos: verificar el pago de un pedido cancelado metía plata a la caja sin dueño; una zona creada con coordenadas en texto rompía la unión de vecinos y el panel; `1e999` tumbaba pedido, reclamo y colchón; la API caía con PIN, celular o lista como número, o con listas donde iba texto; las caídas respondían texto en vez de JSON; el admin podía consultar semanas que no existen.
+- Queda para decisión del equipo: devolver el pago externo de un pedido cancelado antes de verificarse (S-20), limpiar sesiones, cookie `Secure` al publicar con HTTPS, y el bloqueo de cuenta por fuerza bruta.
+- Resultado: 340 pruebas del motor en verde (15 nuevas), 6 del frontend sin cambios.

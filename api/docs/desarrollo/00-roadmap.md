@@ -44,6 +44,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 27 | **API JSON para el frontend React** (`/api`, sesión, CSRF, roles) | decisión del equipo del 17/10 | completa, ver `27-api-json.md` |
 | 28 | **Admin de zona: beneficios, referidos y su panel** | pedido de Carlos del 17/10, doc 07 | completa, ver `28-admin-zona-beneficios.md` (beneficios a validar con su costo) |
 | 29 | **Frontend de Kalos conectado al motor** (vecino, admin de zona, admin de Yapa) | decisión del equipo del 17/10 | completa, ver `29-frontend-tres-roles.md` |
+| 30 | **Auditoría módulo por módulo y endurecimiento** (pedido cancelado, coordenadas, cantidades enormes, entradas de la API) | auditoría del 17/10 | completa, ver `30-auditoria-endurecimiento.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

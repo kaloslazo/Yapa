@@ -151,3 +151,10 @@ S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas)
 | 69 | ¿Está bien que Yapa dé el código de pago y el vecino lo ponga en el mensaje del Yape? | Sí: el vecino no escribe nada y el admin lo encuentra en su Yape (S-150). | Sí (17/10) | | |
 | 70 | ¿Hay registro libre por correo o el alta la hace el equipo? | El alta la hace el equipo con el consentimiento del vecino, y puede traer un código de referido (S-167). | | | |
 
+
+## Iteración 30 · Auditoría y endurecimiento (17/10/2026)
+
+| # | Pregunta | Propuesta | Carlos | Kalos | Aaron |
+|---|---|---|---|---|---|
+| 71 | ¿Qué pasa con el Yape de un pedido que el vecino canceló antes de que el admin lo verificara? | El admin lo registra a mano como devolución pendiente y se paga como las demás (hoy no se devuelve nada, S-20). | | | |
+| 72 | ¿Una zona necesita nombre? | Sí, sin nombre no se crea (S-170). | | | |
