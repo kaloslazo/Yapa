@@ -136,7 +136,7 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
         </section>
 
         <section className="customer-main-card">
-          <div className="customer-section-heading"><div><span className="customer-eyebrow">Tu zona en el mapa</span><h2>Radio y zonas cercanas</h2></div></div>
+          <div className="customer-section-heading"><div><h2>Radio y zonas cercanas</h2></div></div>
           <ZoneMap zone={panel} nearby={panel.nearby} radius={data.radius} mergeDistance={data.mergeDistance} />
           {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : <ConfirmAction label="Pedir unión" confirmLabel="Sí, pedir unión" question={<>Si {z.name} acepta, sus pedidos y los tuyos suman juntos para llegar al mínimo. ¿Pedir unión?</>} onConfirm={() => actions.onRequestMerge(panel.id, z.id)} />}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
           {panel.requests.length ? <div className="merge-requests"><strong>Solicitudes para unirse contigo</strong>{panel.requests.map((r) => <div className="merge-request" key={r.id}><span>{r.name}</span><button className="admin-row-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, true)}>Aceptar</button><button className="text-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, false)}>Rechazar</button></div>)}</div> : null}
@@ -192,7 +192,7 @@ function NeighborView({ data, zones, districts, onJoin, onLocate, onCreate }: { 
     <>
       <section className="zone-hero">
         <div className="zone-hero-copy">
-          <span className="customer-eyebrow">Tu punto de entrega</span>
+          
           <h1>{data.zone?.name ?? 'Todavía no tienes zona'}</h1>
           <p>{data.zone ? `${data.zone.district} · ${data.zone.neighbors} vecinos · ${data.zone.status === 'ACTIVA' ? 'recibe pedidos' : 'falta quien reciba'}` : 'Únete a la zona de tu edificio o crea una.'}</p>
         </div>

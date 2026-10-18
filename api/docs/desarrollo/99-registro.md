@@ -258,3 +258,8 @@
 - Padrón: buscador por nombre, número o celular, sin distinguir tildes ni mayúsculas.
 - También se recorrió el admin de zona (Ana) a 390 px: sin desbordes ni botones chicos, y la confirmación de "Separar mi zona" se ve bien.
 - Resultado: 40 pruebas del frontend (5 nuevas), typecheck y build sin errores. El motor no cambió.
+
+## Iteración 36 · Menos etiquetas sobre los títulos (18/10/2026)
+
+- Spec: `36-kickers.md`. Se quitaron las etiquetas decorativas y se dejaron las que dan un dato (semana, regla, paso).
+- Resultado: 40 pruebas del frontend, typecheck sin errores. Solo cambia la pantalla.

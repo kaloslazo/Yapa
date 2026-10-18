@@ -53,8 +53,8 @@ function useLoad<T>(path: string | null, notify: AdminPanelProps['notify']) {
   return { data, reload };
 }
 
-function Card({ eyebrow, title, children, aside, id }: { eyebrow: string; title: string; children: ReactNode; aside?: ReactNode; id?: string }) {
-  return <section className="admin-card" id={id}><div className="admin-card-heading"><div><span className="admin-eyebrow">{eyebrow}</span><h2>{title}</h2></div>{aside}</div>{children}</section>;
+function Card({ eyebrow, title, children, aside, id }: { eyebrow?: string; title: string; children: ReactNode; aside?: ReactNode; id?: string }) {
+  return <section className="admin-card" id={id}><div className="admin-card-heading"><div>{eyebrow ? <span className="admin-eyebrow">{eyebrow}</span> : null}<h2>{title}</h2></div>{aside}</div>{children}</section>;
 }
 
 function CycleSelect({ cycles, value, onChange }: { cycles: string[]; value: string; onChange: (cycle: string) => void }) {
@@ -116,7 +116,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
 
         <main className="admin-main" id="admin-overview">
           <header className="admin-topbar">
-            <div><span className="admin-eyebrow">Centro de operaciones</span><h1>{current.label}</h1></div>
+            <div><h1>{current.label}</h1></div>
             <div className="admin-top-actions"><a className="admin-store-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}>Tienda <Icon name="arrow" size={16} /></a></div>
           </header>
           <div className="admin-page-content">
@@ -177,11 +177,11 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
         <div className="admin-groups">{data.grupos.map((g: Raw) => <div className="admin-group" key={g.grupo}><div><strong>{g.zonas.join(' + ')}</strong><small>{g.grupo}</small></div><div className="admin-group-count"><span className={g.verificados >= g.minimo ? 'is-ready' : ''}>{g.verificados} / {g.minimo}</span><div className="progress-track"><span style={{ width: `${Math.min(g.verificados / g.minimo, 1) * 100}%` }} /></div></div></div>)}</div>
       </Card>
 
-      <Card eyebrow="Caja" title={`Pagos por verificar (${pending.length})`}>
+      <Card title={`Pagos por verificar (${pending.length})`}>
         {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Yapea</th><th>Código en el mensaje</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td><strong>{formatMoney(o.toPay)}</strong> <small>{o.method === 'PLIN' ? 'Plin' : 'Yape'}</small></td><td><code>{o.paymentCode}</code></td><td><ConfirmAction label={<><Icon name="check" size={15} /> Verificar</>} question={<>¿Ya viste <strong>{formatMoney(o.toPay)}</strong> con el código <code>{o.paymentCode}</code> en tu {o.method === 'PLIN' ? 'Plin' : 'Yape'}?</>} confirmLabel="Sí, verificar" onConfirm={() => verify(o)} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todo verificado" text="Cuando un vecino pida, su código YP aparecerá aquí." />}
       </Card>
 
-      <Card eyebrow="Semana" title={`Pedidos (${orders.length})`}>
+      <Card title={`Pedidos (${orders.length})`}>
         {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Zona</th><th>Pagó</th><th>Estado</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td>{o.zoneId}</td><td>{formatMoney(o.total)}{o.withBalance ? <small className="admin-cell-note">{formatMoney(o.withBalance)} con saldo</small> : null}</td><td><span className={`admin-order-status admin-order-status--${o.status === 'REGISTRADO' ? o.payment.toLowerCase() : o.status.toLowerCase()}`}>{o.status === 'REGISTRADO' && o.payment === 'POR_VERIFICAR' ? 'Por verificar' : statusLabel(o)}</span>{o.settlement ? <small className="admin-cell-note">costó {formatMoney(o.settlement.cost)} · devuelto {formatMoney(o.settlement.returned)}</small> : null}</td></tr>)}</tbody></table></div> : <Empty icon="truck" title="Esta semana todavía no tiene pedidos" text="Aparecerán apenas los vecinos confirmen." />}
         <div className="admin-settle">
           {result ? <div className="admin-settle-result"><strong>Semana {result.ciclo} liquidada</strong><p>Volvió a saldo {formatMoney(num(result.a_saldo))} · a reembolsar por Yape o Plin {formatMoney(num(result.reembolsado))}.</p><ul>{result.productos.map((p: Raw) => <li key={p.id}>{p.id}: {p.total} entre todos · tramo desde {p.tramo} · {formatMoney(num(p.precio_final))}</li>)}</ul></div>
@@ -218,8 +218,8 @@ function Packing({ cycle, setCycle, run, notify }: SectionProps) {
   };
   return (
     <>
-      <section className="admin-intro"><div><span className="admin-eyebrow">Sábado</span><h2>Foto de cada bolsa y de cada entrega</h2><p>Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
-      <Card eyebrow="Paradas" title={`Entregas por zona (${data.paradas.length})`}>
+      <section className="admin-intro"><div><h2>Foto de cada bolsa y de cada entrega</h2><p>Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <Card title={`Entregas por zona (${data.paradas.length})`}>
         {data.paradas.length ? <div className="stop-list">{data.paradas.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
           <div className="stop-card" key={zone.id}>
             <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
@@ -229,7 +229,7 @@ function Packing({ cycle, setCycle, run, notify }: SectionProps) {
             </div> : null}
           </div>); })}</div> : <Empty icon="truck" title="No hay zonas que se atiendan" text="Ningún grupo llegó al mínimo en esta semana." />}
       </Card>
-      <Card eyebrow="Armado" title={`Bolsas por pedido (${orders.length})`}>
+      <Card title={`Bolsas por pedido (${orders.length})`}>
         {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Productos</th><th>Bolsas</th><th>Foto de bolsa</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}<small className="admin-cell-note">{o.zoneId}</small></td><td><small>{o.lines.map((l) => `${l.name} ${formatQuantity(l.quantity)}`).join(' · ')}</small></td><td>{o.bags?.length ? <span className="state-pill state-pill--ok">{o.bags.length}</span> : <span className="state-pill">0</span>}</td><td><PhotoForm label="Agregar bolsa" onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(o.id) }, `Bolsa del pedido ${o.id} registrada.`)} /></td></tr>)}</tbody></table></div> : <Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." />}
       </Card>
     </>
@@ -254,7 +254,7 @@ function Claims({ run, notify }: SectionProps) {
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
         {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
-      {done.length ? <Card eyebrow="Historial" title="Revisados"><div className="admin-table-wrap"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div></Card> : null}
+      {done.length ? <Card title="Revisados"><div className="admin-table-wrap"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div></Card> : null}
     </>
   );
 }
@@ -278,7 +278,7 @@ function Balance({ notify }: SectionProps) {
   return (
     <>
       <section className={`balance-banner ${data.cuadra ? 'is-ok' : 'is-bad'}`}><Icon name={data.cuadra ? 'ok' : 'warning'} size={34} weight="duotone" /><div><strong>{data.cuadra ? 'El dinero cuadra al céntimo' : 'No cuadra: revisar antes de seguir'}</strong><span>recibido = en curso + retenido + deuda + devoluciones pagadas · diferencia {formatMoney(num(data.diferencia))}</span></div></section>
-      <Card eyebrow="Conciliación" title="De dónde viene y a dónde va"><div className="admin-table-wrap"><table className="admin-table balance-table"><tbody>{rows.map(([label, value]) => <tr key={label}><td>{label}</td><td><strong>{formatMoney(num(value))}</strong></td></tr>)}<tr className="is-total"><td>Diferencia</td><td><strong>{formatMoney(num(data.diferencia))}</strong></td></tr></tbody></table></div></Card>
+      <Card title="De dónde viene y a dónde va"><div className="admin-table-wrap"><table className="admin-table balance-table"><tbody>{rows.map(([label, value]) => <tr key={label}><td>{label}</td><td><strong>{formatMoney(num(value))}</strong></td></tr>)}<tr className="is-total"><td>Diferencia</td><td><strong>{formatMoney(num(data.diferencia))}</strong></td></tr></tbody></table></div></Card>
     </>
   );
 }
@@ -301,7 +301,7 @@ function Metrics({ notify }: SectionProps) {
   const avg = margins.length ? margins.reduce((s: number, m: Raw) => s + num(m.margen), 0) / margins.length : 0;
   return (
     <>
-      <section className="admin-intro"><div><span className="admin-eyebrow">Piloto</span><h2>¿El modelo se sostiene?</h2><p>Margen por pedido antes de costos operativos, ahorro entregado y recompra de la semana 4.</p></div><CycleSelect cycles={cycles} value={cycle} onChange={setCycle} /></section>
+      <section className="admin-intro"><div><h2>¿El modelo se sostiene?</h2><p>Margen por pedido antes de costos operativos, ahorro entregado y recompra de la semana 4.</p></div><CycleSelect cycles={cycles} value={cycle} onChange={setCycle} /></section>
       {error ? <Empty icon="info" title="Esta semana aún no tiene métricas" text={error} /> : data ? <>
         <section className="admin-kpis">
           <div className="admin-kpi"><span className="admin-kpi-label">Margen promedio</span><strong>{formatMoney(avg)}</strong><small>por pedido</small></div>
@@ -309,7 +309,7 @@ function Metrics({ notify }: SectionProps) {
           <div className="admin-kpi"><span className="admin-kpi-label">Frente al supermercado</span><strong>{data.frente_a.SUPERMERCADO?.porcentaje ? `${data.frente_a.SUPERMERCADO.porcentaje} %` : '—'}</strong><small>{data.frente_a.SUPERMERCADO?.canastas ?? 0} canastas comparadas</small></div>
           <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? data.recompra.error.mensaje : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
         </section>
-        <Card eyebrow="Por pedido" title="Margen antes de costos operativos"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th><th>Margen</th></tr></thead><tbody>{margins.map((m: Raw) => <tr key={m.pedido} className={m.negativo ? 'is-negative' : ''}><td>{m.pedido}</td><td>{formatMoney(num(m.cobrado))}</td><td>{formatMoney(num(m.reclamos))}</td><td>{formatMoney(num(m.proveedor))}</td><td>{formatMoney(num(m.parada))}</td><td><strong>{formatMoney(num(m.margen))}</strong></td></tr>)}</tbody></table></div></Card>
+        <Card title="Margen antes de costos operativos"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th><th>Margen</th></tr></thead><tbody>{margins.map((m: Raw) => <tr key={m.pedido} className={m.negativo ? 'is-negative' : ''}><td>{m.pedido}</td><td>{formatMoney(num(m.cobrado))}</td><td>{formatMoney(num(m.reclamos))}</td><td>{formatMoney(num(m.proveedor))}</td><td>{formatMoney(num(m.parada))}</td><td><strong>{formatMoney(num(m.margen))}</strong></td></tr>)}</tbody></table></div></Card>
       </> : <p className="admin-muted">Cargando…</p>}
     </>
   );
@@ -325,8 +325,8 @@ function CatalogAdmin({ run, notify }: SectionProps) {
   const publish = () => run(() => api.post('/api/admin/catalogo', { ciclo: data.ciclo, lista: text }), `Catálogo de la semana ${data.ciclo} publicado.`).then(() => reload());
   return (
     <>
-      <section className="admin-intro"><div><span className="admin-eyebrow">Proveedor aliado</span><h2>Semana {data.ciclo} · {data.publicado ? 'publicado' : 'usa el catálogo base'}</h2><p>Precio máximo = primer tramo del proveedor más la comisión. Se publica antes del lunes 00:00.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setWeek} /></section>
-      <Card eyebrow="Inventario" title={`Productos (${data.productos.length})`}>
+      <section className="admin-intro"><div><h2>Semana {data.ciclo} · {data.publicado ? 'publicado' : 'usa el catálogo base'}</h2><p>Precio máximo = primer tramo del proveedor más la comisión. Se publica antes del lunes 00:00.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setWeek} /></section>
+      <Card title={`Productos (${data.productos.length})`}>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th><th>Máximo</th><th>Estado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id} className={p.activo ? '' : 'is-muted'}><td><strong>{p.nombre}</strong><small className="admin-cell-note">{p.id} · por {p.unidad}</small></td><td>{formatMoney(num(p.precio_max))}</td><td><small className="admin-tiers">{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td><td>{p.maximo} {p.unidad}</td><td>{p.activo ? <button className="text-button" type="button" onClick={() => void deactivate(p.id)}>Desactivar</button> : <span className="state-pill">Desactivado</span>}</td></tr>)}</tbody></table></div>
       </Card>
       <details className="admin-card plegable"><summary>Publicar la lista del proveedor</summary><p className="admin-muted">Una línea por producto, separada por comas. Se publica todo o nada.</p><textarea className="admin-textarea" rows={10} value={text} onChange={(event) => setText(event.target.value)} /><button className="primary-button" type="button" onClick={() => void publish()}>Publicar semana {data.ciclo}</button></details>
@@ -347,7 +347,7 @@ function References({ run, notify }: SectionProps) {
   return (
     <>
       <Card eyebrow="Vigencia: 14 días" title="¿Cuánto costaría en otro lado?"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo Yapa</th><th>Mercado de barrio</th><th>Supermercado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id}><td><strong>{p.nombre}</strong></td><td>{formatMoney(num(p.precio_max))}</td><td>{cell(p.referencias.MERCADO)}</td><td>{cell(p.referencias.SUPERMERCADO)}</td></tr>)}</tbody></table></div></Card>
-      <form className="admin-card" onSubmit={save}><div className="admin-card-heading"><div><span className="admin-eyebrow">Trabajo de campo</span><h2>Registrar un precio visto</h2></div></div>
+      <form className="admin-card" onSubmit={save}><div className="admin-card-heading"><div><h2>Registrar un precio visto</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Producto</span><select value={product} onChange={(event) => setProduct(event.target.value)}>{data.productos.map((p: Raw) => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
           <div className="checkout-field"><span>Dónde</span><div className="segmented">{(['MERCADO', 'SUPERMERCADO'] as const).map((k) => <button type="button" key={k} className={kind === k ? 'is-active' : ''} onClick={() => setKind(k)}>{k === 'MERCADO' ? 'Mercado de barrio' : 'Supermercado'}</button>)}</div></div>
           <label className="checkout-field"><span>Precio (S/)</span><input value={price} onChange={(event) => setPrice(event.target.value)} inputMode="decimal" placeholder="0.00" required /></label>
@@ -384,14 +384,14 @@ function Neighbors({ run, notify }: SectionProps) {
   return (
     <>
       {created ? <section className="pin-banner"><Icon name="ok" size={30} weight="duotone" /><div><strong>Cliente {created.id} · PIN {created.pin}</strong><span>Se muestra una sola vez. Envíaselo por WhatsApp.</span></div><a className="primary-button" href={`https://wa.me/${created.celular ? `51${created.celular}` : ''}?text=${encodeURIComponent(welcome(created))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Enviar</a><button className="icon-button" type="button" onClick={() => setCreated(null)} aria-label="Cerrar"><Icon name="close" size={18} /></button></section> : null}
-      <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><span className="admin-eyebrow">Consentimiento del vecino</span><h2>Dar de alta a un vecino</h2></div></div>
+      <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><h2>Dar de alta a un vecino</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Nombre</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label>
           <label className="checkout-field"><span>Celular</span><input value={form.celular} onChange={(event) => setForm({ ...form, celular: event.target.value.replace(/[^\d\s]/g, '') })} inputMode="numeric" placeholder="9XX XXX XXX" required /></label>
           <label className="checkout-field"><span>Zona</span><select value={form.zona} onChange={(event) => setForm({ ...form, zona: event.target.value })}>{zones.map((z) => <option key={z.id} value={z.id}>{z.name} · {z.district}</option>)}</select></label>
           <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
         <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre y celular para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
-      <Card eyebrow="Padrón" title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
+      <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
     </>
   );
 }

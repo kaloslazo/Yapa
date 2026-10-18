@@ -160,7 +160,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
   return (
     <main className="customer-page" id="orders-page">
       <header className="customer-page-header savings-hero">
-        <div><span className="customer-eyebrow">Tu cuenta</span><h1>{data && data.supermarketSaving > 0 ? <>Llevas <em>{formatMoney(data.supermarketSaving)}</em> ahorrados</> : 'Tus pedidos'}</h1><p>{data && data.supermarketSaving > 0 ? 'Frente a lo que te costaba en el supermercado. Lo que pagaste, lo que costó y lo que te devolvimos, pedido por pedido.' : 'Lo que pagaste, lo que costó de verdad y lo que te devolvimos en cada ciclo.'}</p></div>
+        <div><h1>{data && data.supermarketSaving > 0 ? <>Llevas <em>{formatMoney(data.supermarketSaving)}</em> ahorrados</> : 'Tus pedidos'}</h1><p>{data && data.supermarketSaving > 0 ? 'Frente a lo que te costaba en el supermercado. Lo que pagaste, lo que costó y lo que te devolvimos, pedido por pedido.' : 'Lo que pagaste, lo que costó de verdad y lo que te devolvimos en cada ciclo.'}</p></div>
         <div className="hero-stats">
           <div className="customer-page-note"><span className="customer-page-note-icon"><Icon name="wallet" size={20} /></span><span><small>Tu saldo a favor</small><strong>{formatMoney(data?.balance ?? 0)}</strong></span></div>
           <div className="customer-page-note"><span className="customer-page-note-icon"><Icon name="undo" size={20} /></span><span><small>Con Yapa te devolvimos</small><strong>{formatMoney(data?.returned ?? 0)}</strong></span></div>
@@ -169,7 +169,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
 
       <div className="customer-page-grid">
         <section className="customer-main-card" aria-labelledby="orders-page-title">
-          <div className="customer-section-heading"><div><span className="customer-eyebrow">Historial</span><h2 id="orders-page-title">Tus canastas</h2></div><span className="customer-count">{orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}</span></div>
+          <div className="customer-section-heading"><div><h2 id="orders-page-title">Tus canastas</h2></div><span className="customer-count">{orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}</span></div>
           {orders.length ? <div className="orders-page-list">{orders.map((order) => (
             <article className="orders-page-card" key={order.id}>
               <div className="orders-page-card-top"><div><strong>Pedido {order.id}</strong><span>Semana {order.cycle}</span></div><span className={`order-status order-status--${order.status === 'REGISTRADO' ? order.payment.toLowerCase() : order.status.toLowerCase()}`}>{statusLabel(order)}</span></div>
@@ -184,7 +184,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
 
         <aside className="customer-side-stack">
           <section className="customer-side-card">
-            <span className="customer-eyebrow">Tu saldo</span><h2>{formatMoney(data?.balance ?? 0)}</h2>
+            <h2>{formatMoney(data?.balance ?? 0)}</h2>
             <p>Se usa solo en tu próximo pedido. No vence. Si lo prefieres, te lo devolvemos a tu Yape o Plin en hasta 30 días.</p>
             {confirmingWithdraw ? <div className="order-confirm" role="group" aria-label="Confirmar devolución del saldo"><p><strong>¿Devolverte {formatMoney(data?.balance ?? 0)} a tu Yape o Plin?</strong> Te lo devolvemos en hasta 30 días.</p><button className="primary-button" type="button" disabled={withdrawing} onClick={() => void withdraw()}>{withdrawing ? 'Enviando…' : 'Sí, devolverme'}</button><button className="text-button" type="button" disabled={withdrawing} onClick={() => setConfirmingWithdraw(false)}>No, dejarlo en mi saldo</button></div>
               : <button className="secondary-button" type="button" disabled={!data?.balance} onClick={() => setConfirmingWithdraw(true)}>Devolverme todo a mi Yape/Plin</button>}
