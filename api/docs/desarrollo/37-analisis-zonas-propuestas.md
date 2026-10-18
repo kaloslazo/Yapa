@@ -59,6 +59,7 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-R | Datos para el mapa | consultar el análisis | trae `radio_m` 300, `union_m` 500 y la lista de semanas conocidas con la actual |
 | AN-S | Fuera del piloto | Miraflores con 1 vecino | no genera propuesta |
 | AN-T | Singular | una zona con 1 vecino | el detalle dice "Tiene 1 vecino" |
+| AN-U | Motivo en Mi zona | admin de Arenales mira sus cercanas, miércoles y sábado | Los Álamos con motivo vacío el miércoles y `CYCLE_CLOSED` el sábado; Las Palmeras (del grupo de Álamos, 455 m) también |
 | AN-Q | Demo | `demo_store()` | existe `Z-LINCE-03` con admin 116 a 391 m de `Z-LINCE-01`, y los números de la semana no cambian |
 
 ## Trazabilidad (regla → código → prueba)
@@ -73,6 +74,7 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-09 | La respuesta incluye `radio_m` (300), `union_m` (500) y `ciclos` (semanas conocidas, como las demás pantallas del admin) para dibujar el mapa y elegir semana. | — |
 | AN-10 | Las propuestas de unir, recordar e invitar solo cuentan zonas de los distritos del piloto (Lince, Jesús María y La Victoria). | — |
 | AN-11 | Los textos usan singular y plural correctos ("1 vecino", "2 vecinos"). | — |
+| AN-12 | En el panel del admin de zona (`/api/mi-zona`), cada zona cercana trae `motivo`: vacío si la unión se puede pedir hoy, el código que lo impide si no, y vacío también si ya son del mismo grupo (se muestran como "Unidas"). | — |
 | AN-08 | `merge_blocker` en `src/yapa_sdd/zones.py` | AN-D, AN-E |
 | S-188 | zona y vecino nuevos en `src/yapa_sdd/demo.py`, PIN de demo en `web/__main__.py` | AN-Q |
 

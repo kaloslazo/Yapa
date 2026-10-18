@@ -152,6 +152,24 @@ class ZoneAnalysisTests(AnalysisBase):
         self.assertEqual(self.store.merge_requests, {})
 
 
+class NearbyReasonTests(AnalysisBase):
+    # AN-U
+    def test_an_u_las_cercanas_dicen_si_hoy_se_puede_pedir_la_union(self):
+        [admin_id] = self.neighbors(ARENALES, 950, 1)
+        self.store.zones[ARENALES].admin_id = admin_id
+        set_pin(self.store, admin_id, PIN)
+        def nearby():
+            client = ApiClient(self.api)
+            client.login(admin_id, PIN, "vecino")  # la sesión caduca al mover el reloj: se entra de nuevo
+            status, body, _ = client.get("/api/mi-zona")
+            self.assertEqual(status, 200, body)
+            return {z["id"]: z["motivo"] for z in body["administra"]["cercanas"]}
+
+        self.assertEqual(nearby(), {ALAMOS: "", PALMERAS: ""})
+        self.clock[0] = SATURDAY
+        self.assertEqual(nearby(), {ALAMOS: "CYCLE_CLOSED", PALMERAS: "CYCLE_CLOSED"})
+
+
 class FewOrdersTests(AnalysisBase):
     # AN-H
     def test_an_h_no_propone_unir_si_juntas_no_llegan(self):

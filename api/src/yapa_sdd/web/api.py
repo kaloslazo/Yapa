@@ -346,8 +346,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                     continue
                 meters = zones.distance_m(zone.lat, zone.lon, other.lat, other.lon)
                 if meters <= zones.MERGE_DISTANCE_M:
-                    nearby.append(zone_json(other) | {"distancia_m": round(meters),
-                                                      "mismo_grupo": other.group_id == zone.group_id})
+                    same_group = other.group_id == zone.group_id
+                    nearby.append(zone_json(other) | {"distancia_m": round(meters), "mismo_grupo": same_group,
+                                                      "motivo": "" if same_group else zones.merge_blocker(store, zone, other, clock()) or ""})  # AN-12
         discount = _in_discount_weeks(zone.created_cycle, current)
         last_week = cycle.add_weeks(zone.created_cycle, ZONE_ADMIN_DISCOUNT_WEEKS - 1) if zone.created_cycle else None
         requests = [{"id": mid, "zona": zid, "nombre": store.zones[zid].name if zid in store.zones else zid}
