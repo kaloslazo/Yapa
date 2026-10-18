@@ -869,3 +869,7 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
   .admin-sidebar-user > span, .admin-sidebar-user > span:not(.admin-avatar) { display: none; }
   .admin-sidebar-user .icon-button { min-width: 44px; min-height: 44px; margin-left: 0; }
 }
+
+/* Iteración 35: búsqueda en el padrón */
+.admin-search input { width: 300px; max-width: 100%; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--paper); color: var(--ink); font-size: .9375rem; }
+@media (max-width: 860px) { .admin-search, .admin-search input { width: 100%; } }

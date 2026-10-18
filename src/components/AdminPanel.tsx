@@ -7,7 +7,7 @@ import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
-import { claimEffect, photoUrl } from '../utils/admin';
+import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -68,6 +68,17 @@ function Empty({ icon, title, text }: { icon: IconName; title: string; text: str
 export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelProps) {
   const [section, setSection] = useState<Section>('resumen');
   const [cycle, setCycle] = useState('');
+  const [pending, setPending] = useState<Partial<Record<Section, number>>>({});
+
+  const refreshPending = useCallback(async () => {
+    try {
+      const [summary, claims, refunds] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones')]);
+      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length });
+    } catch {
+      setPending({});
+    }
+  }, [cycle]);
+  useEffect(() => { void refreshPending(); }, [refreshPending, section]);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [section]);
 
@@ -75,12 +86,13 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
     try {
       await action();
       notify(success, 'success');
+      void refreshPending();
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : 'No se pudo completar.', 'warning');
       return false;
     }
-  }, [notify]);
+  }, [notify, refreshPending]);
 
   const current = SECTIONS.find((s) => s.id === section)!;
   const props = { cycle, setCycle, run, notify };
@@ -95,7 +107,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
           </a>
           <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span></button>)}
+            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> pendientes</span></strong> : null}</button>)}
           </nav>
           <div className="admin-sidebar-spacer" />
           <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
@@ -351,7 +363,9 @@ function Neighbors({ run, notify }: SectionProps) {
   const { data: zoneData } = useLoad<Raw>('/api/zonas', notify);
   const [form, setForm] = useState({ nombre: '', celular: '', zona: '', referido: '', consentimiento: false });
   const [created, setCreated] = useState<Raw | null>(null);
+  const [query, setQuery] = useState('');
   if (!data) return <p className="admin-muted">Cargando…</p>;
+  const shown: Raw[] = filterNeighbors(data.vecinos, query);
   const zones: Zone[] = (zoneData?.zonas ?? []).map(toZone);
   const register = async (event: FormEvent) => {
     event.preventDefault();
@@ -377,7 +391,7 @@ function Neighbors({ run, notify }: SectionProps) {
           <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
         <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre y celular para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
-      <Card eyebrow="Padrón" title={`Vecinos (${data.vecinos.length})`}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.vecinos.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div></Card>
+      <Card eyebrow="Padrón" title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
     </>
   );
 }

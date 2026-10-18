@@ -49,6 +49,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 32 | **Accesibilidad y lenguaje claro** (foco, contraste, enlace de salto, aviso de conexión) | auditoría de diseño del 18/10 | completa, ver `32-accesibilidad-lenguaje.md` |
 | 33 | **Foto del reclamo y confirmaciones del admin** (`GET /api/admin/foto`, confirmar pago, reclamo, unión y separación) | auditoría de diseño del 18/10 | completa, ver `33-admin-foto-confirmaciones.md` |
 | 34 | **El admin en el celular** (menú, Salir, tablas, áreas de toque) | recorrido visual del 18/10 | completa, ver `34-admin-celular.md` |
+| 35 | **Contadores y búsqueda del admin** (pendientes en el menú, buscador de vecinos) | recorrido visual del 18/10 | completa, ver `35-admin-contadores-busqueda.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

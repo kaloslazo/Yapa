@@ -250,3 +250,11 @@
 - Spec: `34-admin-celular.md`. Sin supuestos nuevos. Recorrido a 390 px de las 9 secciones del admin y de las pantallas del vecino.
 - Encontrado y corregido: el menú del admin mostraba una sola sección (cada opción medía 335 px), el botón Salir quedaba oculto en el celular, dos tablas (Conciliación y Revisados) se cortaban por la derecha, y "Desactivar", "Nuevo PIN", los textos de enlace y los resúmenes de pedido medían 21 a 25 px de alto.
 - Resultado: 35 pruebas del frontend (3 nuevas), typecheck y build sin errores. El motor no cambió.
+
+## Iteración 35 · Contadores en el menú del admin y búsqueda de vecinos (18/10/2026)
+
+- Spec: `35-admin-contadores-busqueda.md`. Sin supuestos nuevos.
+- Menú del admin: número de pagos por verificar, reclamos pendientes y devoluciones por hacer, que se actualiza tras cada acción.
+- Padrón: buscador por nombre, número o celular, sin distinguir tildes ni mayúsculas.
+- También se recorrió el admin de zona (Ana) a 390 px: sin desbordes ni botones chicos, y la confirmación de "Separar mi zona" se ve bien.
+- Resultado: 40 pruebas del frontend (5 nuevas), typecheck y build sin errores. El motor no cambió.
