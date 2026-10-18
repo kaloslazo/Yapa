@@ -30,6 +30,7 @@ export default function App() {
   const [state, setState] = useState<CycleState | null>(null);
   const [districts, setDistricts] = useState<string[]>([]);
   const [account, setAccount] = useState<Account | null>(null);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartState>(() => readStored('yapa.cart', {}));
   const [category, setCategory] = useState('Todos');
   const [query, setQuery] = useState('');
@@ -56,6 +57,7 @@ export default function App() {
     const [estado, catalogo, zonas] = await Promise.all([api.get<Raw>('/api/estado'), api.get<Raw>('/api/catalogo'), api.get<Raw>('/api/zonas')]);
     setState(toCycle(estado));
     setDistricts(estado.distritos);
+    setGoogleClientId(estado.google_client_id ?? null);
     setCatalog(catalogo.productos.map(toProduct));
     setZones(zonas.zonas.map(toZone));
   }, []);
@@ -217,8 +219,9 @@ export default function App() {
 
   // --- sesión ---
 
-  const login = async (kind: AuthAudience, user: string, secret: string) => {
-    const me = toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret }));
+  const login = async (kind: AuthAudience, user: string, secret: string) => finishLogin(toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret })));
+  const loginWithGoogle = async (credential: string) => { finishLogin(toAccount(await api.post<Raw>('/api/sesion/google', { credential }))); };
+  const finishLogin = (me: Account) => {
     api.setCsrf(me.csrf);
     setAccount(me);
     setAuthOpen(false);
@@ -283,7 +286,7 @@ export default function App() {
       </>}
       <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} /><span>{toast.message}</span></div> : null}</div>
       {!showAdmin ? <>
-        <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} onResetPin={async (user, code, pin) => (await api.post<{ mensaje: string }>('/api/pin/restablecer', { usuario: user, codigo: code, pin })).mensaje} onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }} onForgotPin={async (user) => (await api.post<{ mensaje: string }>('/api/pin/olvide', { usuario: user })).mensaje} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
+        <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} googleClientId={googleClientId} onGoogleLogin={loginWithGoogle} onGoogleLink={async (credential) => { await api.post('/api/cuenta/google', { credential }); await loadAccount(); }} onGoogleUnlink={async () => { await api.post('/api/cuenta/google/desvincular'); await loadAccount(); }} onResetPin={async (user, code, pin) => (await api.post<{ mensaje: string }>('/api/pin/restablecer', { usuario: user, codigo: code, pin })).mensaje} onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }} onForgotPin={async (user) => (await api.post<{ mensaje: string }>('/api/pin/olvide', { usuario: user })).mensaje} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
       </> : null}
     </div>

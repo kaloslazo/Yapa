@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from './Icon';
+import { GoogleButton } from './GoogleButton';
 import type { Account } from '../types';
 import { formatMoney } from '../utils/format';
 
@@ -14,6 +15,10 @@ interface AuthDialogProps {
   onLogin: (kind: AuthAudience, user: string, secret: string) => Promise<Account>;
   onLogout: () => Promise<void>;
   onForgotPin: (user: string) => Promise<string>;
+  googleClientId: string | null;
+  onGoogleLogin: (credential: string) => Promise<void>;
+  onGoogleLink: (credential: string) => Promise<void>;
+  onGoogleUnlink: () => Promise<void>;
   onResetPin: (user: string, code: string, pin: string) => Promise<string>;
   onSendEmail: (email: string) => Promise<void>;
   onVerifyEmail: (code: string) => Promise<void>;
@@ -28,7 +33,7 @@ export function shareText(code: string) {
   return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
 }
 
-export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
+export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, googleClientId, onGoogleLogin, onGoogleLink, onGoogleUnlink, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [audience, setAudience] = useState<AuthAudience>(initialAudience);
   const [user, setUser] = useState('');
@@ -45,6 +50,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const [emailCode, setEmailCode] = useState('');
   const [emailStep, setEmailStep] = useState<'ask' | 'code'>('ask');
   const [emailMessage, setEmailMessage] = useState('');
+  const [googleMessage, setGoogleMessage] = useState('');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -65,6 +71,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       setEmailInput('');
       setEmailCode('');
       setEmailMessage('');
+      setGoogleMessage('');
       setEmailStep(account?.email ? 'code' : 'ask');
     }
   }, [initialAudience, open]);
@@ -132,6 +139,15 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
     }
   };
 
+  const googleAction = async (action: () => Promise<void>) => {
+    setGoogleMessage('');
+    try {
+      await action();
+    } catch (error) {
+      setGoogleMessage(error instanceof Error ? error.message : 'No pudimos usar tu cuenta de Google. Inténtalo de nuevo.');
+    }
+  };
+
   const go = (action: () => void) => { onClose(); action(); };
 
   return (
@@ -149,6 +165,9 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
               {emailMessage ? <p className="auth-feedback" role="status">{emailMessage}</p> : null}
             </div>)) : null}
           {account.referralCode ? <div className="referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : null}
+          {account.role !== 'admin' && googleClientId ? (account.googleLinked
+            ? <p className="email-ok"><Icon name="ok" size={16} /> Cuenta de Google vinculada <button className="auth-link" type="button" onClick={() => void googleAction(onGoogleUnlink)}>Desvincular</button></p>
+            : <div className="google-link"><strong>Entra sin PIN</strong><p>Vincula tu cuenta de Google y la próxima vez entras con un toque.</p><GoogleButton clientId={googleClientId} text="continue_with" onCredential={(credential) => void googleAction(() => onGoogleLink(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div>) : null}
           <div className="auth-account-actions">
             {account.role === 'admin' ? <button className="primary-button" type="button" onClick={() => go(onOpenAdmin)}>Ir al centro de operaciones <Icon name="arrow" size={17} /></button> : <>
               <button className="primary-button" type="button" onClick={() => go(onOpenOrders)}>Mis pedidos <Icon name="arrow" size={17} /></button>
@@ -170,6 +189,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
             {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
             <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'} {!busy ? <Icon name="arrow" size={17} /> : null}</button>
           </form>
+          {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
           {audience === 'vecino' ? (
             <div className="signup-help">
               <button className="auth-link" type="button" onClick={() => setShowSignup((value) => !value)} aria-expanded={showSignup}>¿Todavía no tienes cuenta?</button>

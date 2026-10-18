@@ -61,4 +61,25 @@ Las reglas de pantalla (GO-07) se verifican en el navegador hasta donde se pueda
 
 ## Trazabilidad
 
-Se completa al terminar la implementación.
+| Regla | Código | Prueba |
+|---|---|---|
+| GO-01 | `google_client_id` en `estado` (`src/yapa_sdd/web/api.py`); `google_from_env` en `google_identity.py` | GO-Q |
+| GO-02 | `cuenta_google`, `recovery.link_google` | GO-A, GO-K, GO-L, GO-M, GO-N, GO-P, GO-S |
+| GO-03 | `sesion_google`, `open_session` (la misma sesión que el PIN), `recovery.customer_by_google` | GO-B, GO-C, GO-R |
+| GO-04 | `cuenta_google_desvincular`, `recovery.unlink_google` | GO-O |
+| GO-05, S-214 | `GoogleVerifier.verify` en `src/yapa_sdd/google_identity.py` | GO-D, GO-E, GO-F, GO-G, GO-H, GO-I |
+| GO-06 | `google_vinculado` en `me()` | GO-A |
+| GO-07 | `GoogleButton.tsx`, `src/utils/google.ts`, `AuthDialog.tsx` | navegador (ver abajo) |
+| S-210 | `GoogleVerifier` solo si hay `YAPA_GOOGLE_CLIENT_ID` | GO-J |
+
+Pruebas de las propias pruebas (mutaciones a mano, revertidas): sin comprobar la audiencia (GO-E y varias más), sin comprobar el emisor (GO-F), sin exigir el correo verificado (GO-H), cualquier audiencia aceptada (GO-E). Quitar la guardia propia del algoritmo no cambia nada porque PyJWT ya exige RS256: es una defensa doble.
+
+Pantalla, con la demo: con un Client ID de mentira el botón "Iniciar sesión con Google" aparece con el script real de Google; sin Client ID no hay botón, ni script, ni objeto `google` en la página. **No se pudo probar el inicio de sesión real** (la ventana de Google necesita el Client ID del proyecto del equipo); esa parte la cubren las pruebas con tokens firmados.
+
+Evidencia: `docs/evidencia/desarrollo/41-google-rojo.txt` (el módulo no existía) y `41-google-verde.txt` (431 pruebas del motor, 19 nuevas; 55 del frontend). Las pruebas de Google se saltan solas si no están instaladas `PyJWT` y `cryptography` (dependencia opcional).
+
+## Cómo activarlo (una sola vez)
+
+1. Instalar la dependencia opcional: `pip install "PyJWT>=2.8,<3" cryptography` (o `pip install -e ".[google]"` desde `api/`).
+2. En Google Cloud Console crear un proyecto, la pantalla de consentimiento y una credencial "ID de cliente de OAuth" de tipo Aplicación web, con `http://localhost:5173` como origen autorizado (y el dominio real al publicar). El **Client ID es público**: no hay ningún secreto que guardar.
+3. Arrancar el motor con `$env:YAPA_GOOGLE_CLIENT_ID="<el client id>"`.

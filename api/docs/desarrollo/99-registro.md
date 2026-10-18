@@ -297,3 +297,12 @@
 - El envío es un componente intercambiable: sin credenciales imprime el código en la consola del motor; con una cuenta Gmail de Yapa (contraseña de aplicación en variables de entorno) manda correos reales. No hace falta ninguna API key.
 - Se probó en el navegador con la demo y se comprobó con mutaciones que las pruebas detectan un código aceptado sin revisar, sin tope de intentos y sin vencimiento.
 - Resultado: 412 pruebas del motor (29 nuevas) y 55 del frontend, typecheck y build sin errores.
+
+## Iteración 41 · Entrar con Google (18/10/2026)
+
+- Spec: `41-entrar-con-google.md` (S-210..S-215, a validar). Opcional y complementa al PIN y al código por correo: se activa con el Client ID público de Google Cloud; sin él no aparece nada.
+- El vecino entra al menos una vez con su PIN y vincula su cuenta de Google. Después entra con un toque. Se guarda el identificador estable de Google, no el correo. Si no tenía correo verificado, el de Google (ya verificado por Google) pasa a serlo.
+- El motor verifica el token con PyJWT: firma RS256 con las llaves públicas de Google, audiencia, emisor, vencimiento y correo verificado. Es una dependencia **opcional**: el resto del motor sigue usando solo la biblioteca estándar.
+- Las pruebas firman tokens de verdad con una llave propia (incluidos los ataques típicos: sin firma y confusión de algoritmo) y se comprobó con mutaciones que muerden.
+- No se pudo probar el inicio de sesión real con la ventana de Google: falta el Client ID del equipo.
+- Resultado: 431 pruebas del motor (19 nuevas) y 55 del frontend, typecheck y build sin errores.

@@ -902,3 +902,10 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .email-card { display: grid; gap: 6px; padding: 14px 16px; border-radius: var(--radius-field); background: var(--accent-soft); }
 .email-card p { color: var(--copy); font-size: .9375rem; }
 .email-ok { display: flex; align-items: center; gap: 8px; color: var(--green); font-size: .9375rem; font-weight: 600; }
+
+/* Iteración 41: entrar con Google */
+.google-login, .google-link { display: grid; justify-items: center; gap: 10px; }
+.google-link { justify-items: start; padding: 14px 16px; border-radius: var(--radius-field); background: var(--paper); }
+.google-link p { color: var(--copy); font-size: .9375rem; }
+.google-divider { color: var(--muted); font-size: .875rem; }
+.google-button { min-height: 44px; }

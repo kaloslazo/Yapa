@@ -47,6 +47,7 @@ export interface Account {
   referralCode?: string;
   email?: string | null;
   emailVerified?: boolean;
+  googleLinked?: boolean;
 }
 
 export interface Zone {
