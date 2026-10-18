@@ -8,3 +8,6 @@ build/
 .env
 .env.*
 !.env.example
+
+# fotos de reclamos, bolsas y entregas (datos de vecinos)
+fotos/

@@ -7,6 +7,8 @@ import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
+import { claimEffect, photoUrl } from '../utils/admin';
+import { ConfirmAction } from './ConfirmAction';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -164,7 +166,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
       </Card>
 
       <Card eyebrow="Caja" title={`Pagos por verificar (${pending.length})`}>
-        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Yapea</th><th>Código en el mensaje</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td><strong>{formatMoney(o.toPay)}</strong> <small>{o.method === 'PLIN' ? 'Plin' : 'Yape'}</small></td><td><code>{o.paymentCode}</code></td><td><button className="admin-row-button" type="button" onClick={() => void verify(o)}><Icon name="check" size={15} /> Verificar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todo verificado" text="Cuando un vecino pida, su código YP aparecerá aquí." />}
+        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Yapea</th><th>Código en el mensaje</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td><strong>{formatMoney(o.toPay)}</strong> <small>{o.method === 'PLIN' ? 'Plin' : 'Yape'}</small></td><td><code>{o.paymentCode}</code></td><td><ConfirmAction label={<><Icon name="check" size={15} /> Verificar</>} question={<>¿Ya viste <strong>{formatMoney(o.toPay)}</strong> con el código <code>{o.paymentCode}</code> en tu {o.method === 'PLIN' ? 'Plin' : 'Yape'}?</>} confirmLabel="Sí, verificar" onConfirm={() => verify(o)} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todo verificado" text="Cuando un vecino pida, su código YP aparecerá aquí." />}
       </Card>
 
       <Card eyebrow="Semana" title={`Pedidos (${orders.length})`}>
@@ -222,6 +224,13 @@ function Packing({ cycle, setCycle, run, notify }: SectionProps) {
   );
 }
 
+function ClaimPhoto({ route, who }: { route: string; who: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!route) return <small>Sin foto</small>;
+  if (failed) return <small>No se pudo cargar la foto</small>;
+  return <a className="claim-photo" href={photoUrl(route)} target="_blank" rel="noopener" aria-label={`Abrir la foto del reclamo de ${who}`}><img src={photoUrl(route)} alt={`Foto del reclamo de ${who}`} width="64" height="64" loading="lazy" onError={() => setFailed(true)} /></a>;
+}
+
 function Claims({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/reclamos', notify);
   if (!data) return <p className="admin-muted">Cargando…</p>;
@@ -231,7 +240,7 @@ function Claims({ run, notify }: SectionProps) {
   return (
     <>
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
-        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><small>{c.foto}</small></td><td className="row-actions"><button className="admin-row-button" type="button" onClick={() => void review(c.id, 'aprobar')}>Aprobar</button><button className="text-button" type="button" onClick={() => void review(c.id, 'rechazar')}>Rechazar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
+        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
       {done.length ? <Card eyebrow="Historial" title="Revisados"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></Card> : null}
     </>

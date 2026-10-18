@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { Zone } from '../types';
 import { Icon } from './Icon';
 import { shareText } from './AuthDialog';
+import { ConfirmAction } from './ConfirmAction';
 
 export interface ZonePanel extends Zone {
   progress: { verified: number; minimum: number; cycle: string };
@@ -137,9 +138,9 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
         <section className="customer-main-card">
           <div className="customer-section-heading"><div><span className="customer-eyebrow">Tu zona en el mapa</span><h2>Radio y zonas cercanas</h2></div></div>
           <ZoneMap zone={panel} nearby={panel.nearby} radius={data.radius} mergeDistance={data.mergeDistance} />
-          {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : <button className="admin-row-button" type="button" onClick={() => void actions.onRequestMerge(panel.id, z.id)}>Pedir unión</button>}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
+          {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : <ConfirmAction label="Pedir unión" confirmLabel="Sí, pedir unión" question={<>Si {z.name} acepta, sus pedidos y los tuyos suman juntos para llegar al mínimo. ¿Pedir unión?</>} onConfirm={() => actions.onRequestMerge(panel.id, z.id)} />}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
           {panel.requests.length ? <div className="merge-requests"><strong>Solicitudes para unirse contigo</strong>{panel.requests.map((r) => <div className="merge-request" key={r.id}><span>{r.name}</span><button className="admin-row-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, true)}>Aceptar</button><button className="text-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, false)}>Rechazar</button></div>)}</div> : null}
-          {sharesGroup ? <button className="text-button" type="button" onClick={() => void actions.onLeaveGroup(panel.id)}>Separar mi zona del grupo</button> : null}
+          {sharesGroup ? <ConfirmAction label="Separar mi zona del grupo" className="text-button" confirmLabel="Sí, separar" question={<>Tu zona volverá a contar sola para el mínimo. ¿Separar?</>} onConfirm={() => actions.onLeaveGroup(panel.id)} /> : null}
           <p className="admin-muted">Unidas, dos zonas suman sus pedidos para llegar al mínimo, y el camión hace dos paradas cortas.</p>
         </section>
       </div>
