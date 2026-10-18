@@ -749,17 +749,6 @@ code { padding: 1px 6px; border-radius: 6px; background: var(--paper); font-fami
 .state-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--paper); color: var(--muted); font-size: .76rem; font-weight: 700; white-space: nowrap; }
 .state-pill--ok { background: var(--green-soft); color: var(--green); }
 .state-pill--bad { background: var(--accent-soft); color: var(--accent-dark); }
-.zone-map { width: 100%; max-width: 420px; justify-self: center; }
-.zone-map-bg { fill: #eef2e6; }
-.zone-map-road { stroke: #fff; stroke-width: 14; fill: none; }
-.zone-map-merge { fill: none; stroke: var(--line-strong); stroke-width: 1.5; stroke-dasharray: 6 6; }
-.zone-map-radius { fill: rgba(59, 113, 88, .14); stroke: var(--green); stroke-width: 2; }
-.zone-map-home { fill: var(--accent); stroke: #fff; stroke-width: 4; }
-.zone-map-pin { fill: var(--ink); stroke: #fff; stroke-width: 3; }
-.zone-map-pin.is-group { fill: var(--green); }
-.zone-map-label { fill: var(--ink); font-size: 11px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: #eef2e6; stroke-width: 4px; }
-.zone-map-label--home { fill: var(--accent-dark); }
-.zone-map-legend { fill: var(--muted); font-size: 10px; }
 .merge-requests { display: grid; gap: 8px; padding: 12px; border-radius: var(--radius-note); background: var(--yellow-soft); }
 .merge-request { display: flex; align-items: center; gap: 10px; }
 .merge-request span { flex: 1; font-weight: 600; }
@@ -898,3 +887,4 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 @media (max-width: 860px) { .zones-map { height: 340px; } }
 .zones-map-wrap { display: grid; gap: 4px; justify-items: start; }
 .zones-map-wrap .zones-map { width: 100%; }
+.merge-blocked { color: var(--copy); font-size: .8125rem; }

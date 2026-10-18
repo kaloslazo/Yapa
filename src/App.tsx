@@ -92,7 +92,7 @@ export default function App() {
         neighbors: a.vecinos.length, // en el panel, "vecinos" es la lista, no el número
         progress: { verified: a.avance.verificados, minimum: a.avance.minimo, cycle: a.avance.ciclo },
         neighborsList: a.vecinos.map((v: Raw) => ({ id: v.id, name: v.nombre, ordered: v.pidio })),
-        nearby: a.cercanas.map((z: Raw) => ({ ...toZone(z), distance: z.distancia_m, sameGroup: z.mismo_grupo })),
+        nearby: a.cercanas.map((z: Raw) => ({ ...toZone(z), distance: z.distancia_m, sameGroup: z.mismo_grupo, reason: z.motivo ?? '' })),
         requests: a.solicitudes.map((r: Raw) => ({ id: r.id, zone: r.zona, name: r.nombre })),
         benefits: { freeDelivery: a.beneficios.envio_gratis, discountPct: Number(a.beneficios.descuento_pct), discountActive: a.beneficios.descuento_activo, discountUntil: a.beneficios.descuento_hasta },
         referralCode: a.codigo_referido,

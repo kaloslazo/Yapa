@@ -60,6 +60,10 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-S | Fuera del piloto | Miraflores con 1 vecino | no genera propuesta |
 | AN-T | Singular | una zona con 1 vecino | el detalle dice "Tiene 1 vecino" |
 | AN-U | Motivo en Mi zona | admin de Arenales mira sus cercanas, miércoles y sábado | Los Álamos con motivo vacío el miércoles y `CYCLE_CLOSED` el sábado; Las Palmeras (del grupo de Álamos, 455 m) también |
+| AN-V | Solicitudes enviadas | Arenales pide unión a Álamos | su panel lista la solicitud en `enviadas` con el nombre de Los Álamos |
+| AN-W | Retirar | el mismo admin retira la solicitud | `enviadas` queda vacía y se puede volver a pedir |
+| AN-X | Solo quien la pidió | el admin de Álamos intenta retirarla | 422 `NOT_ZONE_ADMIN` (como las demás reglas de zona) y la solicitud sigue |
+| AN-Y | Acuerdo de los dos admins | Arenales pide, Álamos acepta | Arenales queda en el grupo de Álamos y la solicitud desaparece de ambos paneles |
 | AN-Q | Demo | `demo_store()` | existe `Z-LINCE-03` con admin 116 a 391 m de `Z-LINCE-01`, y los números de la semana no cambian |
 
 ## Trazabilidad (regla → código → prueba)
@@ -75,6 +79,8 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-10 | Las propuestas de unir, recordar e invitar solo cuentan zonas de los distritos del piloto (Lince, Jesús María y La Victoria). | — |
 | AN-11 | Los textos usan singular y plural correctos ("1 vecino", "2 vecinos"). | — |
 | AN-12 | En el panel del admin de zona (`/api/mi-zona`), cada zona cercana trae `motivo`: vacío si la unión se puede pedir hoy, el código que lo impide si no, y vacío también si ya son del mismo grupo (se muestran como "Unidas"). | — |
+| AN-13 | El panel del admin de zona (`/api/mi-zona`) trae `enviadas`: las solicitudes de unión que su zona pidió y esperan respuesta, con el nombre de la zona de destino. | — |
+| AN-14 | `POST /api/solicitudes/<id>/retirar`: el admin que pidió la unión la retira (HR-04 del motor). Otra persona recibe `NOT_ZONE_ADMIN` y una solicitud inexistente `MERGE_REQUEST_NOT_FOUND`. | `NOT_ZONE_ADMIN`, `MERGE_REQUEST_NOT_FOUND` |
 | AN-08 | `merge_blocker` en `src/yapa_sdd/zones.py` | AN-D, AN-E |
 | S-188 | zona y vecino nuevos en `src/yapa_sdd/demo.py`, PIN de demo en `web/__main__.py` | AN-Q |
 

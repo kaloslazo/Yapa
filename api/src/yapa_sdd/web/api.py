@@ -353,6 +353,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         last_week = cycle.add_weeks(zone.created_cycle, ZONE_ADMIN_DISCOUNT_WEEKS - 1) if zone.created_cycle else None
         requests = [{"id": mid, "zona": zid, "nombre": store.zones[zid].name if zid in store.zones else zid}
                     for mid, (zid, target) in store.merge_requests.items() if target == zone.zone_id]
+        sent = [{"id": mid, "zona": target, "nombre": store.zones[target].name if target in store.zones else target}
+                for mid, (zid, target) in store.merge_requests.items() if zid == zone.zone_id]  # AN-13
         admin = store.customers[zone.admin_id]
         return zone_json(zone) | {
             "avance": {"verificados": verified, "minimo": MIN_ORDERS_PER_GROUP, "ciclo": current},
@@ -360,7 +362,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                         for c in sorted(store.customers.values(), key=lambda c: c.customer_id)
                         if c.zone_id == zone.zone_id],
             "cercanas": sorted(nearby, key=lambda z: z["distancia_m"]),
-            "solicitudes": requests,
+            "solicitudes": requests, "enviadas": sent,
             "beneficios": {"envio_gratis": True, "descuento_pct": money(ZONE_ADMIN_DISCOUNT * 100),
                            "descuento_activo": discount, "descuento_hasta": last_week if discount else None},
             "codigo_referido": customers.referral_code(admin),
@@ -405,6 +407,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def solicitud_aceptar(environ, data, session, merge_id):
         return zone_json(zones.accept_merge(store, _int(merge_id, "Solicitud"), session["principal"], now=clock()))
+
+    def solicitud_retirar(environ, data, session, merge_id):
+        zones.withdraw_merge(store, _int(merge_id, "Solicitud"), session["principal"])  # AN-14
+        return {"retirada": True}
 
     def solicitud_rechazar(environ, data, session, merge_id):
         zones.reject_merge(store, _int(merge_id, "Solicitud"), session["principal"])
@@ -668,6 +674,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/zonas/([\w-]+)/transferir", {"POST": (zona_transferir, "vecino")}),
         (r"/api/solicitudes/(\d+)/aceptar", {"POST": (solicitud_aceptar, "vecino")}),
         (r"/api/solicitudes/(\d+)/rechazar", {"POST": (solicitud_rechazar, "vecino")}),
+        (r"/api/solicitudes/(\d+)/retirar", {"POST": (solicitud_retirar, "vecino")}),
         (r"/api/admin/resumen", {"GET": (admin_resumen, "admin")}),
         (r"/api/admin/foto", {"GET": (admin_foto, "admin")}),
         (r"/api/admin/pedidos/(\d+)/verificar", {"POST": (admin_verificar, "admin")}),

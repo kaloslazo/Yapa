@@ -170,6 +170,65 @@ class NearbyReasonTests(AnalysisBase):
         self.assertEqual(nearby(), {ALAMOS: "CYCLE_CLOSED", PALMERAS: "CYCLE_CLOSED"})
 
 
+class MergeFlowTests(AnalysisBase):
+    def setUp(self):
+        super().setUp()
+        [self.marta] = self.neighbors(ARENALES, 950, 1)
+        [self.ana] = self.neighbors(ALAMOS, 960, 1)
+        self.store.zones[ARENALES].admin_id = self.marta
+        self.store.zones[ALAMOS].admin_id = self.ana
+        for customer_id in (self.marta, self.ana):
+            set_pin(self.store, customer_id, PIN)
+
+    def login(self, customer_id):
+        client = ApiClient(self.api)
+        client.login(customer_id, PIN, "vecino")
+        return client
+
+    def panel(self, client):
+        status, body, _ = client.get("/api/mi-zona")
+        self.assertEqual(status, 200, body)
+        return body["administra"]
+
+    def request_union(self):
+        status, body, _ = self.login(self.marta).post(f"/api/zonas/{ARENALES}/unir", {"destino": ALAMOS})
+        self.assertEqual(status, 200, body)
+        return body["solicitud"]
+
+    # AN-V
+    def test_an_v_la_solicitud_enviada_se_ve(self):
+        merge_id = self.request_union()
+        sent = self.panel(self.login(self.marta))["enviadas"]
+        self.assertEqual(sent, [{"id": merge_id, "zona": ALAMOS, "nombre": self.store.zones[ALAMOS].name}])
+
+    # AN-W
+    def test_an_w_el_admin_retira_su_solicitud(self):
+        merge_id = self.request_union()
+        status, _, _ = self.login(self.marta).post(f"/api/solicitudes/{merge_id}/retirar")
+        self.assertEqual(status, 200)
+        self.assertEqual(self.panel(self.login(self.marta))["enviadas"], [])
+        self.request_union()
+
+    # AN-X
+    def test_an_x_solo_quien_la_pidio_la_retira(self):
+        merge_id = self.request_union()
+        status, body, _ = self.login(self.ana).post(f"/api/solicitudes/{merge_id}/retirar")
+        self.assertEqual((status, body["error"]["codigo"]), (422, "NOT_ZONE_ADMIN"))
+        self.assertIn(merge_id, self.store.merge_requests)
+        status, body, _ = self.login(self.marta).post("/api/solicitudes/999/retirar")
+        self.assertEqual(body["error"]["codigo"], "MERGE_REQUEST_NOT_FOUND")
+
+    # AN-Y
+    def test_an_y_los_dos_admins_de_acuerdo_unen_las_zonas(self):
+        merge_id = self.request_union()
+        self.assertEqual([r["id"] for r in self.panel(self.login(self.ana))["solicitudes"]], [merge_id])
+        status, _, _ = self.login(self.ana).post(f"/api/solicitudes/{merge_id}/aceptar")
+        self.assertEqual(status, 200)
+        self.assertEqual(self.store.zones[ARENALES].group_id, self.store.zones[ALAMOS].group_id)
+        self.assertEqual(self.panel(self.login(self.ana))["solicitudes"], [])
+        self.assertEqual(self.panel(self.login(self.marta))["enviadas"], [])
+
+
 class FewOrdersTests(AnalysisBase):
     # AN-H
     def test_an_h_no_propone_unir_si_juntas_no_llegan(self):

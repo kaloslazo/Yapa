@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Zone } from '../types';
 import { Icon } from './Icon';
 import { shareText } from './AuthDialog';
 import { ConfirmAction } from './ConfirmAction';
+import { ZonesMap, type MapUnion, type MapZone } from './ZonesMap';
+import { unionReason } from '../utils/zoneMap';
 
 export interface ZonePanel extends Zone {
   progress: { verified: number; minimum: number; cycle: string };
   neighborsList: Array<{ id: number; name: string; ordered: boolean }>;
-  nearby: Array<Zone & { distance: number; sameGroup: boolean }>;
+  nearby: Array<Zone & { distance: number; sameGroup: boolean; reason: string }>;
   requests: Array<{ id: number; zone: string; name: string }>;
   benefits: { freeDelivery: boolean; discountPct: number; discountActive: boolean; discountUntil: string | null };
   referralCode: string;
@@ -69,34 +71,6 @@ function ProgressRing({ value, total }: { value: number; total: number }) {
   );
 }
 
-// mapa esquemático: el punto de recepción al centro, el radio de 300 m y las zonas a 500 m o menos
-function ZoneMap({ zone, nearby, radius, mergeDistance }: { zone: Zone; nearby: ZonePanel['nearby']; radius: number; mergeDistance: number }) {
-  const size = 320;
-  const scale = (size / 2 - 24) / (mergeDistance * 1.15);
-  const toXY = (lat: number | null, lon: number | null) => {
-    if (lat === null || lon === null || zone.lat === null || zone.lon === null) return { x: size / 2, y: size / 2 };
-    const dx = (lon - zone.lon) * 111320 * Math.cos((zone.lat * Math.PI) / 180);
-    const dy = (lat - zone.lat) * 110540;
-    return { x: size / 2 + dx * scale, y: size / 2 - dy * scale };
-  };
-  return (
-    <svg className="zone-map" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Mapa de ${zone.name}: radio de ${radius} metros y zonas cercanas`}>
-      <rect width={size} height={size} rx="22" className="zone-map-bg" />
-      <path d={`M0 ${size * 0.62} L${size} ${size * 0.48}`} className="zone-map-road" />
-      <path d={`M${size * 0.35} 0 L${size * 0.42} ${size}`} className="zone-map-road" />
-      <circle cx={size / 2} cy={size / 2} r={mergeDistance * scale} className="zone-map-merge" />
-      <circle cx={size / 2} cy={size / 2} r={radius * scale} className="zone-map-radius" />
-      {nearby.map((other) => {
-        const { x, y } = toXY(other.lat, other.lon);
-        return <g key={other.id}><circle cx={x} cy={y} r="8" className={`zone-map-pin ${other.sameGroup ? 'is-group' : ''}`} /><text x={x} y={y - 13} className="zone-map-label">{other.name.split(' ').slice(-1)[0]} · {other.distance} m</text></g>;
-      })}
-      <circle cx={size / 2} cy={size / 2} r="11" className="zone-map-home" />
-      <text x={size / 2} y={size / 2 + 28} className="zone-map-label zone-map-label--home">{zone.name}</text>
-      <text x="14" y={size - 14} className="zone-map-legend">— {radius} m tu zona · - - {mergeDistance} m para unir</text>
-    </svg>
-  );
-}
-
 function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; data: MyZone; userId: number } & Pick<ZonePageProps, 'onActivate' | 'onRequestMerge' | 'onAnswerMerge' | 'onLeaveGroup' | 'onTransfer'>) {
   const [kind, setKind] = useState('PORTERIA');
   const [contact, setContact] = useState('');
@@ -105,6 +79,8 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
   const missing = Math.max(panel.progress.minimum - panel.progress.verified, 0);
   const others = panel.neighborsList.filter((n) => n.id !== userId);
   const sharesGroup = panel.nearby.some((z) => z.sameGroup);
+  const mapZones = useMemo<MapZone[]>(() => [panel, ...panel.nearby].map((zone) => ({ id: zone.id, name: zone.name, group: zone.group, lat: zone.lat, lon: zone.lon })), [panel]);
+  const mapUnions = useMemo<MapUnion[]>(() => panel.nearby.filter((zone) => !zone.sameGroup).map((zone) => ({ a: panel.id, b: zone.id, distance: zone.distance, reason: zone.reason })), [panel]);
 
   return (
     <>
@@ -137,8 +113,8 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
 
         <section className="customer-main-card">
           <div className="customer-section-heading"><div><h2>Radio y zonas cercanas</h2></div></div>
-          <ZoneMap zone={panel} nearby={panel.nearby} radius={data.radius} mergeDistance={data.mergeDistance} />
-          {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : <ConfirmAction label="Pedir unión" confirmLabel="Sí, pedir unión" question={<>Si {z.name} acepta, sus pedidos y los tuyos suman juntos para llegar al mínimo. ¿Pedir unión?</>} onConfirm={() => actions.onRequestMerge(panel.id, z.id)} />}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
+          <ZonesMap zones={mapZones} unions={mapUnions} radius={data.radius} mergeDistance={data.mergeDistance} highlightId={panel.id} label={`Mapa de ${panel.name}: radio de ${data.radius} metros y zonas cercanas`} />
+          {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : z.reason ? <span className="merge-blocked">{unionReason(z.reason)}</span> : <ConfirmAction label="Pedir unión" confirmLabel="Sí, pedir unión" question={<>Si {z.name} acepta, sus pedidos y los tuyos suman juntos para llegar al mínimo. ¿Pedir unión?</>} onConfirm={() => actions.onRequestMerge(panel.id, z.id)} />}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
           {panel.requests.length ? <div className="merge-requests"><strong>Solicitudes para unirse contigo</strong>{panel.requests.map((r) => <div className="merge-request" key={r.id}><span>{r.name}</span><button className="admin-row-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, true)}>Aceptar</button><button className="text-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, false)}>Rechazar</button></div>)}</div> : null}
           {sharesGroup ? <ConfirmAction label="Separar mi zona del grupo" className="text-button" confirmLabel="Sí, separar" question={<>Tu zona volverá a contar sola para el mínimo. ¿Separar?</>} onConfirm={() => actions.onLeaveGroup(panel.id)} /> : null}
           <p className="admin-muted">Unidas, dos zonas suman sus pedidos para llegar al mínimo, y el camión hace dos paradas cortas.</p>
