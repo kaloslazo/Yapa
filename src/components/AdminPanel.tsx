@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { api } from '../services/api';
 import { toOrder, toZone } from '../services/mappers';
@@ -9,6 +9,8 @@ import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
+import { ZonesMap, type MapUnion, type MapZone } from './ZonesMap';
+import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -20,10 +22,11 @@ interface AdminPanelProps {
   notify: (message: string, tone?: 'neutral' | 'success' | 'warning') => void;
 }
 
-type Section = 'resumen' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos';
+type Section = 'resumen' | 'zonas' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos';
 
 const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
   { id: 'resumen', label: 'Resumen', icon: 'chart' },
+  { id: 'zonas', label: 'Zonas', icon: 'map' },
   { id: 'armado', label: 'Armado y entrega', icon: 'truck' },
   { id: 'reclamos', label: 'Reclamos', icon: 'receipt' },
   { id: 'devoluciones', label: 'Devoluciones', icon: 'undo' },
@@ -72,8 +75,8 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
 
   const refreshPending = useCallback(async () => {
     try {
-      const [summary, claims, refunds] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones')]);
-      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length });
+      const [summary, claims, refunds, analysis] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`)]);
+      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length });
     } catch {
       setPending({});
     }
@@ -107,7 +110,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
           </a>
           <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> pendientes</span></strong> : null}</button>)}
+            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {s.id === 'zonas' ? 'propuestas' : 'pendientes'}</span></strong> : null}</button>)}
           </nav>
           <div className="admin-sidebar-spacer" />
           <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
@@ -121,6 +124,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
           </header>
           <div className="admin-page-content">
             {section === 'resumen' ? <Summary {...props} /> : null}
+            {section === 'zonas' ? <Zones {...props} /> : null}
             {section === 'armado' ? <Packing {...props} /> : null}
             {section === 'reclamos' ? <Claims {...props} /> : null}
             {section === 'devoluciones' ? <Refunds {...props} /> : null}
@@ -141,6 +145,46 @@ interface SectionProps {
   setCycle: (cycle: string) => void;
   run: (action: () => Promise<unknown>, success: string) => Promise<boolean>;
   notify: AdminPanelProps['notify'];
+}
+
+const PROPOSAL_KIND: Record<string, { label: string; icon: IconName }> = {
+  UNIR: { label: 'Unir zonas', icon: 'merge' },
+  RECORDAR: { label: 'Recordar', icon: 'whatsapp' },
+  INVITAR: { label: 'Invitar vecinos', icon: 'gift' },
+  REVISAR_COSTO: { label: 'Revisar costo', icon: 'scale' },
+  REACTIVAR: { label: 'Reactivar', icon: 'undo' },
+};
+
+function Zones({ cycle, setCycle, notify }: SectionProps) {
+  const { data } = useLoad<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  const mapZones = useMemo<MapZone[]>(() => (data?.zonas ?? []).map((z: Raw) => ({ id: z.id, name: z.nombre, group: z.grupo, lat: z.lat, lon: z.lon })), [data]);
+  const mapUnions = useMemo<MapUnion[]>(() => (data?.uniones ?? []).map((u: Raw) => ({ a: u.a, b: u.b, distance: u.distancia_m, reason: u.motivo })), [data]);
+  if (!data) return <p className="admin-muted">Cargando…</p>;
+  const colors = groupColors(mapZones.map((z) => z.group));
+  const nameOf = (id: string) => data.zonas.find((z: Raw) => z.id === id)?.nombre ?? id;
+  const missing = data.zonas.length - drawableZones(mapZones).length;
+  return (
+    <>
+      <section className="admin-intro"><div><h2>Zonas, uniones y propuestas</h2><p>Cada círculo es el radio de {data.radio_m} m de una zona; del mismo color, las zonas ya unidas. Las líneas muestran qué zonas están a {data.union_m} m o menos. Aquí solo se mira y se propone: la unión la piden y aceptan los admins de zona.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+
+      <Card title="Mapa de zonas">
+        <ZonesMap zones={mapZones} unions={mapUnions} radius={data.radio_m} mergeDistance={data.union_m} label="Mapa de las zonas de Yapa con su radio y las uniones posibles" />
+        {missing ? <p className="admin-muted">{missing} {missing === 1 ? 'zona no tiene' : 'zonas no tienen'} ubicación y no se dibuja{missing === 1 ? '' : 'n'}.</p> : null}
+        <ul className="zones-legend">{[...new Set(mapZones.map((z) => z.group))].map((g) => <li key={g}><span className="zones-dot" style={{ background: colors[g] }} />{mapZones.filter((z) => z.group === g).map((z) => z.name).join(' + ')}</li>)}</ul>
+        {data.uniones.length ? <ul className="zones-unions">{data.uniones.map((u: Raw) => <li key={`${u.a}-${u.b}`} className={u.motivo ? 'is-blocked' : 'is-ok'}><strong>{nameOf(u.a)} ↔ {nameOf(u.b)}</strong> <span>{unionLabel(u.distancia_m, u.motivo)}</span></li>)}</ul> : <p className="admin-muted">Ninguna zona está a {data.union_m} m o menos de otra de un grupo distinto.</p>}
+      </Card>
+
+      <Card title={`Propuestas del sistema (${data.propuestas.length})`}>
+        {data.propuestas.length ? <div className="proposal-list">{data.propuestas.map((p: Raw) => { const kind = PROPOSAL_KIND[p.tipo] ?? { label: p.tipo, icon: 'info' as IconName }; return <article className="proposal" key={`${p.tipo}-${p.zonas.join('-')}`}><span className="proposal-icon"><Icon name={kind.icon} size={20} /></span><div><span className="proposal-kind">{kind.label}</span><h3>{p.titulo}</h3><p>{p.detalle}</p></div></article>; })}</div> : <Empty icon="ok" title="Nada que proponer" text="Cuando una zona pueda llegar al mínimo o pierda dinero, aparecerá aquí." />}
+        <p className="admin-muted">Son sugerencias hechas con los pedidos de la semana: el sistema no ejecuta nada solo.</p>
+      </Card>
+
+      <Card title="Cómo va cada zona">
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Zona</th><th>Vecinos</th><th>Pedidos</th><th>Verificados</th><th>Adopción</th><th>Margen</th></tr></thead><tbody>{data.zonas.map((z: Raw) => <tr key={z.id}><td><span className="zones-dot" style={{ background: colors[z.grupo] }} /><strong>{z.nombre}</strong><small className="admin-cell-note">{z.distrito}{z.estado === 'ACTIVA' ? '' : ' · falta quien reciba'}</small></td><td>{z.vecinos}</td><td>{z.pedidos}</td><td>{z.verificados}</td><td>{z.adopcion} %</td><td className={z.margen !== null && num(z.margen) < 0 ? 'is-negative-text' : ''}>{marginLabel(z.margen)}</td></tr>)}</tbody></table></div>
+        <p className="admin-muted">Adopción: pedidos de la semana entre vecinos de la zona. El margen aparece cuando la semana se liquida.</p>
+      </Card>
+    </>
+  );
 }
 
 function Summary({ cycle, setCycle, run, notify }: SectionProps) {

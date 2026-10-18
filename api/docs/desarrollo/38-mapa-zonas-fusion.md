@@ -23,7 +23,7 @@ Pedido del equipo (18/10/2026): ver las zonas por perímetros en un mapa real y 
 |---|---|
 | MP-01 | El mapa dibuja cada zona con ubicación como un círculo de 300 m del color de su grupo, con su nombre. Las zonas sin ubicación no se dibujan y se avisa cuántas faltan. |
 | MP-02 | Las zonas de grupos distintos a 500 m o menos se unen con una línea y su distancia: verde continua si se pueden unir hoy, gris punteada si algo lo impide, con el motivo en palabras. |
-| MP-03 | El mapa se encuadra solo para mostrar todas las zonas; con una sola zona se acerca a ella. |
+| MP-03 | El mapa se encuadra primero en las zonas que están unidas o que se pueden unir (si no hay ninguna, en todas) para que los nombres no se pisen; el botón "Ver todas las zonas" las muestra todas. Con una sola zona se acerca a ella. |
 | MP-04 | El mapa se puede usar con teclado y tiene nombre para lectores de pantalla; la información importante (zonas, distancias, motivos) también está en una lista debajo, no solo en el dibujo. |
 | MP-05 | Si no cargan los mosaicos (sin internet), los círculos y la lista siguen visibles sobre un fondo liso. |
 | MP-06 | Motivos en palabras: ciclo cerrado → "Solo se unen zonas con el ciclo abierto"; muy lejos → "Están muy lejos para compartir camión"; sin ubicación → "Falta registrar la ubicación de una zona". |
@@ -46,6 +46,9 @@ Pedido del equipo (18/10/2026): ver las zonas por perímetros en un mapa real y 
 | MP-H | Etiqueta de unión bloqueada | 455 m, `ZONES_TOO_FAR` | "455 m · Están muy lejos para compartir camión" |
 | MP-I | Margen sin liquidar | `null` | "Sin liquidar" |
 | MP-J | Margen negativo | "-12.50" | "-S/ 12.50" |
+| MP-K | Zonas en foco | 3 zonas: dos del mismo grupo, una suelta lejos, sin uniones | solo las dos del mismo grupo |
+| MP-L | Zonas en foco con unión | una suelta con unión a otra zona | las dos zonas de la unión |
+| MP-M | Sin nada que enfocar | 3 zonas sueltas sin uniones | las 3 |
 
 Las reglas de pantalla (MP-01..MP-05, MP-07..MP-10) se verifican en el navegador a escritorio y a 390 px.
 

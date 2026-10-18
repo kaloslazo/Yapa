@@ -169,6 +169,17 @@ class FewOrdersTests(AnalysisBase):
         self.assertNotIn("REVISAR_COSTO", self.types(body))
         self.assertNotIn("REACTIVAR", self.types(body))
 
+    # AN-S
+    def test_an_s_fuera_del_piloto_no_hay_propuestas(self):
+        proposals = self.analysis()["propuestas"]
+        self.assertFalse([p for p in proposals if MIRAFLORES in p["zonas"]])
+
+    # AN-T
+    def test_an_t_singular_y_plural(self):
+        self.neighbors(ARENALES, 911, 1)
+        proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "INVITAR" and p["zonas"] == [ARENALES])
+        self.assertIn("Tiene 1 vecino y", proposal["detalle"])
+
     # AN-O
     def test_an_o_ciclo_invalido(self):
         status, body, _ = self.admin().get("/api/admin/analisis?ciclo=hola")

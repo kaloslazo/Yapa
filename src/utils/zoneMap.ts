@@ -32,3 +32,12 @@ export function unionLabel(distance: number, reason: string): string {
 export function marginLabel(margin: string | null): string {
   return margin === null ? 'Sin liquidar' : formatMoney(Number(margin));
 }
+
+// zonas que el mapa encuadra primero (MP-03): las ya unidas y las que se pueden unir; si no hay, todas
+export function focusZoneIds(zones: Array<{ id: string; group: string }>, unions: Array<{ a: string; b: string }>): Set<string> {
+  const size: Record<string, number> = {};
+  for (const zone of zones) size[zone.group] = (size[zone.group] ?? 0) + 1;
+  const focus = new Set(zones.filter((z) => size[z.group] > 1).map((z) => z.id));
+  for (const union of unions) { focus.add(union.a); focus.add(union.b); }
+  return focus.size ? focus : new Set(zones.map((z) => z.id));
+}

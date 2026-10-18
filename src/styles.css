@@ -873,3 +873,28 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 /* Iteración 35: búsqueda en el padrón */
 .admin-search input { width: 300px; max-width: 100%; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--paper); color: var(--ink); font-size: .9375rem; }
 @media (max-width: 860px) { .admin-search, .admin-search input { width: 100%; } }
+
+/* Iteración 38: mapa real de zonas y propuestas */
+.zones-map { position: relative; isolation: isolate; height: 440px; border-radius: var(--radius-card); background: #eef2e6; overflow: hidden; }
+.zones-map:focus-visible { outline-offset: 2px; }
+.zones-map .zones-map-label { padding: 2px 8px; border: 0; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .88); box-shadow: none; color: var(--ink); font-size: .75rem; font-weight: 600; }
+.zones-map .zones-map-label::before { display: none; }
+.zones-legend, .zones-unions { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; font-size: .875rem; }
+.zones-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.zones-legend li { display: inline-flex; align-items: center; gap: 8px; }
+.zones-dot { display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; vertical-align: -1px; }
+.zones-legend .zones-dot { margin-right: 0; }
+.zones-unions li { padding: 8px 12px; border-radius: var(--radius-field); background: var(--paper); }
+.zones-unions li.is-ok { border-left: 4px solid var(--green); }
+.zones-unions li.is-blocked { border-left: 4px solid var(--muted); }
+.zones-unions span { color: var(--copy); }
+.proposal-list { display: grid; gap: 10px; }
+.proposal { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 14px 16px; border-radius: var(--radius-field); background: var(--paper); }
+.proposal-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-dark); }
+.proposal-kind { color: var(--accent-dark); font-size: .8125rem; font-weight: 600; }
+.proposal h3 { font-size: 1rem; font-weight: 600; }
+.proposal p { margin-top: 2px; color: var(--copy); font-size: .9375rem; }
+.is-negative-text { color: var(--accent-dark); font-weight: 600; }
+@media (max-width: 860px) { .zones-map { height: 340px; } }
+.zones-map-wrap { display: grid; gap: 4px; justify-items: start; }
+.zones-map-wrap .zones-map { width: 100%; }

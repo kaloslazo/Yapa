@@ -8,10 +8,14 @@ from __future__ import annotations
 from decimal import Decimal
 
 from . import cycle, metrics, zones
-from .domain import MIN_ORDERS_PER_GROUP
+from .domain import MIN_ORDERS_PER_GROUP, PILOT_DISTRICTS
 from .store import InMemoryStore
 
 ZERO = Decimal("0")
+def _neighbors(count: int) -> str:
+    return "1 vecino" if count == 1 else f"{count} vecinos"
+
+
 PROPOSAL_ORDER = ["UNIR", "RECORDAR", "INVITAR", "REVISAR_COSTO", "REACTIVAR"]  # AN-05
 
 
@@ -62,7 +66,8 @@ def _propose_merges(store: InMemoryStore, unions: list[dict], by_group: dict[str
     """S-183: una propuesta por par de grupos, con el par de zonas más cercano que se puede unir hoy."""
     closest: dict[tuple[str, str], dict] = {}
     for union in unions:
-        if union["motivo"]:
+        a, b = store.zones[union["a"]], store.zones[union["b"]]
+        if union["motivo"] or not {a.district, b.district} <= PILOT_DISTRICTS:  # AN-10
             continue
         key = tuple(sorted((store.zones[union["a"]].group_id, store.zones[union["b"]].group_id)))
         if key not in closest or union["distancia_m"] < closest[key]["distancia_m"]:
@@ -92,7 +97,7 @@ def _group_summary(store: InMemoryStore, cycle_id: str) -> dict[str, dict]:
         placed = {o.customer_id for o in orders if o.zone_id in ids}
         summary[group_id] = {
             "zonas": [z for z in members if any(c.zone_id == z.zone_id for c in store.customers.values())],
-            "activa": any(z.status == "ACTIVA" for z in members),
+            "activa": any(z.status == "ACTIVA" and z.district in PILOT_DISTRICTS for z in members),  # AN-10
             "vecinos": len(neighbors),
             "sin_pedir": len([c for c in neighbors if c.customer_id not in placed]),
             "verificados": sum(1 for o in orders if o.zone_id in ids and o.payment_status == "VERIFICADO"),
@@ -112,12 +117,12 @@ def _propose_for_groups(by_group: dict[str, dict]) -> list[dict]:
         ids, names = [z.zone_id for z in g["zonas"]], _names(g["zonas"])
         if g["vecinos"] < MIN_ORDERS_PER_GROUP:  # S-185
             proposals.append({"tipo": "INVITAR", "zonas": ids, "titulo": f"Invitar más vecinos en {names}",
-                              "detalle": (f"Tiene {g['vecinos']} vecinos y el mínimo es {MIN_ORDERS_PER_GROUP}: aunque todos pidan, "
+                              "detalle": (f"Tiene {_neighbors(g['vecinos'])} y el mínimo es {MIN_ORDERS_PER_GROUP}: aunque todos pidan, "
                                           "no llega. Su admin puede invitar con el premio por referido."),
                               "datos": {"vecinos": g["vecinos"], "minimo": MIN_ORDERS_PER_GROUP}})
         elif g["sin_pedir"] and g["verificados"] + g["sin_pedir"] >= MIN_ORDERS_PER_GROUP:  # S-184
             proposals.append({"tipo": "RECORDAR", "zonas": ids, "titulo": f"Recordar a los vecinos de {names}",
-                              "detalle": (f"Faltan {g['sin_pedir']} vecinos por pedir. Si piden y pagan, llegan a "
+                              "detalle": (f"{'Falta' if g['sin_pedir'] == 1 else 'Faltan'} {_neighbors(g['sin_pedir'])} por pedir. Si piden y pagan, llegan a "
                                           f"{g['verificados'] + g['sin_pedir']} de {MIN_ORDERS_PER_GROUP}."),
                               "datos": {"sin_pedir": g["sin_pedir"], "verificados": g["verificados"]}})
     return proposals
@@ -138,7 +143,7 @@ def _propose_money(store: InMemoryStore, cycle_id: str, rows: list[dict]) -> lis
                   and c.customer_id in received and c.customer_id not in ordering]
         if silent:
             proposals.append({"tipo": "REACTIVAR", "zonas": [zone.zone_id], "titulo": f"Reactivar a vecinos de {zone.name}",
-                              "detalle": f"{len(silent)} vecinos recibieron su pedido la semana {previous} y aún no piden esta semana.",
+                              "detalle": f"{_neighbors(len(silent))} {'recibió' if len(silent) == 1 else 'recibieron'} su pedido la semana {previous} y aún no {'pide' if len(silent) == 1 else 'piden'} esta semana.",
                               "datos": {"vecinos": len(silent), "semana_anterior": previous}})
     return proposals
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawableZones, groupColors, marginLabel, unionLabel, unionReason } from './zoneMap';
+import { drawableZones, focusZoneIds, groupColors, marginLabel, unionLabel, unionReason } from './zoneMap';
 
 describe('MP-A..MP-C · colores por grupo', () => {
   it('MP-A: mismo grupo, mismo color', () => {
@@ -46,4 +46,17 @@ describe('MP-I y MP-J · margen de la zona', () => {
   it('sin liquidar', () => expect(marginLabel(null)).toBe('Sin liquidar'));
   it('negativo', () => expect(marginLabel('-12.50')).toBe('-S/ 12.50'));
   it('positivo', () => expect(marginLabel('45.00')).toBe('S/ 45.00'));
+});
+
+describe('MP-K..MP-M · zonas en foco del mapa', () => {
+  const zones = [{ id: 'a', group: 'G1' }, { id: 'b', group: 'G1' }, { id: 'c', group: 'G2' }];
+  it('MP-K: las unidas', () => expect([...focusZoneIds(zones, [])].sort()).toEqual(['a', 'b']));
+  it('MP-L: las de una unión posible', () => {
+    const loose = [{ id: 'a', group: 'G1' }, { id: 'c', group: 'G2' }, { id: 'd', group: 'G3' }];
+    expect([...focusZoneIds(loose, [{ a: 'a', b: 'c' }])].sort()).toEqual(['a', 'c']);
+  });
+  it('MP-M: si no hay nada que enfocar, todas', () => {
+    const loose = [{ id: 'a', group: 'G1' }, { id: 'b', group: 'G2' }, { id: 'c', group: 'G3' }];
+    expect([...focusZoneIds(loose, [])].sort()).toEqual(['a', 'b', 'c']);
+  });
 });

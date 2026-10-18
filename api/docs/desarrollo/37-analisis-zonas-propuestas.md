@@ -57,6 +57,8 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-O | Ciclo inválido | `?ciclo=hola` | 422 `INVALID_CYCLE` |
 | AN-P | No cambia nada | consultar dos veces | las zonas y el dinero (`money_balance`) quedan igual |
 | AN-R | Datos para el mapa | consultar el análisis | trae `radio_m` 300, `union_m` 500 y la lista de semanas conocidas con la actual |
+| AN-S | Fuera del piloto | Miraflores con 1 vecino | no genera propuesta |
+| AN-T | Singular | una zona con 1 vecino | el detalle dice "Tiene 1 vecino" |
 | AN-Q | Demo | `demo_store()` | existe `Z-LINCE-03` con admin 116 a 391 m de `Z-LINCE-01`, y los números de la semana no cambian |
 
 ## Trazabilidad (regla → código → prueba)
@@ -69,6 +71,8 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 | AN-04, AN-05 | `_propose_merges`, `_propose_for_groups`, `_propose_money`, orden en `analysis` | AN-G..AN-M |
 | AN-06 | `query_cycle` (ya existente) y ceros sin pedidos | AN-N, AN-O |
 | AN-09 | La respuesta incluye `radio_m` (300), `union_m` (500) y `ciclos` (semanas conocidas, como las demás pantallas del admin) para dibujar el mapa y elegir semana. | — |
+| AN-10 | Las propuestas de unir, recordar e invitar solo cuentan zonas de los distritos del piloto (Lince, Jesús María y La Victoria). | — |
+| AN-11 | Los textos usan singular y plural correctos ("1 vecino", "2 vecinos"). | — |
 | AN-08 | `merge_blocker` en `src/yapa_sdd/zones.py` | AN-D, AN-E |
 | S-188 | zona y vecino nuevos en `src/yapa_sdd/demo.py`, PIN de demo en `web/__main__.py` | AN-Q |
 
