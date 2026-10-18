@@ -244,3 +244,9 @@
 - En pantalla: miniatura de la foto en cada reclamo y confirmación corta al aprobar o rechazar (dice el efecto), al verificar un pago (muestra monto y código) y al pedir unión o separar la zona.
 - Pregunta para el equipo: las fotos de reclamos fallidos quedan guardadas (huérfanas).
 - Resultado: 346 pruebas del motor (6 nuevas) y 32 del frontend (5 nuevas), typecheck y build sin errores.
+
+## Iteración 34 · Recorrido visual del admin en el celular (18/10/2026)
+
+- Spec: `34-admin-celular.md`. Sin supuestos nuevos. Recorrido a 390 px de las 9 secciones del admin y de las pantallas del vecino.
+- Encontrado y corregido: el menú del admin mostraba una sola sección (cada opción medía 335 px), el botón Salir quedaba oculto en el celular, dos tablas (Conciliación y Revisados) se cortaban por la derecha, y "Desactivar", "Nuevo PIN", los textos de enlace y los resúmenes de pedido medían 21 a 25 px de alto.
+- Resultado: 35 pruebas del frontend (3 nuevas), typecheck y build sin errores. El motor no cambió.

@@ -95,7 +95,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
           </a>
           <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} onClick={() => setSection(s.id)}><Icon name={s.icon} size={18} /><span>{s.label}</span></button>)}
+            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span></button>)}
           </nav>
           <div className="admin-sidebar-spacer" />
           <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
@@ -242,7 +242,7 @@ function Claims({ run, notify }: SectionProps) {
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
         {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
-      {done.length ? <Card eyebrow="Historial" title="Revisados"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></Card> : null}
+      {done.length ? <Card eyebrow="Historial" title="Revisados"><div className="admin-table-wrap"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div></Card> : null}
     </>
   );
 }
@@ -266,7 +266,7 @@ function Balance({ notify }: SectionProps) {
   return (
     <>
       <section className={`balance-banner ${data.cuadra ? 'is-ok' : 'is-bad'}`}><Icon name={data.cuadra ? 'ok' : 'warning'} size={34} weight="duotone" /><div><strong>{data.cuadra ? 'El dinero cuadra al céntimo' : 'No cuadra: revisar antes de seguir'}</strong><span>recibido = en curso + retenido + deuda + devoluciones pagadas · diferencia {formatMoney(num(data.diferencia))}</span></div></section>
-      <Card eyebrow="Conciliación" title="De dónde viene y a dónde va"><table className="admin-table balance-table"><tbody>{rows.map(([label, value]) => <tr key={label}><td>{label}</td><td><strong>{formatMoney(num(value))}</strong></td></tr>)}<tr className="is-total"><td>Diferencia</td><td><strong>{formatMoney(num(data.diferencia))}</strong></td></tr></tbody></table></Card>
+      <Card eyebrow="Conciliación" title="De dónde viene y a dónde va"><div className="admin-table-wrap"><table className="admin-table balance-table"><tbody>{rows.map(([label, value]) => <tr key={label}><td>{label}</td><td><strong>{formatMoney(num(value))}</strong></td></tr>)}<tr className="is-total"><td>Diferencia</td><td><strong>{formatMoney(num(data.diferencia))}</strong></td></tr></tbody></table></div></Card>
     </>
   );
 }

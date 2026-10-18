@@ -31,3 +31,10 @@ describe('AC-E · duración de los avisos', () => {
     expect(toastDuration('warning')).toBe(9000);
   });
 });
+
+describe('AC-F · el admin se usa en el celular', () => {
+  const block = css.slice(css.indexOf('Iteración 34'));
+  it('cada opción del menú del admin se ajusta a su texto', () => expect(block).toMatch(/\.admin-nav button\.admin-nav-link \{ width: auto/));
+  it('el botón Salir del admin no se oculta', () => expect(block).toMatch(/\.admin-sidebar > \.admin-sidebar-user \{ display: flex/));
+  it('las tablas del admin que no se desplazan no fuerzan ancho', () => expect(block).toContain('.admin-table.balance-table { min-width: 0; }'));
+});
