@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthDialog, type AuthAudience } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
+import { toastDuration } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
@@ -99,9 +100,8 @@ export default function App() {
     });
   }, []);
 
-  useEffect(() => {
-    Promise.all([loadPublic(), loadAccount()]).then(() => setOffline(false)).catch((error) => { setOffline(true); fail(error); });
-  }, [loadPublic, loadAccount, fail]);
+  const retry = useCallback(() => { Promise.all([loadPublic(), loadAccount()]).then(() => setOffline(false)).catch((error) => { setOffline(true); fail(error); }); }, [loadPublic, loadAccount, fail]);
+  useEffect(() => { retry(); }, [retry]);
 
   useEffect(() => {
     if (!account || account.role === 'admin') { setMyOrders(null); setMyZone(null); return; }
@@ -112,7 +112,7 @@ export default function App() {
   useEffect(() => { writeStored('yapa.cart', cart); }, [cart]);
   useEffect(() => {
     if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(null), 3200);
+    const timeout = window.setTimeout(() => setToast(null), toastDuration(toast.tone));
     return () => window.clearTimeout(timeout);
   }, [toast]);
   useEffect(() => {
@@ -241,7 +241,7 @@ export default function App() {
   return (
     <div className="app-shell">
       {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} /> : <>
-        <a className="skip-link" href="#catalog-title">Saltar al contenido principal</a>
+        <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.png" alt="" width="512" height="512" fetchPriority="high" /><span>yapa</span></a>
           <nav className="main-nav" aria-label="Navegación principal">
@@ -256,7 +256,7 @@ export default function App() {
           </div>
         </header>
 
-        {offline ? <div className="offline-banner"><Icon name="warning" size={18} /> No hay conexión con el motor de Yapa. Levántalo con <code>python -m yapa_sdd.web --demo</code> en la carpeta <code>api</code>.</div> : null}
+        {offline ? <div className="offline-banner" role="alert"><Icon name="warning" size={18} /> No pudimos conectar con Yapa.{import.meta.env.DEV ? <> Levanta el motor con <code>npm run api</code>.</> : null}<button className="text-button" type="button" onClick={retry}>Reintentar</button></div> : null}
 
         {view === 'orders' ? <OrdersPage data={myOrders} claimables={claimables} claims={claims} onBack={() => goStore('catalog')} onCancel={cancelOrder} onWithdraw={withdraw} onClaim={claim} />
           : view === 'zone' ? <ZonePage data={myZone} zones={zones} userId={Number(account?.user ?? 0)} districts={districts} onBack={() => goStore('catalog')}
@@ -279,7 +279,7 @@ export default function App() {
 
         <footer className="site-footer"><span>Yapa · compras que rinden · Diseño de Software, UTEC 2026-2</span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Centro de operaciones</button><span>Pagos con Yape y Plin verificados por el equipo</span></div></footer>
       </>}
-      <div className="toast-region" aria-live="polite" aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} /><span>{toast.message}</span></div> : null}</div>
+      <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} /><span>{toast.message}</span></div> : null}</div>
       {!showAdmin ? <>
         <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />

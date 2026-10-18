@@ -37,9 +37,9 @@ export function Catalog({ products, categories, cart, category, query, onCategor
           <span className="sr-only">Buscar productos</span>
           <input name="product-search" value={query} onChange={(event) => onQueryChange(event.target.value)} type="search" placeholder="Busca papa, limón, lejía…" autoComplete="off" />
         </label>
-        <div className="category-tabs" role="tablist" aria-label="Filtrar por categoría">
+        <div className="category-tabs" role="group" aria-label="Filtrar por categoría">
           {['Todos', ...categories].map((item) => (
-            <button className={`category-tab ${category === item ? 'is-selected' : ''}`} key={item} type="button" role="tab" aria-selected={category === item} onClick={() => onCategoryChange(item)}>{item}</button>
+            <button className={`category-tab ${category === item ? 'is-selected' : ''}`} key={item} type="button" aria-pressed={category === item} onClick={() => onCategoryChange(item)}>{item}</button>
           ))}
         </div>
       </div>

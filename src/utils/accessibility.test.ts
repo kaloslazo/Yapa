@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs';
+import css from '../styles.css?raw';
 import { describe, expect, it } from 'vitest';
 import { contrast } from './contrast';
 import { toastDuration } from './toast';
 
-const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
-const token = (name: string) => css.match(new RegExp(`--${name}:\s*(#[0-9a-fA-F]{6})`))![1];
+const token = (name: string) => css.match(new RegExp(`--${name}: *(#[0-9a-fA-F]{6})`))![1];
 const surfaces = ['canvas', 'page', 'paper', 'paper-strong', 'accent-soft', 'green-soft', 'yellow-soft'];
 
 describe('AC-A · el gris de apoyo se lee en todos los fondos', () => {
