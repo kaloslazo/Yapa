@@ -45,6 +45,8 @@ export interface Account {
   zoneId?: string;
   balance?: number;
   referralCode?: string;
+  email?: string | null;
+  emailVerified?: boolean;
 }
 
 export interface Zone {

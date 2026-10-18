@@ -407,7 +407,7 @@ function Neighbors({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/vecinos', notify);
   const { data: zoneData } = useLoad<Raw>('/api/zonas', notify);
   const { data: pinData, reload: reloadPins } = useLoad<Raw>('/api/admin/pin-solicitudes', notify);
-  const [form, setForm] = useState({ nombre: '', celular: '', zona: '', referido: '', consentimiento: false });
+  const [form, setForm] = useState({ nombre: '', celular: '', correo: '', zona: '', referido: '', consentimiento: false });
   const [created, setCreated] = useState<Raw | null>(null);
   const [query, setQuery] = useState('');
   if (!data) return <p className="admin-muted">Cargando…</p>;
@@ -418,7 +418,7 @@ function Neighbors({ run, notify }: SectionProps) {
     try {
       const result = await api.post<Raw>('/api/admin/vecinos', { ...form, zona: form.zona || zones[0]?.id, celular: form.celular.replace(/\s/g, '') });
       setCreated({ ...result, celular: form.celular.replace(/\s/g, '') });
-      setForm({ nombre: '', celular: '', zona: form.zona, referido: '', consentimiento: false });
+      setForm({ nombre: '', celular: '', correo: '', zona: form.zona, referido: '', consentimiento: false });
       notify(`Vecino ${result.id} registrado.`, 'success');
       void reload();
     } catch (error) {
@@ -435,9 +435,10 @@ function Neighbors({ run, notify }: SectionProps) {
       <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><h2>Dar de alta a un vecino</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Nombre</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label>
           <label className="checkout-field"><span>Celular</span><input value={form.celular} onChange={(event) => setForm({ ...form, celular: event.target.value.replace(/[^\d\s]/g, '') })} inputMode="numeric" placeholder="9XX XXX XXX" required /></label>
+          <label className="checkout-field"><span>Correo</span><input type="email" value={form.correo} onChange={(event) => setForm({ ...form, correo: event.target.value })} placeholder="nombre@gmail.com" autoComplete="off" required /></label>
           <label className="checkout-field"><span>Zona</span><select value={form.zona} onChange={(event) => setForm({ ...form, zona: event.target.value })}>{zones.map((z) => <option key={z.id} value={z.id}>{z.name} · {z.district}</option>)}</select></label>
           <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
-        <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre y celular para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
+        <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre, celular y correo para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
       <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
     </>

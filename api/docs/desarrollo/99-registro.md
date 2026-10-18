@@ -288,3 +288,12 @@
 - Olvidé mi PIN **sin bot ni correo**: el vecino pide ayuda con su número de cliente y recibe siempre el mismo mensaje, exista o no el número. El admin ve la cola en Vecinos (con número en el menú) y la atiende con "Nuevo PIN y escribir", que abre WhatsApp al celular registrado; o la descarta. El PIN nunca se muestra a quien lo pide.
 - Un bot de WhatsApp o correo se retoman cuando el volumen lo pida; piden decisiones del equipo (número de empresa, plantillas, costo, guardar correos).
 - Resultado: 383 pruebas del motor (11 nuevas) y 55 del frontend, typecheck y build sin errores.
+
+## Iteración 40 · Correo obligatorio y recuperar el PIN con un código (18/10/2026)
+
+- Spec: `40-correo-y-recuperar-pin.md` (S-201..S-209, a validar). Decisión del equipo: correo y celular obligatorios, y recuperación sin depender de una persona.
+- El alta pide el correo (único, en minúsculas). Un vecino con sesión lo agrega o cambia y lo verifica con un código de 6 dígitos (vale 10 minutos, 5 intentos, un reenvío por minuto, 5 por hora). Solo un correo verificado sirve para recuperar.
+- "Olvidé mi PIN": con correo verificado manda un código; sin él, sigue la cola del equipo (iteración 39). Con el código el vecino elige su PIN nuevo, que también quita el bloqueo. Las respuestas son iguales exista o no el número.
+- El envío es un componente intercambiable: sin credenciales imprime el código en la consola del motor; con una cuenta Gmail de Yapa (contraseña de aplicación en variables de entorno) manda correos reales. No hace falta ninguna API key.
+- Se probó en el navegador con la demo y se comprobó con mutaciones que las pruebas detectan un código aceptado sin revisar, sin tope de intentos y sin vencimiento.
+- Resultado: 412 pruebas del motor (29 nuevas) y 55 del frontend, typecheck y build sin errores.

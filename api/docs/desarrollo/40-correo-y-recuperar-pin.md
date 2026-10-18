@@ -72,4 +72,31 @@ Las reglas de pantalla (CR-10) se verifican en el navegador.
 
 ## Trazabilidad
 
-Se completa al terminar la implementación.
+| Regla | Código | Prueba |
+|---|---|---|
+| CR-01 | `normalize_email` en `src/yapa_sdd/customers.py`; el alta lo exige en `register_customer`; formularios del admin (`AdminPanel.tsx` y el HTML de `views.py`) | CR-A..CR-D |
+| CR-02, CR-03, CR-04 | `start_email_verification`, `confirm_email`, `_issue_code`, `_consume_code` en `src/yapa_sdd/recovery.py`; rutas `/api/cuenta/correo` y `/api/cuenta/correo/verificar` | CR-E..CR-K, CR-W, CR-Y |
+| CR-05 | `request_pin_reset`; `/api/pin/olvide` | CR-L..CR-N, `test_op_a_misma_respuesta_exista_o_no_ahora_con_correo` |
+| CR-06 | `reset_pin_with_code`; `/api/pin/restablecer` | CR-O..CR-T |
+| CR-07 | el código se guarda como resumen con sal (`_digest`) | CR-U, CR-Z |
+| CR-08 | `mask_email` y `me()` en `api.py` | CR-F |
+| CR-09 | `send_code` y el manejo de `MailError` en `api.py` | CR-V |
+| CR-10 | `AuthDialog.tsx` (recuperar con código y tarjeta "Verifica tu correo") | navegador, con la demo: verifiqué el correo de Ana (código malo rechazado, bueno aceptado), pedí el código de recuperación, cambié el PIN y entré con el nuevo |
+| S-208 | `mailer.py` (`ConsoleMailer`, `SmtpMailer`, `mailer_from_env`) y `web/__main__.py` | CR-X |
+
+Pruebas de las propias pruebas (mutaciones, hechas a mano y revertidas): aceptar cualquier código lo detectan CR-G y CR-R; quitar el tope de intentos, CR-H; quitar el vencimiento, CR-I. CR-R se reforzó porque la primera versión no detectaba la primera mutación.
+
+Evidencia: `docs/evidencia/desarrollo/40-correo-rojo.txt` (el módulo de correo no existía) y `40-correo-verde.txt` (412 pruebas del motor, 29 nuevas; 55 del frontend). Cambios en pruebas anteriores por el correo obligatorio: `test_customers.py`, `test_zone_benefits.py` y `test_api_hardening.py` ahora mandan el correo del alta (no se quitó ninguna aserción).
+
+## Cómo activar el envío real (una sola vez)
+
+No hace falta ninguna API key de Gmail. Sirve una cuenta Gmail propia de Yapa:
+1. Activar la verificación en dos pasos de esa cuenta.
+2. Crear una "contraseña de aplicación" (16 letras) en la cuenta de Google.
+3. Arrancar el motor con las variables de entorno (en PowerShell):
+   `$env:YAPA_SMTP_USER="yapa.avisos@gmail.com"; $env:YAPA_SMTP_PASSWORD="<la contraseña de aplicación>"; python -m yapa_sdd.web --demo`
+Sin esas variables el motor imprime el código en su consola. La contraseña no va en el código ni en el repositorio. Gmail limita los envíos diarios, así que sirve para el piloto; para crecer se cambia `YAPA_SMTP_HOST`, el usuario y la contraseña por los de un servicio de correo transaccional, sin tocar código.
+
+## Pendiente en la iteración 41
+
+"Entrar con Google" (permitido por el equipo): necesita una librería para verificar la firma del token de Google en el motor y un Client ID público de Google Cloud.
