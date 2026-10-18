@@ -60,4 +60,15 @@ Escenario base: semana abierta 2026-W38 (miércoles 16/09/2026 10:00). Zonas del
 
 ## Trazabilidad (regla → código → prueba)
 
-Se completa al terminar la implementación.
+| Regla | Código | Prueba |
+|---|---|---|
+| AN-01, AN-07 |  en ,  | AN-A, AN-P |
+| AN-02 |  en  | AN-B, AN-C |
+| AN-03 |  | AN-D, AN-E, AN-F |
+| AN-04, AN-05 | , , , orden en  | AN-G..AN-M |
+| AN-06 |  (ya existente) y ceros sin pedidos | AN-N, AN-O |
+| AN-08 |  en  | AN-D, AN-E |
+| S-188 | zona y vecino nuevos en , PIN de demo en  | AN-Q |
+
+Evidencia:  (17 fallas y 1 error antes del código) y  (364 pruebas, 18 nuevas).
+Cuenta demo nueva: Marta Quispe, cliente 116, PIN 260318 (solo demo local).

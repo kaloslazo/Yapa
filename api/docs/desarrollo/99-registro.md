@@ -263,3 +263,10 @@
 
 - Spec: `36-kickers.md`. Se quitaron las etiquetas decorativas y se dejaron las que dan un dato (semana, regla, paso).
 - Resultado: 40 pruebas del frontend, typecheck sin errores. Solo cambia la pantalla.
+
+## Iteración 37 · Análisis por zona y propuestas del sistema (18/10/2026)
+
+- Spec:  (S-182..S-189, a validar). Nuevo : por zona, pedidos, avance, adopción y margen; los pares de zonas que se pueden unir (con el motivo si hoy no) y propuestas del sistema: unir, recordar, invitar, revisar costo y reactivar.
+-  reutiliza las reglas de pedir y aceptar la unión, sin duplicarlas.
+- La demo suma el Edificio Arenales con su admin (Marta, cliente 116) a 391 m de Los Álamos, para ver la unión con acuerdo de los dos admins.
+- Resultado: 364 pruebas del motor (18 nuevas). Solo lee: no mueve dinero ni zonas.
