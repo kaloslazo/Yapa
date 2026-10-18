@@ -429,7 +429,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         result = insights.analysis(store, query_cycle(environ), clock())
         for row in result["zonas"]:
             row["margen"] = money(row["margen"]) if row["margen"] is not None else None
-        return result
+        return result | {"radio_m": zones.MEMBER_RADIUS_M, "union_m": zones.MERGE_DISTANCE_M, "ciclos": known_cycles()}
 
     def admin_foto(environ, data, session):
         """FA-01..FA-04, S-179, S-180: entrega una foto guardada solo si la ruta tiene la forma exacta que escribe el motor."""

@@ -135,6 +135,12 @@ class ZoneAnalysisTests(AnalysisBase):
         order = self.types(self.analysis())
         self.assertEqual(order, sorted(order, key=["UNIR", "RECORDAR", "INVITAR", "REVISAR_COSTO", "REACTIVAR"].index))
 
+    # AN-R
+    def test_an_r_trae_los_datos_para_el_mapa(self):
+        body = self.analysis()
+        self.assertEqual((body["radio_m"], body["union_m"]), (300, 500))
+        self.assertIn("2026-W38", body["ciclos"])
+
     # AN-P
     def test_an_p_consultar_no_cambia_nada(self):
         groups = {z.zone_id: z.group_id for z in self.store.zones.values()}
