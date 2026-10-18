@@ -65,4 +65,21 @@ Las reglas de pantalla (OP-10, OP-11) se verifican en el navegador.
 
 ## Trazabilidad
 
-Se completa al terminar la implementación.
+| Regla | Código | Prueba |
+|---|---|---|
+| PH-01..PH-03 | `try/except` alrededor del manejador en `dispatch`, `src/yapa_sdd/web/api.py` | PH-A (`test_api_fotos.py`); PH-B es FA-I existente |
+| OP-01 | `pin_olvide` en `api.py`, `customers.request_pin_help` | OP-A, OP-J |
+| OP-02..OP-04 | `request_pin_help` y `store.pin_requests` | OP-B, OP-C, OP-D |
+| OP-05 | formato en `request_pin_help` | OP-E |
+| OP-06, OP-09 | `admin_pin_solicitudes` | OP-B, OP-F, OP-J |
+| OP-07 | cierre de solicitudes en `customers.reset_pin` | OP-G |
+| OP-08 | `dismiss_pin_request`, `admin_pin_descartar` | OP-H, OP-I |
+| OP-10 | "¿Olvidaste tu PIN?" en `AuthDialog.tsx` | navegador: botón desactivado sin número y mensaje fijo |
+| OP-11 | tarjeta "Solicitudes de PIN" en `Neighbors` (`AdminPanel.tsx`) y número en el menú | navegador: la solicitud de Carmen (cliente 105) aparece con "Nuevo PIN y escribir" y "Descartar" |
+
+Evidencia: `docs/evidencia/desarrollo/39-fotos-pin-rojo.txt` (11 fallas antes del código) y `39-fotos-pin-verde.txt` (383 pruebas del motor, 11 nuevas; 55 del frontend).
+
+Límites que conoce el equipo:
+- Alguien podría llenar las 100 plazas pidiendo ayuda con números ajenos y dejar sin plaza a un vecino real. Para el piloto se acepta; el admin puede descartar, y después se puede limitar por dirección de origen.
+- En la demo los vecinos sin alta no tienen celular registrado ("Sin celular"); los dados de alta sí, porque el alta lo exige.
+- Un bot de WhatsApp o el correo no hacen falta ahora (S-194, S-195); se retoman cuando el volumen supere lo que un admin atiende a mano.

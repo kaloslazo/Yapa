@@ -37,6 +37,7 @@ const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
   { id: 'vecinos', label: 'Vecinos', icon: 'users' },
 ];
 
+const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN' };
 const num = (value: unknown) => Number(value ?? 0);
 const CLAIM_STATUS: Record<string, string> = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente' };
 const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
@@ -75,8 +76,8 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
 
   const refreshPending = useCallback(async () => {
     try {
-      const [summary, claims, refunds, analysis] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`)]);
-      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length });
+      const [summary, claims, refunds, analysis, pins] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/pin-solicitudes')]);
+      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length, vecinos: pins.solicitudes.length });
     } catch {
       setPending({});
     }
@@ -110,7 +111,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
           </a>
           <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {s.id === 'zonas' ? 'propuestas' : 'pendientes'}</span></strong> : null}</button>)}
+            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {PENDING_NOUN[s.id] ?? 'pendientes'}</span></strong> : null}</button>)}
           </nav>
           <div className="admin-sidebar-spacer" />
           <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
@@ -405,6 +406,7 @@ function References({ run, notify }: SectionProps) {
 function Neighbors({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/vecinos', notify);
   const { data: zoneData } = useLoad<Raw>('/api/zonas', notify);
+  const { data: pinData, reload: reloadPins } = useLoad<Raw>('/api/admin/pin-solicitudes', notify);
   const [form, setForm] = useState({ nombre: '', celular: '', zona: '', referido: '', consentimiento: false });
   const [created, setCreated] = useState<Raw | null>(null);
   const [query, setQuery] = useState('');
@@ -424,10 +426,12 @@ function Neighbors({ run, notify }: SectionProps) {
     }
   };
   const resetPin = (id: number, celular: string | null) => run(async () => { const r = await api.post<Raw>(`/api/admin/vecinos/${id}/pin`); setCreated({ ...r, nombre: data.vecinos.find((v: Raw) => v.id === id)?.nombre, celular }); }, 'PIN nuevo generado.');
+  const dismissPin = (id: number) => run(() => api.post(`/api/admin/pin-solicitudes/${id}/descartar`), 'Solicitud descartada.').then(() => reloadPins());
   const welcome = (c: Raw) => `Hola ${String(c.nombre ?? '').split(' ')[0]}, ya estás en Yapa. Entra con tu número de cliente ${c.id} y tu PIN ${c.pin}. Te recomendamos cambiarlo al entrar.`;
   return (
     <>
       {created ? <section className="pin-banner"><Icon name="ok" size={30} weight="duotone" /><div><strong>Cliente {created.id} · PIN {created.pin}</strong><span>Se muestra una sola vez. Envíaselo por WhatsApp.</span></div><a className="primary-button" href={`https://wa.me/${created.celular ? `51${created.celular}` : ''}?text=${encodeURIComponent(welcome(created))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Enviar</a><button className="icon-button" type="button" onClick={() => setCreated(null)} aria-label="Cerrar"><Icon name="close" size={18} /></button></section> : null}
+      {pinData?.solicitudes.length ? <Card title={`Solicitudes de PIN (${pinData.solicitudes.length})`}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Vecino</th><th>Celular registrado</th><th>Pidió</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pinData.solicitudes.map((r: Raw) => <tr key={r.id}><td><strong>{r.vecino}</strong><small className="admin-cell-note">Cliente {r.cliente}</small></td><td>{r.celular ?? 'Sin celular'}</td><td>{new Date(r.hora).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}</td><td className="row-actions"><button className="admin-row-button" type="button" onClick={() => void resetPin(r.cliente, r.celular).then(() => reloadPins())}>Nuevo PIN y escribir</button><ConfirmAction label="Descartar" className="text-button" confirmLabel="Sí, descartar" question={<>¿Descartar? El PIN de {r.vecino} no cambia.</>} onConfirm={() => dismissPin(r.id)} /></td></tr>)}</tbody></table></div><p className="admin-muted">El PIN nuevo se manda al celular que el vecino registró: así solo lo recibe quien tiene ese teléfono.</p></Card> : null}
       <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><h2>Dar de alta a un vecino</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Nombre</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label>
           <label className="checkout-field"><span>Celular</span><input value={form.celular} onChange={(event) => setForm({ ...form, celular: event.target.value.replace(/[^\d\s]/g, '') })} inputMode="numeric" placeholder="9XX XXX XXX" required /></label>

@@ -889,3 +889,11 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .zones-map-wrap .zones-map { width: 100%; }
 .merge-blocked { color: var(--copy); font-size: .8125rem; }
 .merge-pending { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+
+/* Iteración 39: olvidé mi PIN */
+.forgot-pin { display: grid; gap: 10px; margin-top: 8px; }
+.forgot-pin p { color: var(--copy); font-size: .9375rem; }
+.signup-help { grid-template-columns: minmax(0, 1fr); padding: 0 28px 24px; }
+.forgot-pin { justify-items: stretch; text-align: left; width: 100%; }
+@media (max-width: 560px) { .signup-help { padding: 0 20px 20px; } }
+.signup-help .auth-link { min-height: 40px; }

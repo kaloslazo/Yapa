@@ -280,3 +280,11 @@
 - Recorrido en el navegador con la demo: Marta (Edificio Arenales) pide unirse a Los Álamos, Ana acepta y las tres zonas quedan unidas con el mismo color.
 - Errores propios corregidos en el camino: el mapa dejaba la app en blanco por usar `getBounds` de un círculo antes de tener vista (ahora se calcula directo y un fallo del mapa no tumba la pantalla); mis datos de prueba no contaban los 3 vecinos que ya trae el piloto; la spec decía 403 donde el motor responde 422.
 - Resultado: 372 pruebas del motor (26 nuevas) y 55 del frontend (15 nuevas), typecheck y build sin errores.
+
+## Iteración 39 · Fotos sin dueño y "Olvidé mi PIN" (18/10/2026)
+
+- Spec: `39-fotos-huerfanas-pin.md` (S-194..S-200, a validar).
+- Fotos: antes la foto se guardaba antes de validar la acción, así que un reclamo rechazado dejaba un archivo sin dueño. Ahora, si la acción falla, el archivo de esa petición se borra (solo ese archivo).
+- Olvidé mi PIN **sin bot ni correo**: el vecino pide ayuda con su número de cliente y recibe siempre el mismo mensaje, exista o no el número. El admin ve la cola en Vecinos (con número en el menú) y la atiende con "Nuevo PIN y escribir", que abre WhatsApp al celular registrado; o la descarta. El PIN nunca se muestra a quien lo pide.
+- Un bot de WhatsApp o correo se retoman cuando el volumen lo pida; piden decisiones del equipo (número de empresa, plantillas, costo, guardar correos).
+- Resultado: 383 pruebas del motor (11 nuevas) y 55 del frontend, typecheck y build sin errores.

@@ -13,6 +13,7 @@ interface AuthDialogProps {
   onClose: () => void;
   onLogin: (kind: AuthAudience, user: string, secret: string) => Promise<Account>;
   onLogout: () => Promise<void>;
+  onForgotPin: (user: string) => Promise<string>;
   onOpenAdmin: () => void;
   onOpenZone: () => void;
   onOpenOrders: () => void;
@@ -24,7 +25,7 @@ export function shareText(code: string) {
   return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
 }
 
-export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
+export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, onForgotPin, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [audience, setAudience] = useState<AuthAudience>(initialAudience);
   const [user, setUser] = useState('');
@@ -32,6 +33,8 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const [feedback, setFeedback] = useState('');
   const [busy, setBusy] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState('');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -44,6 +47,8 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       setSecret('');
       setFeedback('');
       setShowSignup(false);
+      setShowForgot(false);
+      setForgotMessage('');
     }
   }, [initialAudience, open]);
 
@@ -55,6 +60,17 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       await onLogin(audience, user.trim(), secret);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'No pudimos entrar. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const forgot = async () => {
+    setBusy(true);
+    try {
+      setForgotMessage(await onForgotPin(user.trim()));
+    } catch (error) {
+      setForgotMessage(error instanceof Error ? error.message : 'No pudimos enviar tu pedido. Inténtalo de nuevo.');
     } finally {
       setBusy(false);
     }
@@ -95,6 +111,8 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
           {audience === 'vecino' ? (
             <div className="signup-help">
               <button className="auth-link" type="button" onClick={() => setShowSignup((value) => !value)} aria-expanded={showSignup}>¿Todavía no tienes cuenta?</button>
+              <button className="auth-link" type="button" onClick={() => setShowForgot((value) => !value)} aria-expanded={showForgot}>¿Olvidaste tu PIN?</button>
+              {showForgot ? <div className="forgot-pin"><p>Escribe tu número de cliente arriba. El equipo de Yapa te escribirá por WhatsApp, al celular que registraste, con un PIN nuevo.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir un PIN nuevo</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}</div> : null}
               {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele al admin de tu edificio, o a Yapa por WhatsApp, que te dé de alta.</li><li><span>2</span>Si un vecino te invitó, dale su código: los dos ganan S/ 3.</li><li><span>3</span>Aceptas que Yapa guarde tu nombre y celular para tus pedidos, y te llega tu PIN.</li></ol> : null}
             </div>
           ) : null}
