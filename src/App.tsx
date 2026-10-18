@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { AuthDialog, type AuthAudience } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
-import { CartPanel, type CartLine } from './components/CartPanel';
+import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorksSection } from './components/EditorialSections';
@@ -275,6 +275,7 @@ export default function App() {
                 <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
                 <HowItWorksSection />
               </main>}
+        {!offline && view === 'store' && lines.length ? <MobileCartBar count={lines.length} subtotal={subtotal} onCheckout={() => void openCheckout()} /> : null}
 
         <footer className="site-footer"><span>Yapa · compras que rinden · Diseño de Software, UTEC 2026-2</span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Centro de operaciones</button><span>Pagos con Yape y Plin verificados por el equipo</span></div></footer>
       </>}

@@ -4,6 +4,7 @@ import type { Order, RefundDestination } from '../types';
 import { Icon } from './Icon';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
+import { refundPromise } from '../utils/refund';
 
 export interface MyOrders {
   orders: Order[];
@@ -83,6 +84,7 @@ function Timeline({ order }: { order: Order }) {
 
 function CancelActions({ order, onCancel }: { order: Order; onCancel: OrdersPageProps['onCancel'] }) {
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
   const run = async (destination: RefundDestination) => {
     setBusy(true);
     try {
@@ -91,10 +93,13 @@ function CancelActions({ order, onCancel }: { order: Order; onCancel: OrdersPage
       setBusy(false);
     }
   };
+  if (!asking) return <div className="order-actions"><button className="secondary-button" type="button" onClick={() => setAsking(true)}>Cancelar pedido</button></div>;
   return (
-    <div className="order-actions">
-      <button className="secondary-button" type="button" disabled={busy} onClick={() => void run('MEDIO_DE_PAGO')}>Cancelar y devolver a mi {methodName(order.method)}</button>
-      <button className="secondary-button" type="button" disabled={busy} onClick={() => void run('SALDO')}>Cancelar y pasar a mi saldo</button>
+    <div className="order-confirm" role="group" aria-label={`Cancelar el pedido ${order.id}`}>
+      <p><strong>¿Cancelar el pedido {order.id}?</strong> Elige a dónde va tu dinero:</p>
+      <button className="secondary-button" type="button" disabled={busy} onClick={() => void run('SALDO')}>A mi saldo<small>{refundPromise('SALDO', order.method)}</small></button>
+      <button className="secondary-button" type="button" disabled={busy} onClick={() => void run('MEDIO_DE_PAGO')}>A mi {methodName(order.method)}<small>{refundPromise('MEDIO_DE_PAGO', order.method)}</small></button>
+      <button className="text-button" type="button" disabled={busy} onClick={() => setAsking(false)}>No cancelar</button>
     </div>
   );
 }
@@ -141,6 +146,7 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
 export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithdraw, onClaim }: OrdersPageProps) {
   const orders = data?.orders ?? [];
   const [withdrawing, setWithdrawing] = useState(false);
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
   const withdraw = async () => {
     if (!data?.balance) return;
     setWithdrawing(true);
@@ -148,6 +154,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
       await onWithdraw(data.balance);
     } finally {
       setWithdrawing(false);
+      setConfirmingWithdraw(false);
     }
   };
   return (
@@ -179,7 +186,8 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
           <section className="customer-side-card">
             <span className="customer-eyebrow">Tu saldo</span><h2>{formatMoney(data?.balance ?? 0)}</h2>
             <p>Se usa solo en tu próximo pedido. No vence. Si lo prefieres, te lo devolvemos a tu Yape o Plin en hasta 30 días.</p>
-            <button className="secondary-button" type="button" disabled={!data?.balance || withdrawing} onClick={() => void withdraw()}>Devolverme todo a mi Yape/Plin</button>
+            {confirmingWithdraw ? <div className="order-confirm" role="group" aria-label="Confirmar devolución del saldo"><p><strong>¿Devolverte {formatMoney(data?.balance ?? 0)} a tu Yape o Plin?</strong> Te lo devolvemos en hasta 30 días.</p><button className="primary-button" type="button" disabled={withdrawing} onClick={() => void withdraw()}>{withdrawing ? 'Enviando…' : 'Sí, devolverme'}</button><button className="text-button" type="button" disabled={withdrawing} onClick={() => setConfirmingWithdraw(false)}>No, dejarlo en mi saldo</button></div>
+              : <button className="secondary-button" type="button" disabled={!data?.balance} onClick={() => setConfirmingWithdraw(true)}>Devolverme todo a mi Yape/Plin</button>}
             {data?.refunds.length ? <table className="mini-table"><caption>Devoluciones en curso</caption><tbody>{data.refunds.map((r) => <tr key={r.id}><td>{formatMoney(r.amount)}</td><td>{STATUS[r.status] ?? r.status}</td></tr>)}</tbody></table> : null}
           </section>
           <section className="customer-side-card">

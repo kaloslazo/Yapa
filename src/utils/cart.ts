@@ -22,3 +22,7 @@ export function cartSubtotal(lines: Array<{ product: { price: number }; quantity
 export function formatQuantity(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0$/, '');
 }
+
+export function minimumGap(subtotal: number, minimum: number): number {
+  return Math.max(round(minimum - subtotal), 0);
+}

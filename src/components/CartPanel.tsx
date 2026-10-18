@@ -2,7 +2,7 @@ import type { Product } from '../types';
 import { Icon } from './Icon';
 import { ProductVisual } from './Catalog';
 import { formatMoney } from '../utils/format';
-import { formatQuantity } from '../utils/cart';
+import { formatQuantity, minimumGap } from '../utils/cart';
 
 export const MIN_SUBTOTAL = 50; // se muestra; la regla la aplica el motor (S-04)
 export const MAX_DELIVERY = 5;
@@ -23,7 +23,7 @@ interface CartPanelProps {
 }
 
 export function minimumMessage(subtotal: number) {
-  return subtotal >= MIN_SUBTOTAL ? 'Ya llegaste al pedido mínimo.' : `Te faltan ${formatMoney(MIN_SUBTOTAL - subtotal)} para el mínimo de ${formatMoney(MIN_SUBTOTAL)}.`;
+  return subtotal >= MIN_SUBTOTAL ? 'Ya llegaste al pedido mínimo.' : `Te faltan ${formatMoney(minimumGap(subtotal, MIN_SUBTOTAL))} para el mínimo de ${formatMoney(MIN_SUBTOTAL)}.`;
 }
 
 export function SavingsNote({ savings }: { savings: number }) {
@@ -54,5 +54,22 @@ export function CartPanel({ lines, subtotal, savings, onAdd, onDecrease, onCheck
         <div className="cart-empty"><div className="cart-empty-art"><Icon name="basket" size={28} /></div><h3>Tu canasta está vacía</h3><p>Agrega productos del catálogo y aquí verás el total de tu compra.</p><button className="secondary-button" type="button" onClick={onFocusCatalog}>Explorar catálogo <Icon name="arrow" size={16} /></button></div>
       )}
     </aside>
+  );
+}
+
+interface MobileCartBarProps {
+  count: number;
+  subtotal: number;
+  onCheckout: () => void;
+}
+
+export function MobileCartBar({ count, subtotal, onCheckout }: MobileCartBarProps) {
+  const ready = subtotal >= MIN_SUBTOTAL;
+  const showCart = () => document.querySelector('#cart-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return (
+    <div className="mobile-cart-bar" role="region" aria-label="Resumen de tu canasta">
+      <div><strong>{count} {count === 1 ? 'producto' : 'productos'} · {formatMoney(subtotal)}</strong><span>{minimumMessage(subtotal)}</span></div>
+      <button className="primary-button" type="button" onClick={ready ? onCheckout : showCart}>{ready ? 'Continuar pedido' : 'Ver canasta'}</button>
+    </div>
   );
 }
