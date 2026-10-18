@@ -228,3 +228,11 @@
 - Cancelar un pedido y devolver el saldo a Yape o Plin ahora piden confirmar y dicen el plazo con palabras. En el celular hay una barra fija con el total y lo que falta para el mínimo, botones de al menos 44 px y el menú con pista de que se desliza.
 - Queda para la iteración 32: ver la foto del reclamo (hace falta un endpoint solo para el admin), confirmaciones del admin de zona y de Yapa. Accesibilidad (foco, grises, enlace de salto) en una iteración propia.
 - Resultado: 13 pruebas del frontend en verde (antes 6), typecheck y build sin errores; el motor no cambió.
+
+## Iteración 32 · Accesibilidad y lenguaje claro de la tienda (18/10/2026)
+
+- Spec: `32-accesibilidad-lenguaje.md` (S-175..S-178). Sale de la auditoría del 18/10: foco invisible en listas y subida de foto, gris de apoyo con contraste 3.5 a 4.2, enlace de salto roto fuera del catálogo, aviso de conexión con comando de Python, avisos de 3 segundos.
+- Cambios: foco visible en todos los campos, gris `#526059` (mínimo 4.88:1 sobre cualquier fondo), anillo de foco de 3 px en acento oscuro, enlace de salto que funciona en toda página, filtro de categorías con botones, aviso "No pudimos conectar con Yapa" con Reintentar, avisos de 6 s (9 s las advertencias), y textos sin códigos en el admin.
+- Las pruebas de accesibilidad leen la hoja de estilos y comprueban contraste y foco: si alguien oscurece o aclara un color por error, falla.
+- Queda: foto del reclamo y confirmaciones del admin (iteración 33), kickers sobre los títulos, bordes de campos y fotos reales de productos.
+- Resultado: 27 pruebas del frontend en verde (antes 13), typecheck y build sin errores; el motor no cambió.

@@ -57,3 +57,21 @@ Foto del reclamo para el admin y confirmaciones del admin (iteración 33), kicke
 | AC-E | `toastDuration('warning')` y `toastDuration('success')` | 9000 y 6000 |
 
 Las reglas de pantalla se verifican en el navegador y quedan en el registro.
+
+## Trazabilidad (regla → código → prueba)
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AC-01 | se quitó `input:focus-visible, select:focus-visible { outline: none }` de `styles.css` | AC-C; navegador: la lista de reclamos muestra contorno sólido de 3 px |
+| AC-02 | `--muted: #526059` en `styles.css` | AC-A (siete fondos) |
+| AC-03 | `:focus-visible` con `var(--accent-dark)` | AC-B (cuatro fondos) |
+| AC-04 | `onClick` del enlace de salto en `App.tsx` | navegador: en Mis pedidos el foco cae en `main#orders-page` |
+| AC-05 | `Catalog.tsx` (`role="group"`, `aria-pressed`) | navegador: grupo con la categoría activa en "true" |
+| AC-06 | banner con `retry` en `App.tsx` | revisión de código (el comando solo se ve con `import.meta.env.DEV`) |
+| AC-07 | `toastDuration` en `src/utils/toast.ts`, `aria-live` dinámico en `App.tsx` | AC-E |
+| AC-08, AC-09, AC-10 | `AdminPanel.tsx` (`sr-only` en las columnas, `CLAIM_STATUS`, "Consentimiento del vecino") | revisión de código |
+| AC-11 | `font-variant-numeric: tabular-nums` en `styles.css` | revisión de CSS |
+
+Las pruebas leen `styles.css` (por eso `vitest.config.ts` procesa esa hoja). Se comprobó que fallan de verdad: con el gris viejo y con `outline: none` en `input:focus-visible` fallan 8 pruebas.
+
+Evidencia: `docs/evidencia/desarrollo/32-accesibilidad-rojo.txt` y `32-accesibilidad-verde.txt` (27 pruebas del frontend, antes 13). Tipos y build sin errores. El motor no cambió.
