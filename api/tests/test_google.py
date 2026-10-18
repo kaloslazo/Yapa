@@ -12,8 +12,11 @@ import time
 import unittest
 from dataclasses import replace
 
-import jwt
-from cryptography.hazmat.primitives.asymmetric import rsa
+try:
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+except ImportError:  # S-214: dependencia opcional
+    raise unittest.SkipTest("Entrar con Google necesita PyJWT y cryptography (dependencia opcional)")
 
 from api_client import ApiClient
 from test_api import ADMIN, ADMIN_PASS, PIN, WEDNESDAY
@@ -62,11 +65,11 @@ class GoogleBase(unittest.TestCase):
         return client
 
     def link(self, token=None, customer_id=101, pin=PIN, api=None):
-        return self.neighbor(customer_id, pin, api).post("/api/cuenta/google", {"credential": token or mint()})
+        return self.neighbor(customer_id, pin, api).post("/api/cuenta/google", {"credential": mint() if token is None else token})
 
     def enter(self, token=None, api=None):
         client = ApiClient(api or self.api)
-        return client, client.post("/api/sesion/google", {"credential": token or mint()}, with_csrf=False)
+        return client, client.post("/api/sesion/google", {"credential": mint() if token is None else token}, with_csrf=False)
 
     def code(self, response):
         return response[1]["error"]["codigo"]

@@ -7,6 +7,7 @@ from wsgiref.simple_server import make_server
 from .. import auth, persistence
 from ..demo import DEMO_NOW, demo_store
 from ..seed import pilot_store
+from ..google_identity import google_from_env
 from ..mailer import mailer_from_env
 from .api import create_api
 from .app import create_app
@@ -55,7 +56,7 @@ def main() -> None:
     if args.base:
         persistence.save(store, args.base)
     html = create_app(store, clock, on_change=on_change)
-    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env())  # S-153: la API JSON en /api del mismo servidor
+    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(), google=google_from_env())  # S-153: la API JSON en /api del mismo servidor
 
     def app(environ, start_response):
         target = api if (environ.get("PATH_INFO") or "").startswith("/api/") else html

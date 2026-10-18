@@ -106,3 +106,33 @@ def reset_pin_with_code(store: InMemoryStore, user, code, new_pin, now: datetime
     set_pin(store, customer_id, new_pin)  # una credencial nueva también quita el bloqueo (S-207)
     for request_id in [r for r, (customer_, _) in store.pin_requests.items() if customer_ == customer_id]:
         del store.pin_requests[request_id]
+
+
+# --- Iteración 41: vincular una cuenta de Google (docs/desarrollo/41-entrar-con-google.md) ---
+
+
+def link_google(store: InMemoryStore, customer_id: int, identity: dict, now: datetime) -> None:
+    """GO-02, S-211..S-213: guarda el identificador de Google; adopta su correo si el vecino no tenía uno verificado."""
+    sub, email = identity["sub"], identity["email"]
+    if any(c.google_sub == sub and c.customer_id != customer_id for c in store.customers.values()):
+        raise BusinessRuleError("GOOGLE_ALREADY_LINKED", "Esa cuenta de Google ya está vinculada a otro vecino.")
+    customer = store.customers[customer_id]
+    changes = {"google_sub": sub}
+    email_taken = any(c.email == email and c.customer_id != customer_id for c in store.customers.values())
+    if email and not email_taken and customer.email_verified_at is None:  # S-212
+        changes.update(email=email, email_verified_at=now)
+    store.customers[customer_id] = replace(customer, **changes)
+
+
+def unlink_google(store: InMemoryStore, customer_id: int) -> None:
+    """GO-04."""
+    store.customers[customer_id] = replace(store.customers[customer_id], google_sub=None)
+
+
+def customer_by_google(store: InMemoryStore, sub: str) -> int:
+    """GO-03."""
+    for customer in store.customers.values():
+        if customer.google_sub == sub:
+            return customer.customer_id
+    raise BusinessRuleError("GOOGLE_NOT_LINKED",
+                            "Esa cuenta de Google todavía no está vinculada. Entra con tu PIN y vincúlala desde tu cuenta.")

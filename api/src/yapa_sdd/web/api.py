@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, recovery, reference, wallet, zones
+from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
 from ..domain import MAX_QUANTITY, MIN_ORDERS_PER_GROUP, MIN_SUBTOTAL, PILOT_DISTRICTS, BusinessRuleError
@@ -97,7 +98,7 @@ def _body(environ) -> tuple[dict, dict]:
     return _form(environ)  # multipart con fotos (S-151) o formulario simple
 
 
-def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None):
+def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
@@ -169,7 +170,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ciclo": cycle_id, "abierto": cycle.is_open(now), "ahora": now.isoformat(),
                 "cierre": "miércoles 20:00", "entrega": "sábado", "ventanas": WINDOWS,
                 "minimo_pedido": money(MIN_SUBTOTAL), "minimo_grupo": MIN_ORDERS_PER_GROUP,
-                "distritos": sorted(PILOT_DISTRICTS)}
+                "distritos": sorted(PILOT_DISTRICTS),
+                "google_client_id": getattr(google, "client_id", None)}  # GO-01: el id es público
 
     def catalogo(environ, data, session):
         now = clock()
@@ -209,12 +211,40 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def sesion_entrar(environ, data, session):
         kind = data.get("tipo") if data.get("tipo") in ("vecino", "admin") else "vecino"
         principal = auth.authenticate(store, kind, data.get("usuario", ""), data.get("secreto", ""), clock())
+        return open_session(principal, kind)
+
+    def open_session(principal, kind):
         token = secrets.token_urlsafe(32)
         new = {"principal": principal, "kind": kind, "csrf": secrets.token_urlsafe(16),
                "expires": clock() + SESSION_TIME}
         sessions[token] = new
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}"
         return me(new), [("Set-Cookie", cookie)]
+
+    def google_identity(data) -> dict:
+        """GO-05, GO-06 (S-214): el token se comprueba aquí; cualquier problema da el mismo error."""
+        if google is None:
+            raise BusinessRuleError("GOOGLE_NOT_CONFIGURED", "Entrar con Google todavía no está activado.")
+        try:
+            return google.verify(data.get("credential", ""))
+        except ImportError:
+            raise BusinessRuleError("GOOGLE_NOT_CONFIGURED", "Entrar con Google todavía no está activado.") from None
+        except GoogleError:
+            raise BusinessRuleError("INVALID_GOOGLE_TOKEN", "No pudimos comprobar tu cuenta de Google. Inténtalo de nuevo.") from None
+
+    def sesion_google(environ, data, session):
+        """GO-03."""
+        return open_session(recovery.customer_by_google(store, google_identity(data)["sub"]), "vecino")
+
+    def cuenta_google(environ, data, session):
+        """GO-02."""
+        recovery.link_google(store, session["principal"], google_identity(data), clock())
+        return {"google_vinculado": True}
+
+    def cuenta_google_desvincular(environ, data, session):
+        """GO-04."""
+        recovery.unlink_google(store, session["principal"])
+        return {"google_vinculado": False}
 
     def me(session) -> dict:
         data = {"rol": role_of(session), "csrf": session["csrf"], "usuario": session["principal"]}
@@ -224,7 +254,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                          "saldo": money(wallet.balance(store, customer.customer_id)),
                          "codigo_referido": customers.referral_code(customer),
                          "correo": recovery.mask_email(customer.email),  # CR-08
-                         "correo_verificado": customer.email_verified_at is not None})
+                         "correo_verificado": customer.email_verified_at is not None,
+                         "google_vinculado": customer.google_sub is not None})  # GO-06
         else:
             data.update({"nombre": "Equipo Yapa"})
         return data
@@ -744,6 +775,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/vecinos/(\d+)/pin", {"POST": (admin_vecino_pin, "admin")}),
         (r"/api/pin/olvide", {"POST": (pin_olvide, None)}),
         (r"/api/pin/restablecer", {"POST": (pin_restablecer, None)}),
+        (r"/api/sesion/google", {"POST": (sesion_google, None)}),
+        (r"/api/cuenta/google", {"POST": (cuenta_google, "vecino")}),
+        (r"/api/cuenta/google/desvincular", {"POST": (cuenta_google_desvincular, "vecino")}),
         (r"/api/cuenta/correo", {"POST": (cuenta_correo, "vecino")}),
         (r"/api/cuenta/correo/verificar", {"POST": (cuenta_correo_verificar, "vecino")}),
         (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),
