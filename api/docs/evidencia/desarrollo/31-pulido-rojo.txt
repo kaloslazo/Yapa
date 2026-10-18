@@ -1,0 +1,25 @@
+
+ RUN  v5.0.1 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/utils/refund.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/refund.test.ts [ src/utils/refund.test.ts ]
+Error: Cannot find module './refund' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/utils/refund.test.ts
+ ❯ src/utils/refund.test.ts:3:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { minimumGap } from './cart';
+      3| import { refundPromise } from './refund';
+       | ^
+      4|
+      5| describe('UI-A..UI-D · cuánto falta para el mínimo', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  6 passed (6)
+   Start at  02:07:16
+   Duration  298ms (transform 67%, tests 14%, import 12%, worker 6%)
+
