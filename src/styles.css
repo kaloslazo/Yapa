@@ -888,3 +888,4 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .zones-map-wrap { display: grid; gap: 4px; justify-items: start; }
 .zones-map-wrap .zones-map { width: 100%; }
 .merge-blocked { color: var(--copy); font-size: .8125rem; }
+.merge-pending { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }

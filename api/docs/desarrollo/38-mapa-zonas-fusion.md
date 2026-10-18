@@ -31,6 +31,8 @@ Pedido del equipo (18/10/2026): ver las zonas por perímetros en un mapa real y 
 | MP-08 | El menú muestra el número de propuestas junto a **Zonas**. |
 | MP-09 | En Mi zona (admin de zona) el mapa esquemático se reemplaza por el mapa real con su zona resaltada y las cercanas; la lista de "Pedir unión" y las solicitudes siguen igual. |
 | MP-10 | En Mi zona, cada zona cercana sin unir dice si hoy se puede pedir la unión; si no, el motivo en palabras. |
+| MP-11 | En Mi zona, una unión ya pedida muestra "Esperando a su admin" con la opción de retirarla; cuando el otro admin acepta, las dos zonas pasan a "Unidas". |
+| MP-12 | Los conteos de vecinos usan singular y plural correctos. |
 
 ## Criterios de aceptación (`src/utils/zoneMap.test.ts`)
 
@@ -46,6 +48,7 @@ Pedido del equipo (18/10/2026): ver las zonas por perímetros en un mapa real y 
 | MP-H | Etiqueta de unión bloqueada | 455 m, `ZONES_TOO_FAR` | "455 m · Están muy lejos para compartir camión" |
 | MP-I | Margen sin liquidar | `null` | "Sin liquidar" |
 | MP-J | Margen negativo | "-12.50" | "-S/ 12.50" |
+| MP-N | Singular y plural | 1, 0 y 8 vecinos | "1 vecino", "0 vecinos", "8 vecinos" |
 | MP-K | Zonas en foco | 3 zonas: dos del mismo grupo, una suelta lejos, sin uniones | solo las dos del mismo grupo |
 | MP-L | Zonas en foco con unión | una suelta con unión a otra zona | las dos zonas de la unión |
 | MP-M | Sin nada que enfocar | 3 zonas sueltas sin uniones | las 3 |

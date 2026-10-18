@@ -41,3 +41,7 @@ export function focusZoneIds(zones: Array<{ id: string; group: string }>, unions
   for (const union of unions) { focus.add(union.a); focus.add(union.b); }
   return focus.size ? focus : new Set(zones.map((z) => z.id));
 }
+
+export function neighborsLabel(count: number): string {
+  return count === 1 ? '1 vecino' : `${count} vecinos`;
+}

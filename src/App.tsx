@@ -94,6 +94,7 @@ export default function App() {
         neighborsList: a.vecinos.map((v: Raw) => ({ id: v.id, name: v.nombre, ordered: v.pidio })),
         nearby: a.cercanas.map((z: Raw) => ({ ...toZone(z), distance: z.distancia_m, sameGroup: z.mismo_grupo, reason: z.motivo ?? '' })),
         requests: a.solicitudes.map((r: Raw) => ({ id: r.id, zone: r.zona, name: r.nombre })),
+        sent: a.enviadas.map((r: Raw) => ({ id: r.id, zone: r.zona, name: r.nombre })),
         benefits: { freeDelivery: a.beneficios.envio_gratis, discountPct: Number(a.beneficios.descuento_pct), discountActive: a.beneficios.descuento_activo, discountUntil: a.beneficios.descuento_hasta },
         referralCode: a.codigo_referido,
       } : null,
@@ -266,6 +267,7 @@ export default function App() {
             onActivate={(zoneId, kind, contact) => zoneAction(() => api.post(`/api/zonas/${zoneId}/activar`, { tipo: kind, contacto: contact }), 'Tu zona ya recibe pedidos.')()}
             onRequestMerge={(zoneId, target) => zoneAction(() => api.post(`/api/zonas/${zoneId}/unir`, { destino: target }), 'Solicitud enviada: falta que el admin de la otra zona acepte.')()}
             onAnswerMerge={(id, accept) => zoneAction(() => api.post(`/api/solicitudes/${id}/${accept ? 'aceptar' : 'rechazar'}`), accept ? 'Zonas unidas: ahora suman juntas para el mínimo.' : 'Solicitud rechazada.')()}
+            onWithdrawMerge={(id) => zoneAction(() => api.post(`/api/solicitudes/${id}/retirar`), 'Solicitud retirada.')()}
             onLeaveGroup={(zoneId) => zoneAction(() => api.post(`/api/zonas/${zoneId}/separar`), 'Tu zona vuelve a contar sola.')()}
             onTransfer={(zoneId, newAdmin) => zoneAction(() => api.post(`/api/zonas/${zoneId}/transferir`, { nuevo: newAdmin }), 'Rol transferido. ¡Gracias por organizar tu edificio!')()} />
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />

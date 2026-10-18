@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawableZones, focusZoneIds, groupColors, marginLabel, unionLabel, unionReason } from './zoneMap';
+import { drawableZones, focusZoneIds, groupColors, marginLabel, neighborsLabel, unionLabel, unionReason } from './zoneMap';
 
 describe('MP-A..MP-C · colores por grupo', () => {
   it('MP-A: mismo grupo, mismo color', () => {
@@ -58,5 +58,13 @@ describe('MP-K..MP-M · zonas en foco del mapa', () => {
   it('MP-M: si no hay nada que enfocar, todas', () => {
     const loose = [{ id: 'a', group: 'G1' }, { id: 'b', group: 'G2' }, { id: 'c', group: 'G3' }];
     expect([...focusZoneIds(loose, [])].sort()).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('MP-N · singular y plural', () => {
+  it('uno, cero y varios', () => {
+    expect(neighborsLabel(1)).toBe('1 vecino');
+    expect(neighborsLabel(0)).toBe('0 vecinos');
+    expect(neighborsLabel(8)).toBe('8 vecinos');
   });
 });
