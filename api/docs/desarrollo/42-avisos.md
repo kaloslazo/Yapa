@@ -40,7 +40,7 @@ Texto del aviso de liquidación, según cómo terminó el pedido: `LIQUIDADO` ("
 |---|---|---|
 | AV-01 | `GET /api/avisos` (vecino con sesión): `avisos` (más nuevos primero, cada uno con `id`, `tipo`, `titulo`, `texto`, `hora`, `leido`), `sin_leer`, `correo_avisos` (si el vecino quiere el correo) y `correo_verificado`. | `LOGIN_REQUIRED`, `FORBIDDEN` |
 | AV-02 | `POST /api/avisos/leer {id}` marca un aviso como leído; sin `id` marca todos. Solo se pueden marcar los propios. Marcar uno ya leído no cambia nada. | `NOTICE_NOT_FOUND` |
-| AV-03 | `POST /api/avisos/preferencias {correo}` activa o apaga el correo de avisos. | `LOGIN_REQUIRED`, `FORBIDDEN` |
+| AV-03 | `POST /api/avisos/preferencias {avisos_correo}` (verdadero o falso) activa o apaga el correo de avisos. | `LOGIN_REQUIRED`, `FORBIDDEN` |
 | AV-04 | `GET /api/sesion` del vecino agrega `avisos_sin_leer` y `correo_avisos`. | — |
 | AV-05 | Cada hecho de la tabla crea el aviso con su tipo, título y texto. El texto nombra la semana, el pedido y los montos, con palabras de negocio. | — |
 | AV-06 | **Privacidad:** un aviso solo lo ve su dueño. Los demás vecinos de la zona no reciben el aviso ni lo ven en su lista. | — |

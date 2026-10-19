@@ -317,19 +317,19 @@ class EmailNoticeTests(AvisosBase):
     def test_av_o_apagado_y_encendido(self):
         self.verified_email(801)
         client = self.client(801)
-        self.assertEqual(client.post("/api/avisos/preferencias", {"correo": False})[0], 200)
+        self.assertEqual(client.post("/api/avisos/preferencias", {"avisos_correo": False})[0], 200)
         self.assertFalse(client.get("/api/avisos")[1]["correo_avisos"])
         self.assertFalse(client.get("/api/sesion")[1]["correo_avisos"])
         self.delivered()
         self.assertEqual(self.mailer.sent, [])
         self.assertIn("ENTREGADO", self.kinds(801))
-        self.assertEqual(self.client(801).post("/api/avisos/preferencias", {"correo": True})[0], 200)
+        self.assertEqual(self.client(801).post("/api/avisos/preferencias", {"avisos_correo": True})[0], 200)
         self.assertTrue(self.client(801).get("/api/avisos")[1]["correo_avisos"])
         self.admin().post("/api/admin/ciclos/2026-W38/liquidar")
         self.assertEqual([m[0] for m in self.mailer.sent], [EMAIL])  # el de entrega no se manda a destiempo
 
     def test_av_o_la_preferencia_es_un_si_o_no(self):
-        status, body, _ = self.client(801).post("/api/avisos/preferencias", {"correo": ["x"]})
+        status, body, _ = self.client(801).post("/api/avisos/preferencias", {"avisos_correo": ["x"]})
         self.assertEqual((status, body["error"]["codigo"]), (422, "INVALID_INPUT"))
 
     # AV-P
