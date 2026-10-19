@@ -24,7 +24,7 @@ Decisión del equipo (18/10/2026): las notificaciones van **dentro de la app** (
 | Hecho | Aviso a | Tipo | Título | Correo |
 |---|---|---|---|---|
 | El equipo verifica un pago | dueño del pedido | `PAGO_VERIFICADO` | Verificamos tu pago | no |
-| Se liquida la semana | dueño de cada pedido (menos los cancelados por el vecino) | `LIQUIDADO` | Cerramos tu pedido de la semana W | sí |
+| Se liquida la semana | dueño de cada pedido de la liquidación (los que el vecino canceló ya se resolvieron al cancelar y no entran) | `LIQUIDADO` | Cerramos tu pedido de la semana W | sí |
 | Se entrega una zona | dueño de cada pedido de esa entrega | `ENTREGADO` | Tu pedido llegó a tu zona | sí |
 | Falla la entrega de una zona | dueño de cada pedido | `NO_ENTREGADO` | No pudimos entregar tu pedido | sí |
 | Se revisa un reclamo | quien reclamó | `RECLAMO_APROBADO` o `RECLAMO_RECHAZADO` | Aprobamos / No pudimos aprobar tu reclamo | sí |
@@ -32,7 +32,7 @@ Decisión del equipo (18/10/2026): las notificaciones van **dentro de la app** (
 | Una zona pide unirse a otra | admin de la zona pedida | `UNION_SOLICITADA` | La zona A quiere unirse a la tuya | sí |
 | La otra zona acepta o rechaza | admin de la zona que pidió | `UNION_ACEPTADA` o `UNION_RECHAZADA` | Tu pedido de unión fue aceptado / rechazado | no |
 
-Texto del aviso de liquidación, según cómo terminó el pedido: `LIQUIDADO` ("Pagaste S/ P y tu pedido costó S/ C. Te devolvimos S/ D a tu saldo." o, si no hubo devolución, sin la última frase), `NO_ATENDIDO` ("Tu zona no llegó al mínimo de pedidos. Te devolvemos S/ D.") y `NO_ENTREGADO` ("No pudimos entregarlo. Te devolvimos S/ D a tu saldo."). Los montos van con dos decimales.
+Texto del aviso de liquidación, según cómo terminó el pedido: `LIQUIDADO` ("Pagaste S/ P y tu pedido costó S/ C. Te devolvimos S/ D a tu saldo." o, si no hubo devolución, sin la última frase), `NO_ATENDIDO` ("Tu zona no llegó al mínimo de pedidos. Te devolvemos S/ D.") `NO_ENTREGADO` ("No pudimos entregarlo. Te devolvimos S/ D a tu saldo.") y, para el pedido cuyo pago nunca se verificó, "No pudimos verificar tu pago a tiempo, así que tu pedido de esta semana no entró en la compra." (más "Te devolvimos S/ D a tu saldo." si había usado saldo). Los montos van con dos decimales.
 
 ## Reglas
 
@@ -59,7 +59,7 @@ Texto del aviso de liquidación, según cómo terminó el pedido: `LIQUIDADO` ("
 | AV-A | Pago verificado | el equipo verifica el pedido de 101 | 101 tiene un aviso `PAGO_VERIFICADO` sin leer; `sin_leer` es 1 y `GET /api/sesion` también lo dice |
 | AV-B | Solo el dueño | el pedido de 801 se verifica | el aviso está en la lista de 801, no en la de 802 |
 | AV-C | Entrega | se entrega la zona con 8 pedidos | los 8 dueños reciben `ENTREGADO` |
-| AV-D | Liquidación | se liquida la semana | cada dueño recibe `LIQUIDADO` con los montos pagado, costo y devuelto del pedido |
+| AV-D | Liquidación | se liquida la semana | cada dueño recibe `LIQUIDADO` con los montos pagado, costo y devuelto del pedido; quien canceló su pedido no recibe nada; quien no tuvo su pago verificado recibe el aviso de que su pedido no entró |
 | AV-E | Entrega fallida | se registra la falla de una zona | los dueños reciben `NO_ENTREGADO` |
 | AV-F | Reclamo | se aprueba y se rechaza un reclamo | `RECLAMO_APROBADO` con el monto devuelto y `RECLAMO_RECHAZADO` |
 | AV-G | Devolución | el equipo marca una devolución pagada | `DEVOLUCION_PAGADA` con el monto |
