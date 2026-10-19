@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowsMerge,
   Basket,
+  Bell,
   CalendarBlank,
   Camera,
   CaretDown,
@@ -84,6 +85,7 @@ const icons = {
   ok: CheckCircle,
   no: XCircle,
   basket: Basket,
+  bell: Bell,
 } satisfies Record<string, ComponentType<PhosphorIconProps>>;
 
 export type IconName = keyof typeof icons;

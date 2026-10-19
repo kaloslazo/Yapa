@@ -123,3 +123,12 @@ export interface CycleState {
 }
 
 export type RefundDestination = 'SALDO' | 'MEDIO_DE_PAGO';
+
+export interface Notice {
+  id: number;
+  kind: string;
+  title: string;
+  text: string;
+  at: string;
+  read: boolean;
+}

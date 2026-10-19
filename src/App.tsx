@@ -8,12 +8,14 @@ import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorksSection } from './components/EditorialSections';
 import { Icon } from './components/Icon';
+import { NoticeBell } from './components/NoticeBell';
 import { OrdersPage, type Claimable, type ClaimRecord, type MyOrders } from './components/OrdersPage';
 import { ZonePage, type MyZone } from './components/ZonePage';
 import { api, ApiError } from './services/api';
-import { toAccount, toCycle, toOrder, toProduct, toQuote, toZone } from './services/mappers';
-import type { Account, CartState, CycleState, Order, Product, Quote, RefundDestination, Zone } from './types';
+import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } from './services/mappers';
+import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Zone } from './types';
 import { cartSubtotal, stepDown, stepUp } from './utils/cart';
+import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
 import './styles.css';
@@ -47,6 +49,10 @@ export default function App() {
   const [myZone, setMyZone] = useState<MyZone | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: 'neutral' | 'success' | 'warning' } | null>(null);
   const [offline, setOffline] = useState(false);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [unreadNotices, setUnreadNotices] = useState(0);
+  const [emailNotices, setEmailNotices] = useState(true);
+  const [clockOffset, setClockOffset] = useState(0);
 
   const notify = useCallback((message: string, tone: 'neutral' | 'success' | 'warning' = 'neutral') => setToast({ message, tone }), []);
   const fail = useCallback((error: unknown) => notify(error instanceof Error ? error.message : 'Algo salió mal.', 'warning'), [notify]);
@@ -56,6 +62,7 @@ export default function App() {
   const loadPublic = useCallback(async () => {
     const [estado, catalogo, zonas] = await Promise.all([api.get<Raw>('/api/estado'), api.get<Raw>('/api/catalogo'), api.get<Raw>('/api/zonas')]);
     setState(toCycle(estado));
+    setClockOffset(new Date(estado.ahora).getTime() - Date.now());
     setDistricts(estado.distritos);
     setGoogleClientId(estado.google_client_id ?? null);
     setCatalog(catalogo.productos.map(toProduct));
@@ -79,6 +86,13 @@ export default function App() {
     setMyOrders({ orders: mine.pedidos.map(toOrder), balance: Number(mine.saldo), returned: Number(mine.devuelto_total), supermarketSaving: Number(mine.ahorro_supermercado), refunds: mine.devoluciones.map((r: Raw) => ({ id: r.id, amount: Number(r.monto), reason: r.motivo, status: r.estado })) });
     setClaimables(rec.reclamables.map((c: Raw) => ({ order: c.pedido, product: c.producto, name: c.nombre, quantity: Number(c.cantidad) })));
     setClaims(rec.reclamos.map((c: Raw) => ({ id: c.id, order: c.pedido, product: c.producto, quantity: Number(c.cantidad), reason: c.motivo, status: c.estado, returned: Number(c.devuelto) })));
+  }, []);
+
+  const loadNotices = useCallback(async () => {
+    const raw = await api.get<Raw>('/api/avisos');
+    setNotices(raw.avisos.map(toNotice));
+    setUnreadNotices(raw.sin_leer);
+    setEmailNotices(Boolean(raw.correo_avisos));
   }, []);
 
   const loadZone = useCallback(async () => {
@@ -111,6 +125,18 @@ export default function App() {
     if (view === 'orders') loadOrders().catch(fail);
     if (view === 'zone') loadZone().catch(fail);
   }, [account, view, loadOrders, loadZone, fail]);
+
+  const isNeighbor = account !== null && account.role !== 'admin';
+  const accountUser = account?.user;
+  useEffect(() => {
+    if (!isNeighbor) { setNotices([]); setUnreadNotices(0); return; }
+    const refresh = () => { loadNotices().catch(() => undefined); }; // AV-13: al sondear no se molesta con errores
+    const visible = () => { if (document.visibilityState === 'visible') refresh(); };
+    refresh();
+    const timer = window.setInterval(refresh, 60000);
+    document.addEventListener('visibilitychange', visible);
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', visible); };
+  }, [isNeighbor, accountUser, loadNotices]);
 
   useEffect(() => { writeStored('yapa.cart', cart); }, [cart]);
   useEffect(() => {
@@ -217,6 +243,26 @@ export default function App() {
     } catch (error) { fail(error); }
   };
 
+  // --- avisos ---
+
+  const openNotice = async (notice: Notice) => {
+    try {
+      if (!notice.read) await api.post('/api/avisos/leer', { id: notice.id });
+      await loadNotices();
+    } catch (error) { fail(error); }
+    openView(noticeTarget(notice.kind));
+  };
+  const readAllNotices = async () => {
+    try { await api.post('/api/avisos/leer', {}); await loadNotices(); } catch (error) { fail(error); }
+  };
+  const toggleEmailNotices = async (enabled: boolean) => {
+    try {
+      await api.post('/api/avisos/preferencias', { avisos_correo: enabled });
+      setEmailNotices(enabled);
+      notify(enabled ? 'Te avisaremos también por correo.' : 'Ya no te mandaremos avisos por correo.', 'success');
+    } catch (error) { fail(error); }
+  };
+
   // --- sesión ---
 
   const login = async (kind: AuthAudience, user: string, secret: string) => finishLogin(toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret })));
@@ -255,6 +301,7 @@ export default function App() {
             <button className={`nav-link ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')}>Canasta{lines.length ? <span className="nav-badge">{lines.length}</span> : null}</button>
           </nav>
           <div className="topbar-actions">
+            {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={() => openAuth('vecino')} /> : null}
             <button className="location-button" type="button" onClick={() => (account ? openView('zone') : notify('Zonas activas en Lince y Jesús María; La Victoria muy pronto.'))}><Icon name="pin" size={16} /><span>{accountZone?.district ?? 'Lima'} · <strong>{accountZone?.name ?? 'Elige tu zona'}</strong></span><Icon name="chevron" size={15} /></button>
             <button className="account-button" type="button" onClick={() => openAuth('vecino')}><Icon name="user" size={17} /><span>{account ? account.name.split(' ')[0] : 'Ingresar'}</span>{account?.balance ? <span className="balance-chip">{`S/ ${account.balance.toFixed(2)}`}</span> : null}</button>
           </div>

@@ -1,6 +1,6 @@
 // convierte las respuestas de la API (montos como texto, S-154) a los tipos de la tienda
 import { categoryNames, lookFor } from '../data/presentation';
-import type { Account, CycleState, Order, OrderLine, Product, Quote, ReferencePrice, Settlement, Zone } from '../types';
+import type { Account, CycleState, Notice, Order, OrderLine, Product, Quote, ReferencePrice, Settlement, Zone } from '../types';
 
 const num = (value: unknown) => Number(value ?? 0);
 
@@ -63,6 +63,10 @@ export function toQuote(raw: Raw): Quote {
 
 export function toAccount(raw: Raw): Account {
   return { user: raw.usuario, name: raw.nombre, role: raw.rol, csrf: raw.csrf, zoneId: raw.zona, balance: raw.saldo !== undefined ? num(raw.saldo) : undefined, referralCode: raw.codigo_referido, email: raw.correo ?? null, emailVerified: Boolean(raw.correo_verificado), googleLinked: Boolean(raw.google_vinculado) };
+}
+
+export function toNotice(raw: Raw): Notice {
+  return { id: raw.id, kind: raw.tipo, title: raw.titulo, text: raw.texto, at: raw.hora, read: Boolean(raw.leido) };
 }
 
 export function toZone(raw: Raw): Zone {
