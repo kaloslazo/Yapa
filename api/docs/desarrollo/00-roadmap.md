@@ -56,6 +56,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 39 | **Fotos sin dueño y Olvidé mi PIN** (sin bot; cola para el admin) | auditoría de la iteración 33 y pedido del equipo | completa, ver `39-fotos-huerfanas-pin.md` |
 | 40 | **Correo obligatorio y recuperar el PIN con un código** (verificación por correo, envío intercambiable) | decisión del equipo 18/10 | completa, ver `40-correo-y-recuperar-pin.md` |
 | 41 | **Entrar con Google** (vincular cuenta, verificación del token en el motor, opcional) | decisión del equipo 18/10 | completa, ver `41-entrar-con-google.md` |
+| 42 | **Avisos dentro de la app y por correo** (campana, ocho hechos, correo de lo importante) | decisión del equipo 18/10 | completa, ver `42-avisos.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

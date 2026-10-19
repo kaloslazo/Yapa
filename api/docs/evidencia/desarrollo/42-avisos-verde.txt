@@ -1,0 +1,11 @@
+----------------------------------------------------------------------
+Ran 465 tests in 1.491s
+
+OK
+
+
+ Test Files  7 passed (7)
+      Tests  67 passed (67)
+   Start at  18:46:06
+   Duration  392ms (transform 73%, import 17%, tests 7%, worker 3%)
+

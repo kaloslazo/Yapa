@@ -80,3 +80,37 @@ Texto del aviso de liquidación, según cómo terminó el pedido: `LIQUIDADO` ("
 | AV-V | Falla al avisar | crear el aviso lanza un error | la acción que lo causó responde 200 igual (AV-11) |
 
 Las reglas de pantalla (AV-13) se verifican en el navegador y con pruebas de las funciones puras del frontend.
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| AV-01 | `avisos`, `notices.for_customer` (`src/yapa_sdd/web/api.py`, `notices.py`) | AV-A, AV-B, AV-L |
+| AV-02 | `avisos_leer`, `notices.mark_read` | AV-I, AV-J, AV-K |
+| AV-03 | `avisos_preferencias`, `notices.set_email_preference`; `Customer.email_notices` | AV-O |
+| AV-04 | `me()` agrega `avisos_sin_leer` y `correo_avisos` | AV-A, AV-J, AV-O |
+| AV-05 | los ocho hechos en `notices.py` (`payment_verified`, `cycle_settled`, `delivered`, `delivery_failed`, `claim_reviewed`, `refund_paid`, `merge_requested`, `merge_answered`) llamados desde los manejadores de la API | AV-A, AV-C, AV-D, AV-E, AV-F, AV-G, AV-H |
+| AV-06 | cada aviso lleva el `customer_id` de su dueño; `for_customer` y `mark_read` filtran por él | AV-B, AV-H, AV-K |
+| AV-07, S-218 | recorte por vecino en `notices.add` | AV-L |
+| AV-08, S-217, S-219 | `EMAIL_KINDS`, `notices.claim_emails` y `send_notice_emails` (segundo plano) | AV-M, AV-N, AV-O, AV-P, AV-Q |
+| AV-09, S-220 | cuerpo del correo en `claim_emails` | AV-M, AV-S |
+| AV-10 | `send_notice_emails` atrapa `MailError` | AV-R |
+| AV-11 | `tell` atrapa cualquier error al avisar | AV-V |
+| AV-12 | `Notice` es un dataclass del paquete; `InMemoryStore.notices` y `_next_notice_id` | AV-U |
+| AV-13 | `NoticeBell.tsx`, `utils/notices.ts`, bloque "Iteración 42" de `styles.css`, cableado en `App.tsx` | `utils/notices.test.ts` y navegador (ver abajo) |
+| S-216 | los ocho hechos; el admin de Yapa no recibe avisos | AV-T |
+| S-221 | los avisos se llaman desde la API, no desde la web HTML | — |
+
+Una duda que apareció al probar: la liquidación incluye los pedidos cuyo pago nunca se verificó (el motor los marca `CANCELADO` al liquidar, distinto de lo que el vecino canceló). Esos reciben el aviso "No pudimos verificar tu pago a tiempo" (AV-D); los que el vecino canceló ya se resolvieron al cancelar y no avisan.
+
+Pruebas de las propias pruebas (mutaciones a mano, revertidas, 15 en total): sin marcar el correo como enviado (AV-Q, AV-R, AV-U), sin revisar el correo verificado (AV-N), sin revisar la preferencia (AV-O), leer sin filtrar por dueño (AV-J, AV-K), sin tope o recortando los más nuevos (AV-L), el pago verificado mandando correo (AV-P), el aviso de unión aceptada al admin equivocado (AV-H), la lista con avisos ajenos (AV-B), un aviso que rompe la acción (AV-V), un correo caído que rompe la acción (AV-R), un pedido sin pago verificado con el texto de "pagaste" (AV-D), un PIN dentro del correo (AV-S), el correo sin la línea para apagarlo (AV-M) y "leer todos" que deja la mitad sin leer (AV-I). Una mutación sobrevivió al principio: mi prueba de la liquidación suponía que el motor liquida los pedidos cancelados por el vecino y no es así; se corrigió la spec y se agregó AV-D de pago sin verificar.
+
+Pantalla, con la demo (motor con ConsoleMailer): con una solicitud de unión pendiente, la campana de Ana (admin de zona) muestra "1"; el panel lista el aviso con "ahora" (la hora sale del reloj del motor, no del navegador); al hacer clic se marca leído y lleva a "Mi zona". Sin correo verificado el panel invita a verificarlo; después de verificar el correo con el código de la consola, el panel muestra "Avisarme también por correo", y una segunda solicitud de unión mandó el correo (visto en la consola del motor). Apagar el interruptor lo guarda en el motor. A 390 px el panel cabe entero (16 a 355 px, sin barra horizontal) y la campana mide 44 × 44.
+
+**Una limitación del navegador de pruebas:** este Chrome automatizado no devolvió la cookie de sesión al motor (también con el motor de la iteración 41, así que no es un error de esta iteración), por lo que la verificación en pantalla se hizo con un proxy local que guarda la cookie. El proxy es solo de la prueba y no está en el repositorio. En un navegador normal la cookie funciona como siempre.
+
+Evidencia: `docs/evidencia/desarrollo/42-avisos-rojo.txt` (el módulo no existía) y `42-avisos-verde.txt` (465 pruebas del motor, 34 nuevas; 67 del frontend, 12 nuevas).
+
+## Cómo activar el correo
+
+Es el mismo envío de la iteración 40: con `YAPA_SMTP_USER` y `YAPA_SMTP_PASSWORD` los avisos importantes salen por correo real; sin esas variables se imprimen en la consola del motor. No hay nada nuevo que configurar.

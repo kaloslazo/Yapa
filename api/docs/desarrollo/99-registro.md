@@ -306,3 +306,13 @@
 - Las pruebas firman tokens de verdad con una llave propia (incluidos los ataques típicos: sin firma y confusión de algoritmo) y se comprobó con mutaciones que muerden.
 - No se pudo probar el inicio de sesión real con la ventana de Google: falta el Client ID del equipo.
 - Resultado: 431 pruebas del motor (19 nuevas) y 55 del frontend, typecheck y build sin errores.
+
+## Iteración 42 · Avisos dentro de la app y por correo (19/10/2026)
+
+- Spec: `42-avisos.md` (S-216..S-221, a validar). Ocho hechos generan un aviso para la persona concerniente: pago verificado, pedido liquidado, zona entregada, entrega fallida, reclamo revisado, devolución pagada, y la solicitud de unión de zonas y su respuesta.
+- Dentro de la app: una campana en la barra con el número de avisos sin leer, un panel con la lista (cada aviso lleva a "Mis pedidos" o a "Mi zona"), "Marcar todo como leído" y el interruptor del correo. Se refresca cada minuto y al volver a la pestaña. Se guardan los últimos 50 por vecino.
+- Por correo: solo lo importante (dinero, entrega, reclamo, devolución y pedido de unión), solo a un correo verificado y solo si el vecino no lo apagó. Sale en segundo plano y se intenta una sola vez; si el correo falla, la acción termina igual y el aviso queda en la app. Nunca lleva códigos ni PIN.
+- Un aviso nunca rompe la acción que lo causa. Los avisos se guardan en la base como el resto del estado.
+- Se comprobó con 15 mutaciones que las pruebas detectan un correo sin filtro de verificación o de preferencia, avisos ajenos, el tope y un aviso que rompe la acción. Una mutación sobrevivió al principio y reveló un error de la spec sobre qué pedidos entran en la liquidación; se corrigió.
+- Se probó en el navegador (con un proxy local de prueba, ver la spec), incluido el correo y el ancho de 390 px.
+- Resultado: 465 pruebas del motor (34 nuevas) y 67 del frontend (12 nuevas), typecheck y build sin errores.
