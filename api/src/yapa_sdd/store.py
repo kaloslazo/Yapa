@@ -24,6 +24,7 @@ class InMemoryStore:
         self.settled_cycles: set[str] = set()
         self.merge_requests: dict = {}  # zonas (iteración 5)
         self.email_codes: dict = {}  # códigos de correo: (cliente, motivo) -> resumen, vencimiento, envíos (iteración 40)
+        self.notices: list = []  # avisos dentro de la app (iteración 42)
         self.pin_requests: dict = {}  # "Olvidé mi PIN": id -> (cliente, hora) (iteración 39, S-199)
         self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
         self.bags: dict = {}  # armado: bolsas por pedido
@@ -39,6 +40,7 @@ class InMemoryStore:
         self._next_merge_id = 1
         self._next_order_id = 1
         self._next_refund_id = 1
+        self._next_notice_id = 1
 
     def add_customer(self, customer: Customer) -> None:
         self.customers[customer.customer_id] = customer
@@ -90,6 +92,11 @@ class InMemoryStore:
         refund_id = self._next_refund_id
         self._next_refund_id += 1
         return refund_id
+
+    def next_notice_id(self) -> int:
+        notice_id = self._next_notice_id
+        self._next_notice_id += 1
+        return notice_id
 
     def next_claim_id(self) -> int:
         claim_id = self._next_claim_id

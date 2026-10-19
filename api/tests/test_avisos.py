@@ -137,6 +137,7 @@ class NoticeFlowTests(AvisosBase):
         self.store.add_customer(Customer(809, "Vecino 809", SAN_FELIPE))
         set_pin(self.store, 809, PIN)
         self.assertEqual(self.client(801).post("/api/pedidos", {"lineas": BASKET, "metodo": "YAPE"})[0], 201)
+        self.assertEqual(self.admin().post("/api/admin/pedidos/1/verificar")[0], 200)  # pagado: entra a la liquidación
         self.assertEqual(self.client(801).post("/api/pedidos/1/cancelar", {"destino": "SALDO"})[0], 200)
         for customer_id in WEEK[1:] + [809]:
             self.assertEqual(self.client(customer_id).post("/api/pedidos", {"lineas": BASKET, "metodo": "YAPE"})[0], 201)
@@ -151,6 +152,21 @@ class NoticeFlowTests(AvisosBase):
         self.assertEqual(admin.post("/api/admin/ciclos/2026-W38/liquidar")[0], 200)
         self.assertNotIn("LIQUIDADO", self.kinds(801))
         self.assertIn("LIQUIDADO", self.kinds(802))
+
+    def test_av_d_pago_sin_verificar(self):
+        self.store.add_customer(Customer(809, "Vecino 809", SAN_FELIPE))
+        set_pin(self.store, 809, PIN)
+        self.order_week()
+        self.assertEqual(self.client(809).post("/api/pedidos", {"lineas": BASKET, "metodo": "YAPE"})[0], 201)  # pedido 9
+        self.clock[0] = SATURDAY
+        admin = self.admin()
+        for order_id in range(1, 9):
+            admin.post("/api/admin/bolsas", {"pedido": order_id, "foto": f"b{order_id}.jpg"})
+        admin.post("/api/admin/entregas", {"ciclo": "2026-W38", "zona": SAN_FELIPE, "foto": "e.jpg", "recibe": "Sr. Ramos"})
+        self.assertEqual(admin.post("/api/admin/ciclos/2026-W38/liquidar")[0], 200)
+        text = next(n for n in self.notices_of(809) if n["tipo"] == "LIQUIDADO")["texto"]
+        self.assertIn("No pudimos verificar tu pago", text)
+        self.assertNotIn("Pagaste", text)
 
     # AV-E
     def test_av_e_entrega_fallida(self):

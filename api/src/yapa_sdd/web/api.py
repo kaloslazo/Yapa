@@ -9,6 +9,7 @@ import hmac
 import json
 import re
 import secrets
+import threading
 import traceback
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -16,7 +17,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, recovery, reference, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, notices, recovery, reference, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -67,7 +68,7 @@ def _money_in(value, what: str) -> Decimal:
     return amount
 
 
-FLAGS = ("usar_saldo", "consentimiento")  # los únicos datos de sí o no
+FLAGS = ("usar_saldo", "consentimiento", "avisos_correo")  # los únicos datos de sí o no
 
 
 def _scalars(data: dict) -> dict:
@@ -98,12 +99,38 @@ def _body(environ) -> tuple[dict, dict]:
     return _form(environ)  # multipart con fotos (S-151) o formulario simple
 
 
-def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None):
+def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None,
+               background_mail: bool = True):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
 
     # --- ayudas ---
+
+    def tell(event, *args) -> None:
+        """AV-11: un aviso nunca debe romper la acción que lo causa."""
+        try:
+            event(store, *args, clock())
+        except Exception:
+            traceback.print_exc()
+
+    def send_notice_emails(errors) -> None:
+        """AV-08, AV-10, S-219: los correos de aviso salen en segundo plano y se intentan una sola vez."""
+        batch = notices.claim_emails(store)
+        if not batch:
+            return
+
+        def send_all() -> None:
+            for to, subject, body in batch:
+                try:
+                    mailer.send(to, subject, body)
+                except MailError:
+                    traceback.print_exc(file=errors)
+
+        if background_mail:
+            threading.Thread(target=send_all, daemon=True).start()
+        else:
+            send_all()
 
     def session_of(environ) -> tuple[str | None, dict | None]:
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
@@ -255,7 +282,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                          "codigo_referido": customers.referral_code(customer),
                          "correo": recovery.mask_email(customer.email),  # CR-08
                          "correo_verificado": customer.email_verified_at is not None,
-                         "google_vinculado": customer.google_sub is not None})  # GO-06
+                         "google_vinculado": customer.google_sub is not None,  # GO-06
+                         "avisos_sin_leer": notices.unread_count(store, customer.customer_id),  # AV-04
+                         "correo_avisos": customer.email_notices})
         else:
             data.update({"nombre": "Equipo Yapa"})
         return data
@@ -432,6 +461,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def zona_unir(environ, data, session, zone_id):
         merge_id = zones.request_merge(store, zone_id, str(data.get("destino", "")), session["principal"], now=clock())
+        tell(notices.merge_requested, *merge_zones(merge_id))
         return {"solicitud": merge_id}
 
     def zona_separar(environ, data, session, zone_id):
@@ -440,15 +470,25 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def zona_transferir(environ, data, session, zone_id):
         return zone_json(zones.transfer_admin(store, zone_id, session["principal"], _int(data.get("nuevo"), "Vecino")))
 
+    def merge_zones(merge_id: int):
+        """(zona que pidió, zona pedida) de una solicitud, o (None, None) si ya no existe."""
+        requester, target = store.merge_requests.get(merge_id, (None, None))
+        return store.zones.get(requester), store.zones.get(target)
+
     def solicitud_aceptar(environ, data, session, merge_id):
-        return zone_json(zones.accept_merge(store, _int(merge_id, "Solicitud"), session["principal"], now=clock()))
+        answered = merge_zones(_int(merge_id, "Solicitud"))
+        merged = zones.accept_merge(store, _int(merge_id, "Solicitud"), session["principal"], now=clock())
+        tell(notices.merge_answered, *answered, True)
+        return zone_json(merged)
 
     def solicitud_retirar(environ, data, session, merge_id):
         zones.withdraw_merge(store, _int(merge_id, "Solicitud"), session["principal"])  # AN-14
         return {"retirada": True}
 
     def solicitud_rechazar(environ, data, session, merge_id):
+        answered = merge_zones(_int(merge_id, "Solicitud"))
         zones.reject_merge(store, _int(merge_id, "Solicitud"), session["principal"])
+        tell(notices.merge_answered, *answered, False)
         return {"ok": True}
 
     # --- admin Yapa (API-06) ---
@@ -516,10 +556,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def admin_verificar(environ, data, session, order_id):
         order = verify_payment(store, _int(order_id, "Número de pedido"), now=clock())
+        tell(notices.payment_verified, order)
         return order_json(order, names_for(order.cycle), clock())
 
     def admin_liquidar(environ, data, session, cycle_id):
         result = fulfillment.close_cycle(store, cycle_id, at=clock())
+        tell(notices.cycle_settled, result)
         return {"ciclo": result.cycle,
                 "productos": [{"id": p.product_id, "total": qty(p.total_quantity), "tramo": qty(p.tier_min_quantity),
                                "precio_final": money(p.final_unit_price)} for p in result.products.values()],
@@ -557,12 +599,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         delivery = fulfillment.deliver_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
                                             by=session["principal"], photo=data.get("foto", ""),
                                             received_by=data.get("recibe", ""), now=clock())
+        tell(notices.delivered, delivery)
         return {"zona": delivery.zone_id, "pedidos": len(delivery.order_ids), "recibe": delivery.received_by}
 
     def admin_entrega_fallida(environ, data, session):
         failure = fulfillment.register_failed_delivery(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
                                                        by=session["principal"], photo=data.get("foto", ""),
                                                        reason=data.get("motivo", ""), now=clock())
+        tell(notices.delivery_failed, failure)
         return {"zona": failure.zone_id, "pedidos": len(failure.order_ids)}
 
     def admin_reclamos(environ, data, session):
@@ -575,6 +619,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             raise BusinessRuleError("INVALID_INPUT", "Elige aprobar o rechazar.")
         claim = claims.review_claim(store, _int(claim_id, "Reclamo"), by=session["principal"],
                                     approve=decision == "aprobar", now=clock())
+        tell(notices.claim_reviewed, claim)
         return claim_json(claim)
 
     def admin_devoluciones(environ, data, session):
@@ -586,6 +631,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def admin_devolucion_pagar(environ, data, session, refund_id):
         refund = wallet.mark_refund_paid(store, _int(refund_id, "Devolución"), str(data.get("codigo", "")))
+        tell(notices.refund_paid, refund)
         return {"id": refund.refund_id, "estado": refund.status}
 
     def admin_conciliacion(environ, data, session):
@@ -725,6 +771,28 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         customers.dismiss_pin_request(store, _int(request_id, "Solicitud"), by=session["principal"])
         return {"descartada": True}
 
+    def avisos(environ, data, session):
+        """AV-01."""
+        customer = store.customers[session["principal"]]
+        mine = notices.for_customer(store, customer.customer_id)
+        return {"avisos": [{"id": n.notice_id, "tipo": n.kind, "titulo": n.title, "texto": n.body,
+                            "hora": n.created_at.isoformat(), "leido": n.read_at is not None} for n in mine],
+                "sin_leer": sum(1 for n in mine if n.read_at is None), "correo_avisos": customer.email_notices,
+                "correo_verificado": customer.email_verified_at is not None}
+
+    def avisos_leer(environ, data, session):
+        """AV-02."""
+        notice_id = _int(data["id"], "Aviso") if data.get("id") not in (None, "") else None
+        notices.mark_read(store, session["principal"], notice_id, clock())
+        return {"sin_leer": notices.unread_count(store, session["principal"])}
+
+    def avisos_preferencias(environ, data, session):
+        """AV-03."""
+        if not isinstance(data.get("avisos_correo"), bool):
+            raise BusinessRuleError("INVALID_INPUT", "Elige si quieres recibir los avisos por correo.")
+        notices.set_email_preference(store, session["principal"], data["avisos_correo"])
+        return {"correo_avisos": data["avisos_correo"]}
+
     def admin_colchon(environ, data, session):
         return {"valor": money(buffer.buffer_value(store)), "tope": money(buffer.BUFFER_LIMIT),
                 "stock": [{"producto": s.product_id, "cantidad": qty(s.quantity), "valor": money(s.value)}
@@ -783,6 +851,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),
         (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, "admin")}),
         (r"/api/admin/colchon", {"GET": (admin_colchon, "admin")}),
+        (r"/api/avisos", {"GET": (avisos, "vecino")}),
+        (r"/api/avisos/leer", {"POST": (avisos_leer, "vecino")}),
+        (r"/api/avisos/preferencias", {"POST": (avisos_preferencias, "vecino")}),
     ]
     compiled = [(re.compile(pattern + r"/?"), methods) for pattern, methods in routes]
 
@@ -833,8 +904,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             traceback.print_exc(file=environ.get("wsgi.errors"))
             status, body, headers = "500 Internal Server Error", {"error": {
                 "codigo": "INTERNAL_ERROR", "mensaje": "Algo salió mal de nuestro lado. Intenta de nuevo."}}, []
-        if on_change and environ.get("REQUEST_METHOD") in ("POST", "DELETE") and status[:1] == "2":
-            on_change(store)
+        if environ.get("REQUEST_METHOD") in ("POST", "DELETE") and status[:1] == "2":
+            send_notice_emails(environ.get("wsgi.errors"))  # antes de guardar: el aviso queda marcado como enviado
+            if on_change:
+                on_change(store)
         if isinstance(body, bytes):  # fotos: se entregan tal cual, con las cabeceras del manejador
             start_response(status, [("Content-Length", str(len(body)))] + headers)
             return [body]
