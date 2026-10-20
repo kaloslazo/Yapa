@@ -10,6 +10,8 @@ import os
 import smtplib
 from email.message import EmailMessage
 
+from . import mail_html
+
 
 class MailError(Exception):
     """No se pudo enviar el correo."""
@@ -21,14 +23,16 @@ class ConsoleMailer:
 
 
 class SmtpMailer:
-    def __init__(self, host: str, port: int, user: str, password: str, sender: str = ""):
+    def __init__(self, host: str, port: int, user: str, password: str, sender: str = "", app_url: str = ""):
         self.host, self.port, self.user, self.password = host, port, user, password
         self.sender = sender or user
+        self.app_url = app_url
 
     def send(self, to: str, subject: str, body: str) -> None:
         message = EmailMessage()
         message["From"], message["To"], message["Subject"] = f"Yapa <{self.sender}>", to, subject
         message.set_content(body)
+        message.add_alternative(mail_html.render(subject, body, self.app_url), subtype="html")  # S-222
         try:
             with smtplib.SMTP(self.host, self.port, timeout=15) as server:
                 server.starttls()
@@ -44,4 +48,4 @@ def mailer_from_env(env=None):
     if not (user and password):
         return ConsoleMailer()
     return SmtpMailer(env.get("YAPA_SMTP_HOST", "smtp.gmail.com"), int(env.get("YAPA_SMTP_PORT", "587")), user, password,
-                      env.get("YAPA_SMTP_FROM", ""))
+                      env.get("YAPA_SMTP_FROM", ""), env.get("YAPA_PUBLIC_URL", ""))
