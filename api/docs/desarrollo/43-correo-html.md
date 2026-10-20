@@ -48,3 +48,40 @@ Hoy el correo sale como texto suelto (iteraciones 40 y 42). Con el dominio propi
 ## Fuera de esta iteración
 
 Plantillas distintas por tipo de aviso, imágenes o logotipo, correos en otros idiomas, y medir si abren los correos (S-223 lo descarta a propósito).
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| HT-01, S-222 | `SmtpMailer.send` agrega la parte HTML (`src/yapa_sdd/mailer.py`) | HT-A, HT-B |
+| HT-02 | `escape` en `_paragraph`, `_code_box`, `_button` y el asunto (`src/yapa_sdd/mail_html.py`) | HT-C |
+| HT-03, S-225 | `CODE_LINE` y `_code_box` | HT-D |
+| HT-04, S-223 | `render`: solo estilos en línea y tablas, sin imágenes ni scripts | HT-E |
+| HT-05 | las líneas "Si no quieres recibir…" pasan al pie en `render` | HT-H |
+| HT-06, S-224 | `_valid_url`, `_button`; `mailer_from_env` lee `YAPA_PUBLIC_URL` | HT-F, HT-G, HT-K |
+| HT-07 | `render` solo se usa en `SmtpMailer`; la API y los avisos no cambian | las 465 pruebas anteriores siguen en verde; HT-J |
+
+Pruebas de las propias pruebas (7 mutaciones a mano, revertidas, todas detectadas): sin escapar los párrafos (HT-C), sin validar la dirección del botón (HT-G), sin parte HTML (HT-A y HT-K), la dirección del botón sin escapar (HT-G), el código sin su caja (HT-D), la despedida "Yapa" como un párrafo más (HT-I) y el pie de apagar los correos perdido (HT-H).
+
+Vista: se abrieron en el navegador el correo de código y el de aviso (con botón): encabezado oscuro con la marca "Yapa" y un punto de acento, título, código grande en una caja punteada verde, texto y pie. Con el correo real: llegaron a la bandeja principal de `carlos.bravo@utec.edu.pe`, sin pasar por spam, el de verificación y el de "La zona Edificio Arenales quiere unirse a la tuya" (ambos HTML, de unos 8 KB contra 5 KB del texto solo).
+
+No se comprobó todavía cómo se ve en la app de Gmail del celular ni en Outlook; el diseño usa tablas y estilos en línea justamente para eso, pero conviene mirarlo en un celular real.
+
+Evidencia: `docs/evidencia/desarrollo/43-correo-html-rojo.txt` (el módulo no existía) y `43-correo-html-verde.txt` (477 pruebas del motor, 12 nuevas).
+
+## Cómo activar el correo con Resend (dominio propio)
+
+Se usa el mismo envío SMTP de la iteración 40. Con un dominio verificado en Resend, el correo sale desde `avisos@<dominio>` sin mostrar la cuenta de nadie:
+
+```
+export YAPA_SMTP_HOST=smtp.resend.com
+export YAPA_SMTP_PORT=587
+export YAPA_SMTP_USER=resend
+export YAPA_SMTP_PASSWORD=<la API key de Resend>
+export YAPA_SMTP_FROM=avisos@<dominio>
+export YAPA_PUBLIC_URL=https://<dirección pública de Yapa>   # opcional, activa el botón "Abrir Yapa"
+```
+
+- `YAPA_SMTP_FROM` lleva **solo la dirección**: el código ya escribe "Yapa <dirección>". Con `"Yapa <dirección>"` el remitente queda inválido y el envío falla.
+- La API key va solo en el entorno del servidor, nunca en el repositorio ni en el chat.
+- El dominio se verifica en Resend con los registros DNS que la página del dominio muestra (DKIM y los dos CNAME de envío, más un DMARC opcional) puestos en el registrador.

@@ -316,3 +316,12 @@
 - Se comprobó con 15 mutaciones que las pruebas detectan un correo sin filtro de verificación o de preferencia, avisos ajenos, el tope y un aviso que rompe la acción. Una mutación sobrevivió al principio y reveló un error de la spec sobre qué pedidos entran en la liquidación; se corrigió.
 - Se probó en el navegador (con un proxy local de prueba, ver la spec), incluido el correo y el ancho de 390 px.
 - Resultado: 465 pruebas del motor (34 nuevas) y 67 del frontend (12 nuevas), typecheck y build sin errores.
+
+## Iteración 43 · Correos con diseño (19/10/2026)
+
+- Spec: `43-correo-html.md` (S-222..S-225, a validar). Los correos reales llevan dos versiones, texto plano y HTML, armadas desde el mismo texto: encabezado con la marca, título, el código de 6 dígitos en una caja destacada, los párrafos y un pie con la línea para apagar los avisos.
+- Solo texto y color: sin imágenes, fuentes externas, scripts ni seguimiento. Todo texto que viene de datos se escapa (un nombre con etiquetas se ve como texto). Un botón "Abrir Yapa" aparece solo si se define `YAPA_PUBLIC_URL` con `http(s)://`.
+- La API, los avisos y la consola del motor no cambian; solo cambia el correo que sale por SMTP.
+- Con el dominio `holayapa.app` verificado en Resend, se envió de verdad: llegaron a la bandeja principal el código de verificación y un aviso de unión de zonas. Aprendizaje: `YAPA_SMTP_FROM` va solo con la dirección (el código agrega "Yapa").
+- Se comprobó con 7 mutaciones que las pruebas detectan HTML sin escapar, una dirección de botón insegura, la ausencia de la parte HTML y el código sin su caja.
+- Resultado: 477 pruebas del motor (12 nuevas); el frontend no cambió (67).

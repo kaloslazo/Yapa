@@ -113,4 +113,4 @@ Evidencia: `docs/evidencia/desarrollo/42-avisos-rojo.txt` (el módulo no existí
 
 ## Cómo activar el correo
 
-Es el mismo envío de la iteración 40: con `YAPA_SMTP_USER` y `YAPA_SMTP_PASSWORD` los avisos importantes salen por correo real; sin esas variables se imprimen en la consola del motor. No hay nada nuevo que configurar.
+Es el mismo envío de la iteración 40: con `YAPA_SMTP_USER` y `YAPA_SMTP_PASSWORD` los avisos importantes salen por correo real; sin esas variables se imprimen en la consola del motor. No hay nada nuevo que configurar. Desde la iteración 43 el correo sale con diseño, y los pasos para usar Resend con un dominio propio están en `43-correo-html.md`.
