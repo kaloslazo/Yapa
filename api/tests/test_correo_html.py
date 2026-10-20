@@ -4,6 +4,7 @@ import contextlib
 import io
 import re
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from yapa_sdd import mail_html, mailer
@@ -79,11 +80,15 @@ class CorreoHtmlTest(unittest.TestCase):
         self.assertRegex(html, r'data-role="code"[^>]*>\s*795704\s*<')
         self.assertIn("10 minutos", html)
 
-    def test_ht_e_sin_imagenes_ni_scripts(self):
+    def test_ht_e_nada_externo(self):
         for body in (CODE_BODY, NOTICE_BODY):
-            html = mail_html.render("Asunto", body).lower()
-            for banned in ("<img", "<script", "<link", "@import", "http"):
-                self.assertNotIn(banned, html)
+            for logo in (False, True):
+                html = mail_html.render("Asunto", body, logo=logo).lower()
+                for banned in ("<script", "<link", "@import", "http"):
+                    self.assertNotIn(banned, html)
+                sources = re.findall(r'<img[^>]*src="([^"]*)"', html)
+                self.assertEqual(len(sources), 1 if logo else 0)
+                self.assertTrue(all(source.startswith("cid:") for source in sources))
 
     def test_ht_f_boton(self):
         html = mail_html.render("Asunto", NOTICE_BODY, app_url="https://yapa.example")
@@ -117,6 +122,30 @@ class CorreoHtmlTest(unittest.TestCase):
             ConsoleMailer().send("vecino@example.com", "Asunto", CODE_BODY)
         self.assertIn("795704", out.getvalue())
         self.assertNotIn("<html", out.getvalue().lower())
+
+    def test_ht_l_logo_incrustado(self):
+        message = send_with(self.smtp, NOTICE_BODY)
+        images = [part for part in message.walk() if part.get_content_type() == "image/png"]
+        self.assertEqual(len(images), 1)
+        cid = images[0]["Content-ID"].strip("<>")
+        html = message.get_body(preferencelist=("html",)).get_content()
+        self.assertIn(f'src="cid:{cid}"', html)
+        self.assertLess(len(images[0].get_content()), 30_000)
+
+    def test_ht_m_sin_archivo_de_logo(self):
+        with mock.patch.object(mailer, "LOGO_PATH", Path("no-existe.png")):
+            message = send_with(self.smtp, NOTICE_BODY)
+        self.assertEqual([part for part in message.walk() if part.get_content_type().startswith("image/")], [])
+        self.assertNotIn("<img", message.get_body(preferencelist=("html",)).get_content())
+        self.assertEqual(message.get_body(preferencelist=("plain",)).get_content().strip(), NOTICE_BODY)
+
+    def test_ht_n_marca_como_la_app(self):
+        html = mail_html.render("Asunto", NOTICE_BODY, app_url="https://yapa.example", logo=True)
+        self.assertIn(">yapa<", html)
+        self.assertNotIn(">Yapa<", html)
+        self.assertNotIn("background:#263430", html)  # el encabezado de antes era oscuro
+        self.assertIn("border-radius:999px", html)  # el botón es una píldora
+        self.assertIn("border-radius:16px", html)  # la tarjeta
 
     def test_ht_k_variable_de_entorno(self):
         env = {"YAPA_SMTP_USER": "u", "YAPA_SMTP_PASSWORD": "p", "YAPA_PUBLIC_URL": "https://yapa.example"}

@@ -1,0 +1,6 @@
+ERROR: test_ht_e_nada_externo (tests.test_correo_html.CorreoHtmlTest.test_ht_e_nada_externo)
+ERROR: test_ht_m_sin_archivo_de_logo (tests.test_correo_html.CorreoHtmlTest.test_ht_m_sin_archivo_de_logo)
+ERROR: test_ht_n_marca_como_la_app (tests.test_correo_html.CorreoHtmlTest.test_ht_n_marca_como_la_app)
+FAIL: test_ht_l_logo_incrustado (tests.test_correo_html.CorreoHtmlTest.test_ht_l_logo_incrustado)
+Ran 15 tests in 0.011s
+FAILED (failures=1, errors=3)
