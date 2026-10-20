@@ -63,18 +63,24 @@ Plantillas distintas por tipo de aviso, otras imágenes además del logo, correo
 | HT-01, S-222 | `SmtpMailer.send` agrega la parte HTML (`src/yapa_sdd/mailer.py`) | HT-A, HT-B |
 | HT-02 | `escape` en `_paragraph`, `_code_box`, `_button` y el asunto (`src/yapa_sdd/mail_html.py`) | HT-C |
 | HT-03, S-225 | `CODE_LINE` y `_code_box` | HT-D |
-| HT-04, S-223 | `render`: solo estilos en línea y tablas, sin imágenes ni scripts | HT-E |
+| HT-04, S-223 | `render`: solo estilos en línea y tablas, nada cargado de internet | HT-E |
+| HT-08, S-226 | `_read_logo` y `SmtpMailer.send` (`mailer.py`) incrustan `brand/yapa-mark.png` con `add_related`; `render(logo=True)` lo llama por `cid:` | HT-L, HT-M, HT-E |
+| HT-09, S-227 | encabezado claro, marca "yapa", esquinas de 16 px y botón en píldora en `render` | HT-N |
 | HT-05 | las líneas "Si no quieres recibir…" pasan al pie en `render` | HT-H |
 | HT-06, S-224 | `_valid_url`, `_button`; `mailer_from_env` lee `YAPA_PUBLIC_URL` | HT-F, HT-G, HT-K |
 | HT-07 | `render` solo se usa en `SmtpMailer`; la API y los avisos no cambian | las 465 pruebas anteriores siguen en verde; HT-J |
 
-Pruebas de las propias pruebas (7 mutaciones a mano, revertidas, todas detectadas): sin escapar los párrafos (HT-C), sin validar la dirección del botón (HT-G), sin parte HTML (HT-A y HT-K), la dirección del botón sin escapar (HT-G), el código sin su caja (HT-D), la despedida "Yapa" como un párrafo más (HT-I) y el pie de apagar los correos perdido (HT-H).
+Pruebas de las propias pruebas (7 mutaciones a mano, revertidas, todas detectadas) en la primera versión: sin escapar los párrafos (HT-C), sin validar la dirección del botón (HT-G), sin parte HTML (HT-A y HT-K), la dirección del botón sin escapar (HT-G), el código sin su caja (HT-D), la despedida "Yapa" como un párrafo más (HT-I) y el pie de apagar los correos perdido (HT-H).
 
-Vista: se abrieron en el navegador el correo de código y el de aviso (con botón): encabezado oscuro con la marca "Yapa" y un punto de acento, título, código grande en una caja punteada verde, texto y pie. Con el correo real: llegaron a la bandeja principal de `carlos.bravo@utec.edu.pe`, sin pasar por spam, el de verificación y el de "La zona Edificio Arenales quiere unirse a la tuya" (ambos HTML, de unos 8 KB contra 5 KB del texto solo).
+**Ajuste de marca (S-226, S-227).** La primera versión tenía un encabezado oscuro con "Yapa" en mayúscula, inventado por mí; no se parecía a la app. Se revisó la barra real de la app (`src/App.tsx` y `styles.css`): logo de la bolsa más la palabra "yapa" en minúsculas, peso fuerte y letras juntas, sobre fondo claro; botones en píldora terracota; tarjetas de 16 px. El correo ahora copia eso. El logo es el mismo de la app (`public/images/brand/yapa-mark.png`) reducido a 96 px (unos 7 KB) en `src/yapa_sdd/brand/yapa-mark.png`, y viaja dentro del correo. No se puede incrustar la letra de la app (Archivo) sin cargarla de internet, así que el correo usa Archivo si el dispositivo la tiene y, si no, Helvetica o Arial: es la única diferencia visible que queda.
+
+Mutaciones de este ajuste (7, todas detectadas): sin adjuntar el logo (HT-L), sin tolerar la ausencia del archivo (HT-M), marca en mayúscula, botón sin esquinas de píldora y encabezado oscuro (HT-N), una imagen cargada de internet (HT-E y HT-L) y el logo siempre apagado (HT-L).
+
+Vista: se abrieron en el navegador el correo de código y el de aviso (con botón): encabezado claro con el logo y "yapa", título, código grande en una caja punteada verde, texto y pie. Con el correo real llegaron a la bandeja principal de `carlos.bravo@utec.edu.pe`, sin pasar por spam, el de verificación y el de "La zona Edificio Arenales quiere unirse a la tuya" (HTML con el logo incrustado, unos 18 KB).
 
 No se comprobó todavía cómo se ve en la app de Gmail del celular ni en Outlook; el diseño usa tablas y estilos en línea justamente para eso, pero conviene mirarlo en un celular real.
 
-Evidencia: `docs/evidencia/desarrollo/43-correo-html-rojo.txt` (el módulo no existía) y `43-correo-html-verde.txt` (477 pruebas del motor, 12 nuevas).
+Evidencia: `docs/evidencia/desarrollo/43-correo-html-rojo.txt` (el módulo no existía) y `43b-marca-rojo.txt` (el ajuste de marca, antes del código) y `43-correo-html-verde.txt` (480 pruebas del motor, 15 nuevas en esta iteración).
 
 ## Cómo activar el correo con Resend (dominio propio)
 

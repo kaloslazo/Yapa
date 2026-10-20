@@ -320,8 +320,9 @@
 ## Iteración 43 · Correos con diseño (19/10/2026)
 
 - Spec: `43-correo-html.md` (S-222..S-225, a validar). Los correos reales llevan dos versiones, texto plano y HTML, armadas desde el mismo texto: encabezado con la marca, título, el código de 6 dígitos en una caja destacada, los párrafos y un pie con la línea para apagar los avisos.
-- Solo texto y color: sin imágenes, fuentes externas, scripts ni seguimiento. Todo texto que viene de datos se escapa (un nombre con etiquetas se ve como texto). Un botón "Abrir Yapa" aparece solo si se define `YAPA_PUBLIC_URL` con `http(s)://`.
+- Se ve como la app (S-227): encabezado claro con el logo de la bolsa y "yapa" en minúsculas, tarjeta de 16 px, botón en píldora terracota. El logo viaja incrustado en el correo (S-226); nada se carga de internet, sin scripts ni seguimiento. Todo texto que viene de datos se escapa (un nombre con etiquetas se ve como texto). Un botón "Abrir Yapa" aparece solo si se define `YAPA_PUBLIC_URL` con `http(s)://`.
 - La API, los avisos y la consola del motor no cambian; solo cambia el correo que sale por SMTP.
 - Con el dominio `holayapa.app` verificado en Resend, se envió de verdad: llegaron a la bandeja principal el código de verificación y un aviso de unión de zonas. Aprendizaje: `YAPA_SMTP_FROM` va solo con la dirección (el código agrega "Yapa").
 - Se comprobó con 7 mutaciones que las pruebas detectan HTML sin escapar, una dirección de botón insegura, la ausencia de la parte HTML y el código sin su caja.
-- Resultado: 477 pruebas del motor (12 nuevas); el frontend no cambió (67).
+- Primera versión con encabezado oscuro y marca en mayúscula, inventada y distinta de la app; el dueño pidió uniformar y se rehízo con la marca real (se revisó la barra de la app). Mutaciones del ajuste: 7 de 7 detectadas.
+- Resultado: 480 pruebas del motor (15 nuevas); el frontend no cambió (67).
