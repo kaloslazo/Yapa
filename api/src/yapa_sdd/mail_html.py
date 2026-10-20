@@ -1,6 +1,7 @@
 """Diseño de los correos (iteración 43). Docs: docs/desarrollo/43-correo-html.md.
 
-Arma el HTML a partir del mismo texto del correo (S-225). Solo texto y color, sin imágenes ni scripts (S-223).
+Arma el HTML a partir del mismo texto del correo (S-225). Se ve como la app (S-227): mismos colores, la marca en
+minúsculas, esquinas y botón en píldora. No carga nada de internet (S-223): el logo viaja incrustado (S-226).
 """
 
 from __future__ import annotations
@@ -8,9 +9,10 @@ from __future__ import annotations
 import re
 from html import escape
 
-INK, ACCENT, GREEN, GREEN_SOFT = "#263430", "#be4d36", "#3b7158", "#dceadf"
+INK, ACCENT, GREEN = "#263430", "#be4d36", "#3b7158"
 PAGE, CANVAS, LINE, COPY, MUTED = "#f7f1e9", "#fffdf9", "#e4ddd2", "#47544e", "#526059"
-FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif"
+FONT = "'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+LOGO_CID = "yapa-mark"
 
 CODE_LINE = re.compile(r"^Tu código es (\d{4,8})\.\s*(.*)$", re.S)
 OPT_OUT = "Si no quieres recibir"
@@ -31,17 +33,17 @@ def _code_box(code: str, note: str) -> str:
 
 def _button(url: str) -> str:
     return (f'<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px;"><tr>'
-            f'<td bgcolor="{ACCENT}" style="border-radius:8px;">'
-            f'<a href="{escape(url, quote=True)}" style="display:inline-block;padding:14px 28px;font-size:16px;'
-            f'font-weight:700;color:#ffffff;text-decoration:none;">Abrir Yapa</a></td></tr></table>')
+            f'<td bgcolor="{ACCENT}" style="border-radius:999px;">'
+            f'<a href="{escape(url, quote=True)}" style="display:inline-block;padding:15px 30px;font-size:15px;'
+            f'font-weight:600;color:#ffffff;text-decoration:none;">Abrir Yapa</a></td></tr></table>')
 
 
 def _valid_url(url: str) -> bool:
     return url.lower().startswith(("http://", "https://"))
 
 
-def render(subject: str, body: str, app_url: str = "") -> str:
-    """HT-02 a HT-06: el HTML del correo. Todo texto que viene de datos se escapa."""
+def render(subject: str, body: str, app_url: str = "", logo: bool = False) -> str:
+    """HT-02 a HT-09: el HTML del correo. Todo texto que viene de datos se escapa."""
     blocks = [block.strip() for block in body.replace("\r\n", "\n").split("\n\n") if block.strip()]
     if blocks and blocks[-1] == "Yapa":
         blocks.pop()  # la marca ya va en el encabezado
@@ -66,6 +68,8 @@ def render(subject: str, body: str, app_url: str = "") -> str:
     if app_url and _valid_url(app_url):
         content.append(_button(app_url))
     footer_text = "".join(f"{escape(line)}<br>" for line in footer)
+    mark = (f'<img src="cid:{LOGO_CID}" width="36" height="36" alt="" '
+            f'style="display:inline-block;vertical-align:middle;border:0;margin-right:8px;">') if logo else ""
 
     return f"""<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,9 +77,9 @@ def render(subject: str, body: str, app_url: str = "") -> str:
 <body style="margin:0;padding:0;background:{PAGE};font-family:{FONT};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{escape(preview)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{PAGE};"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:{CANVAS};border:1px solid {LINE};border-radius:14px;overflow:hidden;">
-<tr><td style="padding:20px 28px;background:{INK};"><span style="font-size:26px;font-weight:800;letter-spacing:.5px;color:#ffffff;">Yapa</span><span style="display:inline-block;margin-left:10px;width:8px;height:8px;border-radius:4px;background:{ACCENT};"></span></td></tr>
-<tr><td style="padding:28px 28px 8px;"><h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;color:{INK};">{escape(subject)}</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:{CANVAS};border:1px solid {LINE};border-radius:16px;overflow:hidden;">
+<tr><td style="padding:20px 28px;border-bottom:1px solid {LINE};">{mark}<span style="display:inline-block;vertical-align:middle;font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;color:{INK};">yapa</span></td></tr>
+<tr><td style="padding:28px 28px 8px;"><h1 style="margin:0 0 18px;font-size:22px;font-weight:600;letter-spacing:-.4px;line-height:1.3;color:{INK};">{escape(subject)}</h1>
 {"".join(content)}</td></tr>
 <tr><td style="padding:16px 28px 24px;border-top:1px solid {LINE};font-size:13px;line-height:1.5;color:{MUTED};">{footer_text}Yapa · compras grupales de vecinos</td></tr>
 </table></td></tr></table></body></html>

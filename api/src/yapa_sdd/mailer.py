@@ -9,12 +9,24 @@ from __future__ import annotations
 import os
 import smtplib
 from email.message import EmailMessage
+from pathlib import Path
 
 from . import mail_html
 
 
+LOGO_PATH = Path(__file__).with_name("brand") / "yapa-mark.png"
+
+
 class MailError(Exception):
     """No se pudo enviar el correo."""
+
+
+def _read_logo() -> bytes | None:
+    """HT-08: sin el archivo del logo el correo sale igual, sin imagen."""
+    try:
+        return LOGO_PATH.read_bytes()
+    except OSError:
+        return None
 
 
 class ConsoleMailer:
@@ -32,7 +44,10 @@ class SmtpMailer:
         message = EmailMessage()
         message["From"], message["To"], message["Subject"] = f"Yapa <{self.sender}>", to, subject
         message.set_content(body)
-        message.add_alternative(mail_html.render(subject, body, self.app_url), subtype="html")  # S-222
+        logo = _read_logo()
+        message.add_alternative(mail_html.render(subject, body, self.app_url, logo=logo is not None), subtype="html")  # S-222
+        if logo is not None:
+            message.get_payload()[1].add_related(logo, "image", "png", cid=f"<{mail_html.LOGO_CID}>")  # S-226
         try:
             with smtplib.SMTP(self.host, self.port, timeout=15) as server:
                 server.starttls()
