@@ -49,7 +49,7 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```bash
 PYTHONPATH=src python -m yapa_sdd.web --demo   # semana ya vivida, en memoria (iteración 25)
 PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --ahora 2026-09-16T10:00:00-05:00
-# credenciales de demo: se imprimen al arrancar (vecinos 101 y 105, admin admin-yapa)
+# credenciales de demo (solo con --demo o sin --base): se imprimen al arrancar (vecinos 101 y 105, admin admin-yapa)
 # vecinos nuevos: /admin/vecinos (el PIN se muestra una sola vez)
 ```
 
