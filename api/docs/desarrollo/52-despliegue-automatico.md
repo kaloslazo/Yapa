@@ -71,13 +71,14 @@ Resultados (21/10/2026):
 | DA-F | Con la función real del script contra la ejecución real de GitHub: baja 765 KB, sigue la redirección sin mandar el token al almacén, y el paquete es válido |
 | DA-G | En GitHub, en una rama, el trabajo `Desplegar en la VPS` se **saltó** (`skipped`) |
 | DA-H | **Pendiente**: hace falta que Kalos registre el runner y que se suba a `main` |
+| DA-I | **El paquete que construyó GitHub se desplegó en la VPS** con el mismo script (`-ZipLocal`, paquete bajado de la ejecución 39696047470): versión de Kalos con sus cabeceras (CSP, HSTS), zonas públicas sin contacto, y las cuentas de demostración siguen entrando |
 
 Hallazgos que cambiaron el trabajo:
 
 - El Windows de la VPS lee los `.ps1` sin marca de codificación como ANSI y una "Ó" rompió una cadena; los scripts van guardados con BOM.
 - GitHub ya tenía el flujo `tests` de Kalos en `main` en el mismo archivo `ci.yml`; se combinaron en uno solo sin tocar los nombres de sus trabajos (`motor`, `web`).
 - La numeración se reordenó porque Kalos ya usaba S-259 a S-269 y las iteraciones 50 y 51: esta iteración es la **52** y sus supuestos van de S-270 a S-276; la 49 sigue reservada para el registro abierto.
-- El endurecimiento de Kalos (iteración 51) calcula la dirección del cliente con `X-Forwarded-For` cuando la petición viene de la misma máquina; con el túnel de Cloudflare hay que comprobar en producción que cada vecino se vea con su propia dirección y no todos como `127.0.0.1`.
+- El endurecimiento de Kalos (iteración 51) calcula la dirección del cliente con `X-Forwarded-For` cuando la petición viene de la misma máquina. **Comprobado en producción con el túnel de Cloudflare (21/10):** 30 intentos fallidos desde mi PC (`45.236.45.62`) dieron 429 en el 31.º, también con el PIN bueno; en ese momento, desde la VPS (otra dirección pública, `181.224.242.173`) el ingreso de Carmen dio 200. Cada persona se ve con su propia dirección y el límite no bloquea a todos juntos.
 
 ## Fuera de esta iteración (anotado)
 
