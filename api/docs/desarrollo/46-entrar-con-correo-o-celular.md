@@ -53,3 +53,22 @@ Hoy la pantalla de ingreso pide el "número de cliente" (101, 107…), un dato q
 - El ingreso del vecino dice **"Correo, celular o número de cliente"** (acepta texto, no solo dígitos) y avisa: "Si te registraste con Google, entra con el botón de Google, no necesitas PIN."
 - "¿Olvidaste tu PIN?" pide lo mismo.
 - En **Mi cuenta**, quien no tiene PIN ve "Crea tu PIN (opcional)".
+
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| LG-01, LG-07, S-244 | `customers.resolve_login`, `sesion_entrar` | LG-A, LG-B, LG-C |
+| LG-02, LG-03, S-245 | `resolve_login` (lo que no existe va al número 0) y `auth.authenticate` | LG-D, LG-E, LG-F, LG-M |
+| LG-04, S-246 | `pin_olvide` y `pin_restablecer` usan `resolve_login` | LG-G, LG-H |
+| LG-05, S-247 | `auth.create_pin`, `POST /api/pin/crear` | LG-I, LG-J, LG-K |
+| LG-06, S-248 | `me()` agrega `tiene_pin` | LG-L |
+| Pantalla | `AuthDialog` (campo "Correo, celular o número de cliente", ayuda para Google, "Crea tu PIN"), `mappers.toAccount` | `mappers.test.ts` |
+
+Pruebas de las propias pruebas (8 mutaciones a mano, revertidas, todas detectadas; una sobrevivió al inicio —un admin con el mismo texto que el número de un vecino— y se reforzó LG-M): correo sensible a mayúsculas, sin entrada por celular, un desconocido que no sigue el mismo camino que un número desconocido, el admin resuelto como vecino, crear PIN que pisa el existente, `tiene_pin` siempre verdadero, y olvidé o restablecer sin resolver el correo o el celular.
+
+Se arregló de paso un fallo viejo de la pantalla: los campos del código y del PIN nuevo filtraban la letra "D" en vez de los caracteres que no son dígitos (`/D/g` en lugar de `/\D/g`), así que dejaban escribir letras.
+
+Prueba real en producción: el vecino 106 entró con su correo, con su celular y con su número, y un correo inventado dio el mismo error de siempre.
+
+Evidencia: `docs/evidencia/desarrollo/46-entrar-rojo.txt` y `46-entrar-verde.txt` (532 pruebas del motor, 14 nuevas; 85 del frontend, 2 nuevas).

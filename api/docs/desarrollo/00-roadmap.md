@@ -60,6 +60,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 43 | **Correos con diseño** (HTML con la marca, código destacado, texto plano de respaldo) | pedido del dueño 19/10 | completa, ver `43-correo-html.md` |
 | 44 | **Lista para producción** (administrador real por entorno, sin credenciales de demo, cookie segura, `/salud`, web servida por el motor, servidor con hilos y cerrojo) | despliegue en servidor para el proyecto final | completa, ver `44-produccion.md` |
 | 45 | **Registro por invitación** (enlace propio de cada vecino, registro con correo o Google, la zona y el referido de quien invita, topes y avisos; página `/unete`) | pedido del dueño 20/10 | completa, ver `45-registro-por-invitacion.md` |
+| 46 | **Entrar con correo o celular** (ya no se pide el número de cliente; quien nació con Google puede crear su PIN, opcional) | prueba del dueño 21/10 | completa, ver `46-entrar-con-correo-o-celular.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

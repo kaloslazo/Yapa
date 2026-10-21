@@ -345,3 +345,11 @@
 - Se comprobó con 13 mutaciones (todas detectadas) y con un registro real contra el motor local. Chrome no respondía en esa sesión, así que la pantalla se probó en un DOM simulado.
 - Se corrigió un dato que se había dicho mal: las solicitudes de unión y de PIN sí se guardan en la base; al reiniciar solo se pierden las sesiones.
 - Resultado: 518 pruebas del motor (22 nuevas) y 77 del frontend (10 nuevas), typecheck y build sin errores.
+
+## Iteración 46 · Entrar con correo o celular (21/10/2026)
+
+- Spec: `46-entrar-con-correo-o-celular.md` (S-244..S-248, a validar). El vecino entra con su correo, su celular o su número de cliente más el PIN; lo que no existe da el mismo error que una clave mala. "Olvidé mi PIN" acepta lo mismo. Quien nació con Google no tiene PIN: entra con Google y, si quiere, crea su PIN desde Mi cuenta (`POST /api/pin/crear`, sin PIN actual).
+- Salió de la prueba del dueño con el registro por Google: "para iniciar sesión manualmente te tienes que saber tu número de cliente, y además te pide contraseña si te vinculaste con Google".
+- Se comprobó con 8 mutaciones (todas detectadas, tras reforzar una prueba) y en producción con el vecino de prueba.
+- Se corrigió un fallo viejo: los campos del código y del PIN nuevo dejaban escribir letras por un `/D/g` mal escrito.
+- Resultado: 532 pruebas del motor (14 nuevas) y 85 del frontend (2 nuevas).
