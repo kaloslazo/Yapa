@@ -49,7 +49,7 @@ Hoy un vecino solo existe si el admin lo da de alta a mano (nombre, celular, zon
 | IN-I | Tope diario | 20 registros con el mismo enlace en un día; el 21 | `INVITE_LIMIT`; al día siguiente se admite |
 | IN-J | Registro con Google | token válido de Google, celular, consentimiento | vecino nuevo en la zona de Ana, sin PIN, `google_vinculado` verdadero, correo verificado, nombre tomado de Google, sesión abierta |
 | IN-K | Avisos | un registro completado | Ana (quien invita) y el admin de zona, si es otro, tienen un aviso "se unió con tu enlace" dentro de la app, y no salió correo por ello |
-| IN-L | Premio por referido | el nuevo hace su primer pedido y se liquida | Ana y el nuevo reciben S/ 3.00 de saldo (la regla ya existente, aplicada a un registro por enlace) |
+| IN-L | Referido | un registro completado por el enlace de Ana | el nuevo queda con `referred_by` igual a 101; el premio de S/ 3.00 y S/ 3.00 lo paga la regla de siempre al liquidar su primer pedido (probada en AZ-F), que solo mira `referred_by` |
 | IN-M | Pendientes | 200 registros a medio hacer; el 201 | `SIGNUPS_FULL`; los vencidos no cuentan |
 | IN-N | Sin sesión de otro | el registro con enlace no abre la sesión de nadie más ni cambia datos de Ana | — |
 
