@@ -11,6 +11,24 @@ export const inviteShareText = (link: string): string =>
 
 export const whatsappShareUrl = (text: string): string => `https://wa.me/?text=${encodeURIComponent(text)}`;
 
+export interface GoogleProfile { name: string; email: string }
+
+// Solo para mostrar quién es antes de crear la cuenta; el motor es quien verifica el token de verdad (GO-05).
+export const decodeGoogleProfile = (credential: string): GoogleProfile | null => {
+  try {
+    const payload = credential.split('.')[1];
+    const bytes = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const json = decodeURIComponent([...bytes].map((ch) => `%${ch.charCodeAt(0).toString(16).padStart(2, '0')}`).join(''));
+    const data = JSON.parse(json) as { name?: unknown; email?: unknown };
+    const email = typeof data.email === 'string' ? data.email.trim() : '';
+    if (!email) return null;
+    const name = typeof data.name === 'string' && data.name.trim() ? data.name.trim() : email.split('@')[0];
+    return { name, email };
+  } catch {
+    return null;
+  }
+};
+
 const PHONE = /^9\d{8}$/;
 export const isValidPhone = (phone: string): boolean => PHONE.test(phone);
 export const isWeakPin = (pin: string): boolean => {

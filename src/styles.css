@@ -951,3 +951,13 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .invite-link { max-width: 100%; padding: 8px 12px; border-radius: var(--radius-note); background: var(--canvas); color: var(--green); font-family: ui-monospace, Consolas, monospace; font-size: .875rem; overflow-wrap: anywhere; }
 .invite-body .share-actions { display: grid; gap: 8px; width: 100%; }
 .invite-body small, .invite-renew { color: var(--copy); font-size: .82rem; margin: 0; }
+.invite-card .auth-form { padding: 6px 0 0; }
+.invite-card input:not([type=checkbox]) { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-note); background: var(--canvas); color: var(--ink); font: inherit; }
+.invite-card input:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; border-color: var(--accent); }
+.invite-card input.is-readonly { background: var(--paper); color: var(--copy); border-style: dashed; cursor: default; }
+.invite-card h2 { margin: 0; color: var(--ink); font-size: 1.125rem; }
+.invite-methods { display: grid; gap: 12px; justify-items: center; padding-top: 6px; }
+.invite-methods .secondary-button { width: 100%; max-width: 320px; min-height: 48px; }
+.invite-identity { display: flex; align-items: center; gap: 10px; color: var(--copy); font-size: .9rem; }
+.invite-avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--green-soft); color: var(--green); font-weight: 700; }
+.invite-card .auth-link { justify-self: center; }

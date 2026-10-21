@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inviteCodeFromPath, inviteLink, inviteShareText, isValidPhone, isWeakPin, whatsappShareUrl } from './invite';
+import { decodeGoogleProfile, inviteCodeFromPath, inviteLink, inviteShareText, isValidPhone, isWeakPin, whatsappShareUrl } from './invite';
 
 describe('enlace de invitación', () => {
   it('reconoce el código en la dirección', () => {
@@ -16,6 +16,22 @@ describe('enlace de invitación', () => {
     expect(link).toBe('https://holayapa.app/unete/abc123XY');
     expect(inviteShareText(link)).toContain(link);
     expect(decodeURIComponent(whatsappShareUrl(inviteShareText(link)).split('text=')[1])).toContain(link);
+  });
+});
+
+describe('perfil de Google', () => {
+  const token = (claims: object) => `x.${btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(claims)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}.y`;
+
+  it('lee el nombre y el correo, también con tildes', () => {
+    expect(decodeGoogleProfile(token({ name: 'Lucía Gómez', email: 'lucia@gmail.com' }))).toEqual({ name: 'Lucía Gómez', email: 'lucia@gmail.com' });
+  });
+
+  it('sin nombre usa lo anterior a la arroba', () => {
+    expect(decodeGoogleProfile(token({ email: 'sin.nombre@gmail.com' }))).toEqual({ name: 'sin.nombre', email: 'sin.nombre@gmail.com' });
+  });
+
+  it('un token roto o sin correo da nulo', () => {
+    for (const bad of ['', 'abc', 'a.b.c', token({ name: 'X' }), token({ email: 5 })]) expect(decodeGoogleProfile(bad)).toBeNull();
   });
 });
 
