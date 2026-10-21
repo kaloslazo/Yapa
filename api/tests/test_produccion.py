@@ -139,6 +139,7 @@ class WebTest(unittest.TestCase):
         self.assertEqual((status, body), (200, b"console.log(1)"))
         self.assertIn("javascript", headers["Content-Type"])
         self.assertEqual(call(self.app, "GET", "/api/sesion")[2], b"API")
+        self.assertEqual(call(self.app, "GET", "/assets/falta.js")[0], 404)  # un archivo que falta no es la portada
 
     def test_pr_i_sin_carpeta_sigue_la_pagina_de_siempre(self):
         app = produccion.compose(stub("API"), stub("HTML"), None)
@@ -146,7 +147,7 @@ class WebTest(unittest.TestCase):
         self.assertEqual(call(app, "GET", "/salud")[0], 200)
 
     def test_pr_j_nada_fuera_de_la_carpeta(self):
-        for path in ("/../secreto.txt", "/%2e%2e/secreto.txt", "/..%5csecreto.txt", "/assets/../../secreto.txt",
+        for path in ("/../secreto.txt", "/../secreto", "/%2e%2e/secreto.txt", "/..%5csecreto.txt", "/assets/../../secreto.txt",
                      "/..\\secreto.txt", "/assets/a.js\x00.png"):
             status, _, body = call(self.app, "GET", path)
             self.assertEqual(status, 404, path)
