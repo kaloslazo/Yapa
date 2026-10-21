@@ -11,6 +11,7 @@ class ApiClient:
         self.app = app
         self.cookie = None
         self.csrf = None
+        self.extra = {}
 
     def request(self, method, path, body=None, with_csrf=True):
         environ = {}
@@ -22,6 +23,7 @@ class ApiClient:
             "CONTENT_TYPE": "application/json", "CONTENT_LENGTH": str(len(raw)),
             "wsgi.input": io.BytesIO(raw),
         })
+        environ.update(self.extra)  # SG-08: la dirección del cliente en las pruebas
         if self.cookie:
             environ["HTTP_COOKIE"] = f"yapa_api={self.cookie}"
         if with_csrf and self.csrf:

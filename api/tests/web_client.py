@@ -19,6 +19,7 @@ class WebClient:
         self.app = app
         self.cookie = None
         self.csrf = None
+        self.extra = {}
 
     def request(self, method, path, data=None, with_csrf=True, files=None):
         environ = {}
@@ -45,6 +46,7 @@ class WebClient:
             "CONTENT_TYPE": content_type, "CONTENT_LENGTH": str(len(body)),
             "wsgi.input": io.BytesIO(body),
         })
+        environ.update(self.extra)  # SG-08: la dirección del cliente en las pruebas
         if self.cookie:
             environ["HTTP_COOKIE"] = f"yapa_sesion={self.cookie}"
         result = {}
