@@ -1,6 +1,7 @@
 """Iteración 44 · Lista para producción. Spec: docs/desarrollo/44-produccion.md."""
 
 import io
+import re
 import tempfile
 import threading
 import time
@@ -124,6 +125,7 @@ class WebTest(unittest.TestCase):
         (static / "assets").mkdir(parents=True)
         (static / "index.html").write_text("<html>portada</html>")
         (static / "assets" / "a.js").write_text("console.log(1)")
+        (static / "otro.png").write_bytes(b"png")
         self.app = produccion.compose(stub("API"), stub("HTML"), str(static))
 
     def test_pr_h_salud(self):
@@ -164,7 +166,68 @@ class WebTest(unittest.TestCase):
         self.assertEqual(headers["X-Frame-Options"], "DENY")
         self.assertEqual(headers["Referrer-Policy"], "strict-origin-when-cross-origin")
         self.assertEqual(headers["Cache-Control"], "no-cache")
-        self.assertIn("max-age=3600", call(self.app, "GET", "/assets/a.js")[1]["Cache-Control"])
+        self.assertIn("max-age=3600", call(self.app, "GET", "/otro.png")[1]["Cache-Control"])
+
+    # PU-D (S-251: los archivos con huella de /assets/ duran un año)
+    def test_pu_d_cache_de_assets(self):
+        cache = call(self.app, "GET", "/assets/a.js")[1]["Cache-Control"]
+        self.assertIn("max-age=31536000", cache)
+        self.assertIn("immutable", cache)
+        self.assertEqual(call(self.app, "GET", "/")[1]["Cache-Control"], "no-cache")
+
+
+INDEX = ('<html><head><title>Yapa · Compra mejor esta semana</title>'
+         '<meta property="og:title" content="Yapa · Compra mejor esta semana" />'
+         '<meta property="og:description" content="Compras mayoristas entre vecinos." />'
+         '<meta property="og:url" content="https://holayapa.app/" /></head><body></body></html>')
+
+
+class VistaPreviaTest(unittest.TestCase):
+    """PU-A a PU-C (S-250): el enlace de invitación se ve bien al compartirlo."""
+
+    def make(self, preview):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        (Path(self.tmp.name) / "index.html").write_text(INDEX, encoding="utf-8")
+        return produccion.compose(stub("API"), stub("HTML"), self.tmp.name, invite_preview=preview)
+
+    def page(self, app, path="/unete/abc123XY"):
+        status, headers, body = call(app, "GET", path)
+        return status, headers, body.decode("utf-8")
+
+    def test_pu_a_vista_previa_de_la_invitacion(self):
+        app = self.make(lambda code: {"zona": "Edificio Los Álamos", "distrito": "Lince", "invita": "Ana", "vecinos": 3})
+        status, headers, html = self.page(app)
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", headers["Content-Type"])
+        self.assertEqual(headers["Cache-Control"], "no-cache")
+        self.assertRegex(html, r'og:title" content="[^"]*Ana[^"]*"')
+        self.assertRegex(html, r'og:description" content="[^"]*Edificio Los Álamos[^"]*"')
+        self.assertRegex(html, r"<title>[^<]*Ana[^<]*</title>")
+        self.assertIn('og:url" content="https://holayapa.app/unete/abc123XY"', html)
+
+    def test_pu_b_enlace_que_no_vale(self):
+        def broken(code):
+            raise ValueError("no existe")
+        for preview in (broken, lambda code: None):
+            _, _, html = self.page(self.make(preview))
+            self.assertEqual(html, INDEX)
+        _, _, html = self.page(self.make(None))
+        self.assertEqual(html, INDEX)
+
+    def test_pu_c_todo_se_escapa(self):
+        app = self.make(lambda code: {"zona": '<script>alert(1)</script>"x', "distrito": "Lince", "invita": "A<b>na", "vecinos": 2})
+        _, _, html = self.page(app)
+        self.assertNotIn("<script", html)
+        self.assertNotIn("<b>", html)
+        self.assertEqual(len(re.findall(r'content="', html)), 3)  # cada atributo sigue bien cerrado
+        for attribute in re.findall(r'content="([^"]*)"', html):
+            self.assertNotIn('"', attribute)
+
+    def test_otras_rutas_no_cambian(self):
+        app = self.make(lambda code: {"zona": "Z", "distrito": "D", "invita": "Ana", "vecinos": 1})
+        self.assertEqual(self.page(app, "/")[2], INDEX)
+        self.assertEqual(self.page(app, "/unete/a/b")[2], INDEX)
 
 
 class CerrojoTest(unittest.TestCase):

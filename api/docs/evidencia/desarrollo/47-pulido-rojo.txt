@@ -1,0 +1,61 @@
+..........EEEE......F
+======================================================================
+ERROR: test_otras_rutas_no_cambian (test_produccion.VistaPreviaTest.test_otras_rutas_no_cambian)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 228, in test_otras_rutas_no_cambian
+    app = self.make(lambda code: {"zona": "Z", "distrito": "D", "invita": "Ana", "vecinos": 1})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 192, in make
+    return produccion.compose(stub("API"), stub("HTML"), self.tmp.name, invite_preview=preview)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: compose() got an unexpected keyword argument 'invite_preview'
+
+======================================================================
+ERROR: test_pu_a_vista_previa_de_la_invitacion (test_produccion.VistaPreviaTest.test_pu_a_vista_previa_de_la_invitacion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 199, in test_pu_a_vista_previa_de_la_invitacion
+    app = self.make(lambda code: {"zona": "Edificio Los Álamos", "distrito": "Lince", "invita": "Ana", "vecinos": 3})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 192, in make
+    return produccion.compose(stub("API"), stub("HTML"), self.tmp.name, invite_preview=preview)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: compose() got an unexpected keyword argument 'invite_preview'
+
+======================================================================
+ERROR: test_pu_b_enlace_que_no_vale (test_produccion.VistaPreviaTest.test_pu_b_enlace_que_no_vale)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 213, in test_pu_b_enlace_que_no_vale
+    _, _, html = self.page(self.make(preview))
+                           ^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 192, in make
+    return produccion.compose(stub("API"), stub("HTML"), self.tmp.name, invite_preview=preview)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: compose() got an unexpected keyword argument 'invite_preview'
+
+======================================================================
+ERROR: test_pu_c_todo_se_escapa (test_produccion.VistaPreviaTest.test_pu_c_todo_se_escapa)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 219, in test_pu_c_todo_se_escapa
+    app = self.make(lambda code: {"zona": '<script>alert(1)</script>"x', "distrito": "Lince", "invita": "A<b>na", "vecinos": 2})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 192, in make
+    return produccion.compose(stub("API"), stub("HTML"), self.tmp.name, invite_preview=preview)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: compose() got an unexpected keyword argument 'invite_preview'
+
+======================================================================
+FAIL: test_pu_d_cache_de_assets (test_produccion.WebTest.test_pu_d_cache_de_assets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_produccion.py", line 174, in test_pu_d_cache_de_assets
+    self.assertIn("max-age=31536000", cache)
+AssertionError: 'max-age=31536000' not found in 'public, max-age=3600'
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.573s
+
+FAILED (failures=1, errors=4)
