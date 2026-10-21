@@ -31,8 +31,8 @@ Para el proyecto final se desplegará en un servidor (una máquina Windows prest
 | PR-04 | Escuchar en una dirección que no sea `127.0.0.1` sin `--base` se rechaza (S-231). | `UNSAFE_LISTEN` |
 | PR-05 | Con `YAPA_PUBLIC_URL` en `https://`, la cookie de sesión lleva `Secure`, al entrar y al salir (S-230). Sin eso, no la lleva. | — |
 | PR-06 | `GET /salud` devuelve 200 y `{"ok": true}` sin sesión; no devuelve datos del negocio. | — |
-| PR-07 | `--estaticos`: `GET /` devuelve `index.html`; un archivo existente se entrega con su tipo; una ruta desconocida devuelve `index.html`; `/api/...` sigue yendo a la API (S-234). | — |
-| PR-08 | **Un archivo fuera de la carpeta nunca se entrega**: `/../x`, `/%2e%2e/x` y rutas con `\` o con bytes nulos dan 404. | — |
+| PR-07 | `--estaticos`: `GET /` devuelve `index.html`; un archivo existente se entrega con su tipo; una ruta desconocida **sin extensión** devuelve `index.html`; un archivo **con extensión que no existe** (por ejemplo `/assets/falta.js`) devuelve 404 y no se disfraza de página; `/api/...` sigue yendo a la API (S-234). | — |
+| PR-08 | **Un archivo fuera de la carpeta nunca se entrega**: `/../x`, `/%2e%2e/x` y rutas con `\` o con bytes nulos dan 404, **tengan o no extensión** (`/../x` no devuelve la portada). | — |
 | PR-09 | Un método que no sea `GET` o `HEAD` sobre un archivo estático devuelve 405. | — |
 | PR-10 | Las respuestas de archivos llevan las cabeceras de S-235. | — |
 | PR-11 | Dos peticiones simultáneas no se ejecutan a la vez dentro del motor (S-232). | — |
@@ -49,8 +49,8 @@ Para el proyecto final se desplegará en un servidor (una máquina Windows prest
 | PR-F | Escuchar fuera sin base | `check_listen("0.0.0.0", base=None)` | `UNSAFE_LISTEN`; con base o con `127.0.0.1`, sin error |
 | PR-G | Cookie segura | `create_api(..., secure_cookie=True)`: entrar y salir | `Set-Cookie` contiene `Secure` en ambos; con `False`, en ninguno |
 | PR-H | Salud | `GET /salud` sin sesión | 200, `{"ok": true}` |
-| PR-I | Web estática | carpeta con `index.html` y `assets/a.js` | `/` y `/ruta/inventada` dan `index.html`; `/assets/a.js` da el archivo con tipo JavaScript; `/api/sesion` sigue en la API |
-| PR-J | Fuera de la carpeta | `/../secreto.txt`, `/%2e%2e/secreto.txt`, `/..%5csecreto.txt` | 404 y no aparece el contenido del archivo secreto |
+| PR-I | Web estática | carpeta con `index.html` y `assets/a.js` | `/` y `/ruta/inventada` dan `index.html`; `/assets/a.js` da el archivo con tipo JavaScript; `/assets/falta.js` da 404; `/api/sesion` sigue en la API |
+| PR-J | Fuera de la carpeta | `/../secreto.txt`, `/../secreto` (sin extensión), `/%2e%2e/secreto.txt`, `/..%5csecreto.txt` | 404 y no aparece el contenido del archivo secreto ni la portada |
 | PR-K | Solo lectura | `POST /` | 405 |
 | PR-L | Cabeceras | `GET /` | `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Cache-Control: no-cache` para `index.html` |
 | PR-M | Cerrojo | dos hilos llaman a una aplicación lenta envuelta con `locked` | nunca hay dos dentro a la vez |
