@@ -63,6 +63,13 @@ def set_admin_password(store: InMemoryStore, admin_id: str, password: str) -> No
     store.credentials[("admin", admin_id)] = _new_credential(password)
 
 
+def create_pin(store: InMemoryStore, customer_id: int, pin: str) -> None:
+    """LG-05, S-247: quien nació con Google crea su PIN estando dentro; quien ya tiene uno lo cambia con el actual."""
+    if ("vecino", str(customer_id)) in store.credentials:
+        raise BusinessRuleError("PIN_ALREADY_SET", "Ya tienes un PIN. Para cambiarlo usa tu PIN actual o \"Olvidé mi PIN\".")
+    set_pin(store, customer_id, pin)
+
+
 def authenticate(store: InMemoryStore, kind: str, user, secret: str, now: datetime):
     """AC-02 y AC-03. Devuelve el número de cliente (vecino) o el usuario (admin)."""
     key = (kind, str(user).strip())

@@ -238,7 +238,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def sesion_entrar(environ, data, session):
         kind = data.get("tipo") if data.get("tipo") in ("vecino", "admin") else "vecino"
-        principal = auth.authenticate(store, kind, data.get("usuario", ""), data.get("secreto", ""), clock())
+        user = customers.resolve_login(store, data.get("usuario", "")) if kind == "vecino" else data.get("usuario", "")  # S-244
+        principal = auth.authenticate(store, kind, user, data.get("secreto", ""), clock())
         return open_session(principal, kind)
 
     def open_session(principal, kind):
@@ -320,7 +321,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                          "correo_verificado": customer.email_verified_at is not None,
                          "google_vinculado": customer.google_sub is not None,  # GO-06
                          "avisos_sin_leer": notices.unread_count(store, customer.customer_id),  # AV-04
-                         "correo_avisos": customer.email_notices})
+                         "correo_avisos": customer.email_notices,
+                         "tiene_pin": ("vecino", str(customer.customer_id)) in store.credentials})  # S-248
         else:
             data.update({"nombre": "Equipo Yapa"})
         return data
@@ -402,6 +404,11 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def devolucion(environ, data, session):
         refund = wallet.request_withdrawal(store, session["principal"], _money_in(data.get("monto"), "Monto"), clock())
         return {"id": refund.refund_id, "monto": money(refund.amount), "estado": refund.status}
+
+    def crear_pin(environ, data, session):
+        """LG-05."""
+        auth.create_pin(store, session["principal"], data.get("pin", ""))
+        return {"tiene_pin": True}
 
     def cambiar_pin(environ, data, session):
         auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), clock())
@@ -770,7 +777,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def pin_olvide(environ, data, session):
         """OP-01, CR-05, S-196, S-205: siempre la misma respuesta, exista o no el número y tenga o no correo verificado."""
-        sent = recovery.request_pin_reset(store, data.get("usuario"), clock())
+        sent = recovery.request_pin_reset(store, customers.resolve_login(store, data.get("usuario")), clock())  # S-246
         if sent:
             try:
                 send_code(sent[0], "Recupera tu PIN de Yapa", "Pediste cambiar tu PIN.", sent[1])
@@ -780,7 +787,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def pin_restablecer(environ, data, session):
         """CR-06."""
-        recovery.reset_pin_with_code(store, data.get("usuario"), data.get("codigo"), data.get("pin"), clock())
+        recovery.reset_pin_with_code(store, customers.resolve_login(store, data.get("usuario")), data.get("codigo"), data.get("pin"), clock())
         return {"mensaje": "Listo: ya puedes entrar con tu PIN nuevo."}
 
     def cuenta_correo(environ, data, session):
@@ -846,6 +853,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/pedidos/(\d+)/cancelar", {"POST": (cancelar, "vecino")}),
         (r"/api/saldo/devolucion", {"POST": (devolucion, "vecino")}),
         (r"/api/pin", {"POST": (cambiar_pin, "vecino")}),
+        (r"/api/pin/crear", {"POST": (crear_pin, "vecino")}),
         (r"/api/reclamos", {"GET": (reclamos, "vecino"), "POST": (reclamar, "vecino")}),
         (r"/api/mi-zona", {"GET": (mi_zona, "vecino")}),
         (r"/api/ubicacion", {"POST": (ubicacion, "vecino")}),

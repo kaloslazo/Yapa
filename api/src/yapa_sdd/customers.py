@@ -98,6 +98,20 @@ def normalize_email(email, store: InMemoryStore, *, except_id: int | None = None
     return text
 
 
+def resolve_login(store: InMemoryStore, user) -> str:
+    """LG-01, S-244: con lo que escribió el vecino (correo, celular o número) devuelve su número de cliente.
+    Si el correo o el celular no corresponden a nadie, devuelve un número que no existe: el error será el mismo de una clave equivocada (S-245)."""
+    text = str(user or "").strip()
+    if "@" in text:
+        wanted = text.lower()
+        found = next((c for c in store.customers.values() if c.email == wanted), None)
+    elif re.fullmatch(r"9\d{8}", text):
+        found = next((c for c in store.customers.values() if c.phone == text), None)
+    else:
+        return text
+    return str(found.customer_id) if found else "0"  # el 0 nunca existe: mismo camino que un número desconocido
+
+
 def parse_customer_number(user) -> int:
     """OP-05: solo se revisa el formato, no si el número existe."""
     text = str(user or "").strip()
