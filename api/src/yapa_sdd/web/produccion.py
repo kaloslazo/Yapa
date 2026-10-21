@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import mimetypes
 import re
@@ -16,6 +17,7 @@ from .. import auth
 from ..domain import BusinessRuleError
 
 LOCAL = "127.0.0.1"
+MAX_BODY = 9 * 1024 * 1024  # S-259: la foto de 8 MB (S-151) y el formulario
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
          ".css": "text/css; charset=utf-8", ".json": "application/json", ".map": "application/json",
          ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
@@ -54,10 +56,22 @@ def secure_cookie(env) -> bool:
 
 
 def locked(app):
-    """S-232: el almacén no es seguro entre hilos; el motor atiende una petición a la vez."""
+    """S-232: el almacén no es seguro entre hilos; el motor atiende una petición a la vez.
+    SG-01, S-259: el cuerpo se lee antes del cerrojo y con tope, para que un cliente lento o enorme no frene a todos."""
     lock = threading.Lock()
 
     def wrapped(environ, start_response):
+        try:
+            length = max(int(environ.get("CONTENT_LENGTH") or 0), 0)
+        except ValueError:
+            length = 0
+        if length > MAX_BODY:
+            body = json.dumps({"error": {"codigo": "PAYLOAD_TOO_LARGE", "mensaje": "El envío pesa demasiado. La foto debe pesar menos de 8 MB."}},
+                              ensure_ascii=False).encode("utf-8")
+            return _reply(start_response, "413 Content Too Large", [("Content-Type", "application/json; charset=utf-8"),
+                                                                    ("Connection", "close")], body)
+        environ["wsgi.input"] = io.BytesIO(environ["wsgi.input"].read(length) if length else b"")
+        environ["CONTENT_LENGTH"] = str(length)
         with lock:
             return list(app(environ, start_response))
     return wrapped

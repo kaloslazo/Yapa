@@ -31,6 +31,8 @@ from .app import _form, _save_photo
 
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
+PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas"}  # S-260
+VIEW_AS_BLOCKED = re.compile(r"/api/(saldo/devolucion|pedidos/\d+/cancelar|zonas/[\w-]+/transferir)")  # S-262
 COOKIE = "yapa_api"
 SESSION_TIME = timedelta(hours=8)  # S-69
 WINDOWS = ["09:00 – 12:00", "12:00 – 15:00", "15:00 – 18:00"]
@@ -140,7 +142,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
         token = cookie[COOKIE].value if COOKIE in cookie else None
         session = sessions.get(token) if token else None
-        if session and security() >= session["expires"]:
+        if session and (security() >= session["expires"]
+                        or session["stamp"] != auth.credential_stamp(store, session["kind"], session["principal"])):  # SG-05
             del sessions[token]
             session = None
         return token, session
@@ -248,7 +251,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def open_session(principal, kind, **extra):
         token = secrets.token_urlsafe(32)
         new = {"principal": principal, "kind": kind, "csrf": secrets.token_urlsafe(16),
-               "expires": security() + SESSION_TIME, **extra}
+               "expires": security() + SESSION_TIME, "stamp": auth.credential_stamp(store, kind, principal), **extra}
         sessions[token] = new
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}{secure}"
         return me(new), [("Set-Cookie", cookie)]
@@ -441,10 +444,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def crear_pin(environ, data, session):
         """LG-05."""
         auth.create_pin(store, session["principal"], data.get("pin", ""))
+        session["stamp"] = auth.credential_stamp(store, "vecino", session["principal"])  # SG-06
         return {"tiene_pin": True}
 
     def cambiar_pin(environ, data, session):
         auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), security())
+        session["stamp"] = auth.credential_stamp(store, "vecino", session["principal"])  # SG-06
         return {"ok": True}
 
     def reclamos(environ, data, session):
@@ -959,14 +964,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             raise ApiError("401 Unauthorized", "LOGIN_REQUIRED", "Entra a tu cuenta para seguir.")
         if role in ("vecino", "admin") and session["kind"] != role:
             raise ApiError("403 Forbidden", "FORBIDDEN", "Esta acción no es para tu tipo de cuenta.")
-        if method == "POST" and session is not None and session.get("viewing_as") and path.rstrip("/") in credential_paths:
-            raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google.")  # DM-08
+        if method == "POST" and session is not None and session.get("viewing_as") and (path.rstrip("/") in credential_paths or VIEW_AS_BLOCKED.fullmatch(path.rstrip("/"))):
+            raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google, ni sacar dinero o ceder una zona.")  # DM-08, SG-07
         if method in ("POST", "DELETE") and session is not None and handler is not sesion_entrar:  # S-155
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
         saved = ""
-        if files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151
+        if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
         try:
             result = handler(environ, data, session, *match.groups())
