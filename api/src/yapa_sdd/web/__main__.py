@@ -7,7 +7,8 @@ from datetime import datetime
 from wsgiref.simple_server import make_server
 
 from .. import auth, invitations, persistence
-from ..demo import DEMO_NOW, demo_store
+from ..cycle import LIMA
+from ..demo import DEMO_NOW, demo_store, parse_demo_pins, seed_demo_base
 from ..domain import BusinessRuleError
 from ..seed import pilot_store
 from ..google_identity import google_from_env
@@ -41,10 +42,13 @@ def main() -> None:
     parser.add_argument("--base", help="archivo SQLite donde se guardan los datos (PS-04); sin esto, solo memoria")
     parser.add_argument("--escuchar", default=produccion.LOCAL, help="dirección donde escucha (S-231); 0.0.0.0 abre el servidor y exige --base")
     parser.add_argument("--estaticos", help="carpeta de la web construida (npm run build -> dist), S-234")
+    parser.add_argument("--sembrar-demo", action="store_true", help="con --base: si la base no existe, la crea con la semana de demostración de esta semana y las cuentas de prueba (S-253)")
     parser.add_argument("--demo", action="store_true", help="arranca con una semana de demo ya vivida (PW-08)")
     args = parser.parse_args()
     if args.demo and args.base:  # S-143
         parser.error("--demo trabaja en memoria; no se combina con --base")
+    if args.sembrar_demo and (args.demo or not args.base):
+        parser.error("--sembrar-demo se usa con --base y sin --demo")
     try:
         produccion.check_listen(args.escuchar, args.base)  # S-231
     except BusinessRuleError as error:
@@ -58,10 +62,21 @@ def main() -> None:
         store = demo_store()
         print("Semana de demo: 2026-W39 entregada y liquidada, 2026-W40 abierta (miércoles 30/09, 10:00)")
     elif args.base:
-        store = persistence.open_store(args.base)
+        if args.sembrar_demo and not os.path.exists(args.base):  # S-253
+            try:
+                store = seed_demo_base(args.base, datetime.now(LIMA), parse_demo_pins(os.environ.get("YAPA_DEMO_PINS", "")),
+                                       os.environ.get("YAPA_DEBUG_CLAVE", ""))
+            except BusinessRuleError as error:
+                sys.exit(f"No se puede sembrar la demostración: {error}")
+            print("Base de demostración creada para esta semana (cuentas de prueba y admin global listos).")
+        else:
+            store = persistence.open_store(args.base)
         on_change = lambda s: persistence.save(s, args.base)  # noqa: E731
     else:
         store = pilot_store()
+    if clock is None and store.demo_now:  # S-254: la base de demostración trae su propio "ahora"
+        moment = store.demo_now
+        clock = lambda: moment  # noqa: E731
     if args.base and not args.demo:  # S-228: modo servidor, sin credenciales de demo
         try:
             produccion.prepare_server_credentials(store, os.environ)
@@ -73,7 +88,7 @@ def main() -> None:
         persistence.save(store, args.base)
     html = create_app(store, clock, on_change=on_change)
     api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(), google=google_from_env(),
-                     secure_cookie=produccion.secure_cookie(os.environ))  # S-153: la API JSON en /api del mismo servidor
+                     secure_cookie=produccion.secure_cookie(os.environ), security_clock=lambda: datetime.now(LIMA))  # S-153: la API JSON en /api del mismo servidor
 
     app = produccion.locked(produccion.compose(api, html, args.estaticos, lambda code: invitations.preview(store, code)))  # S-232, S-233, S-234, S-250
     with make_server(args.escuchar, args.puerto, app, server_class=produccion.ThreadedServer) as server:  # S-61, S-231

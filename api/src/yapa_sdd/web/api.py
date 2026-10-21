@@ -100,10 +100,13 @@ def _body(environ) -> tuple[dict, dict]:
 
 
 def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None,
-               background_mail: bool = True, secure_cookie: bool = False):
+               background_mail: bool = True, secure_cookie: bool = False, security_clock=None):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
+    security = security_clock or clock  # DM-05, S-254: bloqueos y sesiones con la hora real aunque el negocio use otro reloj
+    credential_paths = frozenset({"/api/pin", "/api/pin/crear", "/api/cuenta/correo", "/api/cuenta/correo/verificar",
+                                  "/api/cuenta/google", "/api/cuenta/google/desvincular"})  # DM-08
     secure = "; Secure" if secure_cookie else ""  # S-230
 
     # --- ayudas ---
@@ -137,7 +140,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
         token = cookie[COOKIE].value if COOKIE in cookie else None
         session = sessions.get(token) if token else None
-        if session and clock() >= session["expires"]:
+        if session and security() >= session["expires"]:
             del sessions[token]
             session = None
         return token, session
@@ -239,13 +242,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def sesion_entrar(environ, data, session):
         kind = data.get("tipo") if data.get("tipo") in ("vecino", "admin") else "vecino"
         user = customers.resolve_login(store, data.get("usuario", "")) if kind == "vecino" else data.get("usuario", "")  # S-244
-        principal = auth.authenticate(store, kind, user, data.get("secreto", ""), clock())
+        principal = auth.authenticate(store, kind, user, data.get("secreto", ""), security())
         return open_session(principal, kind)
 
-    def open_session(principal, kind):
+    def open_session(principal, kind, **extra):
         token = secrets.token_urlsafe(32)
         new = {"principal": principal, "kind": kind, "csrf": secrets.token_urlsafe(16),
-               "expires": clock() + SESSION_TIME}
+               "expires": security() + SESSION_TIME, **extra}
         sessions[token] = new
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}{secure}"
         return me(new), [("Set-Cookie", cookie)]
@@ -325,10 +328,40 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                          "tiene_pin": ("vecino", str(customer.customer_id)) in store.credentials})  # S-248
         else:
             data.update({"nombre": "Equipo Yapa"})
+        if session.get("viewing_as"):  # DM-06
+            data["viendo_como"] = {"admin": session["viewing_as"]}
         return data
 
     def sesion_ver(environ, data, session):
         return me(session)
+
+    def log_debug(admin, target, action) -> None:
+        store.debug_log.append({"admin": admin, "como": target, "accion": action, "momento": security()})  # DM-09
+
+    def ver_como(environ, data, session):
+        """DM-06, S-256, S-257: el admin global abre la pantalla de un vecino o admin de zona."""
+        if session["principal"] not in store.debug_admins:
+            raise BusinessRuleError("NOT_DEBUG_ADMIN", "Solo el admin global de depuración puede ver Yapa como otra persona.")
+        try:
+            target = customers.parse_customer_number(data.get("usuario"))
+        except BusinessRuleError:
+            target = None
+        if target not in store.customers:
+            raise BusinessRuleError("CUSTOMER_NOT_FOUND", "Esa persona no está registrada.")
+        token, _ = session_of(environ)
+        log_debug(session["principal"], target, "ver-como")
+        return open_session(target, "vecino", viewing_as=session["principal"], return_token=token, csrf=session["csrf"])
+
+    def sesion_volver(environ, data, session):
+        """DM-07."""
+        back = sessions.get(session.get("return_token") or "")
+        if back is None:
+            raise BusinessRuleError("NOT_VIEWING_AS", "No estás viendo Yapa como otra persona.")
+        token, _ = session_of(environ)
+        sessions.pop(token, None)
+        log_debug(session["viewing_as"], session["principal"], "volver")
+        cookie = f"{COOKIE}={session['return_token']}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}{secure}"
+        return me(back), [("Set-Cookie", cookie)]
 
     def sesion_salir(environ, data, session):
         token, _ = session_of(environ)
@@ -411,7 +444,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"tiene_pin": True}
 
     def cambiar_pin(environ, data, session):
-        auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), clock())
+        auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), security())
         return {"ok": True}
 
     def reclamos(environ, data, session):
@@ -853,6 +886,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/pedidos/(\d+)/cancelar", {"POST": (cancelar, "vecino")}),
         (r"/api/saldo/devolucion", {"POST": (devolucion, "vecino")}),
         (r"/api/pin", {"POST": (cambiar_pin, "vecino")}),
+        (r"/api/admin/ver-como", {"POST": (ver_como, "admin")}),
+        (r"/api/sesion/volver", {"POST": (sesion_volver, "any")}),
         (r"/api/pin/crear", {"POST": (crear_pin, "vecino")}),
         (r"/api/reclamos", {"GET": (reclamos, "vecino"), "POST": (reclamar, "vecino")}),
         (r"/api/mi-zona", {"GET": (mi_zona, "vecino")}),
@@ -924,6 +959,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             raise ApiError("401 Unauthorized", "LOGIN_REQUIRED", "Entra a tu cuenta para seguir.")
         if role in ("vecino", "admin") and session["kind"] != role:
             raise ApiError("403 Forbidden", "FORBIDDEN", "Esta acción no es para tu tipo de cuenta.")
+        if method == "POST" and session is not None and session.get("viewing_as") and path.rstrip("/") in credential_paths:
+            raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google.")  # DM-08
         if method in ("POST", "DELETE") and session is not None and handler is not sesion_entrar:  # S-155
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
