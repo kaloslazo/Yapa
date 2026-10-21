@@ -1,0 +1,4 @@
+# etiquetas propias que usa el flujo (el runner de la VPS)
+self-hosted-runner:
+  labels:
+    - yapa-vps
