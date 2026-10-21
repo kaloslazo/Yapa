@@ -24,7 +24,9 @@ from ..domain import MAX_QUANTITY, PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
+from ..throttle import Throttle
 from . import views
+from .produccion import client_ip
 
 
 COOKIE = "yapa_sesion"
@@ -152,6 +154,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     """on_change(store) se llama después de cada POST que termina bien (PS-03). Las fotos van a photo_dir."""
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     sessions: dict[str, Session] = {}
+    login_failures = Throttle(30, timedelta(minutes=15))  # SG-09, S-264
 
     def current_session(environ) -> tuple[str | None, Session | None]:
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
@@ -204,7 +207,16 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def entrar(environ, form, session):
         kind = form.get("tipo") if form.get("tipo") in ("vecino", "admin") else "vecino"
-        principal = auth.authenticate(store, kind, form.get("usuario", ""), form.get("secreto", ""), clock())
+        ip = client_ip(environ)
+        if login_failures.blocked(ip, clock()):
+            raise Response("429 Too Many Requests", views.login(views.error_box(
+                "TOO_MANY_ATTEMPTS", "Demasiados intentos desde tu conexión. Vuelve a intentar en 15 minutos.")))
+        try:
+            principal = auth.authenticate(store, kind, form.get("usuario", ""), form.get("secreto", ""), clock())
+        except BusinessRuleError as error:
+            if error.code == "INVALID_CREDENTIALS":
+                login_failures.hit(ip, clock())
+            raise
         token = secrets.token_urlsafe(32)
         sessions[token] = Session(principal, kind, secrets.token_urlsafe(16), clock() + SESSION_TIME,
                                   auth.credential_stamp(store, kind, principal))

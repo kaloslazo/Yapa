@@ -17,6 +17,7 @@ from .recovery import CODE_TTL, INVALID_CODE, MAX_ATTEMPTS, MAX_PER_HOUR, MIN_GA
 from .store import InMemoryStore
 
 DAILY_LIMIT = 20  # S-239: registros por enlace en 24 horas
+CODES_PER_HOUR = 10  # S-266: códigos por enlace en una hora
 MAX_PENDING = 200  # S-239: registros a medio hacer
 NOT_FOUND = ("INVITE_NOT_FOUND", "Ese enlace de invitación no existe o ya no vale. Pídele a tu vecino uno nuevo.")
 
@@ -96,6 +97,10 @@ def start_signup(store: InMemoryStore, token, name, phone, email, consent: bool,
         raise BusinessRuleError("EMAIL_CODE_TOO_SOON", "Ya te mandamos un código hace un momento. Espera un minuto.")
     if len(recent) >= MAX_PER_HOUR:
         raise BusinessRuleError("EMAIL_CODE_LIMIT", "Pediste muchos códigos. Intenta de nuevo en una hora.")
+    codes = [moment for moment in invite.get("codes", []) if now - moment < timedelta(hours=1)]
+    if len(codes) >= CODES_PER_HOUR:  # SG-11
+        raise BusinessRuleError("INVITE_CODE_LIMIT", "Este enlace ya mandó muchos códigos en la última hora. Inténtalo más tarde.")
+    invite["codes"] = codes + [now]
     code, salt = f"{secrets.randbelow(10 ** 6):06d}", secrets.token_hex(8)
     store.signups[email] = {"name": name, "phone": phone, "inviter": inviter.customer_id, "consent_at": now,
                             "salt": salt, "digest": _digest(salt, code), "expires": now + CODE_TTL, "attempts": 0,

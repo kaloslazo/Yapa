@@ -34,6 +34,13 @@ class ConsoleMailer:
         print(f"[correo a {to}] {subject}\n{body}", flush=True)
 
 
+class DisabledMailer:
+    """SG-13, S-268: en un servidor sin SMTP nada se manda y nada se escribe (los códigos no van a los registros)."""
+
+    def send(self, to: str, subject: str, body: str) -> None:
+        raise MailError("el correo no está configurado en este servidor")
+
+
 class SmtpMailer:
     def __init__(self, host: str, port: int, user: str, password: str, sender: str = "", app_url: str = ""):
         self.host, self.port, self.user, self.password = host, port, user, password
@@ -57,10 +64,13 @@ class SmtpMailer:
             raise MailError(str(error)) from error
 
 
-def mailer_from_env(env=None):
+def mailer_from_env(env=None, server: bool = False):
     env = os.environ if env is None else env
     user, password = env.get("YAPA_SMTP_USER", ""), env.get("YAPA_SMTP_PASSWORD", "")
     if not (user and password):
+        if server:  # S-268
+            print("AVISO: sin YAPA_SMTP_USER y YAPA_SMTP_PASSWORD no se mandan correos (códigos, avisos).", flush=True)
+            return DisabledMailer()
         return ConsoleMailer()
     return SmtpMailer(env.get("YAPA_SMTP_HOST", "smtp.gmail.com"), int(env.get("YAPA_SMTP_PORT", "587")), user, password,
                       env.get("YAPA_SMTP_FROM", ""), env.get("YAPA_PUBLIC_URL", ""))

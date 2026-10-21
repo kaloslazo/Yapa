@@ -23,8 +23,26 @@ TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=u
          ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
          ".ico": "image/x-icon", ".woff2": "font/woff2", ".woff": "font/woff", ".txt": "text/plain; charset=utf-8"}
 INVITE_PATH = re.compile(r"/unete/([\w-]+)/?")
+CSP = "; ".join((  # S-269: lo propio, entrar con Google y los mapas de OpenStreetMap
+    "default-src 'self'",
+    "script-src 'self' https://accounts.google.com/gsi/client",
+    "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
+    "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.googleusercontent.com",
+    "font-src 'self' data:",
+    "connect-src 'self' https://accounts.google.com/gsi/",
+    "frame-src https://accounts.google.com/gsi/",
+    "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"))
 SECURITY = [("X-Content-Type-Options", "nosniff"), ("X-Frame-Options", "DENY"),
-            ("Referrer-Policy", "strict-origin-when-cross-origin")]  # S-235
+            ("Referrer-Policy", "strict-origin-when-cross-origin"), ("Content-Security-Policy", CSP)]  # S-235, S-269
+HSTS = ("Strict-Transport-Security", "max-age=31536000")
+LOOPBACK = {"127.0.0.1", "::1"}
+
+
+def client_ip(environ) -> str:
+    """SG-08, S-263: la dirección del socket; detrás del proxy local, la última de X-Forwarded-For."""
+    remote = environ.get("REMOTE_ADDR") or ""
+    forwarded = [part.strip() for part in (environ.get("HTTP_X_FORWARDED_FOR") or "").split(",") if part.strip()]
+    return forwarded[-1] if remote in LOOPBACK and forwarded else remote
 
 
 class ThreadedServer(ThreadingMixIn, WSGIServer):
@@ -69,7 +87,7 @@ def locked(app):
             body = json.dumps({"error": {"codigo": "PAYLOAD_TOO_LARGE", "mensaje": "El envío pesa demasiado. La foto debe pesar menos de 8 MB."}},
                               ensure_ascii=False).encode("utf-8")
             return _reply(start_response, "413 Content Too Large", [("Content-Type", "application/json; charset=utf-8"),
-                                                                    ("Connection", "close")], body)
+                                                                    ("Connection", "close")] + SECURITY, body)
         environ["wsgi.input"] = io.BytesIO(environ["wsgi.input"].read(length) if length else b"")
         environ["CONTENT_LENGTH"] = str(length)
         with lock:
@@ -78,7 +96,7 @@ def locked(app):
 
 
 def _reply(start_response, status, headers, body: bytes = b"", method="GET"):
-    start_response(status, [("Content-Length", str(len(body)))] + headers + SECURITY)
+    start_response(status, [("Content-Length", str(len(body)))] + headers)
     return [] if method == "HEAD" else [body]
 
 
@@ -124,11 +142,18 @@ def _invite_html(index: str, data: dict, code: str) -> str:
     return re.sub(r"(<title>)[^<]*(</title>)", lambda m: m.group(1) + title + m.group(2), index)
 
 
-def compose(api, html, static_dir=None, invite_preview=None):
-    """Un solo punto de entrada: /salud, /api/..., la web construida (S-234) o la página de siempre."""
+def compose(api, html, static_dir=None, invite_preview=None, secure=False):
+    """Un solo punto de entrada: /salud, /api/..., la web construida (S-234) o la página de siempre.
+    SG-14: toda respuesta lleva las cabeceras de seguridad; HSTS solo con https."""
     root = Path(static_dir).resolve() if static_dir else None
+    extra = SECURITY + ([HSTS] if secure else [])
 
     def app(environ, start_response):
+        def with_security(status, headers, *rest):
+            return start_response(status, list(headers) + extra, *rest)
+        return route(environ, with_security)
+
+    def route(environ, start_response):
         path = environ.get("PATH_INFO") or "/"
         method = environ.get("REQUEST_METHOD", "GET")
         if path == "/salud" and method in ("GET", "HEAD"):  # S-233
