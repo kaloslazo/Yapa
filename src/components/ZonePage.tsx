@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Zone } from '../types';
 import { Icon } from './Icon';
 import { shareText } from './AuthDialog';
+import { InviteBody, InviteContext } from './InviteCard';
 import { ConfirmAction } from './ConfirmAction';
 import { ZonesMap, type MapUnion, type MapZone } from './ZonesMap';
 import { neighborsLabel, unionReason } from '../utils/zoneMap';
@@ -47,6 +48,14 @@ const reminder = (cycle: string) => `¡Hola, vecino! Esta semana (${cycle}) comp
 
 function ShareCard({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
+  const { url } = useContext(InviteContext);
+  if (url) return (
+    <section className="customer-side-card referral-side">
+      <span className="customer-eyebrow"><Icon name="gift" size={14} /> Invita y gana</span>
+      <InviteBody />
+      <p>Cuando tu invitado recibe su primer pedido, <strong>los dos ganan S/ 3 de saldo</strong>.</p>
+    </section>
+  );
   return (
     <section className="customer-side-card referral-side">
       <span className="customer-eyebrow"><Icon name="gift" size={14} /> Invita y gana</span>

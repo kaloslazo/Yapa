@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from './Icon';
 import { GoogleButton } from './GoogleButton';
+import { InviteBody, InviteContext } from './InviteCard';
 import type { Account } from '../types';
 import { formatMoney } from '../utils/format';
 
@@ -41,6 +42,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const [feedback, setFeedback] = useState('');
   const [busy, setBusy] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const { url: inviteUrl } = useContext(InviteContext);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotMessage, setForgotMessage] = useState('');
   const [forgotCode, setForgotCode] = useState('');
@@ -164,7 +166,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
                 : <form onSubmit={(event) => { event.preventDefault(); void verifyEmail(); }}><label className="auth-field"><span>Código que te llegó{account.email ? ` a ${account.email}` : ''}</span><input value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label><button className="primary-button" type="submit" disabled={busy || emailCode.length !== 6}>Verificar</button><button className="auth-link" type="button" onClick={() => { setEmailStep('ask'); setEmailMessage(''); }}>Escribir el correo otra vez</button></form>}
               {emailMessage ? <p className="auth-feedback" role="status">{emailMessage}</p> : null}
             </div>)) : null}
-          {account.referralCode ? <div className="referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : null}
+          {account.role !== 'admin' && inviteUrl ? <div className="referral-card"><InviteBody /><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : account.referralCode ? <div className="referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : null}
           {account.role !== 'admin' && googleClientId ? (account.googleLinked
             ? <p className="email-ok"><Icon name="ok" size={16} /> Cuenta de Google vinculada <button className="auth-link" type="button" onClick={() => void googleAction(onGoogleUnlink)}>Desvincular</button></p>
             : <div className="google-link"><strong>Entra sin PIN</strong><p>Vincula tu cuenta de Google y la próxima vez entras con un toque.</p><GoogleButton clientId={googleClientId} text="continue_with" onCredential={(credential) => void googleAction(() => onGoogleLink(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div>) : null}
@@ -201,7 +203,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
                   <button className="primary-button" type="submit" disabled={busy || !user.trim() || forgotCode.length !== 6 || forgotPin.length !== 6}>Cambiar mi PIN</button>
                   {resetMessage ? <p className="auth-feedback" role="status">{resetMessage}</p> : null}
                 </form></div> : null}
-              {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele al admin de tu edificio, o a Yapa por WhatsApp, que te dé de alta.</li><li><span>2</span>Si un vecino te invitó, dale su código: los dos ganan S/ 3.</li><li><span>3</span>Aceptas que Yapa guarde tu nombre y celular para tus pedidos, y te llega tu PIN.</li></ol> : null}
+              {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele a un vecino de tu zona, o al admin de tu edificio, su enlace de invitación de Yapa.</li><li><span>2</span>Ábrelo en tu celular: te registras con tu correo o con Google en un minuto.</li><li><span>3</span>Quedas en su zona y, cuando recibas tu primer pedido, los dos ganan S/ 3.</li></ol> : null}
             </div>
           ) : null}
         </>

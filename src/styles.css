@@ -937,3 +937,17 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
   .notice-bell { position: static; }
   .notice-panel { position: fixed; top: 64px; right: 16px; left: 16px; width: auto; }
 }
+
+/* registro por invitación (iteración 45) */
+.invite-page { min-height: 100vh; display: grid; place-items: start center; padding: 24px 16px 48px; background: var(--page); }
+.invite-card { display: grid; gap: 14px; width: min(100%, 520px); padding: 28px 24px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--canvas); }
+.invite-card h1 { margin: 0; color: var(--ink); font-size: clamp(1.5rem, 5vw, 1.9rem); line-height: 1.15; letter-spacing: -.02em; }
+.invite-card p { margin: 0; color: var(--copy); line-height: 1.5; }
+.invite-chip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-dark); font-size: .8125rem; font-weight: 600; }
+.invite-zone { display: flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; }
+.invite-consent { display: flex; align-items: flex-start; gap: 10px; color: var(--copy); font-size: .875rem; line-height: 1.4; }
+.invite-consent input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--accent); }
+.invite-body { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.invite-link { max-width: 100%; padding: 8px 12px; border-radius: var(--radius-note); background: var(--canvas); color: var(--green); font-family: ui-monospace, Consolas, monospace; font-size: .875rem; overflow-wrap: anywhere; }
+.invite-body .share-actions { display: grid; gap: 8px; width: 100%; }
+.invite-body small, .invite-renew { color: var(--copy); font-size: .82rem; margin: 0; }

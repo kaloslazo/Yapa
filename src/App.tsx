@@ -7,6 +7,8 @@ import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel'
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorksSection } from './components/EditorialSections';
+import { InviteContext } from './components/InviteCard';
+import { InvitePage } from './components/InvitePage';
 import { Icon } from './components/Icon';
 import { NoticeBell } from './components/NoticeBell';
 import { OrdersPage, type Claimable, type ClaimRecord, type MyOrders } from './components/OrdersPage';
@@ -15,6 +17,7 @@ import { api, ApiError } from './services/api';
 import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } from './services/mappers';
 import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Zone } from './types';
 import { cartSubtotal, stepDown, stepUp } from './utils/cart';
+import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
@@ -53,6 +56,8 @@ export default function App() {
   const [unreadNotices, setUnreadNotices] = useState(0);
   const [emailNotices, setEmailNotices] = useState(true);
   const [clockOffset, setClockOffset] = useState(0);
+  const [inviteCode, setInviteCode] = useState<string | null>(() => inviteCodeFromPath(window.location.pathname));
+  const [invite, setInvite] = useState<{ code: string; today: number; total: number } | null>(null);
 
   const notify = useCallback((message: string, tone: 'neutral' | 'success' | 'warning' = 'neutral') => setToast({ message, tone }), []);
   const fail = useCallback((error: unknown) => notify(error instanceof Error ? error.message : 'Algo salió mal.', 'warning'), [notify]);
@@ -119,6 +124,15 @@ export default function App() {
 
   const retry = useCallback(() => { Promise.all([loadPublic(), loadAccount()]).then(() => setOffline(false)).catch((error) => { setOffline(true); fail(error); }); }, [loadPublic, loadAccount, fail]);
   useEffect(() => { retry(); }, [retry]);
+
+  const loadInvite = useCallback(async (renew = false) => {
+    const raw = await (renew ? api.post<Raw>('/api/mi-invitacion/renovar') : api.get<Raw>('/api/mi-invitacion'));
+    setInvite({ code: raw.codigo, today: raw.hoy, total: raw.total });
+  }, []);
+  useEffect(() => {
+    if (!account || account.role === 'admin') { setInvite(null); return; }
+    loadInvite().catch(() => setInvite(null));
+  }, [account, loadInvite]);
 
   useEffect(() => {
     if (!account || account.role === 'admin') { setMyOrders(null); setMyZone(null); return; }
@@ -285,10 +299,22 @@ export default function App() {
     go('catalog');
   };
 
+  const joinedByInvite = (raw: Raw) => {
+    window.history.replaceState(null, '', '/');
+    setInviteCode(null);
+    finishLogin(toAccount(raw));
+  };
+  const goHomeFromInvite = () => { window.history.replaceState(null, '', '/'); setInviteCode(null); };
+
   const accountZone = zones.find((z) => z.id === account?.zoneId);
   const showAdmin = adminOpen && account?.role === 'admin';
 
+  if (inviteCode) return <InvitePage code={inviteCode} googleClientId={googleClientId} signedIn={Boolean(account)} onJoined={joinedByInvite} onGoHome={goHomeFromInvite} />;
+
+  const inviteState = { url: invite ? inviteLink(window.location.origin, invite.code) : null, today: invite?.today ?? 0, total: invite?.total ?? 0, renew: async () => { try { await loadInvite(true); notify('Listo: tu enlace nuevo ya está activo.', 'success'); } catch (error) { fail(error); } } };
+
   return (
+    <InviteContext.Provider value={inviteState}>
     <div className="app-shell">
       {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} /> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
@@ -337,5 +363,6 @@ export default function App() {
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
       </> : null}
     </div>
+    </InviteContext.Provider>
   );
 }
