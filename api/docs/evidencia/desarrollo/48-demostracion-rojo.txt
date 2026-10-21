@@ -1,0 +1,20 @@
+E
+======================================================================
+ERROR: test_demostracion (unittest.loader._FailedTest.test_demostracion)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_demostracion
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_demostracion.py", line 15, in <module>
+    from yapa_sdd.demo import DEMO_NOW, demo_clock, demo_store, seed_demo_base
+ImportError: cannot import name 'demo_clock' from 'yapa_sdd.demo' (C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\demo.py)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
