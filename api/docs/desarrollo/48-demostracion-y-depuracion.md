@@ -49,6 +49,25 @@ El modo de demostración de siempre (`--demo`) vive solo en memoria, con una fec
 | DM-J | Registro | un "ver como" y su vuelta | dos líneas en el registro de depuración |
 | DM-K | Quien no existe | ver como 99999 | `CUSTOMER_NOT_FOUND`, sigue la sesión del admin global |
 
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| DM-01, DM-02, S-253 | `demo.demo_store(now)` (ciclos y fechas corridos a la semana de `now`) | DM-A, DM-B (2) |
+| DM-03, S-255, S-256 | `demo.seed_demo_base`, `parse_demo_pins`; opción `--sembrar-demo` en `web/__main__.py` | DM-C, DM-D, y que no pise una base existente |
+| DM-04, S-254 | `store.demo_now`, `demo.demo_clock`, `web/__main__.py` lo usa como reloj del negocio | DM-E |
+| DM-05, S-254 | `create_api(security_clock=...)` en el bloqueo por intentos y en la vida de las sesiones | DM-F (3) |
+| DM-06, DM-07, S-256, S-257 | `ver_como`, `sesion_volver`, `me()` con `viendo_como` y `puede_ver_como` | DM-G (4), DM-H |
+| DM-08, S-257 | guardia `credential_paths` en `dispatch` | DM-I (2) |
+| DM-09 | `store.debug_log` | DM-J, DM-K y que el registro sobreviva a guardar y cargar |
+| Pantalla | botón "Ver como" en Vecinos del panel (`AdminPanel`), aviso fijo y "Volver a mi cuenta" (`App`) | `mappers.test.ts` |
+
+Pruebas de las propias pruebas (9 mutaciones a mano, revertidas): 8 detectadas. La que sobrevivió ("sin comprobar los PIN" dentro de `seed_demo_base`) es un caso equivalente, no un hueco: `auth.set_pin` revisa el PIN antes de guardar la base, así que el resultado es el mismo. Las detectadas: la seguridad con el reloj del negocio, cualquier admin que ve como, sin registro de depuración, credenciales sin proteger, volver sin comprobar, la semana sin correr, pisar una base existente, y aceptar a quien no existe.
+
+Prueba real en producción: la base se respaldó (`yapa-vps/respaldos`), se borró y se sembró; `/api/estado` dice `2026-W43` abierto a las 10:00 de hoy; Ana (101) y Marta (116) entran como admin de zona, Carmen (105) como vecina, `admin-yapa` como equipo y `debug-global` como equipo con "ver como"; el admin global vio como Marta y volvió. Las claves están en `CREDENCIALES-YAPA.txt` y en `~/.yapa-cuentas-demo.txt`, fuera del repositorio.
+
+Evidencia: `docs/evidencia/desarrollo/48-demostracion-rojo.txt` y `48-demostracion-verde.txt` (557 pruebas del motor, 20 nuevas; 93 del frontend, 1 nueva).
+
 ## Fuera de esta iteración (anotado)
 
 - **Registro abierto con ubicación y aprobación del admin de zona** (idea del dueño, 21/10): cualquiera se registra, comparte su ubicación (el navegador pide permiso), solo entra a zonas a menos de 300 m, y el admin de la zona lo aprueba; la invitación queda como atajo que da beneficios a quien invita. Es la iteración 49 y reemplaza el supuesto S-236.

@@ -361,3 +361,11 @@
 - La invitación pone el cursor en el primer campo al cambiar de paso y ajusta el título de la pestaña.
 - Se comprobó con 5 mutaciones (todas detectadas).
 - Resultado: 537 pruebas del motor (5 nuevas) y 92 del frontend (7 nuevas), tipos y compilación sin errores.
+
+## Iteración 48 · Datos de demostración y cuentas de depuración (21/10/2026)
+
+- Spec: `48-demostracion-y-depuracion.md` (S-253..S-258, a validar). La web desplegada es la demostración para el profesor, así que la base real se siembra con la semana de demostración corrida a la semana actual (`--sembrar-demo`): la anterior entregada y liquidada, y la actual abierta con pedidos. La base guarda su propio "ahora" (miércoles 10:00) para que la semana siempre esté abierta; lo de seguridad (bloqueo, sesiones) usa la hora real.
+- Cuentas de prueba con claves propias (fuera del repositorio): admin de zona (Ana y Marta), vecina (Carmen), admin de Yapa y un admin global de depuración (`debug-global`) que puede "ver como" cualquier vecino o admin de zona, con aviso fijo, botón para volver, sin poder cambiar PIN, correo ni Google, y con registro de cada uso.
+- Se comprobó con 9 mutaciones (8 detectadas y una equivalente) y en producción.
+- Se discutió y quedó anotado como iteración 49: registro abierto con ubicación (el navegador pide permiso, solo zonas a menos de 300 m) y aprobación del admin de zona, con la invitación como atajo que da beneficios a quien invita; reemplaza el supuesto S-236.
+- Resultado: 557 pruebas del motor (20 nuevas) y 93 del frontend (1 nueva).

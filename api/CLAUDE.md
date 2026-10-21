@@ -37,8 +37,8 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 
 ## Estado al 17/10/2026
 
-- Iteraciones 2 a 47 **completas y en verde** (537 pruebas del motor, 92 del frontend). El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-252. **El siguiente libre es S-253.**
+- Iteraciones 2 a 48 **completas y en verde** (557 pruebas del motor, 93 del frontend). El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-258. **El siguiente libre es S-259.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
 - `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
