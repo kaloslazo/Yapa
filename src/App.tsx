@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AdminPanel } from './components/AdminPanel';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { AuthDialog, type AuthAudience } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
 import { toastDuration } from './utils/toast';
@@ -22,7 +21,13 @@ import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
+import { weekLabel } from './utils/week';
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 import './styles.css';
+
+// FE-SG-2: el panel del equipo se baja solo cuando se abre
+const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -340,7 +345,7 @@ export default function App() {
     <InviteContext.Provider value={inviteState}>
     <div className="app-shell">
       {account?.viewingAs ? <div className="view-as-bar" role="status"><span>Estás viendo Yapa como <strong>{account.name}</strong> ({account.role === 'admin_zona' ? 'admin de zona' : 'vecino'}).</span><button type="button" onClick={() => void backFromView()}>Volver a mi cuenta</button></div> : null}
-      {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /> : <>
+      {showAdmin ? <Suspense fallback={<div className="admin-view" aria-busy="true" />}><AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /></Suspense> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" fetchPriority="high" /><span>yapa</span></a>
@@ -373,7 +378,7 @@ export default function App() {
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
               : <main id="catalog" className="page-content">
                 <section className="welcome-row hero-banner" aria-labelledby="page-title"><div className="welcome-copy"><span className="hero-promise"><Icon name="ok" size={16} /> Nunca pagas más del precio que ves</span><h1 id="page-title">Compra mejor para tu semana</h1><p>Del mercado mayorista a tu portería. Pagas el precio máximo y lo que ahorramos entre vecinos te vuelve como saldo.</p><div className="hero-actions"><button className="primary-button" type="button" onClick={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver catálogo <Icon name="arrow" size={17} /></button><a className="text-button" href="#how-it-works" onClick={(event) => { event.preventDefault(); goStore('how-it-works'); }}>Cómo funciona</a></div></div><div className="hero-side"><div className="hero-illustration" role="img" aria-label="Agricultora peruana con una canasta de productos frescos"><span className="hero-note"><Icon name="leaf" size={14} /> Del campo a tu canasta</span><img src="/images/brand/yapa-farmer-banner.webp" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div></div></section>
-                <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>Semana {state?.cycle ?? '—'} · próxima entrega</small><strong>Sábado</strong><span>{state?.open ? 'Pedidos hasta el miércoles a las 20:00' : 'Cerrado para pedidos: vuelve el lunes'}</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="users" size={19} /></span><div><small>Compramos entre vecinos</small><strong>{state?.minimumGroup ?? 8} pedidos por grupo</strong><span>Si tu grupo no llega, te devolvemos el 100 %</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago por adelantado</small><strong>Yape o Plin</strong><span>Con el código que te damos; sin escribir nada</span></div></div></div></section>
+                <section className="delivery-overview" aria-label="Entrega, cobertura y pago"><div className="delivery-facts"><div className="delivery-fact delivery-fact--primary"><span className="delivery-fact-icon"><Icon name="truck" size={20} /></span><div><small>{state?.cycle ? `${capitalize(weekLabel(state.cycle))} · próxima entrega` : 'Próxima entrega'}</small><strong>Sábado</strong><span>{state?.open ? 'Pedidos hasta el miércoles a las 20:00' : 'Cerrado para pedidos: vuelve el lunes'}</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="users" size={19} /></span><div><small>Compramos entre vecinos</small><strong>{state?.minimumGroup ?? 8} pedidos por grupo</strong><span>Si tu grupo no llega, te devolvemos el 100 %</span></div></div><div className="delivery-fact"><span className="delivery-fact-icon"><Icon name="wallet" size={19} /></span><div><small>Pago por adelantado</small><strong>Yape o Plin</strong><span>Con el código que te damos; sin escribir nada</span></div></div></div></section>
                 <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={() => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>
                 <HowItWorksSection />
               </main>}

@@ -10,7 +10,9 @@ from test_api import PIN, WEDNESDAY
 from test_cuenta_correo import FakeMailer
 from web_client import fast_hashing
 
+from yapa_sdd import invitations
 from yapa_sdd.auth import set_pin
+from yapa_sdd.domain import Customer
 from yapa_sdd.seed import pilot_store
 from yapa_sdd.web.api import create_api
 
@@ -177,7 +179,9 @@ class EmailSignupTests(InviteBase):
     def test_in_i_tope_diario(self):
         code = self.my_code()
         for i in range(20):
+            self.now += timedelta(minutes=6)  # S-265, S-266: a lo más 10 códigos por hora y por enlace
             self.assertEqual(self.register(code, i)[0], 200, i)
+        self.now += timedelta(minutes=6)
         self.assertEqual(self.code_of(self.register(code, 20)), "INVITE_LIMIT")
         self.now += timedelta(days=1, minutes=1)
         self.assertEqual(self.register(code, 20)[0], 200)
@@ -215,12 +219,22 @@ class EmailSignupTests(InviteBase):
 
     # IN-M
     def test_in_m_pendientes(self):
-        code = self.my_code()
+        # S-265, S-266: 10 códigos por enlace y por dirección, así que 21 vecinos invitan desde 21 conexiones
+        for n in range(20):
+            self.store.add_customer(Customer(400 + n, f"Vecino {n}", "Z-LINCE-01"))
+        tokens = [invitations.link_for(self.store, 400 + n, self.now)["codigo"] for n in range(20)]
+
+        def start(i, **changes):
+            client = self.public()
+            client.extra = {"REMOTE_ADDR": f"198.51.100.{i // 10}"}
+            return client.post(f"/api/invitaciones/{tokens[i // 10]}/correo", DATA | changes, with_csrf=False)
+
         for i in range(200):
-            self.assertEqual(self.start(code, celular=f"9100000{i:02d}"[:9], correo=f"p{i}@correo.pe")[0], 200, i)
-        self.assertEqual(self.code_of(self.start(code, celular="999999999", correo="extra@correo.pe")), "SIGNUPS_FULL")
+            self.assertEqual(start(i, celular=f"9100000{i:02d}"[:9], correo=f"p{i}@correo.pe")[0], 200, i)
+        tokens.append(self.my_code())
+        self.assertEqual(self.code_of(start(200, celular="999999999", correo="extra@correo.pe")), "SIGNUPS_FULL")
         self.now += timedelta(minutes=11)
-        self.assertEqual(self.start(code, celular="999999999", correo="extra@correo.pe")[0], 200)
+        self.assertEqual(start(200, celular="999999999", correo="extra@correo.pe")[0], 200)
 
     # IN-N
     def test_in_n_no_toca_otras_cuentas(self):

@@ -54,7 +54,7 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 $env:PYTHONPATH="src"; python -m unittest discover -s tests -v
 ```
 
-Resultado esperado: `Ran 45 tests ... OK`. La salida real está en `docs/evidencia/03-pruebas-en-verde.txt`.
+Resultado esperado: todas en verde (`OK`). La cuenta de cada iteración está en `docs/desarrollo/99-registro.md`; la última salida, en `docs/evidencia/desarrollo/`. Las pruebas de Google necesitan `pip install PyJWT cryptography` (el CI las instala).
 
 ## Ejecutar la demo
 

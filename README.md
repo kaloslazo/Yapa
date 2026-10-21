@@ -9,7 +9,7 @@ Curso EL3304 Diseño de Software, UTEC 2026-2, sección 1. Docente: Jaime Moshe 
 | Parte | Dónde | Qué hace |
 |---|---|---|
 | Tienda y paneles (React + TypeScript + Vite) | `src/` | La cara de Yapa: tienda del vecino, panel del admin de zona y centro de operaciones del equipo. **No calcula reglas.** |
-| Motor (Python, solo biblioteca estándar) | `api/` | Todas las reglas del negocio, con sus specs y 340 pruebas. Expone la API JSON en `/api`. |
+| Motor (Python, solo biblioteca estándar) | `api/` | Todas las reglas del negocio, con sus specs y sus pruebas (`api/docs/desarrollo/99-registro.md` lleva la cuenta). Expone la API JSON en `/api`. |
 | Specs, decisiones y evidencia | `api/docs/` | Una spec por iteración (`api/docs/desarrollo/NN-*.md`), registro, roadmap y preguntas al equipo. |
 
 ## Levantar todo en local

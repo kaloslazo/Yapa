@@ -24,7 +24,9 @@ from ..domain import MAX_QUANTITY, PILOT_DISTRICTS, BusinessRuleError
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
+from ..throttle import Throttle
 from . import views
+from .produccion import client_ip
 
 
 COOKIE = "yapa_sesion"
@@ -37,6 +39,7 @@ class Session:
     role: str  # "vecino" o "admin"
     csrf: str
     expires: datetime
+    stamp: bytes | None = None  # SG-05: la credencial con la que se abrió
 
 
 class Response(Exception):
@@ -54,7 +57,21 @@ def _redirect(location: str, headers=None) -> Response:
 
 
 MAX_PHOTO_BYTES = 8 * 1024 * 1024
-PHOTO_TYPES = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
+PHOTO_ROUTES = {"/reclamos", "/admin/bolsa", "/admin/entrega", "/admin/entrega-fallida"}  # S-260
+HEIC_BRANDS = {b"heic", b"heix", b"hevc", b"hevx", b"mif1", b"msf1"}
+
+
+def _photo_suffix(content: bytes) -> str:
+    """SG-04, S-260: el tipo sale del inicio del archivo, no del nombre."""
+    if content.startswith(b"\xff\xd8"):
+        return ".jpg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return ".webp"
+    if content[4:8] == b"ftyp" and content[8:12] in HEIC_BRANDS:
+        return ".heic"
+    raise BusinessRuleError("PHOTO_INVALID", "El archivo no es una foto. Usa una imagen JPG, PNG, WebP o HEIC.")
 
 
 def _form(environ) -> tuple[dict[str, str], dict[str, tuple[str, bytes]]]:
@@ -88,8 +105,7 @@ def _save_photo(folder: str, upload: tuple[str, bytes]) -> str:
         return ""
     if len(content) > MAX_PHOTO_BYTES:
         raise BusinessRuleError("PHOTO_TOO_LARGE", "La foto pesa más de 8 MB.")
-    suffix = Path(filename).suffix.lower()
-    name = f"{secrets.token_hex(8)}{suffix if suffix in PHOTO_TYPES else '.jpg'}"
+    name = f"{secrets.token_hex(8)}{_photo_suffix(content)}"
     Path(folder).mkdir(parents=True, exist_ok=True)
     (Path(folder) / name).write_bytes(content)
     return f"fotos/{name}"
@@ -138,12 +154,14 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     """on_change(store) se llama después de cada POST que termina bien (PS-03). Las fotos van a photo_dir."""
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     sessions: dict[str, Session] = {}
+    login_failures = Throttle(30, timedelta(minutes=15))  # SG-09, S-264
 
     def current_session(environ) -> tuple[str | None, Session | None]:
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
         token = cookie[COOKIE].value if COOKIE in cookie else None
         session = sessions.get(token) if token else None
-        if session and clock() >= session.expires:
+        if session and (clock() >= session.expires
+                        or session.stamp != auth.credential_stamp(store, session.role, session.principal)):  # SG-05
             del sessions[token]
             session = None
         return token, session
@@ -189,9 +207,19 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def entrar(environ, form, session):
         kind = form.get("tipo") if form.get("tipo") in ("vecino", "admin") else "vecino"
-        principal = auth.authenticate(store, kind, form.get("usuario", ""), form.get("secreto", ""), clock())
+        ip = client_ip(environ)
+        if login_failures.blocked(ip, clock()):
+            raise Response("429 Too Many Requests", views.login(views.error_box(
+                "TOO_MANY_ATTEMPTS", "Demasiados intentos desde tu conexión. Vuelve a intentar en 15 minutos.")))
+        try:
+            principal = auth.authenticate(store, kind, form.get("usuario", ""), form.get("secreto", ""), clock())
+        except BusinessRuleError as error:
+            if error.code == "INVALID_CREDENTIALS":
+                login_failures.hit(ip, clock())
+            raise
         token = secrets.token_urlsafe(32)
-        sessions[token] = Session(principal, kind, secrets.token_urlsafe(16), clock() + SESSION_TIME)
+        sessions[token] = Session(principal, kind, secrets.token_urlsafe(16), clock() + SESSION_TIME,
+                                  auth.credential_stamp(store, kind, principal))
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}"
         raise _redirect("/admin" if kind == "admin" else "/cuenta", [("Set-Cookie", cookie)])
 
@@ -283,6 +311,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def cambiar_pin(environ, form, session):
         auth.change_pin(store, session.principal, form.get("actual", ""), form.get("nuevo", ""), clock())
+        session.stamp = auth.credential_stamp(store, "vecino", session.principal)  # SG-06
         return views.simple("PIN actualizado", "Tu PIN se cambió correctamente.", session.csrf)
 
     # --- administrador (AC-05) ---
@@ -617,8 +646,6 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         handler, role = methods[method]
         _, session = current_session(environ)
         form, files = _form(environ) if method == "POST" else ({}, {})
-        if files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151
-            form["foto"] = _save_photo(photo_dir, files["foto_archivo"])
         if role and session is None:  # AC-04, AC-05
             raise _redirect("/entrar")
         if role and session.role != role:
@@ -627,6 +654,8 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             if not hmac.compare_digest(form.get("csrf", ""), session.csrf):
                 raise Response("403 Forbidden", views.simple("Formulario vencido", "Recarga la página e intenta de nuevo.", ok=False))
         try:
+            if path in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02, SG-03
+                form["foto"] = _save_photo(photo_dir, files["foto_archivo"])
             return "200 OK", handler(environ, form, session), []
         except BusinessRuleError as error:
             if path == "/entrar":

@@ -367,5 +367,36 @@
 - Spec: `48-demostracion-y-depuracion.md` (S-253..S-258, a validar). La web desplegada es la demostración para el profesor, así que la base real se siembra con la semana de demostración corrida a la semana actual (`--sembrar-demo`): la anterior entregada y liquidada, y la actual abierta con pedidos. La base guarda su propio "ahora" (miércoles 10:00) para que la semana siempre esté abierta; lo de seguridad (bloqueo, sesiones) usa la hora real.
 - Cuentas de prueba con claves propias (fuera del repositorio): admin de zona (Ana y Marta), vecina (Carmen), admin de Yapa y un admin global de depuración (`debug-global`) que puede "ver como" cualquier vecino o admin de zona, con aviso fijo, botón para volver, sin poder cambiar PIN, correo ni Google, y con registro de cada uso.
 - Se comprobó con 9 mutaciones (8 detectadas y una equivalente) y en producción.
-- Se discutió y quedó anotado como iteración 50: registro abierto con ubicación (el navegador pide permiso, solo zonas a menos de 300 m) y aprobación del admin de zona, con la invitación como atajo que da beneficios a quien invita; reemplaza el supuesto S-236.
+- Se discutió y quedó anotado como iteración 49: registro abierto con ubicación (el navegador pide permiso, solo zonas a menos de 300 m) y aprobación del admin de zona, con la invitación como atajo que da beneficios a quien invita; reemplaza el supuesto S-236.
 - Resultado: 557 pruebas del motor (20 nuevas) y 93 del frontend (1 nueva).
+
+## Iteración 50 · Endurecimiento antes de abrir (21/10/2026)
+
+- Spec: `50-endurecimiento-antes-de-abrir.md` (S-259..S-262, a validar). Sale de la revisión de seguridad de la rama `carlos/motor-y-roles` antes de abrir `holayapa.app`. La 49 queda reservada para el registro abierto con ubicación.
+- Cualquiera, sin sesión, podía dejar un archivo en la carpeta de fotos mandándolo a una ruta que no usa fotos; ahora solo se guardan en el reclamo, la bolsa, la entrega y la entrega fallida, después de sesión y CSRF, y solo si el contenido es una imagen (la extensión sale del contenido).
+- El cuerpo se leía sin tope dentro del cerrojo: ahora el servidor rechaza más de 9 MB sin leerlos (413) y lee el cuerpo antes del cerrojo.
+- Una credencial nueva (cambiar, recuperar, crear o reiniciar el PIN) cierra las demás sesiones de esa persona, en la API y en la web HTML.
+- "Ver como" ya no puede pedir la devolución del saldo, cancelar pedidos ni ceder una zona.
+- El CI estaba en `api/.github` y GitHub nunca lo corría; pasa a la raíz, instala PyJWT (las pruebas de Google ya no se saltan) y suma tipos, pruebas y compilación de la web.
+- La prueba de "crear el PIN" simulaba la entrada con Google borrando la credencial después del login; ahora entra con Google de verdad (las aserciones no cambian).
+- Resultado: 571 pruebas del motor (14 nuevas, sin pruebas saltadas) y 93 del frontend.
+
+## Iteración 51 · Cierre de huecos para pasar a main (21/10/2026)
+
+- Spec: `51-cierre-de-huecos-para-main.md` (S-263..S-269, a validar). Cierra lo que la iteración 50 dejó anotado, para pasar la rama a `main`.
+- Límites por dirección (la real detrás de Caddy): 30 entradas fallidas en 15 minutos y 10 correos con código por hora; 10 códigos por hora por enlace de invitación. Antes se podía probar un PIN común contra todas las cuentas y mandar cientos de códigos desde el Gmail de Yapa.
+- `/api/zonas` ya no muestra el contacto de recepción ni el admin a quien no es del equipo, y a quien no entró le da la ubicación aproximada.
+- En el servidor sin SMTP los códigos ya no van a la consola (ni a los registros): no sale el correo y se avisa al arrancar.
+- Toda respuesta lleva CSP, `nosniff`, `X-Frame-Options` y, con https, HSTS. Las sesiones vencidas se borran; "volver" de "ver como" no reabre una sesión cuya clave cambió.
+- Web: "semana del 28 sep" en vez de `2026-W40` para el vecino, el ingreso dice que vale el correo o el celular, la insignia de ahorro dice cuándo se vio el precio, el panel del equipo y el mapa se bajan solo al abrirse (639 KB → 447 KB), y una respuesta que no es JSON ya no rompe la pantalla. `npm audit fix` en las dependencias de desarrollo.
+- Dos pruebas de la iteración 45 cambian de escenario (no de aserciones) porque los nuevos topes no dejan mandar 20 o 200 códigos en minutos desde un solo enlace.
+- Se comprobó en el navegador con la web construida y la CSP real (portada, mapa y centro de operaciones sin errores).
+- Resultado: 584 pruebas del motor (13 nuevas, ninguna saltada) y 99 del frontend (6 nuevas); tipos, compilación sin aviso de tamaño y 0 vulnerabilidades.
+
+## Iteración 52 · Despliegue automático (21/10/2026)
+
+- Spec: `52-despliegue-automatico.md` (S-270..S-276, a validar). Kalos propuso un runner de GitHub en la VPS. Se comprobó que **sí arranca** en Windows Server 2012 R2 y que Node 20 corre; Node 24 no, así que el trabajo de la VPS usa solo comandos de PowerShell.
+- Cada subida corre las pruebas y arma el paquete en los servidores de GitHub; **solo una subida a `main` despliega**, en el runner de la VPS: baja el paquete con un token temporal del trabajo (no queda ninguna credencial de GitHub en la VPS), respalda la base, guarda la versión anterior, pone la nueva y **vuelve a la anterior si el motor nuevo no responde `/salud` en 40 segundos**.
+- El flujo se combinó con el de Kalos (`tests`, trabajos `motor` y `web`) en el mismo `ci.yml`. Los scripts de la VPS están en `deploy/vps/` como copia de referencia.
+- Se probó: validador de flujos, pruebas en GitHub, despliegue normal, marcha atrás con un motor roto, paquetes inválidos y la bajada real desde GitHub. Falta el trayecto completo (DA-H): que Kalos registre el runner y se suba a `main`.
+- Resultado: 584 pruebas del motor y 99 de la web en verde sobre el árbol integrado con lo de Kalos.

@@ -2,6 +2,7 @@ import type { CartState, Product } from '../types';
 import { Icon } from './Icon';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
+import { shortDate } from '../utils/week';
 
 interface CatalogProps {
   products: Product[];
@@ -61,13 +62,13 @@ function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Produc
       <div className="product-visual-wrap">
         <ProductVisual product={product} />
         <span className="product-category">{product.category}</span>
-        {product.supermarketSaving ? <span className="saving-badge"><Icon name="tag" size={13} weight="bold" />{Math.round(product.supermarketSaving)} % menos que en {product.supermarket?.source}</span> : null}
+        {product.supermarketSaving ? <span className="saving-badge" title={product.supermarket?.seen ? `Precio de ${product.supermarket.source} visto el ${shortDate(product.supermarket.seen)}` : undefined}><Icon name="tag" size={13} weight="bold" />{Math.round(product.supermarketSaving)} % menos que en {product.supermarket?.source}{product.supermarket?.seen ? <span className="sr-only"> (precio visto el {shortDate(product.supermarket.seen)})</span> : null}</span> : null}
       </div>
       <div className="product-info">
         <div className="product-title-row"><h3>{product.name}</h3>{quantity ? <span className="in-cart-label">{formatQuantity(quantity)} {product.unit}</span> : null}</div>
         <p>{product.detail}</p>
         <div className="tier-progress" aria-label={tier ? `Entre todos llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}` : 'Ya estamos en el mejor precio'}>
-          <div className="tier-progress-copy"><Icon name="users" size={14} />{tier ? <span>Vamos {formatQuantity(product.ordered)} de {tier.from} {product.unit} · baja a <strong>{formatMoney(tier.price)}</strong></span> : <span><strong>¡Mejor precio alcanzado!</strong></span>}</div>
+          <div className="tier-progress-copy"><Icon name="users" size={14} />{tier ? <span>Vamos {formatQuantity(product.ordered)} de {tier.from} {product.unit} · baja a <strong className="nowrap">{formatMoney(tier.price)}</strong></span> : <span><strong>¡Mejor precio alcanzado!</strong></span>}</div>
           <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
         </div>
         <div className="product-buy-row">

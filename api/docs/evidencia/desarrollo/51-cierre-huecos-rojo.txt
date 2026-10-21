@@ -1,0 +1,18 @@
+E
+======================================================================
+ERROR: test_cierre_huecos (unittest.loader._FailedTest.test_cierre_huecos)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cierre_huecos
+Traceback (most recent call last):
+  File "/Users/kalosroots/.pyenv/versions/3.12.0/lib/python3.12/unittest/loader.py", line 129, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kalosroots/personal/yapa/api/tests/test_cierre_huecos.py", line 27, in <module>
+    from yapa_sdd.web.produccion import client_ip
+ImportError: cannot import name 'client_ip' from 'yapa_sdd.web.produccion' (/Users/kalosroots/personal/yapa/api/src/yapa_sdd/web/produccion.py)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

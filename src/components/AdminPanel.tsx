@@ -9,7 +9,8 @@ import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
-import { ZonesMap, type MapUnion, type MapZone } from './ZonesMap';
+import type { MapUnion, MapZone } from './ZonesMap';
+import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -171,7 +172,7 @@ function Zones({ cycle, setCycle, notify }: SectionProps) {
       <section className="admin-intro"><div><h2>Zonas, uniones y propuestas</h2><p>Cada círculo es el radio de {data.radio_m} m de una zona; del mismo color, las zonas ya unidas. Las líneas muestran qué zonas están a {data.union_m} m o menos. Aquí solo se mira y se propone: la unión la piden y aceptan los admins de zona.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
 
       <Card title="Mapa de zonas">
-        <ZonesMap zones={mapZones} unions={mapUnions} radius={data.radio_m} mergeDistance={data.union_m} label="Mapa de las zonas de Yapa con su radio y las uniones posibles" />
+        <LazyZonesMap zones={mapZones} unions={mapUnions} radius={data.radio_m} mergeDistance={data.union_m} label="Mapa de las zonas de Yapa con su radio y las uniones posibles" />
         {missing ? <p className="admin-muted">{missing} {missing === 1 ? 'zona no tiene' : 'zonas no tienen'} ubicación y no se dibuja{missing === 1 ? '' : 'n'}.</p> : null}
         <ul className="zones-legend">{[...new Set(mapZones.map((z) => z.group))].map((g) => <li key={g}><span className="zones-dot" style={{ background: colors[g] }} />{mapZones.filter((z) => z.group === g).map((z) => z.name).join(' + ')}</li>)}</ul>
         {data.uniones.length ? <ul className="zones-unions">{data.uniones.map((u: Raw) => <li key={`${u.a}-${u.b}`} className={u.motivo ? 'is-blocked' : 'is-ok'}><strong>{nameOf(u.a)} ↔ {nameOf(u.b)}</strong> <span>{unionLabel(u.distancia_m, u.motivo)}</span></li>)}</ul> : <p className="admin-muted">Ninguna zona está a {data.union_m} m o menos de otra de un grupo distinto.</p>}

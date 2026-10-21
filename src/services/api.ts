@@ -28,7 +28,13 @@ export function createApi(fetchImpl: Fetch = (input, init) => fetch(input, init)
       throw new ApiError(0, 'NETWORK', 'No pudimos conectar con Yapa. Revisa que el servidor esté encendido.');
     }
     const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    let data: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      // FE-SG-1: un proxy caído responde HTML; se muestra como cualquier error de Yapa
+      throw new ApiError(response.status, 'BAD_RESPONSE', 'Yapa no respondió bien. Intenta de nuevo en un momento.');
+    }
     if (!response.ok) {
       const error = data?.error ?? {};
       throw new ApiError(response.status, error.codigo ?? 'ERROR', error.mensaje ?? 'Algo salió mal. Intenta de nuevo.');

@@ -1,5 +1,5 @@
-﻿# Despliegue automático de Yapa en la VPS (iteración 49, api/docs/desarrollo/49-despliegue-automatico.md).
-# Copia de referencia: la que corre vive en la VPS (C:\yapa\ci\desplegar-ci.ps1, S-262); el flujo de GitHub solo la llama.
+﻿# Despliegue automático de Yapa en la VPS (iteración 52, api/docs/desarrollo/52-despliegue-automatico.md).
+# Copia de referencia: la que corre vive en la VPS (C:\yapa\ci\desplegar-ci.ps1, S-273); el flujo de GitHub solo la llama.
 # Funciona en PowerShell 4 (Windows Server 2012 R2): sin Expand-Archive ni Invoke-WebRequest con redirecciones.
 param(
     [string]$Repo = '',       # kaloslazo/Yapa
@@ -34,7 +34,7 @@ function Arrancar-Motor {
     if ($r.ReturnValue -ne 0) { throw "No se pudo lanzar el motor (código $($r.ReturnValue))" }
 }
 
-function Esta-Sano {  # DA-05: hasta 40 segundos de reloj (S-263), no 40 de intentos
+function Esta-Sano {  # DA-05: hasta 40 segundos de reloj (S-274), no 40 de intentos
     $limite = (Get-Date).AddSeconds(40)
     while ((Get-Date) -lt $limite) {
         Start-Sleep -Seconds 2
@@ -56,7 +56,7 @@ function Validar-Paquete($zip) {
     }
 }
 
-# S-261: token temporal del trabajo de GitHub. La dirección de bajada responde 302 hacia un almacén firmado:
+# S-272: token temporal del trabajo de GitHub. La dirección de bajada responde 302 hacia un almacén firmado:
 # se sigue a mano para no mandar el token a ese almacén.
 function Bajar-Artefacto($repo, $runId, $destino) {
     $token = $env:GITHUB_TOKEN
@@ -94,7 +94,7 @@ try {
     if ($ZipLocal) { Copy-Item $ZipLocal $zip -Force } else { Bajar-Artefacto $Repo $RunId $zip }
     Validar-Paquete $zip
 
-    try { & "$raiz\respaldar.ps1" | Out-Null; Log 'base respaldada' } catch { Log "aviso: no se pudo respaldar ($_)" }  # S-263
+    try { & "$raiz\respaldar.ps1" | Out-Null; Log 'base respaldada' } catch { Log "aviso: no se pudo respaldar ($_)" }  # S-274
 
     Parar-Motor
     if (Test-Path $anterior) { Remove-Item $anterior -Recurse -Force }

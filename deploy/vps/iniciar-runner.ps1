@@ -1,4 +1,4 @@
-﻿# Inicia el runner de GitHub si no está corriendo (iteración 49, S-264). Úsalo si la VPS se reinicia.
+﻿# Inicia el runner de GitHub si no está corriendo (iteración 52, S-275). Úsalo si la VPS se reinicia.
 $ErrorActionPreference = 'Stop'
 $dir = 'C:\yapa\runner'
 $corre = Get-WmiObject Win32_Process -Filter "Name='Runner.Listener.exe'" | Where-Object { $_.ExecutablePath -like "$dir\*" }

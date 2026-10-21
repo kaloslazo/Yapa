@@ -1,60 +1,46 @@
-# Iteración 49 · CI y despliegue automático (api/docs/desarrollo/49-despliegue-automatico.md)
-#   - Cada subida a cualquier rama y cada pull request hacia main: pruebas, tipos y compilación (DA-01).
-#   - Solo una subida a main despliega en la VPS (S-259), después de que pasen las pruebas (S-260).
-name: CI y despliegue
+# Pruebas en cada subida y pull request (jobs motor y web, de Kalos) + despliegue automático (iteración 52,
+# api/docs/desarrollo/52-despliegue-automatico.md):
+#   - Cada subida a cualquier rama y cada pull request corren las pruebas y arman el paquete (DA-01, DA-02).
+#   - Solo una subida a main despliega en la VPS (S-270), y solo si pasaron motor y web (S-271).
+name: tests
 
 on:
   push:
-    branches: ['**']
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
   actions: read
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  pruebas:
-    name: Pruebas y paquete
+  motor:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: api
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.11"
+      - run: pip install PyJWT cryptography  # S-214: sin esto se saltan las pruebas de Google
+      - run: PYTHONPATH=src python -m unittest discover -s tests -v
 
-      - name: Pruebas del motor
-        working-directory: api
-        env:
-          PYTHONPATH: src
-        run: |
-          python -m pip install --disable-pip-version-check "PyJWT>=2.8,<3" "cryptography>=42"
-          python -m unittest discover -s tests
-
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
 
-      - name: Dependencias de la web
-        run: npm ci
-
-      - name: Chequeo de tipos
-        run: npm run typecheck
-
-      - name: Pruebas de la web
-        run: npm test
-
-      - name: Compilar la web
-        run: npm run build
-
-      - name: Armar el paquete (api/src y dist)
+      # DA-02: el paquete (api/src y dist) con la misma forma que el paquete manual
+      - name: Armar el paquete
         run: |
           mkdir -p paquete/api
           cp -r api/src paquete/api/src
@@ -62,7 +48,6 @@ jobs:
           find paquete -name '__pycache__' -type d -prune -exec rm -rf {} +
           test -f paquete/dist/index.html
           test -f paquete/api/src/yapa_sdd/web/__main__.py
-
       - uses: actions/upload-artifact@v4
         with:
           name: yapa-app
@@ -71,8 +56,8 @@ jobs:
           retention-days: 14
 
   desplegar:
-    name: Desplegar en la VPS
-    needs: pruebas
+    name: desplegar en la VPS
+    needs: [motor, web]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, windows, yapa-vps]
     timeout-minutes: 15
@@ -81,7 +66,7 @@ jobs:
       cancel-in-progress: false
     steps:
       # Sin acciones de GitHub: el Windows de la VPS no corre Node 24. Solo comandos.
-      # El script vive en la VPS (S-262): el repositorio solo lo llama.
+      # El script vive en la VPS (S-273): el repositorio solo lo llama.
       - name: Descargar el paquete y reemplazar la versión
         shell: powershell
         env:

@@ -100,11 +100,14 @@ class EnterTests(LoginBase):
         self.assertFalse(self.google_session(105).get("/api/sesion")[1]["tiene_pin"])
 
     def google_session(self, customer_id):
-        """Una sesión de quien no tiene PIN (como si hubiera entrado con Google)."""
-        client = ApiClient(self.api)
-        set_pin(self.store, customer_id, NEW_PIN)
-        client.login(customer_id, NEW_PIN)
-        del self.store.credentials[("vecino", str(customer_id))]
+        """Una sesión de quien no tiene PIN: entra con Google (S-261: borrar la credencial cerraría la sesión)."""
+        self.store.customers[customer_id] = replace(self.store.customers[customer_id], google_sub=f"g-{customer_id}")
+        google = type("Google", (), {"client_id": "prueba", "verify": lambda _, c: {"sub": c, "email": "", "name": ""}})()
+        client = ApiClient(create_api(self.store, clock=lambda: self.clock[0], mailer=self.mailer,
+                                      background_mail=False, google=google))
+        status, me, _ = client.post("/api/sesion/google", {"credential": f"g-{customer_id}"}, with_csrf=False)
+        self.assertEqual(status, 200, me)
+        client.csrf = me["csrf"]
         return client
 
 

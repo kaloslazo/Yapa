@@ -1,4 +1,4 @@
-﻿# Registra e inicia el runner de GitHub en la VPS (iteración 49, S-264). Se corre UNA vez.
+﻿# Registra e inicia el runner de GitHub en la VPS (iteración 52, S-275). Se corre UNA vez.
 # El código de registro lo genera quien administra el repo (Settings > Actions > Runners > New self-hosted runner)
 # y vale una hora. Corre como programa normal, sin servicio de Windows: no arranca solo.
 param(

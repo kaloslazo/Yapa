@@ -5,8 +5,10 @@ import { Icon } from './Icon';
 import { shareText } from './AuthDialog';
 import { InviteBody, InviteContext } from './InviteCard';
 import { ConfirmAction } from './ConfirmAction';
-import { ZonesMap, type MapUnion, type MapZone } from './ZonesMap';
+import type { MapUnion, MapZone } from './ZonesMap';
+import { LazyZonesMap } from './LazyZonesMap';
 import { neighborsLabel, unionReason } from '../utils/zoneMap';
+import { weekLabel } from '../utils/week';
 
 export interface ZonePanel extends Zone {
   progress: { verified: number; minimum: number; cycle: string };
@@ -44,7 +46,7 @@ interface ZonePageProps {
 }
 
 const RECEPTION = [{ value: 'PORTERIA', label: 'La portería' }, { value: 'ENCARGADO', label: 'Un encargado' }, { value: 'ADMIN', label: 'Yo mismo' }];
-const reminder = (cycle: string) => `¡Hola, vecino! Esta semana (${cycle}) compramos juntos en Yapa. Si llegamos a 8 pedidos verificados, el camión viene el sábado y todos ahorramos. Pide antes del miércoles 20:00.`;
+const reminder = (cycle: string) => `¡Hola, vecino! Esta semana (${weekLabel(cycle)}) compramos juntos en Yapa. Si llegamos a 8 pedidos verificados, el camión viene el sábado y todos ahorramos. Pide antes del miércoles 20:00.`;
 
 function ShareCard({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
@@ -116,7 +118,7 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
 
       <div className="zone-grid">
         <section className="customer-main-card">
-          <div className="customer-section-heading"><div><span className="customer-eyebrow">Semana {panel.progress.cycle}</span><h2>Tus vecinos</h2></div><span className="customer-count">{panel.neighborsList.filter((n) => n.ordered).length} de {panel.neighborsList.length} pidieron</span></div>
+          <div className="customer-section-heading"><div><span className="customer-eyebrow">{weekLabel(panel.progress.cycle)}</span><h2>Tus vecinos</h2></div><span className="customer-count">{panel.neighborsList.filter((n) => n.ordered).length} de {panel.neighborsList.length} pidieron</span></div>
           <table className="zone-table"><tbody>{panel.neighborsList.map((n) => <tr key={n.id}><td><span className="avatar-dot">{n.name[0]}</span>{n.name}{n.id === userId ? <small> (tú)</small> : null}</td><td>{n.ordered ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Ya pidió</span> : <span className="state-pill">Aún no</span>}</td></tr>)}</tbody></table>
           <a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(reminder(panel.progress.cycle))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Recordar al grupo del edificio</a>
           <p className="admin-muted">Ves los nombres y si ya pidieron; los montos y las direcciones de tus vecinos son privados.</p>
@@ -124,7 +126,7 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
 
         <section className="customer-main-card">
           <div className="customer-section-heading"><div><h2>Radio y zonas cercanas</h2></div></div>
-          <ZonesMap zones={mapZones} unions={mapUnions} radius={data.radius} mergeDistance={data.mergeDistance} highlightId={panel.id} label={`Mapa de ${panel.name}: radio de ${data.radius} metros y zonas cercanas`} />
+          <LazyZonesMap zones={mapZones} unions={mapUnions} radius={data.radius} mergeDistance={data.mergeDistance} highlightId={panel.id} label={`Mapa de ${panel.name}: radio de ${data.radius} metros y zonas cercanas`} />
           {panel.nearby.length ? <table className="zone-table"><tbody>{panel.nearby.map((z) => <tr key={z.id}><td><strong>{z.name}</strong><small> · {z.distance} m</small></td><td>{z.sameGroup ? <span className="state-pill state-pill--ok"><Icon name="merge" size={13} /> Unidas</span> : panel.requests.some((r) => r.zone === z.id) ? <span className="state-pill">Te pidió unirse</span> : panel.sent.find((s) => s.zone === z.id) ? <span className="merge-pending"><span className="state-pill">Esperando a su admin</span><button className="text-button" type="button" onClick={() => void actions.onWithdrawMerge(panel.sent.find((s) => s.zone === z.id)!.id)}>Retirar</button></span> : z.reason ? <span className="merge-blocked">{unionReason(z.reason)}</span> : <ConfirmAction label="Pedir unión" confirmLabel="Sí, pedir unión" question={<>Si {z.name} acepta, sus pedidos y los tuyos suman juntos para llegar al mínimo. ¿Pedir unión?</>} onConfirm={() => actions.onRequestMerge(panel.id, z.id)} />}</td></tr>)}</tbody></table> : <p className="admin-muted">No hay zonas a {data.mergeDistance} m o menos para unir.</p>}
           {panel.requests.length ? <div className="merge-requests"><strong>Solicitudes para unirse contigo</strong>{panel.requests.map((r) => <div className="merge-request" key={r.id}><span>{r.name}</span><button className="admin-row-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, true)}>Aceptar</button><button className="text-button" type="button" onClick={() => void actions.onAnswerMerge(r.id, false)}>Rechazar</button></div>)}</div> : null}
           {sharesGroup ? <ConfirmAction label="Separar mi zona del grupo" className="text-button" confirmLabel="Sí, separar" question={<>Tu zona volverá a contar sola para el mínimo. ¿Separar?</>} onConfirm={() => actions.onLeaveGroup(panel.id)} /> : null}

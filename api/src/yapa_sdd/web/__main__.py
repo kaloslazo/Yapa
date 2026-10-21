@@ -87,10 +87,11 @@ def main() -> None:
     if args.base:
         persistence.save(store, args.base)
     html = create_app(store, clock, on_change=on_change)
-    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(), google=google_from_env(),
+    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(server=bool(args.base)), google=google_from_env(),
                      secure_cookie=produccion.secure_cookie(os.environ), security_clock=lambda: datetime.now(LIMA))  # S-153: la API JSON en /api del mismo servidor
 
-    app = produccion.locked(produccion.compose(api, html, args.estaticos, lambda code: invitations.preview(store, code)))  # S-232, S-233, S-234, S-250
+    app = produccion.locked(produccion.compose(api, html, args.estaticos, lambda code: invitations.preview(store, code),
+                                                 secure=produccion.secure_cookie(os.environ)))  # S-232, S-233, S-234, S-250
     with make_server(args.escuchar, args.puerto, app, server_class=produccion.ThreadedServer) as server:  # S-61, S-231
         print(f"Yapa en http://{args.escuchar}:{args.puerto}  (Ctrl+C para salir)")
         server.serve_forever()

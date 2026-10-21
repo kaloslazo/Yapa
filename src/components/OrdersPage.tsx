@@ -5,6 +5,7 @@ import { Icon } from './Icon';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { refundPromise } from '../utils/refund';
+import { weekLabel } from '../utils/week';
 
 export interface MyOrders {
   orders: Order[];
@@ -172,7 +173,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
           <div className="customer-section-heading"><div><h2 id="orders-page-title">Tus canastas</h2></div><span className="customer-count">{orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}</span></div>
           {orders.length ? <div className="orders-page-list">{orders.map((order) => (
             <article className="orders-page-card" key={order.id}>
-              <div className="orders-page-card-top"><div><strong>Pedido {order.id}</strong><span>Semana {order.cycle}</span></div><span className={`order-status order-status--${order.status === 'REGISTRADO' ? order.payment.toLowerCase() : order.status.toLowerCase()}`}>{statusLabel(order)}</span></div>
+              <div className="orders-page-card-top"><div><strong>Pedido {order.id}</strong><span>{weekLabel(order.cycle)}</span></div><span className={`order-status order-status--${order.status === 'REGISTRADO' ? order.payment.toLowerCase() : order.status.toLowerCase()}`}>{statusLabel(order)}</span></div>
               {order.status === 'REGISTRADO' && order.payment === 'POR_VERIFICAR' && order.toPay > 0 ? <div className="pay-reminder"><Icon name="wallet" size={18} /><span>Yapea <strong>{formatMoney(order.toPay)}</strong> por {methodName(order.method)} con el código <code>{order.paymentCode}</code> en el mensaje.</span></div> : null}
               <Timeline order={order} />
               <Outcome order={order} />

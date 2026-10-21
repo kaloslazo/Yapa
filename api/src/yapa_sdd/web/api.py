@@ -26,11 +26,18 @@ from ..settlement import ZONE_ADMIN_DISCOUNT, ZONE_ADMIN_DISCOUNT_WEEKS, _in_dis
 from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
+from ..throttle import Throttle
 from .app import _form, _save_photo
+from .produccion import client_ip
 
 
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
+PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas"}  # S-260
+VIEW_AS_BLOCKED = re.compile(r"/api/(saldo/devolucion|pedidos/\d+/cancelar|zonas/[\w-]+/transferir)")  # S-262
+LOGIN_FAILURES = (30, timedelta(minutes=15))  # S-264
+MAILS_PER_IP = (10, timedelta(hours=1))  # S-265
+FAILURE_CODES = {"INVALID_CREDENTIALS", "INVALID_CODE"}
 COOKIE = "yapa_api"
 SESSION_TIME = timedelta(hours=8)  # S-69
 WINDOWS = ["09:00 – 12:00", "12:00 – 15:00", "15:00 – 18:00"]
@@ -108,6 +115,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     credential_paths = frozenset({"/api/pin", "/api/pin/crear", "/api/cuenta/correo", "/api/cuenta/correo/verificar",
                                   "/api/cuenta/google", "/api/cuenta/google/desvincular"})  # DM-08
     secure = "; Secure" if secure_cookie else ""  # S-230
+    login_failures, mails = Throttle(*LOGIN_FAILURES), Throttle(*MAILS_PER_IP)
 
     # --- ayudas ---
 
@@ -140,10 +148,24 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
         token = cookie[COOKIE].value if COOKIE in cookie else None
         session = sessions.get(token) if token else None
-        if session and security() >= session["expires"]:
+        if session and (security() >= session["expires"]
+                        or session["stamp"] != auth.credential_stamp(store, session["kind"], session["principal"])):  # SG-05
             del sessions[token]
             session = None
         return token, session
+
+    def counting_failures(environ, action):
+        """SG-09: desde una dirección con muchos fallos no se revisa la clave; cada fallo de clave o código cuenta."""
+        ip = client_ip(environ)
+        if login_failures.blocked(ip, security()):
+            raise ApiError("429 Too Many Requests", "TOO_MANY_ATTEMPTS",
+                           "Demasiados intentos desde tu conexión. Vuelve a intentar en 15 minutos.")
+        try:
+            return action()
+        except BusinessRuleError as error:
+            if error.code in FAILURE_CODES:
+                login_failures.hit(ip, security())
+            raise
 
     def role_of(session: dict) -> str:
         """S-157: el admin de zona es un vecino que administra una zona."""
@@ -235,20 +257,29 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ciclo": cycle_id, "productos": products}
 
     def zonas(environ, data, session):
-        return {"zonas": [zone_json(z) for z in store.zones.values()]}
+        """SG-12, S-267: el equipo ve todo; los demás, sin contacto ni admin; quien no entró, la ubicación redondeada."""
+        result = [zone_json(z) for z in store.zones.values()]
+        if session is None or session["kind"] != "admin":
+            for zone in result:
+                del zone["contacto"], zone["admin"]
+                if session is None:
+                    zone["lat"], zone["lon"] = (round(zone[k], 3) if zone[k] is not None else None for k in ("lat", "lon"))
+        return {"zonas": result}
 
     # --- sesión (API-02) ---
 
     def sesion_entrar(environ, data, session):
         kind = data.get("tipo") if data.get("tipo") in ("vecino", "admin") else "vecino"
         user = customers.resolve_login(store, data.get("usuario", "")) if kind == "vecino" else data.get("usuario", "")  # S-244
-        principal = auth.authenticate(store, kind, user, data.get("secreto", ""), security())
+        principal = counting_failures(environ, lambda: auth.authenticate(store, kind, user, data.get("secreto", ""), security()))
         return open_session(principal, kind)
 
     def open_session(principal, kind, **extra):
+        for old in [t for t, s in sessions.items() if security() >= s["expires"]]:  # SG-15
+            del sessions[old]
         token = secrets.token_urlsafe(32)
         new = {"principal": principal, "kind": kind, "csrf": secrets.token_urlsafe(16),
-               "expires": security() + SESSION_TIME, **extra}
+               "expires": security() + SESSION_TIME, "stamp": auth.credential_stamp(store, kind, principal), **extra}
         sessions[token] = new
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}{secure}"
         return me(new), [("Set-Cookie", cookie)]
@@ -287,8 +318,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def invitacion_correo(environ, data, session, token):
         """IN-04."""
+        ip = client_ip(environ)
+        if mails.blocked(ip, security()):  # SG-10
+            raise ApiError("429 Too Many Requests", "TOO_MANY_ATTEMPTS",
+                           "Pediste muchos códigos desde tu conexión. Intenta de nuevo en una hora.")
         email, code = invitations.start_signup(store, token, data.get("nombre", ""), data.get("celular", ""),
                                                data.get("correo", ""), bool(data.get("consentimiento")), clock())
+        mails.hit(ip, security())
         try:
             send_code(email, "Confirma tu correo en Yapa", "Estás creando tu cuenta de Yapa.", code)
         except MailError:
@@ -297,8 +333,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def invitacion_confirmar(environ, data, session, token):
         """IN-05."""
-        customer = invitations.finish_signup(store, token, data.get("correo", ""), data.get("codigo", ""),
-                                             data.get("pin", ""), clock())
+        customer = counting_failures(environ, lambda: invitations.finish_signup(
+            store, token, data.get("correo", ""), data.get("codigo", ""), data.get("pin", ""), clock()))
         return open_session(customer.customer_id, "vecino")
 
     def invitacion_google(environ, data, session, token):
@@ -355,6 +391,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def sesion_volver(environ, data, session):
         """DM-07."""
         back = sessions.get(session.get("return_token") or "")
+        if back is not None and back["stamp"] != auth.credential_stamp(store, back["kind"], back["principal"]):  # SG-16
+            back = None
         if back is None:
             raise BusinessRuleError("NOT_VIEWING_AS", "No estás viendo Yapa como otra persona.")
         token, _ = session_of(environ)
@@ -441,10 +479,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def crear_pin(environ, data, session):
         """LG-05."""
         auth.create_pin(store, session["principal"], data.get("pin", ""))
+        session["stamp"] = auth.credential_stamp(store, "vecino", session["principal"])  # SG-06
         return {"tiene_pin": True}
 
     def cambiar_pin(environ, data, session):
         auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), security())
+        session["stamp"] = auth.credential_stamp(store, "vecino", session["principal"])  # SG-06
         return {"ok": True}
 
     def reclamos(environ, data, session):
@@ -810,8 +850,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def pin_olvide(environ, data, session):
         """OP-01, CR-05, S-196, S-205: siempre la misma respuesta, exista o no el número y tenga o no correo verificado."""
-        sent = recovery.request_pin_reset(store, customers.resolve_login(store, data.get("usuario")), clock())  # S-246
+        ip = client_ip(environ)
+        if mails.blocked(ip, security()):  # SG-10: la respuesta no cambia (S-196)
+            sent = None
+        else:
+            sent = recovery.request_pin_reset(store, customers.resolve_login(store, data.get("usuario")), clock())  # S-246
         if sent:
+            mails.hit(ip, security())
             try:
                 send_code(sent[0], "Recupera tu PIN de Yapa", "Pediste cambiar tu PIN.", sent[1])
             except MailError:
@@ -820,7 +865,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def pin_restablecer(environ, data, session):
         """CR-06."""
-        recovery.reset_pin_with_code(store, customers.resolve_login(store, data.get("usuario")), data.get("codigo"), data.get("pin"), clock())
+        counting_failures(environ, lambda: recovery.reset_pin_with_code(
+            store, customers.resolve_login(store, data.get("usuario")), data.get("codigo"), data.get("pin"), clock()))
         return {"mensaje": "Listo: ya puedes entrar con tu PIN nuevo."}
 
     def cuenta_correo(environ, data, session):
@@ -959,14 +1005,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             raise ApiError("401 Unauthorized", "LOGIN_REQUIRED", "Entra a tu cuenta para seguir.")
         if role in ("vecino", "admin") and session["kind"] != role:
             raise ApiError("403 Forbidden", "FORBIDDEN", "Esta acción no es para tu tipo de cuenta.")
-        if method == "POST" and session is not None and session.get("viewing_as") and path.rstrip("/") in credential_paths:
-            raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google.")  # DM-08
+        if method == "POST" and session is not None and session.get("viewing_as") and (path.rstrip("/") in credential_paths or VIEW_AS_BLOCKED.fullmatch(path.rstrip("/"))):
+            raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google, ni sacar dinero o ceder una zona.")  # DM-08, SG-07
         if method in ("POST", "DELETE") and session is not None and handler is not sesion_entrar:  # S-155
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
         saved = ""
-        if files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151
+        if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
         try:
             result = handler(environ, data, session, *match.groups())
@@ -1003,4 +1049,5 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                 ("Content-Length", str(len(raw))), ("Cache-Control", "no-store")] + headers)
         return [raw]
 
+    app.sessions = sessions  # SG-W: para comprobar la limpieza
     return app
