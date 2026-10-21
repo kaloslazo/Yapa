@@ -53,6 +53,33 @@ Hoy un vecino solo existe si el admin lo da de alta a mano (nombre, celular, zon
 | IN-M | Pendientes | 200 registros a medio hacer; el 201 | `SIGNUPS_FULL`; los vencidos no cuentan |
 | IN-N | Sin sesión de otro | el registro con enlace no abre la sesión de nadie más ni cambia datos de Ana | — |
 
+## Pantalla (frontend)
+
+- `/unete/<código>` (`src/components/InvitePage.tsx`): muestra quién invita (solo el primer nombre), la zona, cuántos vecinos tiene y el mínimo del grupo; pide celular y consentimiento, y ofrece **Continuar con Google** o el registro con correo (código + PIN elegido). Si el enlace no vale, lo dice; si ya hay sesión, no pide registrarse otra vez. Al terminar entra a la tienda con la sesión abierta.
+- **Mi cuenta** y la tarjeta **Invita y gana** de Mi zona (`src/components/InviteCard.tsx`) muestran el enlace, con **Compartir por WhatsApp** (mensaje ya escrito con el enlace), **Copiar enlace**, cuántos se registraron (hoy y en total) y **Renovar enlace** con confirmación.
+- La ayuda de "¿Todavía no tienes cuenta?" ahora explica el enlace en lugar del alta manual.
+
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| IN-01, IN-02, S-237 | `invitations.link_for`, `renew` | IN-A (2), IN-B |
+| IN-03, S-243 | `invitations.resolve`, `preview` | IN-C, IN-D |
+| IN-04, S-239, S-241 | `invitations.start_signup`, `customers.check_phone` | IN-F, IN-M |
+| IN-05, S-240 | `invitations.finish_signup` | IN-E, IN-G (2), IN-H, confirmar sin código |
+| IN-06, S-240 | `invitations.signup_google`, `GoogleVerifier.verify` (ahora da el nombre) | IN-J (3) |
+| IN-07, S-238, S-242 | `invitations._join`, `notices.neighbor_joined` | IN-I, IN-K (2), IN-L |
+| IN-08 | `customers.register_customer` (usa `check_phone`) | IN-O y las pruebas de siempre del alta |
+| Pantalla | `InvitePage`, `InviteBody`, `utils/invite.ts` | `invitePage.test.ts` (5), `invite.test.ts` (5) |
+
+Pruebas de las propias pruebas (13 mutaciones a mano, revertidas, todas detectadas): un suspendido que invita, un enlace adivinable, sin tope diario, un PIN flojo que gasta el código, intentos sin límite, pendientes vencidos que cuentan, sin tope de pendientes, la vista previa con apellido, sin referido, la zona equivocada, el admin sin aviso, renovar sin invalidar y un celular repetido.
+
+Prueba real contra el motor local: con el enlace de Ana se pidió el código (salió en la consola del motor), se confirmó con un PIN elegido, se abrió la sesión de la vecina nueva en la zona de Ana, el contador de Ana pasó a 1 y le llegó el aviso. El navegador no se pudo usar en esa sesión (Chrome no respondía ni en la portada), por eso la pantalla se probó con pruebas en un DOM simulado.
+
+Nota de método: las pruebas de la pantalla se escribieron justo después de la pantalla, no antes; las del motor sí se escribieron antes (evidencia en rojo).
+
+Evidencia: `docs/evidencia/desarrollo/45-invitaciones-rojo.txt` y `45-invitaciones-verde.txt` (518 pruebas del motor, 22 nuevas; 77 del frontend, 10 nuevas).
+
 ## Fuera de esta iteración (anotado)
 
 - **Código QR imprimible** para pegar en la portería: se hace después de validar el enlace.

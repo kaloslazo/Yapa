@@ -335,3 +335,13 @@
 - Se comprobó con 8 mutaciones: dos sobrevivieron al inicio (el chequeo de `..` y un archivo inexistente con extensión), se ampliaron la spec y las pruebas y las 8 quedaron detectadas. Además se arrancó el motor de verdad en modo servidor y se probaron las negativas y el login.
 - Lo que sigue pendiente para abrir Yapa a internet: HTTPS (lo pone un servidor delante), que las solicitudes de unión y de PIN sobrevivan a un reinicio y un límite de intentos de PIN por IP.
 - Resultado: 496 pruebas del motor (16 nuevas); el frontend no cambió (67).
+
+## Iteración 45 · Registro por invitación (20/10/2026)
+
+- Spec: `45-registro-por-invitacion.md` (S-236..S-243, a validar). El registro propio existe solo con el enlace de un vecino. Cada vecino tiene un enlace con código al azar (el código de referido `ANA101` se puede adivinar y no sirve como llave), que puede renovar.
+- Quien entra con el enlace queda en la zona de quien lo invitó y como su referido (premio de siempre). Se registra con correo (código de 6 dígitos y PIN elegido) o con Google (nombre y correo de Google, sin PIN). Celular y consentimiento obligatorios; el celular no se verifica por SMS.
+- Topes: 20 registros por enlace al día y 200 registros a medio hacer. Quien invita y el admin de la zona reciben un aviso en la app.
+- Pantalla: `/unete/<código>`, el enlace con WhatsApp, copiar y renovar en Mi cuenta y en Invita y gana.
+- Se comprobó con 13 mutaciones (todas detectadas) y con un registro real contra el motor local. Chrome no respondía en esa sesión, así que la pantalla se probó en un DOM simulado.
+- Se corrigió un dato que se había dicho mal: las solicitudes de unión y de PIN sí se guardan en la base; al reiniciar solo se pierden las sesiones.
+- Resultado: 518 pruebas del motor (22 nuevas) y 77 del frontend (10 nuevas), typecheck y build sin errores.
