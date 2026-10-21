@@ -353,3 +353,11 @@
 - Se comprobó con 8 mutaciones (todas detectadas, tras reforzar una prueba) y en producción con el vecino de prueba.
 - Se corrigió un fallo viejo: los campos del código y del PIN nuevo dejaban escribir letras por un `/D/g` mal escrito.
 - Resultado: 532 pruebas del motor (14 nuevas) y 85 del frontend (2 nuevas).
+
+## Iteración 47 · Pulido de lanzamiento (21/10/2026)
+
+- Spec: `47-pulido-de-lanzamiento.md` (S-249..S-252, a validar). Revisión de la web contra una guía de interfaz: la parte mecánica estaba bien; lo flojo era el peso de las imágenes (3,6 MB, ahora 261 KB en WebP), el favicon que faltaba (404 en cada visita), la ausencia de vista previa al compartir el enlace por WhatsApp (ahora el enlace de invitación se ve con el nombre de quien invita y la zona) y que los archivos con huella se guardaban solo una hora (ahora un año).
+- Página `/privacidad` en borrador y enlazada desde el registro: el equipo debe revisar el texto, sobre todo el medio de contacto y los plazos.
+- La invitación pone el cursor en el primer campo al cambiar de paso y ajusta el título de la pestaña.
+- Se comprobó con 5 mutaciones (todas detectadas).
+- Resultado: 537 pruebas del motor (5 nuevas) y 92 del frontend (7 nuevas), tipos y compilación sin errores.

@@ -49,3 +49,22 @@ Web (`src/publicAssets.test.ts`, `src/components/privacyPage.test.ts` y `src/com
 | PU-E | Peso de las imágenes | ninguna imagen de `public/images` supera 150 KB; ya no hay PNG propios pesados |
 | PU-F | `index.html` | tiene favicon, ícono del celular y las etiquetas Open Graph con imagen absoluta |
 | PU-G | Privacidad | la página dice qué datos se guardan, para qué, y cómo ejercer los derechos; el registro enlaza a `/privacidad` |
+
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| PU-01, S-249 | imágenes `.webp` en `public/images`, `favicon.png`, `apple-touch-icon.png`, `og-yapa.jpg`; referencias en `presentation.ts`, `App.tsx`, `AuthDialog.tsx`, `AdminPanel.tsx`, `InvitePage.tsx` | `scripts/publicAssets.test.ts` (PU-E, y que el código solo apunte a imágenes que existen) |
+| PU-02, S-250 | etiquetas en `index.html` | `scripts/publicAssets.test.ts` (PU-F) |
+| PU-03, S-250 | `produccion._invite_html`, `compose(invite_preview=...)`; `__main__` pasa `invitations.preview` | PU-A, PU-B, PU-C, y "otras rutas no cambian" |
+| PU-04, S-251 | `produccion._static` | PU-D y PR-L |
+| PU-05, S-252 | `PrivacyPage.tsx`, ruta `/privacidad` en `App.tsx`, enlace en `InvitePage.tsx` | `privacyPage.test.ts` (PU-G), `invitePage.test.ts` |
+| Foco y título de la invitación | `InvitePage.tsx` | `invitePage.test.ts` |
+
+Resultado medido: las imágenes de la web pasaron de **3,6 MB a 261 KB** (producto de 277–582 KB a 20–41 KB, banner de 696 a 93 KB, logo de 118 a 7 KB). El favicon dejó de dar 404.
+
+Pruebas de las propias pruebas (5 mutaciones del motor a mano, revertidas, todas detectadas): zona sin escapar en la vista previa, sin caché larga, una falla que muestra error en vez de la portada, el título sin cambiar y la vista previa guardada en caché.
+
+Se cambió una prueba vieja con motivo: PR-L comprobaba una hora de caché también para `/assets/`; ahora comprueba una hora para los demás archivos y PU-D un año para `/assets/` (S-251 cambia S-235 solo ahí). No se debilitó nada: la regla es otra.
+
+Evidencia: `docs/evidencia/desarrollo/47-pulido-rojo.txt` y `47-pulido-verde.txt` (537 pruebas del motor, 5 nuevas; 92 del frontend, 7 nuevas).
