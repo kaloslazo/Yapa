@@ -62,7 +62,7 @@ export function toQuote(raw: Raw): Quote {
 }
 
 export function toAccount(raw: Raw): Account {
-  return { user: raw.usuario, name: raw.nombre, role: raw.rol, csrf: raw.csrf, zoneId: raw.zona, balance: raw.saldo !== undefined ? num(raw.saldo) : undefined, referralCode: raw.codigo_referido, email: raw.correo ?? null, emailVerified: Boolean(raw.correo_verificado), googleLinked: Boolean(raw.google_vinculado) };
+  return { user: raw.usuario, name: raw.nombre, role: raw.rol, csrf: raw.csrf, zoneId: raw.zona, balance: raw.saldo !== undefined ? num(raw.saldo) : undefined, referralCode: raw.codigo_referido, email: raw.correo ?? null, emailVerified: Boolean(raw.correo_verificado), googleLinked: Boolean(raw.google_vinculado), hasPin: raw.tiene_pin === undefined ? undefined : Boolean(raw.tiene_pin) };
 }
 
 export function toNotice(raw: Raw): Notice {

@@ -48,6 +48,7 @@ export interface Account {
   email?: string | null;
   emailVerified?: boolean;
   googleLinked?: boolean;
+  hasPin?: boolean;
 }
 
 export interface Zone {

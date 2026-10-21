@@ -23,6 +23,7 @@ interface AuthDialogProps {
   onResetPin: (user: string, code: string, pin: string) => Promise<string>;
   onSendEmail: (email: string) => Promise<void>;
   onVerifyEmail: (code: string) => Promise<void>;
+  onCreatePin: (pin: string) => Promise<void>;
   onOpenAdmin: () => void;
   onOpenZone: () => void;
   onOpenOrders: () => void;
@@ -34,7 +35,7 @@ export function shareText(code: string) {
   return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
 }
 
-export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, googleClientId, onGoogleLogin, onGoogleLink, onGoogleUnlink, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
+export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, googleClientId, onGoogleLogin, onGoogleLink, onGoogleUnlink, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onCreatePin, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [audience, setAudience] = useState<AuthAudience>(initialAudience);
   const [user, setUser] = useState('');
@@ -49,6 +50,8 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const [forgotPin, setForgotPin] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [emailInput, setEmailInput] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [pinMessage, setPinMessage] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [emailStep, setEmailStep] = useState<'ask' | 'code'>('ask');
   const [emailMessage, setEmailMessage] = useState('');
@@ -86,6 +89,19 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       await onLogin(audience, user.trim(), secret);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'No pudimos entrar. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const createPin = async () => {
+    setBusy(true);
+    try {
+      await onCreatePin(newPin);
+      setNewPin('');
+      setPinMessage('Listo: ya puedes entrar también con tu correo o celular y tu PIN.');
+    } catch (error) {
+      setPinMessage(error instanceof Error ? error.message : 'No pudimos guardar tu PIN. Inténtalo de nuevo.');
     } finally {
       setBusy(false);
     }
@@ -163,13 +179,14 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
           {account.role !== 'admin' ? (account.emailVerified ? <p className="email-ok"><Icon name="ok" size={16} /> Correo verificado: {account.email}</p> : (
             <div className="email-card"><strong>Verifica tu correo</strong><p>Con tu correo verificado recuperas tu PIN tú mismo, sin esperar a nadie.</p>
               {emailStep === 'ask' ? <form onSubmit={(event) => { event.preventDefault(); void sendEmail(); }}><label className="auth-field"><span>Tu correo</span><input type="email" value={emailInput} onChange={(event) => setEmailInput(event.target.value)} autoComplete="email" placeholder="nombre@gmail.com" required /></label><button className="secondary-button" type="submit" disabled={busy || !emailInput.trim()}>Enviarme un código</button></form>
-                : <form onSubmit={(event) => { event.preventDefault(); void verifyEmail(); }}><label className="auth-field"><span>Código que te llegó{account.email ? ` a ${account.email}` : ''}</span><input value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label><button className="primary-button" type="submit" disabled={busy || emailCode.length !== 6}>Verificar</button><button className="auth-link" type="button" onClick={() => { setEmailStep('ask'); setEmailMessage(''); }}>Escribir el correo otra vez</button></form>}
+                : <form onSubmit={(event) => { event.preventDefault(); void verifyEmail(); }}><label className="auth-field"><span>Código que te llegó{account.email ? ` a ${account.email}` : ''}</span><input value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label><button className="primary-button" type="submit" disabled={busy || emailCode.length !== 6}>Verificar</button><button className="auth-link" type="button" onClick={() => { setEmailStep('ask'); setEmailMessage(''); }}>Escribir el correo otra vez</button></form>}
               {emailMessage ? <p className="auth-feedback" role="status">{emailMessage}</p> : null}
             </div>)) : null}
           {account.role !== 'admin' && inviteUrl ? <div className="referral-card"><InviteBody /><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : account.referralCode ? <div className="referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : null}
           {account.role !== 'admin' && googleClientId ? (account.googleLinked
             ? <p className="email-ok"><Icon name="ok" size={16} /> Cuenta de Google vinculada <button className="auth-link" type="button" onClick={() => void googleAction(onGoogleUnlink)}>Desvincular</button></p>
             : <div className="google-link"><strong>Entra sin PIN</strong><p>Vincula tu cuenta de Google y la próxima vez entras con un toque.</p><GoogleButton clientId={googleClientId} text="continue_with" onCredential={(credential) => void googleAction(() => onGoogleLink(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div>) : null}
+          {account.role !== 'admin' && account.hasPin === false ? <div className="email-card"><strong>Crea tu PIN (opcional)</strong><p>Hoy entras con Google. Si quieres entrar también con tu correo o celular, crea un PIN de 6 dígitos.</p><form onSubmit={(event) => { event.preventDefault(); void createPin(); }}><label className="auth-field"><span>Tu PIN nuevo</span><input type="password" className="pin-input" value={newPin} onChange={(event) => { setNewPin(event.target.value.replace(/\D/g, '').slice(0, 6)); setPinMessage(''); }} inputMode="numeric" autoComplete="new-password" placeholder="••••••" /></label><button className="secondary-button" type="submit" disabled={busy || newPin.length !== 6}>Guardar mi PIN</button></form>{pinMessage ? <p className="auth-feedback" role="status">{pinMessage}</p> : null}</div> : null}
           <div className="auth-account-actions">
             {account.role === 'admin' ? <button className="primary-button" type="button" onClick={() => go(onOpenAdmin)}>Ir al centro de operaciones <Icon name="arrow" size={17} /></button> : <>
               <button className="primary-button" type="button" onClick={() => go(onOpenOrders)}>Mis pedidos <Icon name="arrow" size={17} /></button>
@@ -186,8 +203,9 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
           </div>
           <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar"><button className={audience === 'vecino' ? 'is-active' : ''} type="button" aria-pressed={audience === 'vecino'} onClick={() => { setAudience('vecino'); setFeedback(''); }}><Icon name="basket" size={15} />Soy vecino</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => { setAudience('admin'); setFeedback(''); }}><Icon name="user" size={15} />Equipo Yapa</button></div>
           <form className="auth-form" onSubmit={submit}>
-            <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Número de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, ''))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="username" placeholder={audience === 'admin' ? 'admin-yapa' : 'Ej. 101'} required /></label>
+            <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o número de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
             <label className="auth-field"><span>{audience === 'admin' ? 'Contraseña' : 'PIN'}</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="current-password" placeholder={audience === 'admin' ? '' : '••••••'} required className={audience === 'vecino' ? 'pin-input' : ''} /></label>
+            {audience === 'vecino' && googleClientId ? <p className="auth-hint">Si te registraste con Google, entra con el botón de Google: no necesitas PIN.</p> : null}
             {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
             <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'} {!busy ? <Icon name="arrow" size={17} /> : null}</button>
           </form>
@@ -196,10 +214,10 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
             <div className="signup-help">
               <button className="auth-link" type="button" onClick={() => setShowSignup((value) => !value)} aria-expanded={showSignup}>¿Todavía no tienes cuenta?</button>
               <button className="auth-link" type="button" onClick={() => setShowForgot((value) => !value)} aria-expanded={showForgot}>¿Olvidaste tu PIN?</button>
-              {showForgot ? <div className="forgot-pin"><p>Escribe tu número de cliente arriba. Si verificaste tu correo, te mandamos un código ahí; si no, el equipo de Yapa te escribirá por WhatsApp al celular que registraste.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir ayuda con mi PIN</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}
+              {showForgot ? <div className="forgot-pin"><p>Escribe tu correo, celular o número de cliente arriba. Si verificaste tu correo, te mandamos un código ahí; si no, el equipo de Yapa te escribirá por WhatsApp al celular que registraste.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir ayuda con mi PIN</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}
                 <form className="forgot-code" onSubmit={(event) => { event.preventDefault(); void resetWithCode(); }}><strong>¿Ya tienes tu código?</strong>
-                  <label className="auth-field"><span>Código del correo</span><input value={forgotCode} onChange={(event) => setForgotCode(event.target.value.replace(/D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label>
-                  <label className="auth-field"><span>PIN nuevo</span><input type="password" value={forgotPin} onChange={(event) => setForgotPin(event.target.value.replace(/D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="new-password" placeholder="6 dígitos" className="pin-input" /></label>
+                  <label className="auth-field"><span>Código del correo</span><input value={forgotCode} onChange={(event) => setForgotCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label>
+                  <label className="auth-field"><span>PIN nuevo</span><input type="password" value={forgotPin} onChange={(event) => setForgotPin(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="new-password" placeholder="6 dígitos" className="pin-input" /></label>
                   <button className="primary-button" type="submit" disabled={busy || !user.trim() || forgotCode.length !== 6 || forgotPin.length !== 6}>Cambiar mi PIN</button>
                   {resetMessage ? <p className="auth-feedback" role="status">{resetMessage}</p> : null}
                 </form></div> : null}

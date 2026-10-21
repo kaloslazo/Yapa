@@ -961,3 +961,5 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .invite-identity { display: flex; align-items: center; gap: 10px; color: var(--copy); font-size: .9rem; }
 .invite-avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--green-soft); color: var(--green); font-weight: 700; }
 .invite-card .auth-link { justify-self: center; }
+
+.auth-hint { margin: 0; color: var(--muted); font-size: .8125rem; line-height: 1.4; }
