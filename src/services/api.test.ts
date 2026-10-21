@@ -15,7 +15,7 @@ describe('FE-A · producto desde la API', () => {
     expect(product.nextTier).toEqual({ from: 100, price: 3.79 });
     expect(product.supermarket?.price).toBe(7.99);
     expect(product.supermarketSaving).toBeCloseTo(49.56, 1);
-    expect(product.image).toBe('/images/products/papa-amarilla.png');
+    expect(product.image).toBe('/images/products/papa-amarilla.webp');
   });
 });
 

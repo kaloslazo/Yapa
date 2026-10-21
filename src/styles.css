@@ -963,3 +963,9 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .invite-card .auth-link { justify-self: center; }
 
 .auth-hint { margin: 0; color: var(--muted); font-size: .8125rem; line-height: 1.4; }
+
+.privacy-page h2 { margin: 10px 0 0; }
+.privacy-page ul { margin: 0; padding-left: 20px; color: var(--copy); line-height: 1.55; }
+.privacy-draft { padding: 8px 12px; border-radius: var(--radius-note); background: var(--yellow-soft); color: var(--ink); font-size: .875rem; }
+.privacy-back { justify-self: start; margin-top: 8px; }
+.invite-consent a { color: var(--accent-dark); font-weight: 600; text-underline-offset: 2px; }

@@ -144,6 +144,26 @@ describe('página de invitación', () => {
     expect(onJoined).toHaveBeenCalledWith(expect.objectContaining({ usuario: 106 }));
   });
 
+  it('el consentimiento enlaza a la privacidad en otra pestaña, y el título dice quién invita (PU-05)', async () => {
+    await render();
+    await act(async () => { button('Registrarme con mi correo').click(); });
+    const link = host.querySelector('.invite-consent a') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/privacidad');
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toContain('noreferrer');
+    expect(document.title).toBe('Ana te invita a Yapa');
+  });
+
+  it('al cambiar de paso el cursor va al primer campo que se puede escribir', async () => {
+    await render();
+    await act(async () => { button('Registrarme con mi correo').click(); });
+    expect(document.activeElement).toBe(field('nombre'));
+    (globalThis as any).FAKE_TOKEN = tokenOf({ name: 'Raith Bravo', email: 'raith@gmail.com' }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    await act(async () => { button('Volver').click(); });
+    await act(async () => { button('Continuar con Google').click(); });
+    expect(document.activeElement).toBe(field('celular')); // nombre y correo están de solo lectura
+  });
+
   it('si ya tiene cuenta no le pide registrarse otra vez', async () => {
     await render({ signedIn: true });
     expect(host.textContent).toContain('Ya tienes tu cuenta');

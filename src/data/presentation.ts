@@ -9,14 +9,14 @@ interface Look {
 }
 
 const looks: Record<string, Look> = {
-  'PAPA-AMARILLA': { detail: 'Cremosa, ideal para causa y puré', art: 'potato', image: '/images/products/papa-amarilla.png', emoji: '🥔' },
+  'PAPA-AMARILLA': { detail: 'Cremosa, ideal para causa y puré', art: 'potato', image: '/images/products/papa-amarilla.webp', emoji: '🥔' },
   'PAPA-BLANCA': { detail: 'Rendidora para el día a día', art: 'potato', emoji: '🥔' },
   'CEBOLLA-ROJA': { detail: 'Para el aderezo y el sarza', art: 'tomato', emoji: '🧅' },
   AJO: { detail: 'Criollo, por cuartos de kilo', art: 'rice', emoji: '🧄' },
   LIMON: { detail: 'Jugoso, para el ceviche', art: 'banana', emoji: '🍋' },
   CAMOTE: { detail: 'Amarillo y dulce', art: 'oil', emoji: '🍠' },
   ZANAHORIA: { detail: 'Fresca, de mercado mayorista', art: 'oil', emoji: '🥕' },
-  'PLATANO-SEDA': { detail: 'Dulce y listo para la semana', art: 'banana', image: '/images/products/platano-seda.png', emoji: '🍌' },
+  'PLATANO-SEDA': { detail: 'Dulce y listo para la semana', art: 'banana', image: '/images/products/platano-seda.webp', emoji: '🍌' },
   'LIMPIATODO-GALON': { detail: 'Galón de 3.8 L, rinde el mes', art: 'milk', emoji: '🧴' },
   'LAVAVAJILLAS-GALON': { detail: 'Galón para la cocina', art: 'milk', emoji: '🧽' },
   'DETERGENTE-LIQUIDO-GALON': { detail: 'Galón para la ropa', art: 'milk', emoji: '🫧' },

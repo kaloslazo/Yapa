@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../services/api';
 import { decodeGoogleProfile, isValidPhone, isWeakPin, type GoogleProfile } from '../utils/invite';
 import { GoogleButton } from './GoogleButton';
@@ -35,10 +35,18 @@ export function InvitePage({ code, googleClientId, signedIn, onJoined, onGoHome 
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [notice, setNotice] = useState('');
+  const card = useRef<HTMLElement>(null);
 
   useEffect(() => {
     api.get<Preview>(`/api/invitaciones/${code}`).then(setPreview).catch((error) => setBroken(error instanceof ApiError && error.status === 0 ? messageOf(error) : 'Este enlace no existe o ya no vale. Pídele a tu vecino que te mande uno nuevo.'));
   }, [code]);
+
+  useEffect(() => { document.title = preview ? `${preview.invita} te invita a Yapa` : 'Yapa · Invitación'; }, [preview]);
+
+  // al cambiar de paso, el cursor va al primer campo que se puede escribir (también para quien usa lector de pantalla)
+  useEffect(() => {
+    if (step !== 'method') card.current?.querySelector<HTMLInputElement>('input:not([readonly]):not([type=checkbox])')?.focus();
+  }, [step]);
 
   // al escribir se limpia el aviso de error anterior
   const typed = (setter: (value: string) => void, clean: (value: string) => string = (value) => value) => (event: { target: { value: string } }) => { setter(clean(event.target.value)); setFeedback(''); };
@@ -97,15 +105,15 @@ export function InvitePage({ code, googleClientId, signedIn, onJoined, onGoHome 
   const phoneAndConsent = (
     <>
       <label className="auth-field"><span>Tu celular</span><input value={phone} onChange={typed(setPhone, (value) => value.replace(/\D/g, '').slice(0, 9))} inputMode="numeric" autoComplete="tel-national" placeholder="9 dígitos, empieza con 9" /></label>
-      <label className="invite-consent"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setFeedback(''); }} /> <span>Acepto que Yapa guarde mi nombre, correo y celular para mis pedidos.</span></label>
+      <label className="invite-consent"><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setFeedback(''); }} /> <span>Acepto que Yapa guarde mi nombre, correo y celular para mis pedidos. <a href="/privacidad" target="_blank" rel="noreferrer">Cómo cuidamos tus datos</a></span></label>
     </>
   );
   const errorBox = feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null;
 
   return (
     <main className="invite-page">
-      <section className="invite-card">
-        <div className="auth-brandline"><img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" /><span>yapa</span></div>
+      <section className="invite-card" ref={card}>
+        <div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div>
         {broken ? (
           <><h1>Este enlace no sirve</h1><p>{broken}</p><button className="secondary-button" type="button" onClick={onGoHome}>Ir a Yapa</button></>
         ) : !preview ? <p role="status">Abriendo tu invitación…</p> : signedIn ? (

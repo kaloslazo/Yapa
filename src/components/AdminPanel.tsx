@@ -106,7 +106,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Navegación de operaciones">
           <a className="admin-brand" href="#admin" aria-label="Yapa, centro de operaciones" onClick={(event) => { event.preventDefault(); setSection('resumen'); }}>
-            <img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" />
+            <img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" />
             <span><strong>yapa</strong><small>operaciones</small></span>
           </a>
           <div className="admin-sidebar-label">Centro de control</div>
