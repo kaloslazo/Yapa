@@ -70,5 +70,5 @@ Evidencia: `docs/evidencia/desarrollo/48-demostracion-rojo.txt` y `48-demostraci
 
 ## Fuera de esta iteración (anotado)
 
-- **Registro abierto con ubicación y aprobación del admin de zona** (idea del dueño, 21/10): cualquiera se registra, comparte su ubicación (el navegador pide permiso), solo entra a zonas a menos de 300 m, y el admin de la zona lo aprueba; la invitación queda como atajo que da beneficios a quien invita. Es la iteración 49 y reemplaza el supuesto S-236.
+- **Registro abierto con ubicación y aprobación del admin de zona** (idea del dueño, 21/10): cualquiera se registra, comparte su ubicación (el navegador pide permiso), solo entra a zonas a menos de 300 m, y el admin de la zona lo aprueba; la invitación queda como atajo que da beneficios a quien invita. Es la iteración 50 y reemplaza el supuesto S-236.
 - Cuentas de proveedor y de la gestión de camiones, cuando existan esas pantallas.
