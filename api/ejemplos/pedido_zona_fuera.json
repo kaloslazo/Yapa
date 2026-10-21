@@ -1,0 +1,9 @@
+{
+  "customerId": 104,
+  "lines": [
+    {"productId": "PAPA-AMARILLA", "quantity": "5"},
+    {"productId": "LIMPIATODO-GALON", "quantity": "4"}
+  ],
+  "payment": {"method": "PLIN", "operationCode": "PL-778812", "amount": "59.60"},
+  "requestedAt": "2026-09-16T10:00:00-05:00"
+}

@@ -1,0 +1,74 @@
+# Iteración 29 · Frontend de Kalos conectado al motor: vecino, admin de zona y admin de Yapa
+
+## Requisito
+
+Como vecino, quiero comprar en la tienda de Yapa (la de Kalos) con las reglas reales: avance del tramo, ahorro frente al supermercado, pago sin escribir códigos, mis pedidos con lo que me devolvieron, mis reclamos y mi zona.
+
+Como admin de zona, quiero un panel propio para ver cómo va mi edificio, invitar vecinos, unir mi zona con una cercana y transferir el rol.
+
+Como admin de Yapa, quiero operar la semana completa desde el panel de Kalos: verificar, armar con foto, entregar, liquidar, resolver reclamos y devoluciones, ver la conciliación y las métricas, publicar el catálogo y dar de alta vecinos.
+
+## Por qué
+
+- Decisión del equipo (17/10/2026): la cara es el React de Kalos y las reglas viven en un solo lugar, el motor de `api/` (iteración 27).
+- Pedido de Carlos: nada de pantallas para escribir. Se elige con botones, listas y casillas; solo se escribe lo que no se puede elegir (PIN, montos, nombres).
+
+## Supuestos nuevos (a validar por el equipo)
+
+| # | Supuesto | Valor |
+|---|---|---|
+| S-166 | El frontend **no calcula reglas**. Precios, totales, ahorro, liquidación, beneficios y permisos vienen de la API. Solo suma el carrito en el navegador para mostrarlo mientras se arma (como S-144); el total que vale lo da `POST /api/cotizar`. | — |
+| S-167 | No hay registro libre con correo: el alta la hace el admin de Yapa con el consentimiento del vecino (S-133). La tienda explica cómo pedir el alta y con qué código de referido. | — |
+| S-168 | Se retiran de esta rama el servicio de Appwrite, la copia en TypeScript de las reglas (`utils/domain.ts`) y sus pruebas, porque las reglas y sus pruebas viven en `api/`. Quedan en el historial de Git (commits de Kalos del 17/10). | — |
+| S-169 | Los productos sin foto propia se muestran con un ícono grande sobre el fondo de color de su tipo, en el mismo estilo de las tarjetas de Kalos. | — |
+
+## Reglas
+
+| Regla | Comportamiento |
+|---|---|
+| FE-01 | Todos los datos vienen de `/api` (S-166). En desarrollo Vite reenvía `/api` al motor en el puerto 8000 (S-153). |
+| FE-02 | Entrar: vecino con número de cliente y PIN; admin con usuario y contraseña. Según el rol se abre la tienda, el panel de zona o el panel de operaciones. |
+| FE-03 | Tienda: productos por categoría, con precio máximo, avance del grupo hacia el siguiente tramo, ahorro frente al supermercado y botones − y + que respetan el paso (0.25 kg en el ajo) y el máximo por pedido. |
+| FE-04 | Pedido sin escribir: medio (Yape o Plin) y casilla "usar mi saldo". La confirmación muestra **cuánto yapear** y el **código de pago** con un botón para copiarlo (S-150). |
+| FE-05 | Mis pedidos: avance, cancelar con botones, lo devuelto, el ahorro frente al supermercado, el beneficio de admin de zona, y reclamos con foto en los pedidos entregados. |
+| FE-06 | Mi zona (vecino): su zona, unirse a otra de una lista, crear una con el botón de ubicación, y su código de referido con enlace para compartir por WhatsApp. |
+| FE-07 | Panel del admin de zona: avance del grupo, vecinos con "ya pidió", beneficios, código de referido, mapa con el radio de 300 m y las zonas a 500 m, unir, aceptar o rechazar solicitudes, transferir el rol y activar la recepción. |
+| FE-09 | Hueco de la API (iteración 27): faltaba guardar la ubicación del vecino (HR-01), que necesitan unirse y crear zona. `POST /api/ubicacion` con `lat` y `lon` llama a `zones.set_location`. |
+| FE-08 | Panel de operaciones (admin de Yapa): resumen con indicadores y grupos, verificar pagos, liquidar con confirmación, armado y entrega con foto, reclamos, devoluciones, conciliación, métricas, catálogo, precios de referencia y vecinos (alta con consentimiento y referido, reinicio de PIN). |
+
+## Criterios de aceptación (pruebas de `src/**/*.test.ts` y `api/tests/test_api.py`)
+
+- **FE-F · Ubicación por la API.** Un vecino sin ubicación hace `POST /api/ubicacion` con lat -12.0850 y lon -77.0350 → 200, y después puede crear una zona en Lince. Con lat `"abc"` → 422 `INVALID_LOCATION`.
+
+- **FE-A · Producto desde la API.** Un producto de la API con `precio_max` `"4.03"`, `paso` `"1"`, `pedido_total` `"27"` y siguiente tramo desde `"100"` a `"3.79"` se muestra con precio 4.03, avance 27 de 100 y "baja a 3.79". Con referencia de supermercado a `"7.99"`, el ahorro es 49.5 %.
+- **FE-B · Paso y tope del carrito.** El ajo (paso 0.25, máximo 10) sube de 0 a 0.25 y a 0.5; desde 10 no sube más; al bajar de 0.25 sale del carrito. La papa (paso 1) sube de 1 en 1.
+- **FE-C · Cliente de la API.** Un `POST` manda la cabecera `X-Yapa-CSRF` con el token de la sesión y la cookie (`credentials: 'include'`). Una respuesta 422 se convierte en un error con el `codigo` y el `mensaje` de la API.
+- **FE-D · Rol.** `admin` abre el panel de operaciones; `admin_zona` puede abrir el panel de zona y la tienda; `vecino` abre la tienda.
+- **FE-E · Total aproximado del carrito.** 5 kg de papa amarilla a 4.03, 10 de papa blanca a 1.23 y 10 de cebolla a 2.35 suman **55.95** aprox. con los precios redondeados que se ven; el servidor, con los precios sin redondear (4.032…), da un subtotal de S/ 56.00 y un total de S/ 61.00 con el envío. Por eso el carrito dice "aprox." y el total que vale es el de `POST /api/cotizar`.
+
+## Trazabilidad
+
+| Regla | Código (`src/`) | Prueba |
+|---|---|---|
+| FE-01, S-166 | `services/api.ts` (cookie, `X-Yapa-CSRF`, errores), `services/mappers.ts`, `vite.config.ts` (proxy `/api`) | `services/api.test.ts` (FE-A, FE-C) |
+| FE-02, S-167 | `components/AuthDialog.tsx`, `utils/roles.ts`, `App.tsx` (`login`, `logout`) | `utils/cart.test.ts` (FE-D) |
+| FE-03, S-169 | `components/Catalog.tsx` (avance del tramo, distintivo de ahorro, − y +), `data/presentation.ts`, `utils/cart.ts` | `utils/cart.test.ts` (FE-B, FE-E) |
+| FE-04 | `components/CheckoutDialog.tsx` (medio, saldo, código de pago para copiar) | API-D (`api/tests/test_api.py`) |
+| FE-05 | `components/OrdersPage.tsx` (avance, cancelar, lo devuelto, ahorro, beneficio, reclamos con foto, devolución de saldo) | API-E, EC-L |
+| FE-06, FE-07 | `components/ZonePage.tsx` (vecino y panel del admin de zona: anillo de avance, mapa, vecinos, beneficios, uniones, transferencia) | API-H, AZ-H |
+| FE-08 | `components/AdminPanel.tsx` (resumen, armado y entrega, reclamos, devoluciones, conciliación, métricas, catálogo, referencias, vecinos) | API-F, API-G |
+| FE-09 | `api/src/yapa_sdd/web/api.py` `ubicacion` | FE-F (`api/tests/test_api.py`) |
+| S-168 | se retiran `services/appwrite.ts`, `auth.ts`, `database.ts`, `utils/domain.ts`, sus pruebas, `scripts/setup-appwrite.mjs` y `supabase/schema.sql` | — |
+
+## Revisión manual (17/10/2026, semana de demo)
+
+Motor con `python -m yapa_sdd.web --demo` y tienda con `npx vite preview`. Capturas con sesión iniciada en escritorio (1400 px) y celular (390 px): tienda con carrito, checkout, confirmación con código, mis pedidos, panel del admin de zona y centro de operaciones.
+
+- Pedido real desde la interfaz: Ana pidió 5 kg de papa amarilla, 10 de papa blanca y 10 de cebolla, usó su saldo de S/ 0.56 y recibió el pedido 19 con el código `YP-2026W40-101-XXXX` para yapear S/ 60.44. El avance de la papa amarilla subió de 33 a 38 kg.
+- Errores encontrados al revisar y corregidos: el panel de zona se caía porque la API usa `vecinos` para la lista y no para el número; la columna de Mis pedidos se desbordaba; el panel de operaciones decía "Falta tu pago" (texto del vecino) en vez de "Por verificar"; la canasta vacía mostraba el envío.
+
+## Notas
+
+- El ahorro aproximado del carrito (S/ 46.80) y el del servidor (S/ 46.75) difieren en céntimos por el redondeo de los precios que se ven; por eso el carrito dice "aprox." (FE-E).
+- Las fotos se guardan en `api/fotos/` y el panel muestra su nombre, no la imagen (S-72).
+

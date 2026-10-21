@@ -1,0 +1,248 @@
+EFEEEEEEEEEEE.EEEFFEEE
+======================================================================
+ERROR: test_confirmar_sin_haber_pedido_codigo (test_invitaciones.EmailSignupTests.test_confirmar_sin_haber_pedido_codigo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 173, in test_confirmar_sin_haber_pedido_codigo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_e_registro_con_correo (test_invitaciones.EmailSignupTests.test_in_e_registro_con_correo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 115, in test_in_e_registro_con_correo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_f_validaciones (test_invitaciones.EmailSignupTests.test_in_f_validaciones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 132, in test_in_f_validaciones
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_g_codigo_malo (test_invitaciones.EmailSignupTests.test_in_g_codigo_malo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 148, in test_in_g_codigo_malo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_g_codigo_vencido (test_invitaciones.EmailSignupTests.test_in_g_codigo_vencido)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 158, in test_in_g_codigo_vencido
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_h_pin_flojo_no_gasta_el_codigo (test_invitaciones.EmailSignupTests.test_in_h_pin_flojo_no_gasta_el_codigo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 166, in test_in_h_pin_flojo_no_gasta_el_codigo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_i_tope_diario (test_invitaciones.EmailSignupTests.test_in_i_tope_diario)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 178, in test_in_i_tope_diario
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_k_avisos_sin_correo (test_invitaciones.EmailSignupTests.test_in_k_avisos_sin_correo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 190, in test_in_k_avisos_sin_correo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_k_si_quien_invita_es_el_admin_un_solo_aviso (test_invitaciones.EmailSignupTests.test_in_k_si_quien_invita_es_el_admin_un_solo_aviso)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 204, in test_in_k_si_quien_invita_es_el_admin_un_solo_aviso
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_l_queda_como_referido (test_invitaciones.EmailSignupTests.test_in_l_queda_como_referido)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 211, in test_in_l_queda_como_referido
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_m_pendientes (test_invitaciones.EmailSignupTests.test_in_m_pendientes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 218, in test_in_m_pendientes
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_n_no_toca_otras_cuentas (test_invitaciones.EmailSignupTests.test_in_n_no_toca_otras_cuentas)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 227, in test_in_n_no_toca_otras_cuentas
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_j_cuenta_google_con_nombre_vacio_usa_el_correo (test_invitaciones.GoogleSignupTests.test_in_j_cuenta_google_con_nombre_vacio_usa_el_correo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 289, in test_in_j_cuenta_google_con_nombre_vacio_usa_el_correo
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_j_registro_con_google (test_invitaciones.GoogleSignupTests.test_in_j_registro_con_google)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 261, in test_in_j_registro_con_google
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_j_validaciones (test_invitaciones.GoogleSignupTests.test_in_j_validaciones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 275, in test_in_j_validaciones
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_b_renovar (test_invitaciones.LinkTests.test_in_b_renovar)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 85, in test_in_b_renovar
+    old = self.my_code()
+          ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_c_vista_previa (test_invitaciones.LinkTests.test_in_c_vista_previa)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 94, in test_in_c_vista_previa
+    status, body, _ = self.public().get(f"/api/invitaciones/{self.my_code()}")
+                                                             ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_in_d_suspendido_no_invita (test_invitaciones.LinkTests.test_in_d_suspendido_no_invita)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 106, in test_in_d_suspendido_no_invita
+    code = self.my_code()
+           ^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 44, in my_code
+    return self.neighbor(customer_id, pin).get("/api/mi-invitacion")[1]["codigo"]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+FAIL: test_enlace_inexistente_en_el_registro (test_invitaciones.EmailSignupTests.test_enlace_inexistente_en_el_registro)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 237, in test_enlace_inexistente_en_el_registro
+    self.assertEqual(self.code_of(self.start("inventado123")), "INVITE_NOT_FOUND")
+AssertionError: 'NOT_FOUND' != 'INVITE_NOT_FOUND'
+- NOT_FOUND
++ INVITE_NOT_FOUND
+
+
+======================================================================
+FAIL: test_in_a_mi_enlace (test_invitaciones.LinkTests.test_in_a_mi_enlace)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 74, in test_in_a_mi_enlace
+    self.assertEqual(first[0], 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_in_a_solo_con_sesion_de_vecino (test_invitaciones.LinkTests.test_in_a_solo_con_sesion_de_vecino)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_invitaciones.py", line 81, in test_in_a_solo_con_sesion_de_vecino
+    self.assertEqual(self.public().get("/api/mi-invitacion")[0], 401)
+AssertionError: 404 != 401
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.028s
+
+FAILED (failures=3, errors=18)

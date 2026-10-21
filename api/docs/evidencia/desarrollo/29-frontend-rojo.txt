@@ -1,0 +1,36 @@
+
+ RUN  v5.0.1 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/utils/cart.test.ts (0 test)
+ ❯ src/services/api.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/api.test.ts [ src/services/api.test.ts ]
+Error: Cannot find module './api' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/services/api.test.ts
+ ❯ src/services/api.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { ApiError, createApi } from './api';
+       | ^
+      3| import { toProduct } from './mappers';
+      4|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/utils/cart.test.ts [ src/utils/cart.test.ts ]
+Error: Cannot find module './cart' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/utils/cart.test.ts
+ ❯ src/utils/cart.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { cartSubtotal, stepDown, stepUp } from './cart';
+       | ^
+      3| import { homeFor, canOpenZonePanel } from './roles';
+      4|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  18:34:49
+   Duration  135ms (worker 96%, environment 4%)
+

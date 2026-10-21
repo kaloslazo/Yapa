@@ -1,0 +1,341 @@
+FFFEEEEEEEEEEEE
+======================================================================
+ERROR: test_ad_c_cantidad_enorme_en_el_colchon (test_audit_hardening.AuditHardeningTests.test_ad_c_cantidad_enorme_en_el_colchon)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 66, in test_ad_c_cantidad_enorme_en_el_colchon
+    self.assertRule("INVALID_QUANTITY", add_to_buffer, self.store, "2026-W38", "LEJIA-GALON", "1e999",
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 28, in assertRule
+    fn(*args, **kwargs)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\buffer.py", line 61, in add_to_buffer
+    value = _quantity(quantity, product.step)  # CO-03
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\buffer.py", line 49, in _quantity
+    if value <= 0 or value % step != 0:
+                     ~~~~~~^~~~~~
+decimal.InvalidOperation: [<class 'decimal.DivisionImpossible'>]
+
+======================================================================
+ERROR: test_ad_c_cantidad_enorme_en_el_pedido (test_audit_hardening.AuditHardeningTests.test_ad_c_cantidad_enorme_en_el_pedido)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 59, in test_ad_c_cantidad_enorme_en_el_pedido
+    self.assertRule("INVALID_QUANTITY", quote_order, self.store, [("LIMON", "1e999")])
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 28, in assertRule
+    fn(*args, **kwargs)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\order_registration.py", line 122, in quote_order
+    _check_quantity(product, quantity)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\order_registration.py", line 97, in _check_quantity
+    if quantity <= 0 or quantity % product.step != 0 or quantity > MAX_QUANTITY[product.unit]:
+                        ~~~~~~~~~^~~~~~~~~~~~~~
+decimal.InvalidOperation: [<class 'decimal.DivisionImpossible'>]
+
+======================================================================
+ERROR: test_ad_c_cantidad_enorme_en_un_reclamo (test_audit_hardening.AuditHardeningTests.test_ad_c_cantidad_enorme_en_un_reclamo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 62, in test_ad_c_cantidad_enorme_en_un_reclamo
+    order = self.order([("LIMON", "10"), ("PAPA-AMARILLA", "5")])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 32, in order
+    total = quote_order(self.store, lines).total
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\order_registration.py", line 128, in quote_order
+    raise BusinessRuleError(
+yapa_sdd.domain.BusinessRuleError: El pedido mínimo es S/ 50.00. Faltan S/ 6.32.
+
+======================================================================
+ERROR: test_ad_d_cantidad_enorme_en_la_cotizacion (test_api_hardening.ApiHardeningTests.test_ad_d_cantidad_enorme_en_la_cotizacion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 72, in test_ad_d_cantidad_enorme_en_la_cotizacion
+    self.assertError(self.client().post("/api/cotizar", {"lineas": {"LIMON": "1e999"}}), 422, "INVALID_QUANTITY")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 220, in cotizar
+    result = quote_order(store, lines_in(data), cycle_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\order_registration.py", line 122, in quote_order
+    _check_quantity(product, quantity)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\order_registration.py", line 97, in _check_quantity
+    if quantity <= 0 or quantity % product.step != 0 or quantity > MAX_QUANTITY[product.unit]:
+                        ~~~~~~~~~^~~~~~~~~~~~~~
+decimal.InvalidOperation: [<class 'decimal.DivisionImpossible'>]
+
+======================================================================
+ERROR: test_ad_d_celular_como_numero (test_api_hardening.ApiHardeningTests.test_ad_d_celular_como_numero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 62, in test_ad_d_celular_como_numero
+    status, data, _ = self.admin().post("/api/admin/vecinos", {"nombre": "Vecino Nuevo", "celular": 999888777,
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 595, in admin_vecino_alta
+    customer, pin = customers.register_customer(store, data.get("nombre", ""), data.get("celular", ""),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\customers.py", line 57, in register_customer
+    phone = (phone or "").strip()
+            ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'strip'
+
+======================================================================
+ERROR: test_ad_d_lista_del_catalogo_como_numero (test_api_hardening.ApiHardeningTests.test_ad_d_lista_del_catalogo_como_numero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 58, in test_ad_d_lista_del_catalogo_como_numero
+    self.assertError(self.admin().post("/api/admin/catalogo", {"ciclo": "2026-W41", "lista": 5}),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 556, in admin_catalogo_publicar
+    published = publish_catalog(store, label, parse_catalog(data.get("lista", "")), by=session["principal"],
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\catalog.py", line 97, in parse_catalog
+    for line_number, line in enumerate((text or "").splitlines(), start=1):
+                                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'splitlines'
+
+======================================================================
+ERROR: test_ad_d_motivo_como_lista (test_api_hardening.ApiHardeningTests.test_ad_d_motivo_como_lista)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 67, in test_ad_d_motivo_como_lista
+    self.assertError(self.admin().post("/api/admin/entregas-fallidas",
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 483, in admin_entrega_fallida
+    failure = fulfillment.register_failed_delivery(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\fulfillment.py", line 141, in register_failed_delivery
+    if reason not in FAILURE_REASONS:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: unhashable type: 'list'
+
+======================================================================
+ERROR: test_ad_d_pin_nuevo_como_numero (test_api_hardening.ApiHardeningTests.test_ad_d_pin_nuevo_como_numero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 53, in test_ad_d_pin_nuevo_como_numero
+    status, _, _ = client.post("/api/pin", {"actual": PIN, "nuevo": 135790})
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 287, in cambiar_pin
+    auth.change_pin(store, session["principal"], data.get("actual", ""), data.get("nuevo", ""), clock())
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 89, in change_pin
+    set_pin(store, customer_id, new)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 55, in set_pin
+    _check_pin(pin)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 44, in _check_pin
+    if not re.fullmatch(r"\d{6}", pin or ""):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\re\__init__.py", line 172, in fullmatch
+    return _compile(pattern, flags).fullmatch(string)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: expected string or bytes-like object, got 'int'
+
+======================================================================
+ERROR: test_ad_d_un_numero_como_clave_se_lee_como_texto (test_api_hardening.ApiHardeningTests.test_ad_d_un_numero_como_clave_se_lee_como_texto)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 43, in test_ad_d_un_numero_como_clave_se_lee_como_texto
+    status, data, _ = client.login(101, 482915)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 49, in login
+    status, data, headers = self.post("/api/sesion", {"tipo": kind, "usuario": str(user), "secreto": secret},
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 189, in sesion_entrar
+    principal = auth.authenticate(store, kind, data.get("usuario", ""), data.get("secreto", ""), clock())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 75, in authenticate
+    if not hmac.compare_digest(_hash(secret or "", credential.salt), credential.hash):
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 34, in _hash
+    return hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), salt, ITERATIONS)
+                                         ^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'encode'
+
+======================================================================
+ERROR: test_ad_d_una_lista_como_clave_se_rechaza (test_api_hardening.ApiHardeningTests.test_ad_d_una_lista_como_clave_se_rechaza)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 48, in test_ad_d_una_lista_como_clave_se_rechaza
+    status, data, _ = ApiClient(self.api).login(101, [1])
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 49, in login
+    status, data, headers = self.post("/api/sesion", {"tipo": kind, "usuario": str(user), "secreto": secret},
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 189, in sesion_entrar
+    principal = auth.authenticate(store, kind, data.get("usuario", ""), data.get("secreto", ""), clock())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 75, in authenticate
+    if not hmac.compare_digest(_hash(secret or "", credential.salt), credential.hash):
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\auth.py", line 34, in _hash
+    return hashlib.pbkdf2_hmac("sha256", secret.encode("utf-8"), salt, ITERATIONS)
+                                         ^^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'encode'
+
+======================================================================
+ERROR: test_ad_e_una_falla_inesperada_responde_json_500 (test_api_hardening.ApiHardeningTests.test_ad_e_una_falla_inesperada_responde_json_500)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 78, in test_ad_e_una_falla_inesperada_responde_json_500
+    status, data, headers = client.post("/api/cotizar", {"lineas": {"LIMON": "5"}})
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 46, in post
+    return self.request("POST", path, body or {}, with_csrf)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\api_client.py", line 35, in request
+    text = b"".join(self.app(environ, start_response)).decode("utf-8")
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 685, in app
+    status, body, headers = dispatch(environ)
+                            ^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 677, in dispatch
+    result = handler(environ, data, session, *match.groups())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\src\yapa_sdd\web\api.py", line 220, in cotizar
+    result = quote_order(store, lines_in(data), cycle_id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1198, in _execute_mock_call
+    raise effect
+RuntimeError: falla de prueba
+
+======================================================================
+ERROR: test_ad_f_semana_inexistente_en_las_consultas_del_admin (test_api_hardening.ApiHardeningTests.test_ad_f_semana_inexistente_en_las_consultas_del_admin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 88, in test_ad_f_semana_inexistente_en_las_consultas_del_admin
+    self.assertError(admin.get(f"{path}?ciclo={week}"), 422, "INVALID_CYCLE")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_hardening.py", line 38, in assertError
+    self.assertEqual((got_status, data["error"]["codigo"]), (status, code))
+                                  ~~~~^^^^^^^^^
+KeyError: 'error'
+
+======================================================================
+FAIL: test_ad_a_verificar_un_pedido_cancelado_no_entra_a_la_caja (test_audit_hardening.AuditHardeningTests.test_ad_a_verificar_un_pedido_cancelado_no_entra_a_la_caja)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 40, in test_ad_a_verificar_un_pedido_cancelado_no_entra_a_la_caja
+    self.assertRule("ORDER_CANCELLED", verify_payment, self.store, order.order_id, now=WEDNESDAY)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 27, in assertRule
+    with self.assertRaises(BusinessRuleError) as raised:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: BusinessRuleError not raised
+
+======================================================================
+FAIL: test_ad_b_coordenadas_en_texto_se_guardan_como_numeros (test_audit_hardening.AuditHardeningTests.test_ad_b_coordenadas_en_texto_se_guardan_como_numeros)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 48, in test_ad_b_coordenadas_en_texto_se_guardan_como_numeros
+    self.assertEqual((zone.lat, zone.lon), (-12.0690, -77.0230))
+AssertionError: Tuples differ: ('-12.0690', '-77.0230') != (-12.069, -77.023)
+
+First differing element 0:
+'-12.0690'
+-12.069
+
+- ('-12.0690', '-77.0230')
+?  -       --  -       --
+
++ (-12.069, -77.023)
+
+======================================================================
+FAIL: test_ad_b_la_zona_exige_nombre (test_audit_hardening.AuditHardeningTests.test_ad_b_la_zona_exige_nombre)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 54, in test_ad_b_la_zona_exige_nombre
+    self.assertRule("NAME_REQUIRED", create_zone, self.store, 103, name="  ", district="La Victoria",
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_audit_hardening.py", line 27, in assertRule
+    with self.assertRaises(BusinessRuleError) as raised:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: BusinessRuleError not raised
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.017s
+
+FAILED (failures=3, errors=12)

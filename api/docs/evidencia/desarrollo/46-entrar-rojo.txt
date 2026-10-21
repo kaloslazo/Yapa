@@ -1,0 +1,110 @@
+FFFFEE...EE.FE
+======================================================================
+ERROR: test_lg_a_con_el_correo (test_entrar_correo_celular.EnterTests.test_lg_a_con_el_correo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 51, in test_lg_a_con_el_correo
+    self.assertEqual((status, body["usuario"]), (200, 101), text)
+                              ~~~~^^^^^^^^^^^
+KeyError: 'usuario'
+
+======================================================================
+ERROR: test_lg_b_con_el_celular (test_entrar_correo_celular.EnterTests.test_lg_b_con_el_celular)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 56, in test_lg_b_con_el_celular
+    self.assertEqual((status, body["usuario"]), (200, 101))
+                              ~~~~^^^^^^^^^^^
+KeyError: 'usuario'
+
+======================================================================
+ERROR: test_lg_f_los_fallos_por_correo_bloquean_la_cuenta (test_entrar_correo_celular.EnterTests.test_lg_f_los_fallos_por_correo_bloquean_la_cuenta)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 82, in test_lg_f_los_fallos_por_correo_bloquean_la_cuenta
+    self.assertEqual((status, self.code_of(body)), (422, "ACCOUNT_LOCKED"))
+                              ^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 43, in code_of
+    return body["error"]["codigo"]
+           ~~~~^^^^^^^^^
+KeyError: 'error'
+
+======================================================================
+ERROR: test_lg_l_tiene_pin (test_entrar_correo_celular.EnterTests.test_lg_l_tiene_pin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 94, in test_lg_l_tiene_pin
+    self.assertTrue(body["tiene_pin"])
+                    ~~~~^^^^^^^^^^^^^
+KeyError: 'tiene_pin'
+
+======================================================================
+ERROR: test_lg_h_restablecer_con_el_celular (test_entrar_correo_celular.RecoveryTests.test_lg_h_restablecer_con_el_celular)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 122, in test_lg_h_restablecer_con_el_celular
+    code = self.mailer.last_code()
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_cuenta_correo.py", line 36, in last_code
+    return re.search(r"\b(\d{6})\b", self.sent[-1][2]).group(1)
+                                     ~~~~~~~~~^^^^
+IndexError: list index out of range
+
+======================================================================
+FAIL: test_lg_i_crear_pin (test_entrar_correo_celular.CreatePinTests.test_lg_i_crear_pin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 137, in test_lg_i_crear_pin
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_lg_i_solo_con_sesion_de_vecino (test_entrar_correo_celular.CreatePinTests.test_lg_i_solo_con_sesion_de_vecino)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 158, in test_lg_i_solo_con_sesion_de_vecino
+    self.assertEqual(ApiClient(self.api).post("/api/pin/crear", {"pin": NEW_PIN}, with_csrf=False)[0], 401)
+AssertionError: 404 != 401
+
+======================================================================
+FAIL: test_lg_j_quien_ya_tiene_pin_no_lo_crea_de_nuevo (test_entrar_correo_celular.CreatePinTests.test_lg_j_quien_ya_tiene_pin_no_lo_crea_de_nuevo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 145, in test_lg_j_quien_ya_tiene_pin_no_lo_crea_de_nuevo
+    self.assertEqual((status, self.code_of(body)), (422, "PIN_ALREADY_SET"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'PIN_ALREADY_SET')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'PIN_ALREADY_SET')
+
+======================================================================
+FAIL: test_lg_k_pin_flojo (test_entrar_correo_celular.CreatePinTests.test_lg_k_pin_flojo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 154, in test_lg_k_pin_flojo
+    self.assertEqual((status, self.code_of(body)), (422, "INVALID_PIN"), weak)
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_PIN')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_PIN') : 123456
+
+======================================================================
+FAIL: test_lg_g_olvide_con_el_correo (test_entrar_correo_celular.RecoveryTests.test_lg_g_olvide_con_el_correo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_entrar_correo_celular.py", line 111, in test_lg_g_olvide_con_el_correo
+    self.assertEqual(status, 200)
+AssertionError: 422 != 200
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.042s
+
+FAILED (failures=5, errors=5)

@@ -1,0 +1,21 @@
+# Iteracion 12 - suite despues de implementar
+# 2026-09-24 23:14
+# PYTHONPATH=src python -m unittest discover -s tests -v  (se muestran las 15 pruebas nuevas)
+test_oa01_create_zone (test_web_operacion.NeighborZoneTests.test_oa01_create_zone) ... ok
+test_oa02_activate_zone (test_web_operacion.NeighborZoneTests.test_oa02_activate_zone) ... ok
+test_oa03_join_zone (test_web_operacion.NeighborZoneTests.test_oa03_join_zone) ... ok
+test_oa04_merge_leave_and_transfer (test_web_operacion.NeighborZoneTests.test_oa04_merge_leave_and_transfer) ... ok
+test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data) ... ok
+test_oa06_withdrawal_request (test_web_operacion.NeighborMoneyAndClaimTests.test_oa06_withdrawal_request) ... ok
+test_oa07_file_claim (test_web_operacion.NeighborMoneyAndClaimTests.test_oa07_file_claim) ... ok
+test_oa08_packing (test_web_operacion.AdminOperationTests.test_oa08_packing) ... ok
+test_oa09_delivery (test_web_operacion.AdminOperationTests.test_oa09_delivery) ... ok
+test_oa10_review_claims (test_web_operacion.AdminOperationTests.test_oa10_review_claims) ... ok
+test_oa11_buffer (test_web_operacion.AdminOperationTests.test_oa11_buffer) ... ok
+test_oa12_metrics_dashboard (test_web_operacion.AdminOperationTests.test_oa12_metrics_dashboard) ... ok
+test_oa13_access (test_web_operacion.CrossCuttingTests.test_oa13_access) ... ok
+test_oa14_routes_and_escaping (test_web_operacion.CrossCuttingTests.test_oa14_routes_and_escaping) ... ok
+test_oa15_mobile_viewport (test_web_operacion.CrossCuttingTests.test_oa15_mobile_viewport) ... ok
+Ran 182 tests in 0.099s
+
+OK

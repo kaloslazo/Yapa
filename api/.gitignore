@@ -1,0 +1,16 @@
+.focuslist.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+dist/
+build/
+.codex-finalizer/
+slides/.build/
+slides/node_modules
+artifacts/
+.codex-finalizer/
+
+# worktrees de agentes locales
+.claude/
+fotos/

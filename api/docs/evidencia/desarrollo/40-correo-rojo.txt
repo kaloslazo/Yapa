@@ -1,0 +1,20 @@
+E
+======================================================================
+ERROR: test_cuenta_correo (unittest.loader._FailedTest.test_cuenta_correo)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_cuenta_correo
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_cuenta_correo.py", line 16, in <module>
+    from yapa_sdd.mailer import ConsoleMailer, MailError
+ModuleNotFoundError: No module named 'yapa_sdd.mailer'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

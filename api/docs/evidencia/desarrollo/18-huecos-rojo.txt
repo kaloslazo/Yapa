@@ -1,0 +1,11 @@
+# Iteracion 18 - pruebas ANTES del codigo
+# 2026-09-24 23:20
+ERROR: test_hardening (unittest.loader._FailedTest.test_hardening)
+FAIL: test_wa10_settle_from_web (test_web.WebSpecTests.test_wa10_settle_from_web)
+FAIL: test_ha01_neighbor_registers_location (test_web_hardening.WebHardeningSpecTests.test_ha01_neighbor_registers_locat
+FAIL: test_ha06_web_rejects_invalid_cycle (test_web_hardening.WebHardeningSpecTests.test_ha06_web_rejects_invalid_cycle)
+FAIL: test_ha08_admin_pays_refund (test_web_hardening.WebHardeningSpecTests.test_ha08_admin_pays_refund)
+FAIL: test_ha09_failed_delivery_from_web (test_web_hardening.WebHardeningSpecTests.test_ha09_failed_delivery_from_web)
+FAIL: test_ha10_settle_from_web_requires_closed_zones (test_web_hardening.WebHardeningSpecTests.test_ha10_settle_from_we
+
+FAILED (failures=6, errors=1)

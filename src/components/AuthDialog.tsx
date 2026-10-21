@@ -1,37 +1,63 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from './Icon';
-import { authMode, localDemoAdmin, loginAccount, registerAccount, requestPasswordReset, signOutAccount } from '../services/auth';
-import type { AccountProfile } from '../types';
-import { DEFAULT_ZONE_ID, zoneById, zones } from '../data/catalog';
-import { validateAuthInput } from '../utils/domain';
+import { GoogleButton } from './GoogleButton';
+import { InviteBody, InviteContext } from './InviteCard';
+import type { Account } from '../types';
+import { formatMoney } from '../utils/format';
 
-type AuthMode = 'login' | 'register';
-export type AuthAudience = 'user' | 'admin';
+export type AuthAudience = 'vecino' | 'admin';
 
 interface AuthDialogProps {
   open: boolean;
-  onClose: () => void;
-  onAuthenticated: (account: AccountProfile, audience: AuthAudience) => void;
-  currentAccount?: AccountProfile | null;
+  account: Account | null;
   initialAudience?: AuthAudience;
-  onSignedOut?: () => void;
-  onOpenAdmin?: () => void;
+  onClose: () => void;
+  onLogin: (kind: AuthAudience, user: string, secret: string) => Promise<Account>;
+  onLogout: () => Promise<void>;
+  onForgotPin: (user: string) => Promise<string>;
+  googleClientId: string | null;
+  onGoogleLogin: (credential: string) => Promise<void>;
+  onGoogleLink: (credential: string) => Promise<void>;
+  onGoogleUnlink: () => Promise<void>;
+  onResetPin: (user: string, code: string, pin: string) => Promise<string>;
+  onSendEmail: (email: string) => Promise<void>;
+  onVerifyEmail: (code: string) => Promise<void>;
+  onCreatePin: (pin: string) => Promise<void>;
+  onOpenAdmin: () => void;
+  onOpenZone: () => void;
+  onOpenOrders: () => void;
 }
 
-export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, initialAudience = 'user', onSignedOut, onOpenAdmin }: AuthDialogProps) {
+const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equipo Yapa' } as const;
+
+export const LOGIN_HINT = 'Con tu correo, celular o número de cliente y tu PIN de 6 dígitos.';
+
+export function shareText(code: string) {
+  return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
+}
+
+export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, googleClientId, onGoogleLogin, onGoogleLink, onGoogleUnlink, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onCreatePin, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [mode, setMode] = useState<AuthMode>('login');
   const [audience, setAudience] = useState<AuthAudience>(initialAudience);
-  const [completed, setCompleted] = useState(false);
-  const [feedback, setFeedback] = useState<{ tone: 'error' | 'notice'; message: string } | null>(null);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [zoneId, setZoneId] = useState(DEFAULT_ZONE_ID);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [user, setUser] = useState('');
+  const [secret, setSecret] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+  const { url: inviteUrl } = useContext(InviteContext);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotPin, setForgotPin] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [pinMessage, setPinMessage] = useState('');
+  const [emailCode, setEmailCode] = useState('');
+  const [emailStep, setEmailStep] = useState<'ask' | 'code'>('ask');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [googleMessage, setGoogleMessage] = useState('');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -40,133 +66,166 @@ export function AuthDialog({ open, onClose, onAuthenticated, currentAccount, ini
     if (!open && dialog.open) dialog.close();
     if (open) {
       setAudience(initialAudience);
-      setMode('login');
-      setCompleted(false);
-      setFeedback(null);
-      setName('');
-      setPhone('');
-      setZoneId(DEFAULT_ZONE_ID);
-      setEmail('');
-      setPassword('');
+      setUser('');
+      setSecret('');
+      setFeedback('');
+      setShowSignup(false);
+      setShowForgot(false);
+      setForgotMessage('');
+      setForgotCode('');
+      setForgotPin('');
+      setResetMessage('');
+      setEmailInput('');
+      setEmailCode('');
+      setEmailMessage('');
+      setGoogleMessage('');
+      setEmailStep(account?.email ? 'code' : 'ask');
     }
   }, [initialAudience, open]);
 
-  const selectAudience = (nextAudience: AuthAudience) => {
-    setAudience(nextAudience);
-    setMode('login');
-    setCompleted(false);
-    setFeedback(null);
-  };
-
-  const selectMode = (nextMode: AuthMode) => {
-    setMode(nextMode);
-    setCompleted(false);
-    setFeedback(null);
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFeedback(null);
-
-    const formData = new FormData(event.currentTarget);
-    const formName = String(formData.get('name') || name).trim();
-    const formPhone = String(formData.get('phone') || phone);
-    const formEmail = String(formData.get('email') || email).trim();
-    const formPassword = String(formData.get('password') || password);
-    const validationMessage = validateAuthInput({ mode, name: formName, phone: formPhone, email: formEmail, password: formPassword });
-    if (validationMessage) {
-      setFeedback({ tone: 'error', message: validationMessage });
-      return;
-    }
-
-    setSubmitting(true);
+    setFeedback('');
+    setBusy(true);
     try {
-      const profile = mode === 'register'
-        ? await registerAccount({ name: formName, phone: formPhone.replace(/\s/g, ''), district: zoneById(zoneId)?.district ?? 'Lince', zoneId, email: formEmail, password: formPassword })
-        : await loginAccount(formEmail, formPassword);
-
-      if (audience === 'admin' && profile.role !== 'admin') {
-        await signOutAccount();
-        onSignedOut?.();
-        throw new Error('Esta cuenta puede comprar, pero todavía no tiene permisos de administración.');
-      }
-
-      setCompleted(true);
-      onAuthenticated(profile, audience);
+      await onLogin(audience, user.trim(), secret);
     } catch (error) {
-      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'No pudimos completar el acceso. Inténtalo nuevamente.' });
+      setFeedback(error instanceof Error ? error.message : 'No pudimos entrar. Inténtalo de nuevo.');
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      setFeedback({ tone: 'error', message: 'Escribe tu correo para enviarte el enlace de recuperación.' });
-      return;
-    }
+  const createPin = async () => {
+    setBusy(true);
     try {
-      await requestPasswordReset(email);
-      setFeedback({ tone: 'notice', message: 'Te enviamos un enlace para recuperar tu acceso.' });
+      await onCreatePin(newPin);
+      setNewPin('');
+      setPinMessage('Listo: ya puedes entrar también con tu correo o celular y tu PIN.');
     } catch (error) {
-      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'No pudimos solicitar la recuperación.' });
-    }
-  };
-
-  const handleSignOut = async () => {
-    setSigningOut(true);
-    try {
-      await signOutAccount();
-      onSignedOut?.();
-      setFeedback(null);
-    } catch (error) {
-      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'No pudimos cerrar tu sesión.' });
+      setPinMessage(error instanceof Error ? error.message : 'No pudimos guardar tu PIN. Inténtalo de nuevo.');
     } finally {
-      setSigningOut(false);
+      setBusy(false);
     }
   };
 
-  const close = () => onClose();
-  const activeAccountForView = currentAccount && !completed ? currentAccount : null;
+  const forgot = async () => {
+    setBusy(true);
+    try {
+      setForgotMessage(await onForgotPin(user.trim()));
+    } catch (error) {
+      setForgotMessage(error instanceof Error ? error.message : 'No pudimos enviar tu pedido. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resetWithCode = async () => {
+    setBusy(true);
+    try {
+      setResetMessage(await onResetPin(user.trim(), forgotCode, forgotPin));
+      setForgotCode('');
+      setForgotPin('');
+    } catch (error) {
+      setResetMessage(error instanceof Error ? error.message : 'No pudimos cambiar tu PIN. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendEmail = async () => {
+    setBusy(true);
+    try {
+      await onSendEmail(emailInput.trim());
+      setEmailStep('code');
+      setEmailMessage('Te mandamos un código. Revisa tu correo (y la carpeta de spam).');
+    } catch (error) {
+      setEmailMessage(error instanceof Error ? error.message : 'No pudimos enviar el código. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyEmail = async () => {
+    setBusy(true);
+    try {
+      await onVerifyEmail(emailCode);
+      setEmailMessage('');
+      setEmailCode('');
+    } catch (error) {
+      setEmailMessage(error instanceof Error ? error.message : 'No pudimos verificar el código. Inténtalo de nuevo.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const googleAction = async (action: () => Promise<void>) => {
+    setGoogleMessage('');
+    try {
+      await action();
+    } catch (error) {
+      setGoogleMessage(error instanceof Error ? error.message : 'No pudimos usar tu cuenta de Google. Inténtalo de nuevo.');
+    }
+  };
+
+  const go = (action: () => void) => { onClose(); action(); };
 
   return (
-    <dialog ref={dialogRef} className="checkout-dialog auth-dialog" aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); close(); }} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
-      {activeAccountForView ? (
+    <dialog ref={dialogRef} className="checkout-dialog auth-dialog" aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      {account ? (
         <div className="auth-account-state">
-          <div className="auth-dialog-topline"><div className="auth-brandline"><img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" /><span>yapa</span></div><button className="icon-button" type="button" onClick={close} aria-label="Cerrar cuenta"><Icon name="close" size={20} /></button></div>
-          <span className="dialog-step">Sesión activa</span>
-          <div className="auth-account-avatar"><Icon name="user" size={26} /></div>
-                    <h2 id="auth-title">Hola, {activeAccountForView.name}</h2>
-          <p>Tu cuenta ya está abierta en este dispositivo. Elige a dónde quieres ir.</p>
-          <div className="auth-account-detail"><strong>{activeAccountForView.email}</strong><span>{activeAccountForView.role === 'admin' ? 'Equipo administrador' : `Compras en ${zoneById(activeAccountForView.zoneId)?.name ?? activeAccountForView.district}`}</span></div>
-          <div className="auth-account-actions"><button className="primary-button" type="button" onClick={close}>Comprar como usuario <Icon name="arrow" size={17} /></button>{activeAccountForView.role === 'admin' ? <button className="secondary-button" type="button" onClick={() => { close(); onOpenAdmin?.(); }}>Ir al panel admin <Icon name="arrow" size={16} /></button> : null}</div>
-          <button className="auth-link auth-switch-account" type="button" onClick={handleSignOut} disabled={signingOut}>{signingOut ? 'Cerrando sesión…' : 'Salir y usar otra cuenta'}</button>
-          {feedback ? <p className={`auth-feedback auth-feedback--${feedback.tone}`} role="alert">{feedback.message}</p> : null}
-        </div>
-      ) : completed ? (
-        <div className="auth-success">
-          <div className="success-icon"><Icon name="check" size={30} /></div>
-          <h2>{mode === 'register' ? 'Bienvenido a Yapa' : 'Qué bueno verte'}</h2>
-          <p>{mode === 'register' ? 'Tu cuenta está lista para armar compras que rindan en Lima.' : 'Ya puedes continuar con tu canasta y elegir tu entrega.'}</p>
-          <button className="primary-button" type="button" onClick={close}>Volver a comprar <Icon name="arrow" size={17} /></button>
+          <div className="auth-dialog-topline"><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
+          <span className={`role-badge role-badge--${account.role}`}>{account.role === 'admin_zona' ? <Icon name="crown" size={14} /> : null}{ROLE_NAMES[account.role]}</span>
+          <h2 id="auth-title">Hola, {account.name.split(' ')[0]}</h2>
+          {account.role !== 'admin' ? <div className="auth-account-detail"><strong>Saldo a favor: {formatMoney(account.balance ?? 0)}</strong><span>Cliente n.º {account.user}</span></div> : <p>Tienes acceso al centro de operaciones de Yapa.</p>}
+          {account.role !== 'admin' ? (account.emailVerified ? <p className="email-ok"><Icon name="ok" size={16} /> Correo verificado: {account.email}</p> : (
+            <div className="email-card"><strong>Verifica tu correo</strong><p>Con tu correo verificado recuperas tu PIN tú mismo, sin esperar a nadie.</p>
+              {emailStep === 'ask' ? <form onSubmit={(event) => { event.preventDefault(); void sendEmail(); }}><label className="auth-field"><span>Tu correo</span><input type="email" value={emailInput} onChange={(event) => setEmailInput(event.target.value)} autoComplete="email" placeholder="nombre@gmail.com" required /></label><button className="secondary-button" type="submit" disabled={busy || !emailInput.trim()}>Enviarme un código</button></form>
+                : <form onSubmit={(event) => { event.preventDefault(); void verifyEmail(); }}><label className="auth-field"><span>Código que te llegó{account.email ? ` a ${account.email}` : ''}</span><input value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label><button className="primary-button" type="submit" disabled={busy || emailCode.length !== 6}>Verificar</button><button className="auth-link" type="button" onClick={() => { setEmailStep('ask'); setEmailMessage(''); }}>Escribir el correo otra vez</button></form>}
+              {emailMessage ? <p className="auth-feedback" role="status">{emailMessage}</p> : null}
+            </div>)) : null}
+          {account.role !== 'admin' && inviteUrl ? <div className="referral-card"><InviteBody /><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : account.referralCode ? <div className="referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></div> : null}
+          {account.role !== 'admin' && googleClientId ? (account.googleLinked
+            ? <p className="email-ok"><Icon name="ok" size={16} /> Cuenta de Google vinculada <button className="auth-link" type="button" onClick={() => void googleAction(onGoogleUnlink)}>Desvincular</button></p>
+            : <div className="google-link"><strong>Entra sin PIN</strong><p>Vincula tu cuenta de Google y la próxima vez entras con un toque.</p><GoogleButton clientId={googleClientId} text="continue_with" onCredential={(credential) => void googleAction(() => onGoogleLink(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div>) : null}
+          {account.role !== 'admin' && account.hasPin === false ? <div className="email-card"><strong>Crea tu PIN (opcional)</strong><p>Hoy entras con Google. Si quieres entrar también con tu correo o celular, crea un PIN de 6 dígitos.</p><form onSubmit={(event) => { event.preventDefault(); void createPin(); }}><label className="auth-field"><span>Tu PIN nuevo</span><input type="password" className="pin-input" value={newPin} onChange={(event) => { setNewPin(event.target.value.replace(/\D/g, '').slice(0, 6)); setPinMessage(''); }} inputMode="numeric" autoComplete="new-password" placeholder="••••••" /></label><button className="secondary-button" type="submit" disabled={busy || newPin.length !== 6}>Guardar mi PIN</button></form>{pinMessage ? <p className="auth-feedback" role="status">{pinMessage}</p> : null}</div> : null}
+          <div className="auth-account-actions">
+            {account.role === 'admin' ? <button className="primary-button" type="button" onClick={() => go(onOpenAdmin)}>Ir al centro de operaciones <Icon name="arrow" size={17} /></button> : <>
+              <button className="primary-button" type="button" onClick={() => go(onOpenOrders)}>Mis pedidos <Icon name="arrow" size={17} /></button>
+              <button className="secondary-button" type="button" onClick={() => go(onOpenZone)}>{account.role === 'admin_zona' ? <><Icon name="crown" size={16} /> Panel de mi zona</> : <><Icon name="map" size={16} /> Mi zona</>}</button>
+            </>}
+          </div>
+          <button className="auth-link auth-switch-account" type="button" onClick={() => void onLogout()}><Icon name="signout" size={15} /> Salir</button>
         </div>
       ) : (
         <>
           <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.png" alt="" width="512" height="512" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Compra con tu cuenta'}</h2><p>{audience === 'admin' ? 'Ingresa con una cuenta autorizada para gestionar Yapa.' : 'Guarda tu zona y vuelve más rápido a tu canasta.'}</p></div>
-            <button className="icon-button" type="button" onClick={close} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
+            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Entra a tu cuenta'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de Yapa.' : LOGIN_HINT}</p></div>
+            <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
           </div>
-          <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar a Yapa"><button className={audience === 'user' ? 'is-active' : ''} type="button" aria-pressed={audience === 'user'} onClick={() => selectAudience('user')}><Icon name="box" size={15} />Comprar como usuario</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => selectAudience('admin')}><Icon name="user" size={15} />Entrar como admin</button></div>
-          {audience === 'user' ? <div className="auth-switch" role="tablist" aria-label="Tipo de acceso"><button className={mode === 'login' ? 'is-active' : ''} type="button" role="tab" aria-selected={mode === 'login'} onClick={() => selectMode('login')}>Ingresar</button><button className={mode === 'register' ? 'is-active' : ''} type="button" role="tab" aria-selected={mode === 'register'} onClick={() => selectMode('register')}>Crear cuenta</button></div> : <p className="auth-access-note">Acceso protegido · solo cuentas administradoras</p>}
-          <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            {mode === 'register' && audience === 'user' ? <><label className="auth-field"><span>¿Cómo te llamas?</span><input name="name" type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Andrea Quispe" autoComplete="name" required /></label><div className="auth-grid"><label className="auth-field"><span>Celular</span><div className="phone-input"><strong>+51</strong><input name="phone" type="tel" inputMode="numeric" value={phone} onChange={(event) => setPhone(event.target.value.replace(/[^\d\s]/g, ''))} placeholder="987 654 321" autoComplete="tel" required /></div></label><label className="auth-field"><span>Tu zona</span><select name="zone" value={zoneId} onChange={(event) => setZoneId(event.target.value)}>{zones.map((zone) => <option key={zone.id} value={zone.id} disabled={!zone.active}>{zone.name} · {zone.district}{zone.active ? '' : ' (pronto)'}</option>)}</select></label></div></> : null}
-            <label className="auth-field"><span>Correo electrónico</span><input name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@correo.com" autoComplete="email" required /></label>
-            <label className="auth-field"><span>Contraseña</span><input name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} required /></label>
-            {mode === 'login' ? <><button className="auth-link" type="button" onClick={handleForgotPassword}>¿Olvidaste tu contraseña?</button>{authMode === 'local' ? <p className="auth-hint">Demo admin local: {localDemoAdmin.email} · {localDemoAdmin.password}</p> : null}</> : <p className="auth-hint">Usaremos tu número solo para coordinar la entrega.</p>}
-            {feedback ? <p className={`auth-feedback auth-feedback--${feedback.tone}`} role="alert">{feedback.message}</p> : null}
-            <button className="primary-button" type="submit" disabled={submitting} aria-busy={submitting}>{audience === 'admin' ? 'Entrar al panel' : mode === 'login' ? 'Ingresar a Yapa' : 'Crear mi cuenta'}{submitting ? ' · Procesando…' : null} {!submitting ? <Icon name="arrow" size={17} /> : null}</button>
-            <p className="dialog-disclaimer">Pagos simulados. Tus datos de cuenta se guardan de forma segura en Yapa.</p>
+          <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar"><button className={audience === 'vecino' ? 'is-active' : ''} type="button" aria-pressed={audience === 'vecino'} onClick={() => { setAudience('vecino'); setFeedback(''); }}><Icon name="basket" size={15} />Soy vecino</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => { setAudience('admin'); setFeedback(''); }}><Icon name="user" size={15} />Equipo Yapa</button></div>
+          <form className="auth-form" onSubmit={submit}>
+            <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o número de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
+            <label className="auth-field"><span>{audience === 'admin' ? 'Contraseña' : 'PIN'}</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="current-password" placeholder={audience === 'admin' ? '' : '••••••'} required className={audience === 'vecino' ? 'pin-input' : ''} /></label>
+            {audience === 'vecino' && googleClientId ? <p className="auth-hint">Si te registraste con Google, entra con el botón de Google: no necesitas PIN.</p> : null}
+            {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
+            <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'} {!busy ? <Icon name="arrow" size={17} /> : null}</button>
           </form>
+          {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
+          {audience === 'vecino' ? (
+            <div className="signup-help">
+              <button className="auth-link" type="button" onClick={() => setShowSignup((value) => !value)} aria-expanded={showSignup}>¿Todavía no tienes cuenta?</button>
+              <button className="auth-link" type="button" onClick={() => setShowForgot((value) => !value)} aria-expanded={showForgot}>¿Olvidaste tu PIN?</button>
+              {showForgot ? <div className="forgot-pin"><p>Escribe tu correo, celular o número de cliente arriba. Si verificaste tu correo, te mandamos un código ahí; si no, el equipo de Yapa te escribirá por WhatsApp al celular que registraste.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir ayuda con mi PIN</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}
+                <form className="forgot-code" onSubmit={(event) => { event.preventDefault(); void resetWithCode(); }}><strong>¿Ya tienes tu código?</strong>
+                  <label className="auth-field"><span>Código del correo</span><input value={forgotCode} onChange={(event) => setForgotCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label>
+                  <label className="auth-field"><span>PIN nuevo</span><input type="password" value={forgotPin} onChange={(event) => setForgotPin(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="new-password" placeholder="6 dígitos" className="pin-input" /></label>
+                  <button className="primary-button" type="submit" disabled={busy || !user.trim() || forgotCode.length !== 6 || forgotPin.length !== 6}>Cambiar mi PIN</button>
+                  {resetMessage ? <p className="auth-feedback" role="status">{resetMessage}</p> : null}
+                </form></div> : null}
+              {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele a un vecino de tu zona, o al admin de tu edificio, su enlace de invitación de Yapa.</li><li><span>2</span>Ábrelo en tu celular: te registras con tu correo o con Google en un minuto.</li><li><span>3</span>Quedas en su zona y, cuando recibas tu primer pedido, los dos ganan S/ 3.</li></ol> : null}
+            </div>
+          ) : null}
         </>
       )}
     </dialog>

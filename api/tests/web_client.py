@@ -1,0 +1,79 @@
+"""Cliente de prueba para la app WSGI: guarda la cookie de sesión y el token CSRF."""
+
+import io
+import re
+from urllib.parse import urlencode
+from wsgiref.util import setup_testing_defaults
+
+
+def fast_hashing(test_case):
+    """Baja las iteraciones de PBKDF2 solo durante la prueba (velocidad). El valor real se prueba en AA-11."""
+    from yapa_sdd import auth
+    original = auth.ITERATIONS
+    auth.ITERATIONS = 1000
+    test_case.addCleanup(setattr, auth, "ITERATIONS", original)
+
+
+class WebClient:
+    def __init__(self, app):
+        self.app = app
+        self.cookie = None
+        self.csrf = None
+        self.extra = {}
+
+    def request(self, method, path, data=None, with_csrf=True, files=None):
+        environ = {}
+        setup_testing_defaults(environ)
+        path, _, query = path.partition("?")
+        if data is not None and with_csrf and self.csrf:
+            data = dict(data, csrf=self.csrf)
+        if files:  # S-151: formulario con archivos
+            boundary = "yapa-prueba-1234"
+            parts = []
+            for key, value in (data or {}).items():
+                parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'
+                             .encode("utf-8"))
+            for key, (filename, content) in files.items():
+                parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"; filename="{filename}"'
+                             f'\r\nContent-Type: image/jpeg\r\n\r\n'.encode("utf-8") + content + b"\r\n")
+            body = b"".join(parts) + f"--{boundary}--\r\n".encode("utf-8")
+            content_type = f"multipart/form-data; boundary={boundary}"
+        else:
+            body = urlencode(data or {}).encode("utf-8")
+            content_type = "application/x-www-form-urlencoded"
+        environ.update({
+            "REQUEST_METHOD": method, "PATH_INFO": path, "QUERY_STRING": query,
+            "CONTENT_TYPE": content_type, "CONTENT_LENGTH": str(len(body)),
+            "wsgi.input": io.BytesIO(body),
+        })
+        environ.update(self.extra)  # SG-08: la dirección del cliente en las pruebas
+        if self.cookie:
+            environ["HTTP_COOKIE"] = f"yapa_sesion={self.cookie}"
+        result = {}
+
+        def start_response(status, headers):
+            result["status"] = int(status.split()[0])
+            result["headers"] = dict(headers)
+
+        html = b"".join(self.app(environ, start_response)).decode("utf-8")
+        cookie = result["headers"].get("Set-Cookie", "")
+        match = re.match(r"yapa_sesion=([^;]*)", cookie)
+        if match:
+            self.cookie = match.group(1) or None
+        found = re.search(r'name="csrf" value="([^"]+)"', html)
+        if found:
+            self.csrf = found.group(1)
+        return result["status"], result["headers"], html
+
+    def get(self, path):
+        return self.request("GET", path)
+
+    def post(self, path, data=None, with_csrf=True, files=None):
+        return self.request("POST", path, data or {}, with_csrf, files)
+
+    def login(self, user, secret, kind="vecino"):
+        status, headers, html = self.post("/entrar", {"tipo": kind, "usuario": str(user), "secreto": secret},
+                                          with_csrf=False)
+        if status == 303:
+            self.get("/admin" if kind == "admin" else "/cuenta")  # trae el token CSRF
+        return status, headers, html

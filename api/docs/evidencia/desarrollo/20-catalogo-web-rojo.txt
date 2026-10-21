@@ -1,0 +1,140 @@
+# Iteracion 20 - pruebas ANTES del codigo
+# 2026-09-24 23:31
+test_cw01_invalid_cycle_in_query (test_web_catalog.WebCatalogTests.test_cw01_invalid_cycle_in_query) ... FAIL
+test_cw02_odd_tiers_and_missing_name_rejected (test_web_catalog.WebCatalogTests.test_cw02_odd_tiers_and_missing_name_rejected) ... FAIL
+test_cw04_unknown_product (test_web_catalog.WebCatalogTests.test_cw04_unknown_product) ... FAIL
+test_cw_a_page_prefills_next_cycle_with_base_catalog (test_web_catalog.WebCatalogTests.test_cw_a_page_prefills_next_cycle_with_base_catalog) ... FAIL
+test_cw_b_page_shows_published_catalog (test_web_catalog.WebCatalogTests.test_cw_b_page_shows_published_catalog) ... FAIL
+test_cw_b_publish_from_web (test_web_catalog.WebCatalogTests.test_cw_b_publish_from_web) ... FAIL
+test_cw_c_comma_decimal_rejects_whole_list (test_web_catalog.WebCatalogTests.test_cw_c_comma_decimal_rejects_whole_list) ... FAIL
+test_cw_c_short_line_rejected (test_web_catalog.WebCatalogTests.test_cw_c_short_line_rejected) ... FAIL
+test_cw_d_rising_tier_rejected_by_catalog_rule (test_web_catalog.WebCatalogTests.test_cw_d_rising_tier_rejected_by_catalog_rule) ... FAIL
+test_cw_e_open_cycle_is_locked (test_web_catalog.WebCatalogTests.test_cw_e_open_cycle_is_locked) ... FAIL
+test_cw_f_deactivate_from_web (test_web_catalog.WebCatalogTests.test_cw_f_deactivate_from_web) ... FAIL
+test_cw_g_deactivate_copies_base_catalog (test_web_catalog.WebCatalogTests.test_cw_g_deactivate_copies_base_catalog) ... FAIL
+test_cw_h_neighbor_forbidden (test_web_catalog.WebCatalogTests.test_cw_h_neighbor_forbidden) ... FAIL
+
+======================================================================
+FAIL: test_cw01_invalid_cycle_in_query (test_web_catalog.WebCatalogTests.test_cw01_invalid_cycle_in_query)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 60, in test_cw01_invalid_cycle_in_query
+    self.assertRejected(self.admin.get("/admin/catalogo?ciclo=2026-W99"), "INVALID_CYCLE")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw02_odd_tiers_and_missing_name_rejected (test_web_catalog.WebCatalogTests.test_cw02_odd_tiers_and_missing_name_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 96, in test_cw02_odd_tiers_and_missing_name_rejected
+    self.assertRejected(self.publish(PAPA + ",250"), "INVALID_CATALOG_FORMAT")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw04_unknown_product (test_web_catalog.WebCatalogTests.test_cw04_unknown_product)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 123, in test_cw04_unknown_product
+    self.assertRejected(self.admin.post("/admin/catalogo/desactivar", {"ciclo": W39, "producto": "MANDARINA"}),
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw_a_page_prefills_next_cycle_with_base_catalog (test_web_catalog.WebCatalogTests.test_cw_a_page_prefills_next_cycle_with_base_catalog)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 53, in test_cw_a_page_prefills_next_cycle_with_base_catalog
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_cw_b_page_shows_published_catalog (test_web_catalog.WebCatalogTests.test_cw_b_page_shows_published_catalog)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 78, in test_cw_b_page_shows_published_catalog
+    self.assertIn("publicado", html)
+AssertionError: 'publicado' not found in '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>No encontrado · Yapa</title><style>\nbody{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f6f8f7;color:#1f2a24}\nmain{max-width:720px;margin:0 auto;padding:16px}\nheader{background:#1f3d2b;color:#fff;padding:12px 16px}\nheader a{color:#cfe3d6;margin-right:14px;text-decoration:none}\nh1{font-size:1.4rem;margin:.4rem 0}\n.card{background:#fff;border-radius:10px;padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px #0001}\n.muted{color:#5f6f66;font-size:.9rem}\n.ok{border-left:0;background:#e6f1ea}\n.error{background:#fbeadb}\ntable{width:100%;border-collapse:collapse;font-size:.92rem}\ntd,th{padding:6px 4px;border-bottom:1px solid #e3e8e5;text-align:left}\ninput,select,button{font-size:1rem;padding:8px;margin:4px 0;width:100%;box-sizing:border-box}\nbutton{background:#2e7d4f;color:#fff;border:0;border-radius:8px}\n*{box-sizing:border-box}\n.row{display:flex;justify-content:space-between;align-items:center;gap:8px}\n.row>div{flex:1;min-width:0;overflow-wrap:anywhere}\n.qty{width:80px;flex:0 0 80px}\n.card{overflow-x:auto}\n</style></head><body><header><strong>Yapa</strong> &nbsp; <a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a><a href="/admin">Admin</a><a href="/entrar">Entrar</a></header><main><h1>No encontrado</h1><div class="card">Esa página no existe.</div></main></body></html>'
+
+======================================================================
+FAIL: test_cw_b_publish_from_web (test_web_catalog.WebCatalogTests.test_cw_b_publish_from_web)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 65, in test_cw_b_publish_from_web
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_cw_c_comma_decimal_rejects_whole_list (test_web_catalog.WebCatalogTests.test_cw_c_comma_decimal_rejects_whole_list)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 84, in test_cw_c_comma_decimal_rejects_whole_list
+    html = self.assertRejected(self.publish("\n".join([HEADER, PAPA.replace("3.50", "3,50"), LIMPIATODO])),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw_c_short_line_rejected (test_web_catalog.WebCatalogTests.test_cw_c_short_line_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 90, in test_cw_c_short_line_rejected
+    html = self.assertRejected(self.publish("\n".join([PAPA, "AJO,Ajo,FRESCOS,kg,0.25,40,SUP-FRESCOS,0"])),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw_d_rising_tier_rejected_by_catalog_rule (test_web_catalog.WebCatalogTests.test_cw_d_rising_tier_rejected_by_catalog_rule)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 103, in test_cw_d_rising_tier_rejected_by_catalog_rule
+    self.assertRejected(self.publish("\n".join([LIMPIATODO, PAPA.replace("3.30", "3.70")])), "INVALID_TIERS")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw_e_open_cycle_is_locked (test_web_catalog.WebCatalogTests.test_cw_e_open_cycle_is_locked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 109, in test_cw_e_open_cycle_is_locked
+    self.assertRejected(self.publish(LIST), "CATALOG_LOCKED")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 46, in assertRejected
+    self.assertEqual(status, 422)
+AssertionError: 404 != 422
+
+======================================================================
+FAIL: test_cw_f_deactivate_from_web (test_web_catalog.WebCatalogTests.test_cw_f_deactivate_from_web)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 116, in test_cw_f_deactivate_from_web
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_cw_g_deactivate_copies_base_catalog (test_web_catalog.WebCatalogTests.test_cw_g_deactivate_copies_base_catalog)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 130, in test_cw_g_deactivate_copies_base_catalog
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_cw_h_neighbor_forbidden (test_web_catalog.WebCatalogTests.test_cw_h_neighbor_forbidden)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_catalog.py", line 140, in test_cw_h_neighbor_forbidden
+    self.assertEqual(neighbor.get("/admin/catalogo")[0], 403)
+AssertionError: 404 != 403
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.014s
+
+FAILED (failures=13)

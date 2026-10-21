@@ -1,0 +1,94 @@
+test_az_h_zone_admin_panel (test_zone_benefits.ZoneAdminPanelSpecTests.test_az_h_zone_admin_panel) ... ERROR
+test_az_a_free_delivery_for_zone_admin (test_zone_benefits.ZoneBenefitSpecTests.test_az_a_free_delivery_for_zone_admin) ... ERROR
+test_az_b_discount_ends_after_four_weeks (test_zone_benefits.ZoneBenefitSpecTests.test_az_b_discount_ends_after_four_weeks) ... FAIL
+test_az_b_temporary_discount (test_zone_benefits.ZoneBenefitSpecTests.test_az_b_temporary_discount) ... ERROR
+test_az_c_no_admin_no_benefit (test_zone_benefits.ZoneBenefitSpecTests.test_az_c_no_admin_no_benefit) ... ERROR
+test_az_d_referral_code (test_zone_benefits.ZoneBenefitSpecTests.test_az_d_referral_code) ... ERROR
+test_az_e_register_with_referral (test_zone_benefits.ZoneBenefitSpecTests.test_az_e_register_with_referral) ... ERROR
+test_az_f_referral_reward_once (test_zone_benefits.ZoneBenefitSpecTests.test_az_f_referral_reward_once) ... ERROR
+test_az_g_money_still_balances (test_zone_benefits.ZoneBenefitSpecTests.test_az_g_money_still_balances) ... ERROR
+
+======================================================================
+ERROR: test_az_h_zone_admin_panel (test_zone_benefits.ZoneAdminPanelSpecTests.test_az_h_zone_admin_panel)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 135, in test_az_h_zone_admin_panel
+    self.assertEqual((panel["avance"]["verificados"], panel["avance"]["minimo"]), (3, 8))
+                      ~~~~~^^^^^^^^^^
+KeyError: 'avance'
+
+======================================================================
+ERROR: test_az_a_free_delivery_for_zone_admin (test_zone_benefits.ZoneBenefitSpecTests.test_az_a_free_delivery_for_zone_admin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 51, in test_az_a_free_delivery_for_zone_admin
+    self.assertEqual((admin.final_amount, admin.refund_amount, admin.benefit), (D("52.64"), D("8.36"), D("5.00")))
+                                                               ^^^^^^^^^^^^^
+AttributeError: 'SettledOrder' object has no attribute 'benefit'
+
+======================================================================
+ERROR: test_az_b_temporary_discount (test_zone_benefits.ZoneBenefitSpecTests.test_az_b_temporary_discount)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 62, in test_az_b_temporary_discount
+    self.assertEqual((admin.final_amount, admin.refund_amount, admin.benefit), (D("50.00"), D("11.00"), D("7.64")))
+                                                               ^^^^^^^^^^^^^
+AttributeError: 'SettledOrder' object has no attribute 'benefit'
+
+======================================================================
+ERROR: test_az_c_no_admin_no_benefit (test_zone_benefits.ZoneBenefitSpecTests.test_az_c_no_admin_no_benefit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 76, in test_az_c_no_admin_no_benefit
+    self.assertEqual({self.settled(c).benefit for c in JM}, {D("0")})
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'SettledOrder' object has no attribute 'benefit'
+
+======================================================================
+ERROR: test_az_d_referral_code (test_zone_benefits.ZoneBenefitSpecTests.test_az_d_referral_code)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 80, in test_az_d_referral_code
+    self.assertEqual(customers.referral_code(self.store.customers[101]), "ANA101")
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.customers' has no attribute 'referral_code'
+
+======================================================================
+ERROR: test_az_e_register_with_referral (test_zone_benefits.ZoneBenefitSpecTests.test_az_e_register_with_referral)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 85, in test_az_e_register_with_referral
+    lucia, _ = customers.register_customer(self.store, "Lucía Ramos", "987654321", "Z-LINCE-01", True, by=ADMIN,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: register_customer() got an unexpected keyword argument 'referral'
+
+======================================================================
+ERROR: test_az_f_referral_reward_once (test_zone_benefits.ZoneBenefitSpecTests.test_az_f_referral_reward_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 97, in test_az_f_referral_reward_once
+    self.store.add_customer(Customer(808, "Vecino 808", "Z-JM-01", referred_by=801))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Customer.__init__() got an unexpected keyword argument 'referred_by'
+
+======================================================================
+ERROR: test_az_g_money_still_balances (test_zone_benefits.ZoneBenefitSpecTests.test_az_g_money_still_balances)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 111, in test_az_g_money_still_balances
+    self.store.add_customer(Customer(808, "Vecino 808", "Z-JM-01", referred_by=801))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Customer.__init__() got an unexpected keyword argument 'referred_by'
+
+======================================================================
+FAIL: test_az_b_discount_ends_after_four_weeks (test_zone_benefits.ZoneBenefitSpecTests.test_az_b_discount_ends_after_four_weeks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_zone_benefits.py", line 69, in test_az_b_discount_ends_after_four_weeks
+    self.assertEqual(self.settled(801).final_amount, D("52.64"))
+AssertionError: Decimal('57.64') != Decimal('52.64')
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.013s
+
+FAILED (failures=1, errors=8)

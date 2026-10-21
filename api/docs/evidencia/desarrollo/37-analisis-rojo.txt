@@ -1,0 +1,208 @@
+EFFFFFFFFFFFFFFFFF
+======================================================================
+ERROR: test_an_q_la_demo_tiene_dos_admins_de_zona_cercanos (test_analisis.DemoTests.test_an_q_la_demo_tiene_dos_admins_de_zona_cercanos)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 212, in test_an_q_la_demo_tiene_dos_admins_de_zona_cercanos
+    arenales, alamos = store.zones[ARENALES], store.zones[ALAMOS]
+                       ~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'Z-LINCE-03'
+
+======================================================================
+FAIL: test_an_h_no_propone_unir_si_juntas_no_llegan (test_analisis.FewOrdersTests.test_an_h_no_propone_unir_si_juntas_no_llegan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 156, in test_an_h_no_propone_unir_si_juntas_no_llegan
+    self.assertNotIn("UNIR", self.types(self.analysis()))
+                                        ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_n_sin_pedidos_responde_con_ceros (test_analisis.FewOrdersTests.test_an_n_sin_pedidos_responde_con_ceros)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 160, in test_an_n_sin_pedidos_responde_con_ceros
+    body = self.analysis()
+           ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_o_ciclo_invalido (test_analisis.FewOrdersTests.test_an_o_ciclo_invalido)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 169, in test_an_o_ciclo_invalido
+    self.assertEqual((status, body["error"]["codigo"]), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_an_k_propone_revisar_el_costo (test_analisis.SettledWeekTests.test_an_k_propone_revisar_el_costo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 183, in test_an_k_propone_revisar_el_costo
+    body = self.analysis("?ciclo=2026-W37")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_l_propone_reactivar_a_quienes_recibieron_y_no_piden (test_analisis.SettledWeekTests.test_an_l_propone_reactivar_a_quienes_recibieron_y_no_piden)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 193, in test_an_l_propone_reactivar_a_quienes_recibieron_y_no_piden
+    proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "REACTIVAR")
+                               ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_m_unir_sale_antes_que_reactivar (test_analisis.SettledWeekTests.test_an_m_unir_sale_antes_que_reactivar)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 202, in test_an_m_unir_sale_antes_que_reactivar
+    order = self.types(self.analysis())
+                       ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_a_solo_el_admin (test_analisis.ZoneAnalysisTests.test_an_a_solo_el_admin)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 85, in test_an_a_solo_el_admin
+    self.assertEqual((status, body["error"]["codigo"]), (401, "LOGIN_REQUIRED"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (401, 'LOGIN_REQUIRED')
+
+First differing element 0:
+404
+401
+
+- (404, 'NOT_FOUND')
++ (401, 'LOGIN_REQUIRED')
+
+======================================================================
+FAIL: test_an_b_datos_de_la_zona (test_analisis.ZoneAnalysisTests.test_an_b_datos_de_la_zona)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 93, in test_an_b_datos_de_la_zona
+    zone = self.zone(self.analysis(), ALAMOS)
+                     ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_c_margen_sin_liquidar_es_nulo (test_analisis.ZoneAnalysisTests.test_an_c_margen_sin_liquidar_es_nulo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 98, in test_an_c_margen_sin_liquidar_es_nulo
+    self.assertIsNone(self.zone(self.analysis(), ALAMOS)["margen"])
+                                ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_d_union_posible (test_analisis.ZoneAnalysisTests.test_an_d_union_posible)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 102, in test_an_d_union_posible
+    pair = next(u for u in self.analysis()["uniones"] if {u["a"], u["b"]} == {ARENALES, ALAMOS})
+                           ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_e_union_bloqueada_por_ciclo_cerrado (test_analisis.ZoneAnalysisTests.test_an_e_union_bloqueada_por_ciclo_cerrado)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 108, in test_an_e_union_bloqueada_por_ciclo_cerrado
+    pair = next(u for u in self.analysis()["uniones"] if {u["a"], u["b"]} == {ARENALES, ALAMOS})
+                           ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_f_las_zonas_lejanas_no_aparecen (test_analisis.ZoneAnalysisTests.test_an_f_las_zonas_lejanas_no_aparecen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 113, in test_an_f_las_zonas_lejanas_no_aparecen
+    for union in self.analysis()["uniones"]:
+                 ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_g_propone_unir_si_juntas_llegan (test_analisis.ZoneAnalysisTests.test_an_g_propone_unir_si_juntas_llegan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 118, in test_an_g_propone_unir_si_juntas_llegan
+    proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "UNIR")
+                               ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_i_propone_recordar (test_analisis.ZoneAnalysisTests.test_an_i_propone_recordar)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 125, in test_an_i_propone_recordar
+    proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "RECORDAR" and p["zonas"] == [ARENALES])
+                               ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_j_propone_invitar_a_una_zona_chica (test_analisis.ZoneAnalysisTests.test_an_j_propone_invitar_a_una_zona_chica)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 130, in test_an_j_propone_invitar_a_una_zona_chica
+    proposal = next(p for p in self.analysis()["propuestas"] if p["tipo"] == "INVITAR" and p["zonas"] == [ARENALES])
+                               ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_m_las_que_ayudan_a_llegar_van_primero (test_analisis.ZoneAnalysisTests.test_an_m_las_que_ayudan_a_llegar_van_primero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 135, in test_an_m_las_que_ayudan_a_llegar_van_primero
+    order = self.types(self.analysis())
+                       ^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+======================================================================
+FAIL: test_an_p_consultar_no_cambia_nada (test_analisis.ZoneAnalysisTests.test_an_p_consultar_no_cambia_nada)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 142, in test_an_p_consultar_no_cambia_nada
+    self.analysis()
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_analisis.py", line 62, in analysis
+    self.assertEqual(status, 200, body)
+AssertionError: 404 != 200 : {'error': {'codigo': 'NOT_FOUND', 'mensaje': 'Esa ruta no existe.'}}
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.023s
+
+FAILED (failures=17, errors=1)

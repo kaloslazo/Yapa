@@ -1,0 +1,19 @@
+test_api (unittest.loader._FailedTest.test_api) ... ERROR
+
+======================================================================
+ERROR: test_api (unittest.loader._FailedTest.test_api)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_api
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python312\Lib\unittest\loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api.py", line 14, in <module>
+    from yapa_sdd.web.api import create_api
+ModuleNotFoundError: No module named 'yapa_sdd.web.api'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

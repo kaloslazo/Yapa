@@ -1,0 +1,241 @@
+test_fa_a_admin_ve_una_foto_guardada (test_api_fotos.PhotoTests.test_fa_a_admin_ve_una_foto_guardada) ... FAIL
+test_fa_b_sin_sesion (test_api_fotos.PhotoTests.test_fa_b_sin_sesion) ... FAIL
+test_fa_c_vecino_no_puede (test_api_fotos.PhotoTests.test_fa_c_vecino_no_puede) ... FAIL
+test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) ... 
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/../secreto.txt') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef.txt') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='/etc/passwd') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='C:/Windows/win.ini') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef/../0123456789abcdef.jpg') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef.jpg%00.png') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='otra/0123456789abcdef.jpg') ... FAIL
+  test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/ABC.jpg') ... FAIL
+test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) ... FAIL
+test_fa_g_foto_que_no_existe (test_api_fotos.PhotoTests.test_fa_g_foto_que_no_existe) ... FAIL
+test_fa_i_foto_subida_se_puede_ver (test_api_fotos.PhotoTests.test_fa_i_foto_subida_se_puede_ver) ... FAIL
+
+======================================================================
+FAIL: test_fa_a_admin_ve_una_foto_guardada (test_api_fotos.PhotoTests.test_fa_a_admin_ve_una_foto_guardada)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 46, in test_fa_a_admin_ve_una_foto_guardada
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_fa_b_sin_sesion (test_api_fotos.PhotoTests.test_fa_b_sin_sesion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 54, in test_fa_b_sin_sesion
+    self.assertEqual(self.error_code(ApiClient(self.api), f"/api/admin/foto?ruta=fotos/{NAME}.jpg"),
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (401, 'LOGIN_REQUIRED')
+
+First differing element 0:
+404
+401
+
+- (404, 'NOT_FOUND')
++ (401, 'LOGIN_REQUIRED')
+
+======================================================================
+FAIL: test_fa_c_vecino_no_puede (test_api_fotos.PhotoTests.test_fa_c_vecino_no_puede)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 59, in test_fa_c_vecino_no_puede
+    self.assertEqual(self.error_code(self.client(101, PIN, "vecino"), f"/api/admin/foto?ruta=fotos/{NAME}.jpg"),
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (403, 'FORBIDDEN')
+
+First differing element 0:
+404
+403
+
+- (404, 'NOT_FOUND')
++ (403, 'FORBIDDEN')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/../secreto.txt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef.txt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='/etc/passwd')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='C:/Windows/win.ini')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef/../0123456789abcdef.jpg')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/0123456789abcdef.jpg%00.png')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='otra/0123456789abcdef.jpg')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas) (ruta='fotos/ABC.jpg')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 68, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, f"/api/admin/foto?ruta={ruta}"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_d_rutas_invalidas (test_api_fotos.PhotoTests.test_fa_d_rutas_invalidas)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 69, in test_fa_d_rutas_invalidas
+    self.assertEqual(self.error_code(admin, "/api/admin/foto"), (422, "INVALID_INPUT"))
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (422, 'INVALID_INPUT')
+
+First differing element 0:
+404
+422
+
+- (404, 'NOT_FOUND')
++ (422, 'INVALID_INPUT')
+
+======================================================================
+FAIL: test_fa_g_foto_que_no_existe (test_api_fotos.PhotoTests.test_fa_g_foto_que_no_existe)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 73, in test_fa_g_foto_que_no_existe
+    self.assertEqual(self.error_code(self.admin(), f"/api/admin/foto?ruta=fotos/{NAME}.jpg"),
+AssertionError: Tuples differ: (404, 'NOT_FOUND') != (404, 'PHOTO_NOT_FOUND')
+
+First differing element 1:
+'NOT_FOUND'
+'PHOTO_NOT_FOUND'
+
+- (404, 'NOT_FOUND')
++ (404, 'PHOTO_NOT_FOUND')
+?        ++++++
+
+
+======================================================================
+FAIL: test_fa_i_foto_subida_se_puede_ver (test_api_fotos.PhotoTests.test_fa_i_foto_subida_se_puede_ver)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_api_fotos.py", line 92, in test_fa_i_foto_subida_se_puede_ver
+    self.assertEqual((status, body), (200, JPEG))
+AssertionError: Tuples differ: (404, b'{"error": {"codigo": "NOT_FOUND", "mensaje": "Esa ruta no existe."}}') != (200, b'\xff\xd8\xff\xe0foto-de-prueba')
+
+First differing element 0:
+404
+200
+
+- (404, b'{"error": {"codigo": "NOT_FOUND", "mensaje": "Esa ruta no existe."}}')
++ (200, b'\xff\xd8\xff\xe0foto-de-prueba')
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.022s
+
+FAILED (failures=15)

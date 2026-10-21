@@ -1,0 +1,9 @@
+{
+  "customerId": 101,
+  "lines": [
+    {"productId": "PAPA-AMARILLA", "quantity": "5"},
+    {"productId": "LIMON", "quantity": "2"}
+  ],
+  "payment": {"method": "YAPE", "operationCode": "04512874", "amount": "29.86"},
+  "requestedAt": "2026-09-16T10:00:00-05:00"
+}

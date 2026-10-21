@@ -1,0 +1,165 @@
+# Iteracion 21 - pruebas ANTES del codigo
+# 2026-09-24 23:37
+test_hc_b_use_is_recorded_with_order (test_gaps_packing.BufferPerOrderTests.test_hc_b_use_is_recorded_with_order) ... ERROR
+test_hc_c_cannot_replace_more_than_ordered (test_gaps_packing.BufferPerOrderTests.test_hc_c_cannot_replace_more_than_ordered) ... ERROR
+test_hc_d_order_without_that_product (test_gaps_packing.BufferPerOrderTests.test_hc_d_order_without_that_product) ... ERROR
+test_hc_e_unknown_or_not_attended_order (test_gaps_packing.BufferPerOrderTests.test_hc_e_unknown_or_not_attended_order) ... ERROR
+test_hc_f_web_asks_for_order_and_lists_uses (test_gaps_packing.BufferWebTests.test_hc_f_web_asks_for_order_and_lists_uses) ... FAIL
+test_hc_g_unit_must_be_kg_or_whole_units (test_gaps_packing.CatalogGapTests.test_hc_g_unit_must_be_kg_or_whole_units) ... FAIL
+test_hc_h_supplier_leaving_does_not_change_published_catalog (test_gaps_packing.CatalogGapTests.test_hc_h_supplier_leaving_does_not_change_published_catalog) ... ok
+test_hc_a_no_bags_after_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_delivery) ... FAIL
+test_hc_a_no_bags_after_failed_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_failed_delivery) ... FAIL
+test_co_a_store_non_perishable_leftovers (test_fulfillment.BufferSpecTests.test_co_a_store_non_perishable_leftovers) ... ok
+test_co_b_buffer_has_amount_limit (test_fulfillment.BufferSpecTests.test_co_b_buffer_has_amount_limit) ... ok
+test_co_c_invalid_products_or_quantities (test_fulfillment.BufferSpecTests.test_co_c_invalid_products_or_quantities) ... ok
+test_co_d_use_buffer_to_replace_missing_items (test_fulfillment.BufferSpecTests.test_co_d_use_buffer_to_replace_missing_items) ... ERROR
+test_co_e_only_staff_uses_buffer (test_fulfillment.BufferSpecTests.test_co_e_only_staff_uses_buffer) ... ERROR
+test_rc_a_claim_in_time_is_pending (test_fulfillment.ClaimSpecTests.test_rc_a_claim_in_time_is_pending) ... ok
+test_rc_b_claim_window_is_24_hours (test_fulfillment.ClaimSpecTests.test_rc_b_claim_window_is_24_hours) ... ok
+test_rc_c_order_must_be_delivered_and_own (test_fulfillment.ClaimSpecTests.test_rc_c_order_must_be_delivered_and_own) ... ok
+test_rc_d_reason_and_photo (test_fulfillment.ClaimSpecTests.test_rc_d_reason_and_photo) ... ok
+test_rc_e_invalid_items (test_fulfillment.ClaimSpecTests.test_rc_e_invalid_items) ... ok
+test_en_a_zone_delivery_is_recorded (test_fulfillment.DeliverySpecTests.test_en_a_zone_delivery_is_recorded) ... ok
+test_en_b_all_or_nothing (test_fulfillment.DeliverySpecTests.test_en_b_all_or_nothing) ... ok
+test_en_c_delivery_requires_photo_and_receiver (test_fulfillment.DeliverySpecTests.test_en_c_delivery_requires_photo_and_receiver) ... ok
+test_en_d_zone_is_delivered_once (test_fulfillment.DeliverySpecTests.test_en_d_zone_is_delivered_once) ... ok
+test_en_e_invalid_zone_or_person (test_fulfillment.DeliverySpecTests.test_en_e_invalid_zone_or_person) ... ok
+test_ar_a_bags_are_numbered_with_their_photo (test_fulfillment.PackingSpecTests.test_ar_a_bags_are_numbered_with_their_photo) ... ok
+test_ar_b_bag_requires_photo (test_fulfillment.PackingSpecTests.test_ar_b_bag_requires_photo) ... ok
+test_ar_c_cannot_pack_before_close (test_fulfillment.PackingSpecTests.test_ar_c_cannot_pack_before_close) ... ok
+test_ar_d_only_attended_orders_are_packed (test_fulfillment.PackingSpecTests.test_ar_d_only_attended_orders_are_packed) ... ok
+test_ar_e_only_staff_packs (test_fulfillment.PackingSpecTests.test_ar_e_only_staff_packs) ... ok
+test_rv_a_approved_claim_returns_the_article_as_balance (test_fulfillment.ReviewSpecTests.test_rv_a_approved_claim_returns_the_article_as_balance) ... ok
+test_rv_b_rejected_claim_moves_no_money (test_fulfillment.ReviewSpecTests.test_rv_b_rejected_claim_moves_no_money) ... ok
+test_rv_c_approval_needs_settled_cycle (test_fulfillment.ReviewSpecTests.test_rv_c_approval_needs_settled_cycle) ... ok
+test_rv_d_invalid_reviews (test_fulfillment.ReviewSpecTests.test_rv_d_invalid_reviews) ... ok
+test_rv_e_missing_item_is_not_returned_twice (test_fulfillment.ReviewSpecTests.test_rv_e_missing_item_is_not_returned_twice) ... ok
+test_oa08_packing (test_web_operacion.AdminOperationTests.test_oa08_packing) ... ok
+test_oa09_delivery (test_web_operacion.AdminOperationTests.test_oa09_delivery) ... ok
+test_oa10_review_claims (test_web_operacion.AdminOperationTests.test_oa10_review_claims) ... ok
+test_oa11_buffer (test_web_operacion.AdminOperationTests.test_oa11_buffer) ... ok
+test_oa12_metrics_dashboard (test_web_operacion.AdminOperationTests.test_oa12_metrics_dashboard) ... ok
+test_oa13_access (test_web_operacion.CrossCuttingTests.test_oa13_access) ... ok
+test_oa14_routes_and_escaping (test_web_operacion.CrossCuttingTests.test_oa14_routes_and_escaping) ... ok
+test_oa15_mobile_viewport (test_web_operacion.CrossCuttingTests.test_oa15_mobile_viewport) ... ok
+test_oa06_withdrawal_request (test_web_operacion.NeighborMoneyAndClaimTests.test_oa06_withdrawal_request) ... ok
+test_oa07_file_claim (test_web_operacion.NeighborMoneyAndClaimTests.test_oa07_file_claim) ... ok
+test_oa01_create_zone (test_web_operacion.NeighborZoneTests.test_oa01_create_zone) ... ok
+test_oa02_activate_zone (test_web_operacion.NeighborZoneTests.test_oa02_activate_zone) ... ok
+test_oa03_join_zone (test_web_operacion.NeighborZoneTests.test_oa03_join_zone) ... ok
+test_oa04_merge_leave_and_transfer (test_web_operacion.NeighborZoneTests.test_oa04_merge_leave_and_transfer) ... ok
+test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data) ... ok
+
+======================================================================
+ERROR: test_hc_b_use_is_recorded_with_order (test_gaps_packing.BufferPerOrderTests.test_hc_b_use_is_recorded_with_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 55, in test_hc_b_use_is_recorded_with_order
+    stock = self.use("2")
+            ^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 34, in use
+    return use_buffer(self.store, "LIMPIATODO-GALON", quantity, order_id=order_id, by=ADMIN, now=FRIDAY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+ERROR: test_hc_c_cannot_replace_more_than_ordered (test_gaps_packing.BufferPerOrderTests.test_hc_c_cannot_replace_more_than_ordered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 64, in test_hc_c_cannot_replace_more_than_ordered
+    self.use("2")
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 34, in use
+    return use_buffer(self.store, "LIMPIATODO-GALON", quantity, order_id=order_id, by=ADMIN, now=FRIDAY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+ERROR: test_hc_d_order_without_that_product (test_gaps_packing.BufferPerOrderTests.test_hc_d_order_without_that_product)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 72, in test_hc_d_order_without_that_product
+    self.assertRule("BUFFER_NOT_FOR_ORDER", self.use, "1", self.first.order_id)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 34, in assertRule
+    fn(*args, **kwargs)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 34, in use
+    return use_buffer(self.store, "LIMPIATODO-GALON", quantity, order_id=order_id, by=ADMIN, now=FRIDAY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+ERROR: test_hc_e_unknown_or_not_attended_order (test_gaps_packing.BufferPerOrderTests.test_hc_e_unknown_or_not_attended_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 77, in test_hc_e_unknown_or_not_attended_order
+    self.assertRule("ORDER_NOT_FOUND", self.use, "1", 999)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 34, in assertRule
+    fn(*args, **kwargs)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 34, in use
+    return use_buffer(self.store, "LIMPIATODO-GALON", quantity, order_id=order_id, by=ADMIN, now=FRIDAY)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+ERROR: test_co_d_use_buffer_to_replace_missing_items (test_fulfillment.BufferSpecTests.test_co_d_use_buffer_to_replace_missing_items)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 246, in test_co_d_use_buffer_to_replace_missing_items
+    stock = use_buffer(self.store, "LIMPIATODO-GALON", "2", order_id=order, by=ADMIN, now=FRIDAY)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+ERROR: test_co_e_only_staff_uses_buffer (test_fulfillment.BufferSpecTests.test_co_e_only_staff_uses_buffer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 258, in test_co_e_only_staff_uses_buffer
+    self.assertRule("NOT_AUTHORIZED", use_buffer, self.store, "LIMPIATODO-GALON", "1",
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 34, in assertRule
+    fn(*args, **kwargs)
+TypeError: use_buffer() got an unexpected keyword argument 'order_id'
+
+======================================================================
+FAIL: test_hc_f_web_asks_for_order_and_lists_uses (test_gaps_packing.BufferWebTests.test_hc_f_web_asks_for_order_and_lists_uses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 90, in test_hc_f_web_asks_for_order_and_lists_uses
+    self.assertIn('name="pedido"', admin.get("/admin/colchon")[2])
+AssertionError: 'name="pedido"' not found in '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Colchón de reposición · Yapa</title><style>\nbody{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f6f8f7;color:#1f2a24}\nmain{max-width:720px;margin:0 auto;padding:16px}\nheader{background:#1f3d2b;color:#fff;padding:12px 16px}\nheader a{color:#cfe3d6;margin-right:14px;text-decoration:none}\nh1{font-size:1.4rem;margin:.4rem 0}\n.card{background:#fff;border-radius:10px;padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px #0001}\n.muted{color:#5f6f66;font-size:.9rem}\n.ok{border-left:0;background:#e6f1ea}\n.error{background:#fbeadb}\ntable{width:100%;border-collapse:collapse;font-size:.92rem}\ntd,th{padding:6px 4px;border-bottom:1px solid #e3e8e5;text-align:left}\ninput,select,button{font-size:1rem;padding:8px;margin:4px 0;width:100%;box-sizing:border-box}\nbutton{background:#2e7d4f;color:#fff;border:0;border-radius:8px}\n*{box-sizing:border-box}\n.row{display:flex;justify-content:space-between;align-items:center;gap:8px}\n.row>div{flex:1;min-width:0;overflow-wrap:anywhere}\n.qty{width:80px;flex:0 0 80px}\n.card{overflow-x:auto}\n</style></head><body><header><strong>Yapa</strong> &nbsp; <a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a><a href="/admin">Admin</a><form method="post" action="/salir" style="display:inline"><input type="hidden" name="csrf" value="IcNAx_3qxD7iUOmiH-0zag"><button style="width:auto;padding:4px 10px;margin:0">Salir</button></form></header><main><h1>Colchón de reposición</h1><div class="card"><p><strong>Valor guardado: S/ 47.40 de un tope de S/ 500.00</strong></p><table><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr><tr><td>LIMPIATODO-GALON</td><td>6</td><td>S/ 47.40</td></tr></table></div><form class="card" method="post" action="/admin/colchon/agregar"><input type="hidden" name="csrf" value="IcNAx_3qxD7iUOmiH-0zag"><label>Producto <select name="producto"><option value="PAPA-AMARILLA">Papa amarilla</option><option value="PAPA-BLANCA">Papa blanca</option><option value="CEBOLLA-ROJA">Cebolla roja</option><option value="AJO">Ajo criollo</option><option value="LIMON">Limón</option><option value="CAMOTE">Camote amarillo</option><option value="ZANAHORIA">Zanahoria</option><option value="LIMPIATODO-GALON">Limpiatodo galón 3.8 L</option><option value="LAVAVAJILLAS-GALON">Lavavajillas galón</option><option value="DETERGENTE-LIQUIDO-GALON">Detergente líquido galón</option><option value="LEJIA-GALON">Lejía galón</option></select></label><label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Guardar en el colchón</button></form><form class="card" method="post" action="/admin/colchon/usar"><input type="hidden" name="csrf" value="IcNAx_3qxD7iUOmiH-0zag"><label>Producto <select name="producto"><option value="PAPA-AMARILLA">Papa amarilla</option><option value="PAPA-BLANCA">Papa blanca</option><option value="CEBOLLA-ROJA">Cebolla roja</option><option value="AJO">Ajo criollo</option><option value="LIMON">Limón</option><option value="CAMOTE">Camote amarillo</option><option value="ZANAHORIA">Zanahoria</option><option value="LIMPIATODO-GALON">Limpiatodo galón 3.8 L</option><option value="LAVAVAJILLAS-GALON">Lavavajillas galón</option><option value="DETERGENTE-LIQUIDO-GALON">Detergente líquido galón</option><option value="LEJIA-GALON">Lejía galón</option></select></label><label>Cantidad <input name="cantidad" inputmode="decimal"></label><button>Usar para reponer</button></form></main></body></html>'
+
+======================================================================
+FAIL: test_hc_g_unit_must_be_kg_or_whole_units (test_gaps_packing.CatalogGapTests.test_hc_g_unit_must_be_kg_or_whole_units)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 117, in test_hc_g_unit_must_be_kg_or_whole_units
+    self.assertRule("INVALID_UNIT", self.publish, [product(unit="caja")])
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 111, in assertRule
+    with self.assertRaises(BusinessRuleError) as raised:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: BusinessRuleError not raised
+
+======================================================================
+FAIL: test_hc_a_no_bags_after_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_delivery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 42, in test_hc_a_no_bags_after_delivery
+    self.assertRule("ZONE_ALREADY_CLOSED", self.pack, self.first)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 33, in assertRule
+    with self.assertRaises(BusinessRuleError) as raised:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: BusinessRuleError not raised
+
+======================================================================
+FAIL: test_hc_a_no_bags_after_failed_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_failed_delivery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_gaps_packing.py", line 49, in test_hc_a_no_bags_after_failed_delivery
+    self.assertRule("ZONE_ALREADY_CLOSED", self.pack, self.first)
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_fulfillment.py", line 33, in assertRule
+    with self.assertRaises(BusinessRuleError) as raised:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: BusinessRuleError not raised
+
+----------------------------------------------------------------------
+Ran 49 tests in 0.048s
+
+FAILED (failures=4, errors=6)

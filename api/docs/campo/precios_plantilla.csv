@@ -1,0 +1,10 @@
+producto,categoria,unidad,precio_mayorista,precio_supermercado,precio_mercado_barrio,fuente_mercado,fecha
+Papa blanca,FRESCOS,kg,0.98,2.39,,,
+Papa amarilla,FRESCOS,kg,3.38,7.99,,,
+Cebolla roja,FRESCOS,kg,1.45,3.89,,,
+Ajo,FRESCOS,kg,4.40,16.49,,,
+Limon,FRESCOS,kg,1.90,4.29,,,
+Camote,FRESCOS,kg,1.05,3.39,,,
+Zanahoria,FRESCOS,kg,1.44,3.69,,,
+Limpiatodo galon (Kaz),LIMPIEZA,unidad,6.90,12.80,,,
+Limpiatodo galon (Exlim),LIMPIEZA,unidad,,,,,

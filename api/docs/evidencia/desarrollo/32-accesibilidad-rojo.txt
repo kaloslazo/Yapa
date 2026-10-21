@@ -1,0 +1,25 @@
+
+ RUN  v5.0.1 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/utils/accessibility.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/accessibility.test.ts [ src/utils/accessibility.test.ts ]
+Error: Cannot find module './contrast' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/utils/accessibility.test.ts
+ ❯ src/utils/accessibility.test.ts:3:1
+      1| import { readFileSync } from 'node:fs';
+      2| import { describe, expect, it } from 'vitest';
+      3| import { contrast } from './contrast';
+       | ^
+      4| import { toastDuration } from './toast';
+      5|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  13 passed (13)
+   Start at  03:17:19
+   Duration  185ms (transform 69%, import 13%, tests 11%, worker 7%)
+

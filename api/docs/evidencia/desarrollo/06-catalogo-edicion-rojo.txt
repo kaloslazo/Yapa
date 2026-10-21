@@ -1,0 +1,6 @@
+# Iteracion 6 (S-39) - prueba CT-M ANTES del codigo
+# 2026-09-24 22:48
+ERROR: test_ct_m_edit_keeps_deactivated_product_without_increasing_it (test_catalog.CatalogSpecTests.test_ct_m_edit_keeps_deactivated_product_without_increasing_it)
+yapa_sdd.domain.BusinessRuleError: PAPA-AMARILLA no está disponible este ciclo.
+Ran 107 tests in 0.033s
+FAILED (errors=1)

@@ -1,0 +1,343 @@
+test_aa01_pin_is_stored_hashed (test_access.AccessSpecTests.test_aa01_pin_is_stored_hashed) ... ok
+test_aa02_invalid_pins (test_access.AccessSpecTests.test_aa02_invalid_pins) ... ok
+test_aa03_login_and_same_error_for_unknown (test_access.AccessSpecTests.test_aa03_login_and_same_error_for_unknown) ... ok
+test_aa04_lock_after_five_failures (test_access.AccessSpecTests.test_aa04_lock_after_five_failures) ... ok
+test_aa05_anonymous_is_redirected (test_access.AccessSpecTests.test_aa05_anonymous_is_redirected) ... ok
+test_aa06_customer_comes_from_session (test_access.AccessSpecTests.test_aa06_customer_comes_from_session) ... ok
+test_aa07_admin_is_protected (test_access.AccessSpecTests.test_aa07_admin_is_protected) ... ok
+test_aa08_csrf_required (test_access.AccessSpecTests.test_aa08_csrf_required) ... ok
+test_aa09_logout (test_access.AccessSpecTests.test_aa09_logout) ... ok
+test_aa10_change_pin (test_access.AccessSpecTests.test_aa10_change_pin) ... ok
+test_aa11_production_iterations (test_access.AccessSpecTests.test_aa11_production_iterations) ... ok
+test_au01_verifying_twice_does_not_duplicate_cash (test_audit.AuditSpecTests.test_au01_verifying_twice_does_not_duplicate_cash) ... ok
+test_au_a_simple_order_and_settlement (test_audit.AuditSpecTests.test_au_a_simple_order_and_settlement) ... ok
+test_au_b_edit_down_keeps_received_amount (test_audit.AuditSpecTests.test_au_b_edit_down_keeps_received_amount) ... ok
+test_ct_a_orders_use_the_cycle_catalog (test_catalog.CatalogSpecTests.test_ct_a_orders_use_the_cycle_catalog) ... ok
+test_ct_b_only_admin_publishes (test_catalog.CatalogSpecTests.test_ct_b_only_admin_publishes) ... ok
+test_ct_c_supplier_must_be_allied (test_catalog.CatalogSpecTests.test_ct_c_supplier_must_be_allied) ... ok
+test_ct_d_invalid_tiers (test_catalog.CatalogSpecTests.test_ct_d_invalid_tiers) ... ok
+test_ct_e_invalid_stock (test_catalog.CatalogSpecTests.test_ct_e_invalid_stock) ... ok
+test_ct_f_duplicate_product (test_catalog.CatalogSpecTests.test_ct_f_duplicate_product) ... ok
+test_ct_g_invalid_category (test_catalog.CatalogSpecTests.test_ct_g_invalid_category) ... ok
+test_ct_h_all_or_nothing (test_catalog.CatalogSpecTests.test_ct_h_all_or_nothing) ... ok
+test_ct_i_catalog_locked_once_cycle_opens (test_catalog.CatalogSpecTests.test_ct_i_catalog_locked_once_cycle_opens) ... ok
+test_ct_j_deactivate_mid_week (test_catalog.CatalogSpecTests.test_ct_j_deactivate_mid_week) ... ok
+test_ct_k_stock_is_per_cycle (test_catalog.CatalogSpecTests.test_ct_k_stock_is_per_cycle) ... ok
+test_ct_l_settlement_uses_cycle_tiers (test_catalog.CatalogSpecTests.test_ct_l_settlement_uses_cycle_tiers) ... ok
+test_ct_m_edit_keeps_deactivated_product_without_increasing_it (test_catalog.CatalogSpecTests.test_ct_m_edit_keeps_deactivated_product_without_increasing_it) ... ok
+test_av05_missing_consent_from_web (test_customers.CustomerWebTests.test_av05_missing_consent_from_web) ... ok
+test_av07_reset_pin_from_web (test_customers.CustomerWebTests.test_av07_reset_pin_from_web) ... ok
+test_av_f_neighbor_forbidden (test_customers.CustomerWebTests.test_av_f_neighbor_forbidden) ... ok
+test_av_g_register_from_web_and_list (test_customers.CustomerWebTests.test_av_g_register_from_web_and_list) ... ok
+test_av06_generated_pins_are_always_valid (test_customers.RegisterCustomerTests.test_av06_generated_pins_are_always_valid) ... ok
+test_av_a_register_new_neighbor (test_customers.RegisterCustomerTests.test_av_a_register_new_neighbor) ... ok
+test_av_b_invalid_data_creates_nothing (test_customers.RegisterCustomerTests.test_av_b_invalid_data_creates_nothing) ... ok
+test_av_c_phone_is_unique (test_customers.RegisterCustomerTests.test_av_c_phone_is_unique) ... ok
+test_av_d_pin_is_not_stored (test_customers.RegisterCustomerTests.test_av_d_pin_is_not_stored) ... ok
+test_av_e_reset_pin_unlocks_account (test_customers.RegisterCustomerTests.test_av_e_reset_pin_unlocks_account) ... ok
+test_au_c_whole_week (test_e2e_week.WholeWeekTest.test_au_c_whole_week) ... ok
+test_ef_a_register_failure_once (test_failed_delivery.FailedDeliverySpecTests.test_ef_a_register_failure_once) ... ok
+test_ef_b_refund_minus_real_delivery (test_failed_delivery.FailedDeliverySpecTests.test_ef_b_refund_minus_real_delivery) ... ok
+test_ef_c_orders_must_be_packed (test_failed_delivery.FailedDeliverySpecTests.test_ef_c_orders_must_be_packed) ... ok
+test_ef_c_required_data (test_failed_delivery.FailedDeliverySpecTests.test_ef_c_required_data) ... ok
+test_ef_d_no_claims_on_failed_zone (test_failed_delivery.FailedDeliverySpecTests.test_ef_d_no_claims_on_failed_zone) ... ok
+test_ef_e_close_cycle_requires_all_zones (test_failed_delivery.FailedDeliverySpecTests.test_ef_e_close_cycle_requires_all_zones) ... ok
+test_ef_f_close_cycle_settles_when_complete (test_failed_delivery.FailedDeliverySpecTests.test_ef_f_close_cycle_settles_when_complete) ... ok
+test_mg_a_loss_is_visible (test_failed_zone_metrics.FailedZoneMetricsSpecTests.test_mg_a_loss_is_visible) ... ok
+test_mg_b_normal_cycle_unchanged (test_failed_zone_metrics.FailedZoneMetricsSpecTests.test_mg_b_normal_cycle_unchanged) ... ok
+test_mg_c_savings_unchanged (test_failed_zone_metrics.FailedZoneMetricsSpecTests.test_mg_c_savings_unchanged) ... ok
+test_co_a_store_non_perishable_leftovers (test_fulfillment.BufferSpecTests.test_co_a_store_non_perishable_leftovers) ... ok
+test_co_b_buffer_has_amount_limit (test_fulfillment.BufferSpecTests.test_co_b_buffer_has_amount_limit) ... ok
+test_co_c_invalid_products_or_quantities (test_fulfillment.BufferSpecTests.test_co_c_invalid_products_or_quantities) ... ok
+test_co_d_use_buffer_to_replace_missing_items (test_fulfillment.BufferSpecTests.test_co_d_use_buffer_to_replace_missing_items) ... ok
+test_co_e_only_staff_uses_buffer (test_fulfillment.BufferSpecTests.test_co_e_only_staff_uses_buffer) ... ok
+test_rc_a_claim_in_time_is_pending (test_fulfillment.ClaimSpecTests.test_rc_a_claim_in_time_is_pending) ... ok
+test_rc_b_claim_window_is_24_hours (test_fulfillment.ClaimSpecTests.test_rc_b_claim_window_is_24_hours) ... ok
+test_rc_c_order_must_be_delivered_and_own (test_fulfillment.ClaimSpecTests.test_rc_c_order_must_be_delivered_and_own) ... ok
+test_rc_d_reason_and_photo (test_fulfillment.ClaimSpecTests.test_rc_d_reason_and_photo) ... ok
+test_rc_e_invalid_items (test_fulfillment.ClaimSpecTests.test_rc_e_invalid_items) ... ok
+test_en_a_zone_delivery_is_recorded (test_fulfillment.DeliverySpecTests.test_en_a_zone_delivery_is_recorded) ... ok
+test_en_b_all_or_nothing (test_fulfillment.DeliverySpecTests.test_en_b_all_or_nothing) ... ok
+test_en_c_delivery_requires_photo_and_receiver (test_fulfillment.DeliverySpecTests.test_en_c_delivery_requires_photo_and_receiver) ... ok
+test_en_d_zone_is_delivered_once (test_fulfillment.DeliverySpecTests.test_en_d_zone_is_delivered_once) ... ok
+test_en_e_invalid_zone_or_person (test_fulfillment.DeliverySpecTests.test_en_e_invalid_zone_or_person) ... ok
+test_ar_a_bags_are_numbered_with_their_photo (test_fulfillment.PackingSpecTests.test_ar_a_bags_are_numbered_with_their_photo) ... ok
+test_ar_b_bag_requires_photo (test_fulfillment.PackingSpecTests.test_ar_b_bag_requires_photo) ... ok
+test_ar_c_cannot_pack_before_close (test_fulfillment.PackingSpecTests.test_ar_c_cannot_pack_before_close) ... ok
+test_ar_d_only_attended_orders_are_packed (test_fulfillment.PackingSpecTests.test_ar_d_only_attended_orders_are_packed) ... ok
+test_ar_e_only_staff_packs (test_fulfillment.PackingSpecTests.test_ar_e_only_staff_packs) ... ok
+test_rv_a_approved_claim_returns_the_article_as_balance (test_fulfillment.ReviewSpecTests.test_rv_a_approved_claim_returns_the_article_as_balance) ... ok
+test_rv_b_rejected_claim_moves_no_money (test_fulfillment.ReviewSpecTests.test_rv_b_rejected_claim_moves_no_money) ... ok
+test_rv_c_approval_needs_settled_cycle (test_fulfillment.ReviewSpecTests.test_rv_c_approval_needs_settled_cycle) ... ok
+test_rv_d_invalid_reviews (test_fulfillment.ReviewSpecTests.test_rv_d_invalid_reviews) ... ok
+test_rv_e_missing_item_is_not_returned_twice (test_fulfillment.ReviewSpecTests.test_rv_e_missing_item_is_not_returned_twice) ... ok
+test_hc_b_use_is_recorded_with_order (test_gaps_packing.BufferPerOrderTests.test_hc_b_use_is_recorded_with_order) ... ok
+test_hc_c_cannot_replace_more_than_ordered (test_gaps_packing.BufferPerOrderTests.test_hc_c_cannot_replace_more_than_ordered) ... ok
+test_hc_d_order_without_that_product (test_gaps_packing.BufferPerOrderTests.test_hc_d_order_without_that_product) ... ok
+test_hc_e_unknown_or_not_attended_order (test_gaps_packing.BufferPerOrderTests.test_hc_e_unknown_or_not_attended_order) ... ok
+test_hc_f_web_asks_for_order_and_lists_uses (test_gaps_packing.BufferWebTests.test_hc_f_web_asks_for_order_and_lists_uses) ... ok
+test_hc_g_unit_must_be_kg_or_whole_units (test_gaps_packing.CatalogGapTests.test_hc_g_unit_must_be_kg_or_whole_units) ... ok
+test_hc_h_supplier_leaving_does_not_change_published_catalog (test_gaps_packing.CatalogGapTests.test_hc_h_supplier_leaving_does_not_change_published_catalog) ... ok
+test_hc_a_no_bags_after_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_delivery) ... ok
+test_hc_a_no_bags_after_failed_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_failed_delivery) ... ok
+test_ha01_customer_location (test_hardening.HardeningSpecTests.test_ha01_customer_location) ... ok
+test_ha02_zone_coordinates_are_validated (test_hardening.HardeningSpecTests.test_ha02_zone_coordinates_are_validated) ... ok
+test_ha03_admin_must_transfer_before_leaving (test_hardening.HardeningSpecTests.test_ha03_admin_must_transfer_before_leaving) ... ok
+test_ha04_merge_requests (test_hardening.HardeningSpecTests.test_ha04_merge_requests) ... ok
+test_ha05_withdrawal_amounts (test_hardening.HardeningSpecTests.test_ha05_withdrawal_amounts) ... ok
+test_ha06_cycle_id_is_validated (test_hardening.HardeningSpecTests.test_ha06_cycle_id_is_validated) ... ok
+test_ha07_pilot_zones_have_coordinates (test_hardening.HardeningSpecTests.test_ha07_pilot_zones_have_coordinates) ... ok
+test_cleaning_has_no_merma (test_herramientas.ValidarPreciosTests.test_cleaning_has_no_merma) ... ok
+test_max_commission_gives_exactly_the_target_saving (test_herramientas.ValidarPreciosTests.test_max_commission_gives_exactly_the_target_saving) ... ok
+test_papa_blanca_matches_economic_analysis (test_herramientas.ValidarPreciosTests.test_papa_blanca_matches_economic_analysis) ... ok
+test_mt_a_margin_per_order (test_metrics.MetricsSpecTests.test_mt_a_margin_per_order) ... ok
+test_mt_b_negative_margin_is_alerted (test_metrics.MetricsSpecTests.test_mt_b_negative_margin_is_alerted) ... ok
+test_mt_c_missing_items_and_approved_claims (test_metrics.MetricsSpecTests.test_mt_c_missing_items_and_approved_claims) ... ok
+test_mt_d_savings_with_8_orders (test_metrics.MetricsSpecTests.test_mt_d_savings_with_8_orders) ... ok
+test_mt_e_savings_with_20_orders (test_metrics.MetricsSpecTests.test_mt_e_savings_with_20_orders) ... ok
+test_mt_f_repurchase_meets_target (test_metrics.MetricsSpecTests.test_mt_f_repurchase_meets_target) ... ok
+test_mt_g_repurchase_below_target (test_metrics.MetricsSpecTests.test_mt_g_repurchase_below_target) ... ok
+test_mt_h_needs_settled_cycles_and_cohort (test_metrics.MetricsSpecTests.test_mt_h_needs_settled_cycles_and_cohort) ... ok
+test_ma_a_order_comparison (test_my_savings.MySavingsTests.test_ma_a_order_comparison) ... ok
+test_ma_b_no_comparison_without_prices_or_settlement (test_my_savings.MySavingsTests.test_ma_b_no_comparison_without_prices_or_settlement) ... ok
+test_ma_c_account_shows_refund_and_savings (test_my_savings.MySavingsTests.test_ma_c_account_shows_refund_and_savings) ... ok
+test_ma_d_says_when_market_was_cheaper (test_my_savings.MySavingsTests.test_ma_d_says_when_market_was_cheaper) ... ok
+test_ma_e_not_attended_order (test_my_savings.MySavingsTests.test_ma_e_not_attended_order) ... ok
+test_ma_f_cycle_numbers_do_not_change (test_my_savings.MySavingsTests.test_ma_f_cycle_numbers_do_not_change) ... ok
+test_na01_optimistic (test_net_margin.NetMarginSpecTests.test_na01_optimistic) ... ok
+test_na02_pessimistic (test_net_margin.NetMarginSpecTests.test_na02_pessimistic) ... ok
+test_na03_balance_pays_no_fee (test_net_margin.NetMarginSpecTests.test_na03_balance_pays_no_fee) ... ok
+test_na04_requires_settled_cycle (test_net_margin.NetMarginSpecTests.test_na04_requires_settled_cycle) ... ok
+test_na05_custom_scenario (test_net_margin.NetMarginSpecTests.test_na05_custom_scenario) ... ok
+test_cc01_cancel_refunds_to_payment_method (test_order_changes.OrderChangesSpecTests.test_cc01_cancel_refunds_to_payment_method) ... ok
+test_cc02_cancel_refunds_to_balance (test_order_changes.OrderChangesSpecTests.test_cc02_cancel_refunds_to_balance) ... ok
+test_cc03_cancel_mixed_payment (test_order_changes.OrderChangesSpecTests.test_cc03_cancel_mixed_payment) ... ok
+test_cc04_cancel_unverified_has_no_automatic_refund (test_order_changes.OrderChangesSpecTests.test_cc04_cancel_unverified_has_no_automatic_refund) ... ok
+test_cc05_cannot_cancel_after_close (test_order_changes.OrderChangesSpecTests.test_cc05_cannot_cancel_after_close) ... ok
+test_cc06_only_owner_can_cancel (test_order_changes.OrderChangesSpecTests.test_cc06_only_owner_can_cancel) ... ok
+test_cc07_cannot_cancel_twice (test_order_changes.OrderChangesSpecTests.test_cc07_cannot_cancel_twice) ... ok
+test_cc08_new_order_after_cancel_but_code_not_reused (test_order_changes.OrderChangesSpecTests.test_cc08_new_order_after_cancel_but_code_not_reused) ... ok
+test_cc09_invalid_refund_destination (test_order_changes.OrderChangesSpecTests.test_cc09_invalid_refund_destination) ... ok
+test_cc10_settlement_ignores_cancelled_orders (test_order_changes.OrderChangesSpecTests.test_cc10_settlement_ignores_cancelled_orders) ... ok
+test_ce_a_edit_down_returns_difference_to_balance (test_order_changes.OrderChangesSpecTests.test_ce_a_edit_down_returns_difference_to_balance) ... ok
+test_ce_b_edit_up_requires_paying_the_difference (test_order_changes.OrderChangesSpecTests.test_ce_b_edit_up_requires_paying_the_difference) ... ok
+test_ce_c_wrong_difference_leaves_order_unchanged (test_order_changes.OrderChangesSpecTests.test_ce_c_wrong_difference_leaves_order_unchanged) ... ok
+test_ce_d_edit_below_minimum_is_rejected (test_order_changes.OrderChangesSpecTests.test_ce_d_edit_below_minimum_is_rejected) ... ok
+test_ce_e_own_reservation_counts_as_available (test_order_changes.OrderChangesSpecTests.test_ce_e_own_reservation_counts_as_available) ... ok
+test_ce_f_cannot_edit_after_close (test_order_changes.OrderChangesSpecTests.test_ce_f_cannot_edit_after_close) ... ok
+test_ce_g_not_served_after_edit_down_returns_everything (test_order_changes.OrderChangesSpecTests.test_ce_g_not_served_after_edit_down_returns_everything) ... ok
+test_ce_h_no_balance_from_unverified_payment (test_order_changes.OrderChangesSpecTests.test_ce_h_no_balance_from_unverified_payment) ... ok
+test_ca01_registers_valid_order (test_order_registration.RegisterOrderSpecTests.test_ca01_registers_valid_order) ... ok
+test_ca02_rejects_suspended_customer (test_order_registration.RegisterOrderSpecTests.test_ca02_rejects_suspended_customer) ... ok
+test_ca02_rejects_unknown_customer (test_order_registration.RegisterOrderSpecTests.test_ca02_rejects_unknown_customer) ... ok
+test_ca03_rejects_zone_outside_pilot (test_order_registration.RegisterOrderSpecTests.test_ca03_rejects_zone_outside_pilot) ... ok
+test_ca03_rejects_zone_without_accepted_reception (test_order_registration.RegisterOrderSpecTests.test_ca03_rejects_zone_without_accepted_reception) ... ok
+test_ca04_accepts_monday_midnight (test_order_registration.RegisterOrderSpecTests.test_ca04_accepts_monday_midnight) ... ok
+test_ca04_accepts_one_second_before_close (test_order_registration.RegisterOrderSpecTests.test_ca04_accepts_one_second_before_close) ... ok
+test_ca04_rejects_exactly_at_close (test_order_registration.RegisterOrderSpecTests.test_ca04_rejects_exactly_at_close) ... ok
+test_ca04_rejects_thursday (test_order_registration.RegisterOrderSpecTests.test_ca04_rejects_thursday) ... ok
+test_ca05_rejects_second_order_in_cycle (test_order_registration.RegisterOrderSpecTests.test_ca05_rejects_second_order_in_cycle) ... ok
+test_ca06_rejects_empty_order (test_order_registration.RegisterOrderSpecTests.test_ca06_rejects_empty_order) ... ok
+test_ca07_merges_repeated_product_lines (test_order_registration.RegisterOrderSpecTests.test_ca07_merges_repeated_product_lines) ... ok
+test_ca08_rejects_inactive_product (test_order_registration.RegisterOrderSpecTests.test_ca08_rejects_inactive_product) ... ok
+test_ca08_rejects_product_not_in_catalog (test_order_registration.RegisterOrderSpecTests.test_ca08_rejects_product_not_in_catalog) ... ok
+test_ca09_accepts_garlic_in_quarter_kilos (test_order_registration.RegisterOrderSpecTests.test_ca09_accepts_garlic_in_quarter_kilos) ... ok
+test_ca09_rejects_invalid_quantities (test_order_registration.RegisterOrderSpecTests.test_ca09_rejects_invalid_quantities) ... ok
+test_ca09_rejects_non_numeric_quantities (test_order_registration.RegisterOrderSpecTests.test_ca09_rejects_non_numeric_quantities) ... ok
+test_ca10_accepts_exactly_remaining_stock_and_reserves_it (test_order_registration.RegisterOrderSpecTests.test_ca10_accepts_exactly_remaining_stock_and_reserves_it) ... ok
+test_ca10_rejects_quantity_above_supplier_stock (test_order_registration.RegisterOrderSpecTests.test_ca10_rejects_quantity_above_supplier_stock) ... ok
+test_ca11_accepts_subtotal_just_above_minimum (test_order_registration.RegisterOrderSpecTests.test_ca11_accepts_subtotal_just_above_minimum) ... ok
+test_ca11_minimum_uses_exact_subtotal (test_order_registration.RegisterOrderSpecTests.test_ca11_minimum_uses_exact_subtotal) ... ok
+test_ca12_rejects_amount_different_from_total (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_amount_different_from_total) ... ok
+test_ca12_rejects_non_numeric_amount (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_non_numeric_amount) ... ok
+test_ca12_rejects_payment_method_not_allowed (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_payment_method_not_allowed) ... ok
+test_ca12_rejects_reused_operation_code (test_order_registration.RegisterOrderSpecTests.test_ca12_rejects_reused_operation_code) ... ok
+test_ca12_requires_operation_code (test_order_registration.RegisterOrderSpecTests.test_ca12_requires_operation_code) ... ok
+test_ca13_prices_come_from_catalog (test_order_registration.RegisterOrderSpecTests.test_ca13_prices_come_from_catalog) ... ok
+test_ca14_admin_verifies_payment_before_close (test_order_registration.RegisterOrderSpecTests.test_ca14_admin_verifies_payment_before_close) ... ok
+test_ca14_rejects_unknown_order (test_order_registration.RegisterOrderSpecTests.test_ca14_rejects_unknown_order) ... ok
+test_ca14_rejects_verification_after_close (test_order_registration.RegisterOrderSpecTests.test_ca14_rejects_verification_after_close) ... ok
+test_ca15_quote_does_not_reserve_or_create_order (test_order_registration.RegisterOrderSpecTests.test_ca15_quote_does_not_reserve_or_create_order) ... ok
+test_plin_is_allowed (test_order_registration.RegisterOrderSpecTests.test_plin_is_allowed) ... ok
+test_pa01_roundtrip_pilot (test_persistence.PersistenceSpecTests.test_pa01_roundtrip_pilot) ... ok
+test_pa02_roundtrip_everything (test_persistence.PersistenceSpecTests.test_pa02_roundtrip_everything) ... ok
+test_pa03_continuity_after_load (test_persistence.PersistenceSpecTests.test_pa03_continuity_after_load) ... ok
+test_pa04_save_is_all_or_nothing (test_persistence.PersistenceSpecTests.test_pa04_save_is_all_or_nothing) ... ok
+test_pa05_tampered_database_is_rejected (test_persistence.PersistenceSpecTests.test_pa05_tampered_database_is_rejected) ... ok
+test_pa06_web_saves_after_successful_posts_only (test_persistence.PersistenceSpecTests.test_pa06_web_saves_after_successful_posts_only) ... ok
+test_pa07_open_store_creates_or_loads (test_persistence.PersistenceSpecTests.test_pa07_open_store_creates_or_loads) ... ok
+test_rf08_cycle_must_be_settled (test_reference.ReferenceSpecTests.test_rf08_cycle_must_be_settled) ... ok
+test_rf_a_register_keeps_source_date_and_author (test_reference.ReferenceSpecTests.test_rf_a_register_keeps_source_date_and_author) ... ok
+test_rf_b_references_expire_after_14_days (test_reference.ReferenceSpecTests.test_rf_b_references_expire_after_14_days) ... ok
+test_rf_c_invalid_data (test_reference.ReferenceSpecTests.test_rf_c_invalid_data) ... ok
+test_rf_d_most_recent_observation_wins (test_reference.ReferenceSpecTests.test_rf_d_most_recent_observation_wins) ... ok
+test_rf_e_cycle_savings_against_each_reference (test_reference.ReferenceSpecTests.test_rf_e_cycle_savings_against_each_reference) ... ok
+test_rf_f_incomplete_basket_is_not_comparable (test_reference.ReferenceSpecTests.test_rf_f_incomplete_basket_is_not_comparable) ... ok
+test_rf_i_references_survive_database (test_reference.ReferenceSpecTests.test_rf_i_references_survive_database) ... ok
+test_rf_a_register_from_web (test_reference.ReferenceWebTests.test_rf_a_register_from_web) ... ok
+test_rf_b_neighbor_catalog_shows_references (test_reference.ReferenceWebTests.test_rf_b_neighbor_catalog_shows_references) ... ok
+test_rf_c_neighbor_forbidden (test_reference.ReferenceWebTests.test_rf_c_neighbor_forbidden) ... ok
+test_rf_g_admin_page_marks_low_savings (test_reference.ReferenceWebTests.test_rf_g_admin_page_marks_low_savings) ... ok
+test_rf_h_metrics_page_shows_savings (test_reference.ReferenceWebTests.test_rf_h_metrics_page_shows_savings) ... ok
+test_ra_a_default_share_is_zero (test_savings_share.SavingsShareSpecTests.test_ra_a_default_share_is_zero) ... ok
+test_ra_b_half_share (test_savings_share.SavingsShareSpecTests.test_ra_b_half_share) ... ok
+test_ra_c_invalid_share (test_savings_share.SavingsShareSpecTests.test_ra_c_invalid_share) ... ok
+test_ra_d_full_share_never_exceeds_max (test_savings_share.SavingsShareSpecTests.test_ra_d_full_share_never_exceeds_max) ... ok
+test_ra_e_simulation_does_not_change_default (test_savings_share.SavingsShareSpecTests.test_ra_e_simulation_does_not_change_default) ... ok
+test_cl01_unverified_order_is_cancelled_and_ignored (test_settlement.SettleCycleSpecTests.test_cl01_unverified_order_is_cancelled_and_ignored) ... ok
+test_cl02_group_below_minimum_gets_full_refund (test_settlement.SettleCycleSpecTests.test_cl02_group_below_minimum_gets_full_refund) ... ok
+test_cl03_joined_zones_count_together (test_settlement.SettleCycleSpecTests.test_cl03_joined_zones_count_together) ... ok
+test_cl04_volume_tier_lowers_final_price (test_settlement.SettleCycleSpecTests.test_cl04_volume_tier_lowers_final_price) ... ok
+test_cl05_dropouts_only_reduce_savings (test_settlement.SettleCycleSpecTests.test_cl05_dropouts_only_reduce_savings) ... ok
+test_cl06_delivery_is_shared_in_zone (test_settlement.SettleCycleSpecTests.test_cl06_delivery_is_shared_in_zone) ... ok
+test_cl06_delivery_never_exceeds_cap (test_settlement.SettleCycleSpecTests.test_cl06_delivery_never_exceeds_cap) ... ok
+test_cl07_missing_item_is_not_charged (test_settlement.SettleCycleSpecTests.test_cl07_missing_item_is_not_charged) ... ok
+test_cl07_rejects_missing_for_order_not_delivered (test_settlement.SettleCycleSpecTests.test_cl07_rejects_missing_for_order_not_delivered) ... ok
+test_cl07_rejects_missing_greater_than_ordered (test_settlement.SettleCycleSpecTests.test_cl07_rejects_missing_greater_than_ordered) ... ok
+test_cl07_rejects_missing_product_not_in_order (test_settlement.SettleCycleSpecTests.test_cl07_rejects_missing_product_not_in_order) ... ok
+test_cl08_nobody_pays_more_than_shown (test_settlement.SettleCycleSpecTests.test_cl08_nobody_pays_more_than_shown) ... ok
+test_cl09_summary_is_transparent (test_settlement.SettleCycleSpecTests.test_cl09_summary_is_transparent) ... ok
+test_sa01_matches_iteration_13 (test_simulator.SimulatorSpecTests.test_sa01_matches_iteration_13) ... ok
+test_sa02_volume_helps_customer_not_margin (test_simulator.SimulatorSpecTests.test_sa02_volume_helps_customer_not_margin) ... ok
+test_sa03_does_not_touch_real_commission (test_simulator.SimulatorSpecTests.test_sa03_does_not_touch_real_commission) ... ok
+test_sa04_break_even (test_simulator.SimulatorSpecTests.test_sa04_break_even) ... ok
+test_sa05_decision_table (test_simulator.SimulatorSpecTests.test_sa05_decision_table) ... ok
+test_cb01_settlement_credits_balance (test_wallet.WalletSpecTests.test_cb01_settlement_credits_balance) ... ok
+test_cb02_partial_balance_plus_yape (test_wallet.WalletSpecTests.test_cb02_partial_balance_plus_yape) ... ok
+test_cb03_balance_covers_everything (test_wallet.WalletSpecTests.test_cb03_balance_covers_everything) ... ok
+test_cb04_rejects_more_than_available (test_wallet.WalletSpecTests.test_cb04_rejects_more_than_available) ... ok
+test_cb04_rejects_negative_balance_use (test_wallet.WalletSpecTests.test_cb04_rejects_negative_balance_use) ... ok
+test_cb05_rejects_balance_above_total (test_wallet.WalletSpecTests.test_cb05_rejects_balance_above_total) ... ok
+test_cb06_external_amount_must_be_the_rest (test_wallet.WalletSpecTests.test_cb06_external_amount_must_be_the_rest) ... ok
+test_cb07_balance_does_not_expire (test_wallet.WalletSpecTests.test_cb07_balance_does_not_expire) ... ok
+test_cb08_not_served_zone_splits_refund (test_wallet.WalletSpecTests.test_cb08_not_served_zone_splits_refund) ... ok
+test_cb09_cancelled_order_returns_balance_part (test_wallet.WalletSpecTests.test_cb09_cancelled_order_returns_balance_part) ... ok
+test_cb10_cycle_is_settled_only_once (test_wallet.WalletSpecTests.test_cb10_cycle_is_settled_only_once) ... ok
+test_cb11_withdrawal_request (test_wallet.WalletSpecTests.test_cb11_withdrawal_request) ... ok
+test_cb12_invalid_withdrawals (test_wallet.WalletSpecTests.test_cb12_invalid_withdrawals) ... ok
+test_cb13_admin_pays_refund_once (test_wallet.WalletSpecTests.test_cb13_admin_pays_refund_once) ... ok
+test_cb14_total_owed_to_customers (test_wallet.WalletSpecTests.test_cb14_total_owed_to_customers) ... ok
+test_cb15_settlement_is_all_or_nothing (test_wallet.WalletSpecTests.test_cb15_settlement_is_all_or_nothing) ... ok
+test_wa01_catalog_shows_max_price_and_next_tier (test_web.WebSpecTests.test_wa01_catalog_shows_max_price_and_next_tier) ... ok
+test_wa02_tier_progress (test_web.WebSpecTests.test_wa02_tier_progress) ... ok
+test_wa03_quote (test_web.WebSpecTests.test_wa03_quote) ... ok
+test_wa04_quote_error (test_web.WebSpecTests.test_wa04_quote_error) ... ok
+test_wa05_register (test_web.WebSpecTests.test_wa05_register) ... ok
+test_wa06_register_error (test_web.WebSpecTests.test_wa06_register_error) ... ok
+test_wa07_account_of_session (test_web.WebSpecTests.test_wa07_account_of_session) ... ok
+test_wa08_cancel_to_balance (test_web.WebSpecTests.test_wa08_cancel_to_balance) ... ok
+test_wa09_admin_verifies (test_web.WebSpecTests.test_wa09_admin_verifies) ... ok
+test_wa10_settle_from_web (test_web.WebSpecTests.test_wa10_settle_from_web) ... ok
+test_wa11_html_is_escaped (test_web.WebSpecTests.test_wa11_html_is_escaped) ... ok
+test_wa12_bad_routes_and_data (test_web.WebSpecTests.test_wa12_bad_routes_and_data) ... ok
+test_wa13_mobile_viewport_everywhere (test_web.WebSpecTests.test_wa13_mobile_viewport_everywhere) ... ok
+test_cw01_invalid_cycle_in_query (test_web_catalog.WebCatalogTests.test_cw01_invalid_cycle_in_query) ... ok
+test_cw02_odd_tiers_and_missing_name_rejected (test_web_catalog.WebCatalogTests.test_cw02_odd_tiers_and_missing_name_rejected) ... ok
+test_cw04_unknown_product (test_web_catalog.WebCatalogTests.test_cw04_unknown_product) ... ok
+test_cw_a_page_prefills_next_cycle_with_base_catalog (test_web_catalog.WebCatalogTests.test_cw_a_page_prefills_next_cycle_with_base_catalog) ... ok
+test_cw_b_page_shows_published_catalog (test_web_catalog.WebCatalogTests.test_cw_b_page_shows_published_catalog) ... ok
+test_cw_b_publish_from_web (test_web_catalog.WebCatalogTests.test_cw_b_publish_from_web) ... ok
+test_cw_c_comma_decimal_rejects_whole_list (test_web_catalog.WebCatalogTests.test_cw_c_comma_decimal_rejects_whole_list) ... ok
+test_cw_c_short_line_rejected (test_web_catalog.WebCatalogTests.test_cw_c_short_line_rejected) ... ok
+test_cw_d_rising_tier_rejected_by_catalog_rule (test_web_catalog.WebCatalogTests.test_cw_d_rising_tier_rejected_by_catalog_rule) ... ok
+test_cw_e_open_cycle_is_locked (test_web_catalog.WebCatalogTests.test_cw_e_open_cycle_is_locked) ... ok
+test_cw_f_deactivate_from_web (test_web_catalog.WebCatalogTests.test_cw_f_deactivate_from_web) ... ok
+test_cw_g_deactivate_copies_base_catalog (test_web_catalog.WebCatalogTests.test_cw_g_deactivate_copies_base_catalog) ... ok
+test_cw_h_neighbor_forbidden (test_web_catalog.WebCatalogTests.test_cw_h_neighbor_forbidden) ... ok
+test_cw_i_zero_step_rejected (test_web_catalog.WebCatalogTests.test_cw_i_zero_step_rejected) ... ok
+test_ec_g_total_savings_in_account (test_web_experiencia.DemoSavingsSpecTests.test_ec_g_total_savings_in_account) ... ok
+test_ec_l_claim_photo_as_file (test_web_experiencia.PhotoUploadSpecTests.test_ec_l_claim_photo_as_file) ... ERROR
+test_ec_a_catalog_buttons_and_cart_bar (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_a_catalog_buttons_and_cart_bar) ... ok
+test_ec_b_cart_page (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_b_cart_page) ... ok
+test_ec_c_cart_savings (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_c_cart_savings) ... ok
+test_ec_d_balance_with_checkbox (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_d_balance_with_checkbox) ... FAIL
+test_ec_e_confirmation (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_e_confirmation) ... ok
+test_ec_f_cancel_with_buttons (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_f_cancel_with_buttons) ... ok
+test_ec_h_admin_dashboard (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_h_admin_dashboard) ... ok
+test_ec_i_messages (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_i_messages) ... ok
+test_ec_j_choose_from_lists (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_j_choose_from_lists) ... ok
+test_ec_k_payment_code_is_generated (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_k_payment_code_is_generated) ... FAIL
+test_ec_m_location_button (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_m_location_button) ... FAIL
+test_ha01_neighbor_registers_location (test_web_hardening.WebHardeningSpecTests.test_ha01_neighbor_registers_location) ... ok
+test_ha06_web_rejects_invalid_cycle (test_web_hardening.WebHardeningSpecTests.test_ha06_web_rejects_invalid_cycle) ... ok
+test_ha08_admin_pays_refund (test_web_hardening.WebHardeningSpecTests.test_ha08_admin_pays_refund) ... ok
+test_ha09_failed_delivery_from_web (test_web_hardening.WebHardeningSpecTests.test_ha09_failed_delivery_from_web) ... ok
+test_ha10_settle_from_web_requires_closed_zones (test_web_hardening.WebHardeningSpecTests.test_ha10_settle_from_web_requires_closed_zones) ... ok
+test_oa08_packing (test_web_operacion.AdminOperationTests.test_oa08_packing) ... ok
+test_oa09_delivery (test_web_operacion.AdminOperationTests.test_oa09_delivery) ... ok
+test_oa10_review_claims (test_web_operacion.AdminOperationTests.test_oa10_review_claims) ... ok
+test_oa11_buffer (test_web_operacion.AdminOperationTests.test_oa11_buffer) ... ok
+test_oa12_metrics_dashboard (test_web_operacion.AdminOperationTests.test_oa12_metrics_dashboard) ... ok
+test_oa13_access (test_web_operacion.CrossCuttingTests.test_oa13_access) ... ok
+test_oa14_routes_and_escaping (test_web_operacion.CrossCuttingTests.test_oa14_routes_and_escaping) ... ok
+test_oa15_mobile_viewport (test_web_operacion.CrossCuttingTests.test_oa15_mobile_viewport) ... ok
+test_oa06_withdrawal_request (test_web_operacion.NeighborMoneyAndClaimTests.test_oa06_withdrawal_request) ... ok
+test_oa07_file_claim (test_web_operacion.NeighborMoneyAndClaimTests.test_oa07_file_claim) ... ok
+test_oa01_create_zone (test_web_operacion.NeighborZoneTests.test_oa01_create_zone) ... ok
+test_oa02_activate_zone (test_web_operacion.NeighborZoneTests.test_oa02_activate_zone) ... ok
+test_oa03_join_zone (test_web_operacion.NeighborZoneTests.test_oa03_join_zone) ... ok
+test_oa04_merge_leave_and_transfer (test_web_operacion.NeighborZoneTests.test_oa04_merge_leave_and_transfer) ... ok
+test_oa05_malformed_zone_data (test_web_operacion.NeighborZoneTests.test_oa05_malformed_zone_data) ... ok
+test_pw_h_demo_week (test_web_presentacion.DemoWeekSpecTests.test_pw_h_demo_week) ... ok
+test_pw_i_demo_through_the_web (test_web_presentacion.DemoWeekSpecTests.test_pw_i_demo_through_the_web) ... ok
+test_pw_a_front_page (test_web_presentacion.PresentationSpecTests.test_pw_a_front_page) ... ok
+test_pw_b_current_page_in_navigation (test_web_presentacion.PresentationSpecTests.test_pw_b_current_page_in_navigation) ... ok
+test_pw_c_progress_bar (test_web_presentacion.PresentationSpecTests.test_pw_c_progress_bar) ... ok
+test_pw_d_no_badge_when_reference_is_cheaper (test_web_presentacion.PresentationSpecTests.test_pw_d_no_badge_when_reference_is_cheaper) ... ok
+test_pw_d_savings_badge (test_web_presentacion.PresentationSpecTests.test_pw_d_savings_badge) ... ok
+test_pw_e_account_balance_first (test_web_presentacion.PresentationSpecTests.test_pw_e_account_balance_first) ... ok
+test_pw_f_admin_tiles (test_web_presentacion.PresentationSpecTests.test_pw_f_admin_tiles) ... ok
+test_pw_g_no_external_resources (test_web_presentacion.PresentationSpecTests.test_pw_g_no_external_resources) ... ok
+test_distance_is_about_100m (test_zones.ZonesSpecTests.test_distance_is_about_100m) ... ok
+test_za01_new_zone_is_pending_and_cannot_take_orders (test_zones.ZonesSpecTests.test_za01_new_zone_is_pending_and_cannot_take_orders) ... ok
+test_za02_district_outside_pilot (test_zones.ZonesSpecTests.test_za02_district_outside_pilot) ... ok
+test_za03_one_zone_per_admin (test_zones.ZonesSpecTests.test_za03_one_zone_per_admin) ... ok
+test_za04_activation_enables_orders (test_zones.ZonesSpecTests.test_za04_activation_enables_orders) ... ok
+test_za05_invalid_activation (test_zones.ZonesSpecTests.test_za05_invalid_activation) ... ok
+test_za06_radius (test_zones.ZonesSpecTests.test_za06_radius) ... ok
+test_za07_cannot_move_with_active_order (test_zones.ZonesSpecTests.test_za07_cannot_move_with_active_order) ... ok
+test_za08_merge_near_zones_count_together (test_zones.ZonesSpecTests.test_za08_merge_near_zones_count_together) ... ok
+test_za09_far_zones_cannot_merge (test_zones.ZonesSpecTests.test_za09_far_zones_cannot_merge) ... ok
+test_za10_no_chains (test_zones.ZonesSpecTests.test_za10_no_chains) ... ok
+test_za11_only_target_admin_accepts (test_zones.ZonesSpecTests.test_za11_only_target_admin_accepts) ... ok
+test_za12_leave_group (test_zones.ZonesSpecTests.test_za12_leave_group) ... ok
+test_za13_transfer_admin (test_zones.ZonesSpecTests.test_za13_transfer_admin) ... ok
+test_za14_merges_only_while_cycle_open (test_zones.ZonesSpecTests.test_za14_merges_only_while_cycle_open) ... ok
+
+======================================================================
+ERROR: test_ec_l_claim_photo_as_file (test_web_experiencia.PhotoUploadSpecTests.test_ec_l_claim_photo_as_file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_experiencia.py", line 159, in test_ec_l_claim_photo_as_file
+    web = WebClient(create_app(store, clock=lambda: saturday_noon, photo_dir=folder))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: create_app() got an unexpected keyword argument 'photo_dir'
+
+======================================================================
+FAIL: test_ec_d_balance_with_checkbox (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_d_balance_with_checkbox)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_experiencia.py", line 70, in test_ec_d_balance_with_checkbox
+    self.assertIn('name="usar_saldo"', html)
+AssertionError: 'name="usar_saldo"' not found in '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tu carrito · Yapa</title><style>\n:root{--verde:#1e6b45;--verde-osc:#14482f;--verde-claro:#e5f3ea;--hoja:#3fa66b;--sol:#f4b63f;--sol-claro:#fff4dc;\n--tinta:#1d2a22;--suave:#5c6b62;--linea:#e2e8e3;--fondo:#f6f7f2;--rojo:#b3401f;--rojo-claro:#fcebe4}\n*{box-sizing:border-box}\nbody{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--fondo);\ncolor:var(--tinta);line-height:1.45}\na{color:var(--verde)}\nheader{background:#fff;border-bottom:1px solid var(--linea);position:sticky;top:0;z-index:5}\n.bar{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}\n.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--verde-osc);font-weight:800;\nfont-size:1.25rem;margin-right:auto}\n.logo{width:34px;height:34px}\nnav{display:flex;gap:4px;flex-wrap:wrap;align-items:center}\nnav a{text-decoration:none;color:var(--suave);padding:6px 12px;border-radius:999px;font-weight:600;font-size:.95rem}\nnav a:hover{background:var(--verde-claro);color:var(--verde-osc)}\nnav a[aria-current=page]{background:var(--verde);color:#fff}\nnav form{display:inline;margin:0}\nnav button{width:auto;margin:0;padding:6px 12px;font-size:.95rem;background:transparent;color:var(--suave);\nborder:1px solid var(--linea)}\nmain{max-width:760px;margin:0 auto;padding:18px 16px 40px}\nh1{font-size:1.6rem;margin:.3rem 0 .8rem;color:var(--verde-osc)}\nh2{font-size:1.15rem;margin:1.4rem 0 .4rem;color:var(--verde-osc)}\n.card{background:#fff;border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 3px #1d2a2214;\nborder:1px solid var(--linea);overflow-x:auto}\n.muted{color:var(--suave);font-size:.9rem}\n.ok{background:var(--verde-claro);border-color:#bfe0cb}\n.error{background:var(--rojo-claro);border-color:#f2c6b5;border-left:5px solid var(--rojo)}\ntable{width:100%;border-collapse:collapse;font-size:.92rem}\ntd,th{padding:8px 6px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}\nth{color:var(--suave);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}\ntr:last-child td{border-bottom:0}\ntd{white-space:nowrap}\ntd[colspan]{white-space:normal}\ntd button,td input{width:auto;margin:2px 0}\ntd button{padding:8px 14px}\nlabel{display:block;font-weight:600;font-size:.92rem;margin-top:6px}\ninput,select,textarea,button{font:inherit;font-size:1rem;padding:10px;margin:4px 0;width:100%;\nborder:1px solid #cdd6cf;border-radius:10px;background:#fff;color:var(--tinta)}\ninput:focus,select:focus,textarea:focus{border-color:var(--hoja);outline:3px solid #3fa66b33}\nbutton,.btn{background:var(--verde);color:#fff;border:0;border-radius:10px;font-weight:700;cursor:pointer;\ndisplay:inline-block;text-align:center;text-decoration:none;padding:11px 16px}\nbutton:hover,.btn:hover{background:var(--verde-osc)}\nbutton.secundario{background:#fff;color:var(--verde);border:2px solid var(--verde)}\n.btn-sol{background:var(--sol);color:var(--tinta)}\n.btn-sol:hover{background:#e5a52c}\n:focus-visible{outline:3px solid var(--sol);outline-offset:2px}\n.hero{background:linear-gradient(135deg,var(--verde-osc),var(--verde) 60%,var(--hoja));color:#fff;\nborder-radius:18px;padding:24px 20px;margin:4px 0 18px}\n.hero h2{color:#fff;font-size:1.5rem;margin:0 0 6px}\n.hero p{margin:6px 0 14px;color:#e3f2e8}\n.promesa{display:inline-block;background:var(--sol);color:var(--tinta);font-weight:800;border-radius:999px;\npadding:6px 14px;margin-bottom:12px}\n.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0 6px}\n.paso{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px}\n.paso b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--sol-claro);\ncolor:var(--verde-osc);align-items:center;justify-content:center;margin-right:6px}\n.ciclo{display:flex;align-items:center;gap:8px;background:var(--sol-claro);border:1px solid #f3dca7;\nborder-radius:12px;padding:10px 14px;margin:6px 0 4px;font-size:.95rem}\n.producto{display:flex;gap:12px;align-items:flex-start}\n.icono{font-size:1.9rem;line-height:1;width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;\njustify-content:center;background:var(--verde-claro);border-radius:12px}\n.producto .info{flex:1;min-width:0;overflow-wrap:anywhere}\n.nombre{font-weight:700;font-size:1.05rem}\n.precio{font-size:1.25rem;font-weight:800;color:var(--verde-osc)}\n.precio small{font-size:.8rem;font-weight:600;color:var(--suave)}\n.ahorro{display:inline-block;background:var(--sol-claro);color:#7a4f00;border:1px solid #f3dca7;border-radius:999px;\npadding:2px 10px;font-size:.82rem;font-weight:700;margin:4px 0}\nprogress{width:100%;height:10px;margin:6px 0 2px;appearance:none;-webkit-appearance:none;border:0;\nborder-radius:999px;background:var(--linea);overflow:hidden}\nprogress::-webkit-progress-bar{background:var(--linea);border-radius:999px}\nprogress::-webkit-progress-value{background:linear-gradient(90deg,var(--hoja),var(--verde));border-radius:999px}\nprogress::-moz-progress-bar{background:var(--hoja);border-radius:999px}\n.qty{width:84px;flex:0 0 84px;text-align:center;font-weight:700}\n.pago{border:2px solid var(--verde-claro)}\n.acciones{display:flex;gap:8px;flex-wrap:wrap}\n.acciones button{flex:1 1 160px}\n.hero-balance{background:linear-gradient(135deg,var(--verde-osc),var(--verde));color:#fff;border-radius:18px;\npadding:20px;margin:4px 0 14px}\n.hero-balance .grande{font-size:2rem;font-weight:800;margin:4px 0}\n.hero-balance .devuelto{display:inline-block;background:var(--sol);color:var(--tinta);border-radius:999px;\npadding:4px 12px;font-weight:700;margin:4px 0}\n.hero-balance a{color:#fff;font-weight:600}\n.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:.78rem;font-weight:700;\nbackground:var(--linea);color:var(--tinta);white-space:nowrap}\n.pill-LIQUIDADO,.pill-VERIFICADO,.pill-APROBADO,.pill-PAGADO,.pill-Activa{background:var(--verde-claro);color:var(--verde-osc)}\n.pill-REGISTRADO,.pill-POR_VERIFICAR,.pill-PENDIENTE{background:var(--sol-claro);color:#7a4f00}\n.pill-CANCELADO_POR_CLIENTE,.pill-NO_ATENDIDO,.pill-NO_ENTREGADO,.pill-RECHAZADO{background:var(--rojo-claro);color:var(--rojo)}\n.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:8px 0 14px}\n.tile{display:block;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;text-decoration:none;\ncolor:var(--tinta);box-shadow:0 1px 3px #1d2a2214}\n.tile:hover{border-color:var(--hoja);background:var(--verde-claro)}\n.tile strong{display:block;color:var(--verde-osc);font-size:1.02rem}\n.tile span{display:block;color:var(--suave);font-size:.86rem;margin-top:2px}\n.login{max-width:420px;margin:0 auto}\nfooter{max-width:760px;margin:0 auto;padding:10px 16px 30px;color:var(--suave);font-size:.8rem;text-align:center}\ndetails>summary{cursor:pointer;font-weight:700;color:var(--verde-osc);list-style:none}\ndetails>summary::-webkit-details-marker{display:none}\ndetails>summary::before{content:"\u25b8";display:inline-block;width:1.1em;transition:transform .15s}\ndetails[open]>summary::before{transform:rotate(90deg)}\n.plegable>summary{padding:2px 0}\n.plegable[open]>summary{margin-bottom:8px}\n.mini{margin-top:6px}\n.mini>summary{font-size:.86rem;color:var(--verde);font-weight:600}\n.grupo{margin:8px 0 4px}\n.grupo>summary{font-size:1.15rem;padding:8px 0}\n.card.en-carrito{border-color:var(--hoja);box-shadow:0 0 0 2px #3fa66b55}\n.stepper{display:flex;align-items:center;gap:4px;flex:0 0 auto}\n.stepper button{width:40px;height:40px;padding:0;margin:0;border-radius:50%;font-size:1.3rem;line-height:1}\n.stepper button[data-delta="-1"]{background:var(--verde-claro);color:var(--verde-osc)}\n.stepper .qty{width:62px;flex:0 0 62px;margin:0;padding:8px 4px}\n.carrito{position:sticky;bottom:10px;z-index:4;display:flex;gap:12px;align-items:center;flex-wrap:wrap;\nbackground:var(--verde-osc);color:#fff;border-radius:18px;padding:12px 16px;margin-top:16px;\nbox-shadow:0 8px 24px #14482f55}\n.carrito-info{flex:1 1 260px;min-width:0}\n.carrito progress{height:8px;margin:6px 0 4px;background:#ffffff33}\n.carrito progress::-webkit-progress-bar{background:#ffffff33}\n.carrito progress::-webkit-progress-value{background:var(--sol)}\n.carrito progress::-moz-progress-bar{background:var(--sol)}\n.carrito-meta{font-size:.86rem;color:#d7ecdf;display:flex;gap:10px;flex-wrap:wrap}\n.carrito-ahorro{color:var(--sol);font-weight:800}\n.carrito button{width:auto;flex:0 0 auto;background:var(--sol);color:var(--tinta);margin:0}\n.carrito button:disabled{opacity:.5;cursor:not-allowed}\n.carrito.vacio{opacity:.92}\n.total{font-size:1.5rem;font-weight:800;color:var(--verde-osc);margin:10px 0 4px}\n.resumen td{border:0;padding:3px 6px;color:var(--suave)}\n.resumen td:last-child{text-align:right}\n.celebra{background:linear-gradient(90deg,var(--sol-claro),#fff);border:2px solid var(--sol);border-radius:14px;\npadding:12px 14px;font-weight:700;color:#5e3d00;margin:10px 0}\n.grande-ahorro{font-size:1.3rem;text-align:center;padding:16px}\n.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px;align-items:end}\n.ok{text-align:center}\n.check{width:56px;height:56px;border-radius:50%;background:var(--verde);color:#fff;font-size:2rem;font-weight:800;\ndisplay:flex;align-items:center;justify-content:center;margin:4px auto 8px}\n.aviso-titulo{font-size:1.15rem;font-weight:800;color:var(--verde-osc);margin-bottom:4px}\n.error .aviso-titulo{color:var(--rojo)}\n.aviso{background:var(--sol-claro);border-color:#f3dca7}\n.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}\n.kpi{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px #1d2a2214}\n.kpi span{display:block;color:var(--suave);font-size:.82rem;font-weight:600}\n.kpi strong{display:block;font-size:1.6rem;color:var(--verde-osc)}\n.pedido-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}\n.pedido-total{margin-left:auto;font-weight:800;font-size:1.1rem}\n.detalle{background:var(--verde-claro);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.92rem}\n.tracker{display:flex;list-style:none;padding:0;margin:12px 0 6px;counter-reset:paso}\n.tracker li{flex:1;text-align:center;font-size:.76rem;color:var(--suave);position:relative;counter-increment:paso}\n.tracker li::before{content:counter(paso);display:flex;width:26px;height:26px;margin:0 auto 4px;border-radius:50%;\nbackground:var(--linea);color:var(--suave);align-items:center;justify-content:center;font-weight:800;position:relative;\nz-index:1}\n.tracker li::after{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--linea)}\n.tracker li:first-child::after{display:none}\n.tracker li.hecho{color:var(--verde-osc);font-weight:700}\n.tracker li.hecho::before{content:"\u2713";background:var(--hoja);color:#fff}\n.tracker li.hecho::after{background:var(--hoja)}\n.acciones{margin-top:8px}\n.acciones button{flex:1 1 220px;font-size:.92rem}\n.hero-acciones{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:10px}\n.hero-acciones .btn{padding:9px 14px}\n.login-logo{text-align:center}\n.login-logo .logo{width:64px;height:64px}\n.pasos-tabla td:first-child{width:34px;font-weight:800;color:var(--verde)}\ncode{background:var(--fondo);border-radius:6px;padding:2px 6px;font-size:.88rem}\n</style></head><body><header><div class="bar"><a class="brand" href="/"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><path d="M19 17c-1-6-6-9-11-8 0 5 4 9 11 8z" fill="#3fa66b"/><path d="M21 17c1-7 6-11 12-10 0 6-5 11-12 10z" fill="#1e6b45"/><path d="M6 16h28l-3 19a3 3 0 0 1-3 2.5H12A3 3 0 0 1 9 35z" fill="#f4b63f"/><path d="M13 22h14" stroke="#14482f" stroke-width="2.2" stroke-linecap="round"/></svg>Yapa</a><nav><a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a><a href="/admin">Admin</a><form method="post" action="/salir"><input type="hidden" name="csrf" value="xWDTkpU1f60zxtVL1DNL4g"><button>Salir</button></form></nav></div></header><main><h1>Tu carrito</h1><div class="card"><table><tr><th>Producto</th><th>Cant.</th><th>Precio máx.</th><th>Total</th></tr><tr><td>Papa amarilla</td><td>5</td><td>S/ 4.03</td><td>S/ 20.16</td></tr><tr><td>Papa blanca</td><td>10</td><td>S/ 1.23</td><td>S/ 12.32</td></tr><tr><td>Cebolla roja</td><td>10</td><td>S/ 2.35</td><td>S/ 23.52</td></tr></table><table class="resumen"><tr><td>Subtotal</td><td>S/ 56.00</td></tr><tr><td>Envío máximo</td><td>S/ 5.00</td></tr></table><p class="total">Total a yapear: S/ 61.00</p><details class="mini"><summary>¿Por qué "máximo"?</summary><p class="muted">Si entre todos llegamos al siguiente descuento, la diferencia vuelve a tu saldo el sábado. Nunca pagas más de esto.</p></details><p><a href="/">\u2190 Seguir comprando</a></p></div><form class="card pago" method="post" action="/pedidos"><input type="hidden" name="csrf" value="xWDTkpU1f60zxtVL1DNL4g"><input type="hidden" name="cant_PAPA-AMARILLA" value="5"><input type="hidden" name="cant_PAPA-BLANCA" value="10"><input type="hidden" name="cant_CEBOLLA-ROJA" value="10"><strong>\U0001f4b3 Paga tu pedido</strong><div class="dos"><label>Medio <select name="metodo"><option>YAPE</option><option>PLIN</option></select></label><label>Código de operación <input name="codigo" autocomplete="off" required></label></div><div class="dos"><label>Monto yapeado (S/) <input name="monto" inputmode="decimal" value="51.00"></label><label>Saldo a usar (S/) <input name="saldo" inputmode="decimal" value="10.00"></label></div><p class="muted">Tienes S/ 10.00 de saldo.</p><button>Pagar y registrar mi pedido</button></form></main><footer>Yapa · compras de la semana entre vecinos de Lince, Jesús María y La Victoria · Diseño de Software, UTEC 2026-2</footer></body></html>'
+
+======================================================================
+FAIL: test_ec_k_payment_code_is_generated (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_k_payment_code_is_generated)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_experiencia.py", line 134, in test_ec_k_payment_code_is_generated
+    self.assertEqual(status, 200)
+AssertionError: 422 != 200
+
+======================================================================
+FAIL: test_ec_m_location_button (test_web_experiencia.ShoppingExperienceSpecTests.test_ec_m_location_button)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\yapa-desarrollo\tests\test_web_experiencia.py", line 143, in test_ec_m_location_button
+    self.assertIn("Usar mi ubicación", self.web.get("/zona")[2])
+AssertionError: 'Usar mi ubicación' not found in '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mi zona · Yapa</title><style>\n:root{--verde:#1e6b45;--verde-osc:#14482f;--verde-claro:#e5f3ea;--hoja:#3fa66b;--sol:#f4b63f;--sol-claro:#fff4dc;\n--tinta:#1d2a22;--suave:#5c6b62;--linea:#e2e8e3;--fondo:#f6f7f2;--rojo:#b3401f;--rojo-claro:#fcebe4}\n*{box-sizing:border-box}\nbody{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--fondo);\ncolor:var(--tinta);line-height:1.45}\na{color:var(--verde)}\nheader{background:#fff;border-bottom:1px solid var(--linea);position:sticky;top:0;z-index:5}\n.bar{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}\n.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--verde-osc);font-weight:800;\nfont-size:1.25rem;margin-right:auto}\n.logo{width:34px;height:34px}\nnav{display:flex;gap:4px;flex-wrap:wrap;align-items:center}\nnav a{text-decoration:none;color:var(--suave);padding:6px 12px;border-radius:999px;font-weight:600;font-size:.95rem}\nnav a:hover{background:var(--verde-claro);color:var(--verde-osc)}\nnav a[aria-current=page]{background:var(--verde);color:#fff}\nnav form{display:inline;margin:0}\nnav button{width:auto;margin:0;padding:6px 12px;font-size:.95rem;background:transparent;color:var(--suave);\nborder:1px solid var(--linea)}\nmain{max-width:760px;margin:0 auto;padding:18px 16px 40px}\nh1{font-size:1.6rem;margin:.3rem 0 .8rem;color:var(--verde-osc)}\nh2{font-size:1.15rem;margin:1.4rem 0 .4rem;color:var(--verde-osc)}\n.card{background:#fff;border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 3px #1d2a2214;\nborder:1px solid var(--linea);overflow-x:auto}\n.muted{color:var(--suave);font-size:.9rem}\n.ok{background:var(--verde-claro);border-color:#bfe0cb}\n.error{background:var(--rojo-claro);border-color:#f2c6b5;border-left:5px solid var(--rojo)}\ntable{width:100%;border-collapse:collapse;font-size:.92rem}\ntd,th{padding:8px 6px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}\nth{color:var(--suave);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.03em}\ntr:last-child td{border-bottom:0}\ntd{white-space:nowrap}\ntd[colspan]{white-space:normal}\ntd button,td input{width:auto;margin:2px 0}\ntd button{padding:8px 14px}\nlabel{display:block;font-weight:600;font-size:.92rem;margin-top:6px}\ninput,select,textarea,button{font:inherit;font-size:1rem;padding:10px;margin:4px 0;width:100%;\nborder:1px solid #cdd6cf;border-radius:10px;background:#fff;color:var(--tinta)}\ninput:focus,select:focus,textarea:focus{border-color:var(--hoja);outline:3px solid #3fa66b33}\nbutton,.btn{background:var(--verde);color:#fff;border:0;border-radius:10px;font-weight:700;cursor:pointer;\ndisplay:inline-block;text-align:center;text-decoration:none;padding:11px 16px}\nbutton:hover,.btn:hover{background:var(--verde-osc)}\nbutton.secundario{background:#fff;color:var(--verde);border:2px solid var(--verde)}\n.btn-sol{background:var(--sol);color:var(--tinta)}\n.btn-sol:hover{background:#e5a52c}\n:focus-visible{outline:3px solid var(--sol);outline-offset:2px}\n.hero{background:linear-gradient(135deg,var(--verde-osc),var(--verde) 60%,var(--hoja));color:#fff;\nborder-radius:18px;padding:24px 20px;margin:4px 0 18px}\n.hero h2{color:#fff;font-size:1.5rem;margin:0 0 6px}\n.hero p{margin:6px 0 14px;color:#e3f2e8}\n.promesa{display:inline-block;background:var(--sol);color:var(--tinta);font-weight:800;border-radius:999px;\npadding:6px 14px;margin-bottom:12px}\n.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:8px 0 6px}\n.paso{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px}\n.paso b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--sol-claro);\ncolor:var(--verde-osc);align-items:center;justify-content:center;margin-right:6px}\n.ciclo{display:flex;align-items:center;gap:8px;background:var(--sol-claro);border:1px solid #f3dca7;\nborder-radius:12px;padding:10px 14px;margin:6px 0 4px;font-size:.95rem}\n.producto{display:flex;gap:12px;align-items:flex-start}\n.icono{font-size:1.9rem;line-height:1;width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;\njustify-content:center;background:var(--verde-claro);border-radius:12px}\n.producto .info{flex:1;min-width:0;overflow-wrap:anywhere}\n.nombre{font-weight:700;font-size:1.05rem}\n.precio{font-size:1.25rem;font-weight:800;color:var(--verde-osc)}\n.precio small{font-size:.8rem;font-weight:600;color:var(--suave)}\n.ahorro{display:inline-block;background:var(--sol-claro);color:#7a4f00;border:1px solid #f3dca7;border-radius:999px;\npadding:2px 10px;font-size:.82rem;font-weight:700;margin:4px 0}\nprogress{width:100%;height:10px;margin:6px 0 2px;appearance:none;-webkit-appearance:none;border:0;\nborder-radius:999px;background:var(--linea);overflow:hidden}\nprogress::-webkit-progress-bar{background:var(--linea);border-radius:999px}\nprogress::-webkit-progress-value{background:linear-gradient(90deg,var(--hoja),var(--verde));border-radius:999px}\nprogress::-moz-progress-bar{background:var(--hoja);border-radius:999px}\n.qty{width:84px;flex:0 0 84px;text-align:center;font-weight:700}\n.pago{border:2px solid var(--verde-claro)}\n.acciones{display:flex;gap:8px;flex-wrap:wrap}\n.acciones button{flex:1 1 160px}\n.hero-balance{background:linear-gradient(135deg,var(--verde-osc),var(--verde));color:#fff;border-radius:18px;\npadding:20px;margin:4px 0 14px}\n.hero-balance .grande{font-size:2rem;font-weight:800;margin:4px 0}\n.hero-balance .devuelto{display:inline-block;background:var(--sol);color:var(--tinta);border-radius:999px;\npadding:4px 12px;font-weight:700;margin:4px 0}\n.hero-balance a{color:#fff;font-weight:600}\n.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:.78rem;font-weight:700;\nbackground:var(--linea);color:var(--tinta);white-space:nowrap}\n.pill-LIQUIDADO,.pill-VERIFICADO,.pill-APROBADO,.pill-PAGADO,.pill-Activa{background:var(--verde-claro);color:var(--verde-osc)}\n.pill-REGISTRADO,.pill-POR_VERIFICAR,.pill-PENDIENTE{background:var(--sol-claro);color:#7a4f00}\n.pill-CANCELADO_POR_CLIENTE,.pill-NO_ATENDIDO,.pill-NO_ENTREGADO,.pill-RECHAZADO{background:var(--rojo-claro);color:var(--rojo)}\n.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:8px 0 14px}\n.tile{display:block;background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;text-decoration:none;\ncolor:var(--tinta);box-shadow:0 1px 3px #1d2a2214}\n.tile:hover{border-color:var(--hoja);background:var(--verde-claro)}\n.tile strong{display:block;color:var(--verde-osc);font-size:1.02rem}\n.tile span{display:block;color:var(--suave);font-size:.86rem;margin-top:2px}\n.login{max-width:420px;margin:0 auto}\nfooter{max-width:760px;margin:0 auto;padding:10px 16px 30px;color:var(--suave);font-size:.8rem;text-align:center}\ndetails>summary{cursor:pointer;font-weight:700;color:var(--verde-osc);list-style:none}\ndetails>summary::-webkit-details-marker{display:none}\ndetails>summary::before{content:"\u25b8";display:inline-block;width:1.1em;transition:transform .15s}\ndetails[open]>summary::before{transform:rotate(90deg)}\n.plegable>summary{padding:2px 0}\n.plegable[open]>summary{margin-bottom:8px}\n.mini{margin-top:6px}\n.mini>summary{font-size:.86rem;color:var(--verde);font-weight:600}\n.grupo{margin:8px 0 4px}\n.grupo>summary{font-size:1.15rem;padding:8px 0}\n.card.en-carrito{border-color:var(--hoja);box-shadow:0 0 0 2px #3fa66b55}\n.stepper{display:flex;align-items:center;gap:4px;flex:0 0 auto}\n.stepper button{width:40px;height:40px;padding:0;margin:0;border-radius:50%;font-size:1.3rem;line-height:1}\n.stepper button[data-delta="-1"]{background:var(--verde-claro);color:var(--verde-osc)}\n.stepper .qty{width:62px;flex:0 0 62px;margin:0;padding:8px 4px}\n.carrito{position:sticky;bottom:10px;z-index:4;display:flex;gap:12px;align-items:center;flex-wrap:wrap;\nbackground:var(--verde-osc);color:#fff;border-radius:18px;padding:12px 16px;margin-top:16px;\nbox-shadow:0 8px 24px #14482f55}\n.carrito-info{flex:1 1 260px;min-width:0}\n.carrito progress{height:8px;margin:6px 0 4px;background:#ffffff33}\n.carrito progress::-webkit-progress-bar{background:#ffffff33}\n.carrito progress::-webkit-progress-value{background:var(--sol)}\n.carrito progress::-moz-progress-bar{background:var(--sol)}\n.carrito-meta{font-size:.86rem;color:#d7ecdf;display:flex;gap:10px;flex-wrap:wrap}\n.carrito-ahorro{color:var(--sol);font-weight:800}\n.carrito button{width:auto;flex:0 0 auto;background:var(--sol);color:var(--tinta);margin:0}\n.carrito button:disabled{opacity:.5;cursor:not-allowed}\n.carrito.vacio{opacity:.92}\n.total{font-size:1.5rem;font-weight:800;color:var(--verde-osc);margin:10px 0 4px}\n.resumen td{border:0;padding:3px 6px;color:var(--suave)}\n.resumen td:last-child{text-align:right}\n.celebra{background:linear-gradient(90deg,var(--sol-claro),#fff);border:2px solid var(--sol);border-radius:14px;\npadding:12px 14px;font-weight:700;color:#5e3d00;margin:10px 0}\n.grande-ahorro{font-size:1.3rem;text-align:center;padding:16px}\n.dos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px;align-items:end}\n.ok{text-align:center}\n.check{width:56px;height:56px;border-radius:50%;background:var(--verde);color:#fff;font-size:2rem;font-weight:800;\ndisplay:flex;align-items:center;justify-content:center;margin:4px auto 8px}\n.aviso-titulo{font-size:1.15rem;font-weight:800;color:var(--verde-osc);margin-bottom:4px}\n.error .aviso-titulo{color:var(--rojo)}\n.aviso{background:var(--sol-claro);border-color:#f3dca7}\n.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}\n.kpi{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px #1d2a2214}\n.kpi span{display:block;color:var(--suave);font-size:.82rem;font-weight:600}\n.kpi strong{display:block;font-size:1.6rem;color:var(--verde-osc)}\n.pedido-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}\n.pedido-total{margin-left:auto;font-weight:800;font-size:1.1rem}\n.detalle{background:var(--verde-claro);border-radius:10px;padding:8px 12px;margin:8px 0;font-size:.92rem}\n.tracker{display:flex;list-style:none;padding:0;margin:12px 0 6px;counter-reset:paso}\n.tracker li{flex:1;text-align:center;font-size:.76rem;color:var(--suave);position:relative;counter-increment:paso}\n.tracker li::before{content:counter(paso);display:flex;width:26px;height:26px;margin:0 auto 4px;border-radius:50%;\nbackground:var(--linea);color:var(--suave);align-items:center;justify-content:center;font-weight:800;position:relative;\nz-index:1}\n.tracker li::after{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--linea)}\n.tracker li:first-child::after{display:none}\n.tracker li.hecho{color:var(--verde-osc);font-weight:700}\n.tracker li.hecho::before{content:"\u2713";background:var(--hoja);color:#fff}\n.tracker li.hecho::after{background:var(--hoja)}\n.acciones{margin-top:8px}\n.acciones button{flex:1 1 220px;font-size:.92rem}\n.hero-acciones{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:10px}\n.hero-acciones .btn{padding:9px 14px}\n.login-logo{text-align:center}\n.login-logo .logo{width:64px;height:64px}\n.pasos-tabla td:first-child{width:34px;font-weight:800;color:var(--verde)}\ncode{background:var(--fondo);border-radius:6px;padding:2px 6px;font-size:.88rem}\n</style></head><body><header><div class="bar"><a class="brand" href="/"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><path d="M19 17c-1-6-6-9-11-8 0 5 4 9 11 8z" fill="#3fa66b"/><path d="M21 17c1-7 6-11 12-10 0 6-5 11-12 10z" fill="#1e6b45"/><path d="M6 16h28l-3 19a3 3 0 0 1-3 2.5H12A3 3 0 0 1 9 35z" fill="#f4b63f"/><path d="M13 22h14" stroke="#14482f" stroke-width="2.2" stroke-linecap="round"/></svg>Yapa</a><nav><a href="/">Catálogo</a><a href="/cuenta">Mi cuenta</a><a href="/admin">Admin</a><form method="post" action="/salir"><input type="hidden" name="csrf" value="yzARxZOzfMZmlrTqMRp9CA"><button>Salir</button></form></nav></div></header><main><h1>Mi zona</h1><div class="card"><strong>Edificio Los Álamos</strong> · Lince<p>Activa · grupo G-LINCE</p></div><div class="card"><strong>Zonas</strong><table><tr><th>Código</th><th>Nombre</th><th>Distrito</th><th>Estado</th></tr><tr><td>Z-LINCE-01</td><td>Edificio Los Álamos</td><td>Lince</td><td>Activa</td></tr><tr><td>Z-LINCE-02</td><td>Condominio Las Palmeras</td><td>Lince</td><td>Activa</td></tr><tr><td>Z-JM-01</td><td>Residencial San Felipe</td><td>Jesús María</td><td>Activa</td></tr><tr><td>Z-LV-01</td><td>Edificio Balconcillo</td><td>La Victoria</td><td>Falta quien reciba</td></tr><tr><td>Z-MIRA-01</td><td>Edificio Larco</td><td>Miraflores</td><td>Activa</td></tr></table></div><form class="card" method="post" action="/zona/unirse"><input type="hidden" name="csrf" value="yzARxZOzfMZmlrTqMRp9CA"><label>Unirme a la zona <select name="zona"><option value="Z-LINCE-02">Condominio Las Palmeras · Lince</option><option value="Z-JM-01">Residencial San Felipe · Jesús María</option><option value="Z-LV-01">Edificio Balconcillo · La Victoria</option><option value="Z-MIRA-01">Edificio Larco · Miraflores</option></select></label><button>Unirme</button></form><details class="card plegable"><summary>\u2795 Crear una zona nueva</summary><form method="post" action="/zona/crear"><input type="hidden" name="csrf" value="yzARxZOzfMZmlrTqMRp9CA"><label>Nombre del edificio o barrio <input name="nombre"></label><label>Distrito <select name="distrito"><option>Jesús María</option><option>La Victoria</option><option>Lince</option></select></label><label>Latitud del punto de recepción <input name="lat" inputmode="decimal" placeholder="-12.0850"></label><label>Longitud <input name="lon" inputmode="decimal" placeholder="-77.0350"></label><button>Crear zona</button></form></details></main><footer>Yapa · compras de la semana entre vecinos de Lince, Jesús María y La Victoria · Diseño de Software, UTEC 2026-2</footer></body></html>'
+
+----------------------------------------------------------------------
+Ran 305 tests in 0.371s
+
+FAILED (failures=3, errors=1)

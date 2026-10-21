@@ -1,0 +1,75 @@
+
+ RUN  v5.0.1 /Users/kalosroots/personal/yapa
+
+ ❯ src/utils/week.test.ts (0 test)
+ ❯ src/services/api.test.ts (4 tests | 1 failed) 43ms
+   ❯ FE-C · cliente de la API (3)
+     × FE-SG-1 · una respuesta que no es JSON es un error normal de Yapa 7ms
+ ❯ src/components/authDialog.test.ts (1 test | 1 failed) 5ms
+   ❯ UX-01 · el ingreso dice con qué se entra (1)
+     × correo, celular o número de cliente 4ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/week.test.ts [ src/utils/week.test.ts ]
+Error: Cannot find module './week' imported from /Users/kalosroots/personal/yapa/src/utils/week.test.ts
+ ❯ src/utils/week.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { shortDate, weekLabel } from './week';
+       | ^
+      3|
+      4| describe('UX-02 · la semana en palabras para el vecino', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/authDialog.test.ts > UX-01 · el ingreso dice con qué se entra > correo, celular o número de cliente
+AssertionError: expected undefined to be 'Con tu correo, celular o número de cl…' // Object.is equality
+
+- Expected:
+"Con tu correo, celular o número de cliente y tu PIN de 6 dígitos."
+
++ Received:
+undefined
+
+ ❯ src/components/authDialog.test.ts:6:24
+      4| describe('UX-01 · el ingreso dice con qué se entra', () => {
+      5|   it('correo, celular o número de cliente', () => {
+      6|     expect(LOGIN_HINT).toBe('Con tu correo, celular o número de client…
+       |                        ^
+      7|   });
+      8| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/services/api.test.ts > FE-C · cliente de la API > FE-SG-1 · una respuesta que no es JSON es un error normal de Yapa
+AssertionError: expected SyntaxError: Unexpected token '<', "<html… to match object { code: 'BAD_RESPONSE', status: 502 }
+
+- Expected
++ Received
+
+- {
+-   "code": "BAD_RESPONSE",
+-   "status": 502,
++ SyntaxError {
++   "message": "Unexpected token '<', \"<html>502 \"... is not valid JSON",
+  }
+
+ ❯ src/services/api.test.ts:44:40
+     42|   it('FE-SG-1 · una respuesta que no es JSON es un error normal de Yap…
+     43|     const api = createApi(async () => new Response('<html>502 Bad Gate…
+     44|     await expect(api.get('/api/estado')).rejects.toMatchObject({ code:…
+       |                                        ^
+     45|     const ok = createApi(async () => new Response('<html>portada</html…
+     46|     await expect(ok.get('/api/estado')).rejects.toBeInstanceOf(ApiErro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 11 passed (14)
+      Tests  2 failed | 93 passed (95)
+   Start at  18:14:11
+   Duration  1.78s (import 53%, environment 23%, transform 16%, tests 6%, worker 1%)
+

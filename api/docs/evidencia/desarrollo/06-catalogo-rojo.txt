@@ -1,0 +1,14 @@
+# Iteracion 6 - pruebas ANTES del codigo
+# 2026-09-24 22:33
+      1 ERROR: test_ca10_accepts_exactly_remaining_stock_and_reserves_it (test_order_registration.RegisterOrderSpecTests.test_ca10_accepts_exactly_remaining_stock_and_reserves_it)
+      1 ERROR: test_ca10_rejects_quantity_above_supplier_stock (test_order_registration.RegisterOrderSpecTests.test_ca10_rejects_quantity_above_supplier_stock)
+      1 ERROR: test_ca15_quote_does_not_reserve_or_create_order (test_order_registration.RegisterOrderSpecTests.test_ca15_quote_does_not_reserve_or_create_order)
+      1 ERROR: test_catalog (unittest.loader._FailedTest.test_catalog)
+      1 ERROR: test_cc01_cancel_refunds_to_payment_method (test_order_changes.OrderChangesSpecTests.test_cc01_cancel_refunds_to_payment_method)
+      1 ERROR: test_ce_a_edit_down_returns_difference_to_balance (test_order_changes.OrderChangesSpecTests.test_ce_a_edit_down_returns_difference_to_balance)
+      1 ERROR: test_ce_c_wrong_difference_leaves_order_unchanged (test_order_changes.OrderChangesSpecTests.test_ce_c_wrong_difference_leaves_order_unchanged)
+      1 ERROR: test_ce_d_edit_below_minimum_is_rejected (test_order_changes.OrderChangesSpecTests.test_ce_d_edit_below_minimum_is_rejected)
+      1 ERROR: test_ce_e_own_reservation_counts_as_available (test_order_changes.OrderChangesSpecTests.test_ce_e_own_reservation_counts_as_available)
+Ran 95 tests in 0.029s
+
+FAILED (errors=9)

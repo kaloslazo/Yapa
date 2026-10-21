@@ -1,0 +1,10 @@
+# Iteracion 3 - pruebas de la billetera ANTES del codigo
+# 2026-09-24 22:22
+    from yapa_sdd.wallet import amount_owed, balance, credit, mark_refund_paid, request_withdrawal
+ModuleNotFoundError: No module named 'yapa_sdd.wallet'
+
+
+----------------------------------------------------------------------
+Ran 46 tests in 0.008s
+
+FAILED (errors=1)

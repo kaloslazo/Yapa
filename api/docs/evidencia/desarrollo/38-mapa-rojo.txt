@@ -1,0 +1,6 @@
+ FAIL  src/utils/zoneMap.test.ts [ src/utils/zoneMap.test.ts ]
+Error: Cannot find module './zoneMap' imported from C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa/src/utils/zoneMap.test.ts
+      Tests  no tests
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/utils/zoneMap.test.ts > MP-K..MP-M · zonas en foco del mapa > MP-K: las unidas
+ FAIL  src/utils/zoneMap.test.ts > MP-K..MP-M · zonas en foco del mapa > MP-L: las de una unión posible

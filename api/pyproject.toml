@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yapa-sdd-vertical"
+version = "0.1.0"
+description = "Vertical SDD de Yapa para registrar pedidos semanales"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+google = ["PyJWT>=2.8,<3", "cryptography>=42"]  # iteración 41: Entrar con Google (opcional)
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
