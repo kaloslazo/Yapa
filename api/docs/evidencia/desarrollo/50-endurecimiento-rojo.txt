@@ -1,0 +1,126 @@
+E.FFFFFFFF.FE.
+======================================================================
+ERROR: test_sg_a_cuerpo_enorme_se_rechaza_sin_leerlo (test_endurecimiento.BodyLimitTests.test_sg_a_cuerpo_enorme_se_rechaza_sin_leerlo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 107, in test_sg_a_cuerpo_enorme_se_rechaza_sin_leerlo
+    "CONTENT_LENGTH": str(produccion.MAX_BODY + 1), "wsgi.input": NoRead()})
+                          ^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.web.produccion' has no attribute 'MAX_BODY'
+
+======================================================================
+ERROR: test_sg_m_ver_como_no_saca_dinero (test_endurecimiento.ViewAsMoneyTests.test_sg_m_ver_como_no_saca_dinero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 230, in test_sg_m_ver_como_no_saca_dinero
+    self.assertEqual((status, data["error"]["codigo"]), (422, "DEBUG_SESSION_READONLY"), path)
+                              ~~~~^^^^^^^^^
+KeyError: 'error'
+
+======================================================================
+FAIL: test_sg_c_foto_anonima_no_se_guarda (test_endurecimiento.PhotoTests.test_sg_c_foto_anonima_no_se_guarda)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 127, in test_sg_c_foto_anonima_no_se_guarda
+    self.assertEqual(self.photos(), [])
+AssertionError: Lists differ: ['5d6c1611e4cacd5a.png'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'5d6c1611e4cacd5a.png'
+
+- ['5d6c1611e4cacd5a.png']
++ []
+
+======================================================================
+FAIL: test_sg_d_foto_en_ruta_sin_fotos_no_se_guarda (test_endurecimiento.PhotoTests.test_sg_d_foto_en_ruta_sin_fotos_no_se_guarda)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 133, in test_sg_d_foto_en_ruta_sin_fotos_no_se_guarda
+    self.assertEqual(self.photos(), [])
+AssertionError: Lists differ: ['f9c2af7594f5fa62.png'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'f9c2af7594f5fa62.png'
+
+- ['f9c2af7594f5fa62.png']
++ []
+
+======================================================================
+FAIL: test_sg_e_foto_que_no_es_imagen_se_rechaza (test_endurecimiento.PhotoTests.test_sg_e_foto_que_no_es_imagen_se_rechaza)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 140, in test_sg_e_foto_que_no_es_imagen_se_rechaza
+    self.assertEqual(body["error"]["codigo"], "PHOTO_INVALID")
+AssertionError: 'ORDER_NOT_FOUND' != 'PHOTO_INVALID'
+- ORDER_NOT_FOUND
++ PHOTO_INVALID
+
+
+======================================================================
+FAIL: test_sg_f_la_extension_sale_del_contenido (test_endurecimiento.PhotoTests.test_sg_f_la_extension_sale_del_contenido)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 146, in test_sg_f_la_extension_sale_del_contenido
+    self.assertRegex(saved, r"^fotos/[0-9a-f]{16}\.png$")
+AssertionError: Regex didn't match: '^fotos/[0-9a-f]{16}\\.png$' not found in 'fotos/ab7a48d10c5de94a.jpg'
+
+======================================================================
+FAIL: test_sg_g_web_html_sin_sesion_no_guarda_la_foto (test_endurecimiento.PhotoTests.test_sg_g_web_html_sin_sesion_no_guarda_la_foto)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 155, in test_sg_g_web_html_sin_sesion_no_guarda_la_foto
+    self.assertEqual(self.photos(), [])
+AssertionError: Lists differ: ['40be711d339f2a31.jpg'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'40be711d339f2a31.jpg'
+
+- ['40be711d339f2a31.jpg']
++ []
+
+======================================================================
+FAIL: test_sg_h_recuperar_el_pin_cierra_las_sesiones (test_endurecimiento.SessionTests.test_sg_h_recuperar_el_pin_cierra_las_sesiones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 167, in test_sg_h_recuperar_el_pin_cierra_las_sesiones
+    self.assertEqual(first.get("/api/sesion")[0], 401)
+AssertionError: 200 != 401
+
+======================================================================
+FAIL: test_sg_i_cambiar_el_pin_cierra_las_otras (test_endurecimiento.SessionTests.test_sg_i_cambiar_el_pin_cierra_las_otras)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 177, in test_sg_i_cambiar_el_pin_cierra_las_otras
+    self.assertEqual(other.get("/api/sesion")[0], 401)
+AssertionError: 200 != 401
+
+======================================================================
+FAIL: test_sg_j_pin_nuevo_del_admin_cierra_la_sesion (test_endurecimiento.SessionTests.test_sg_j_pin_nuevo_del_admin_cierra_la_sesion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 183, in test_sg_j_pin_nuevo_del_admin_cierra_la_sesion
+    self.assertEqual(client.get("/api/sesion")[0], 401)
+AssertionError: 200 != 401
+
+======================================================================
+FAIL: test_sg_l_la_web_html_tambien_cierra (test_endurecimiento.SessionTests.test_sg_l_la_web_html_tambien_cierra)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/personal/yapa/api/tests/test_endurecimiento.py", line 203, in test_sg_l_la_web_html_tambien_cierra
+    self.assertEqual((status, headers.get("Location")), (303, "/entrar"))
+AssertionError: Tuples differ: (200, None) != (303, '/entrar')
+
+First differing element 0:
+200
+303
+
+- (200, None)
++ (303, '/entrar')
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.035s
+
+FAILED (failures=9, errors=2)
