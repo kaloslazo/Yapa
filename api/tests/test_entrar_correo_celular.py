@@ -87,6 +87,10 @@ class EnterTests(LoginBase):
         self.assertEqual((status, body["rol"]), (200, "admin"))
         _, status, body = self.enter(EMAIL, ADMIN_PASS, "admin")
         self.assertEqual((status, self.code_of(body)), (422, "INVALID_CREDENTIALS"))
+        set_admin_password(self.store, "101", ADMIN_PASS)  # un admin con el mismo texto que el número de Ana
+        for text in (EMAIL, PHONE):
+            _, status, body = self.enter(text, ADMIN_PASS, "admin")
+            self.assertEqual((status, self.code_of(body)), (422, "INVALID_CREDENTIALS"), text)
 
     # LG-L, LG-06
     def test_lg_l_tiene_pin(self):
