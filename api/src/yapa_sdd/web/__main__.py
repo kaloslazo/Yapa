@@ -1,16 +1,20 @@
 """Servidor de demo: PYTHONPATH=src python -m yapa_sdd.web [--puerto 8000] [--ahora 2026-09-16T10:00:00-05:00] [--demo]"""
 
 import argparse
+import os
+import sys
 from datetime import datetime
 from wsgiref.simple_server import make_server
 
 from .. import auth, persistence
 from ..demo import DEMO_NOW, demo_store
+from ..domain import BusinessRuleError
 from ..seed import pilot_store
 from ..google_identity import google_from_env
 from ..mailer import mailer_from_env
 from .api import create_api
 from .app import create_app
+from . import produccion
 
 
 DEMO_PINS = {101: "482915", 105: "739104", 116: "260318"}
@@ -35,10 +39,16 @@ def main() -> None:
     parser.add_argument("--puerto", type=int, default=8000)
     parser.add_argument("--ahora", help="fija la hora (S-63), p. ej. 2026-09-16T10:00:00-05:00")
     parser.add_argument("--base", help="archivo SQLite donde se guardan los datos (PS-04); sin esto, solo memoria")
+    parser.add_argument("--escuchar", default=produccion.LOCAL, help="dirección donde escucha (S-231); 0.0.0.0 abre el servidor y exige --base")
+    parser.add_argument("--estaticos", help="carpeta de la web construida (npm run build -> dist), S-234")
     parser.add_argument("--demo", action="store_true", help="arranca con una semana de demo ya vivida (PW-08)")
     args = parser.parse_args()
     if args.demo and args.base:  # S-143
         parser.error("--demo trabaja en memoria; no se combina con --base")
+    try:
+        produccion.check_listen(args.escuchar, args.base)  # S-231
+    except BusinessRuleError as error:
+        parser.error(str(error))
     clock = None
     if args.ahora or args.demo:
         fixed = datetime.fromisoformat(args.ahora) if args.ahora else DEMO_NOW
@@ -52,17 +62,22 @@ def main() -> None:
         on_change = lambda s: persistence.save(s, args.base)  # noqa: E731
     else:
         store = pilot_store()
-    _demo_credentials(store)
+    if args.base and not args.demo:  # S-228: modo servidor, sin credenciales de demo
+        try:
+            produccion.prepare_server_credentials(store, os.environ)
+        except BusinessRuleError as error:
+            sys.exit(f"No se puede arrancar: {error}")
+    else:
+        _demo_credentials(store)
     if args.base:
         persistence.save(store, args.base)
     html = create_app(store, clock, on_change=on_change)
-    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(), google=google_from_env())  # S-153: la API JSON en /api del mismo servidor
+    api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(), google=google_from_env(),
+                     secure_cookie=produccion.secure_cookie(os.environ))  # S-153: la API JSON en /api del mismo servidor
 
-    def app(environ, start_response):
-        target = api if (environ.get("PATH_INFO") or "").startswith("/api/") else html
-        return target(environ, start_response)
-    with make_server("127.0.0.1", args.puerto, app) as server:  # S-61: solo esta máquina
-        print(f"Yapa en http://127.0.0.1:{args.puerto}  (Ctrl+C para salir)")
+    app = produccion.locked(produccion.compose(api, html, args.estaticos))  # S-232, S-233, S-234
+    with make_server(args.escuchar, args.puerto, app, server_class=produccion.ThreadedServer) as server:  # S-61, S-231
+        print(f"Yapa en http://{args.escuchar}:{args.puerto}  (Ctrl+C para salir)")
         server.serve_forever()
 
 

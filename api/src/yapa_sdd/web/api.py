@@ -100,10 +100,11 @@ def _body(environ) -> tuple[dict, dict]:
 
 
 def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None,
-               background_mail: bool = True):
+               background_mail: bool = True, secure_cookie: bool = False):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
+    secure = "; Secure" if secure_cookie else ""  # S-230
 
     # --- ayudas ---
 
@@ -245,7 +246,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         new = {"principal": principal, "kind": kind, "csrf": secrets.token_urlsafe(16),
                "expires": clock() + SESSION_TIME}
         sessions[token] = new
-        cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}"
+        cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={int(SESSION_TIME.total_seconds())}{secure}"
         return me(new), [("Set-Cookie", cookie)]
 
     def google_identity(data) -> dict:
@@ -295,7 +296,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def sesion_salir(environ, data, session):
         token, _ = session_of(environ)
         sessions.pop(token, None)
-        return {"ok": True}, [("Set-Cookie", f"{COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0")]
+        return {"ok": True}, [("Set-Cookie", f"{COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0{secure}")]
 
     # --- vecino (API-03, API-04) ---
 
