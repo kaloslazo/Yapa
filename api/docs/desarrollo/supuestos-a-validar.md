@@ -158,3 +158,13 @@ S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas)
 |---|---|---|---|---|---|
 | 71 | ¿Qué pasa con el Yape de un pedido que el vecino canceló antes de que el admin lo verificara? | El admin lo registra a mano como devolución pendiente y se paga como las demás (hoy no se devuelve nada, S-20). | | | |
 | 72 | ¿Una zona necesita nombre? | Sí, sin nombre no se crea (S-170). | | | |
+
+
+## Iteración 50 · Endurecimiento antes de abrir (21/10/2026)
+
+| # | Pregunta | Propuesta | Carlos | Kalos | Aaron |
+|---|---|---|---|---|---|
+| 73 | ¿Cuánto puede pesar un envío? | 9 MB: la foto de 8 MB y el formulario (S-259). | | | |
+| 74 | ¿Dónde se aceptan fotos? | Solo en el reclamo, la bolsa, la entrega y la entrega fallida, y solo si el archivo es de verdad una imagen (S-260). | | | |
+| 75 | ¿Cambiar el PIN saca a las demás sesiones? | Sí, todas menos la de quien lo cambió (S-261). | | | |
+| 76 | ¿Qué no puede hacer "ver como"? | Además del PIN, correo y Google: pedir la devolución del saldo, cancelar pedidos y ceder la zona (S-262). | | | |

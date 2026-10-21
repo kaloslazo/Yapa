@@ -63,6 +63,8 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 46 | **Entrar con correo o celular** (ya no se pide el número de cliente; quien nació con Google puede crear su PIN, opcional) | prueba del dueño 21/10 | completa, ver `46-entrar-con-correo-o-celular.md` |
 | 47 | **Pulido de lanzamiento** (imágenes WebP, favicon, vista previa al compartir, caché de archivos con huella, privacidad en borrador) | revisión del 21/10 | completa, ver `47-pulido-de-lanzamiento.md` |
 | 48 | **Datos de demostración y cuentas de depuración** (semana actual en la base real, reloj de demostración, cuentas de prueba, admin global que ve como cualquiera) | pedido del dueño 21/10 | completa, ver `48-demostracion-y-depuracion.md` |
+| 49 | **Registro abierto con ubicación** y aprobación del admin de zona | idea del dueño 21/10 | pendiente (reservada) |
+| 50 | **Endurecimiento antes de abrir** (tope del cuerpo fuera del cerrojo, fotos solo donde se usan y con tipo real, cambiar el PIN cierra las sesiones, "ver como" sin sacar dinero, CI en la raíz) | revisión de seguridad 21/10 | completa, ver `50-endurecimiento-antes-de-abrir.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

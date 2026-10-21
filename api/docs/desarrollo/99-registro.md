@@ -369,3 +369,15 @@
 - Se comprobó con 9 mutaciones (8 detectadas y una equivalente) y en producción.
 - Se discutió y quedó anotado como iteración 49: registro abierto con ubicación (el navegador pide permiso, solo zonas a menos de 300 m) y aprobación del admin de zona, con la invitación como atajo que da beneficios a quien invita; reemplaza el supuesto S-236.
 - Resultado: 557 pruebas del motor (20 nuevas) y 93 del frontend (1 nueva).
+
+## Iteración 50 · Endurecimiento antes de abrir (21/10/2026)
+
+- Spec: `50-endurecimiento-antes-de-abrir.md` (S-259..S-262, a validar). Sale de la revisión de seguridad de la rama `carlos/motor-y-roles` antes de abrir `holayapa.app`. La 49 queda reservada para el registro abierto con ubicación.
+- Cualquiera, sin sesión, podía dejar un archivo en la carpeta de fotos mandándolo a una ruta que no usa fotos; ahora solo se guardan en el reclamo, la bolsa, la entrega y la entrega fallida, después de sesión y CSRF, y solo si el contenido es una imagen (la extensión sale del contenido).
+- El cuerpo se leía sin tope dentro del cerrojo: ahora el servidor rechaza más de 9 MB sin leerlos (413) y lee el cuerpo antes del cerrojo.
+- Una credencial nueva (cambiar, recuperar, crear o reiniciar el PIN) cierra las demás sesiones de esa persona, en la API y en la web HTML.
+- "Ver como" ya no puede pedir la devolución del saldo, cancelar pedidos ni ceder una zona.
+- El CI estaba en `api/.github` y GitHub nunca lo corría; pasa a la raíz, instala PyJWT (las pruebas de Google ya no se saltan) y suma tipos, pruebas y compilación de la web.
+- La prueba de "crear el PIN" simulaba la entrada con Google borrando la credencial después del login; ahora entra con Google de verdad (las aserciones no cambian).
+- Resultado: 571 pruebas del motor (14 nuevas, sin pruebas saltadas) y 93 del frontend.
+

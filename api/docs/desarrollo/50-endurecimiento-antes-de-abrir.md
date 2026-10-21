@@ -53,6 +53,21 @@ Como equipo, queremos cerrar los huecos de seguridad que encontró la revisión 
 | SG-M | "Ver como" sin sacar dinero | `debug-global` ve como 101 y pide devolución, cancela, transfiere zona | `DEBUG_SESSION_READONLY` y saldo, pedidos y zona sin cambios |
 | SG-N | "Ver como" sigue sirviendo | ve como 105 y cotiza | 200 |
 
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| SG-01, S-259 | `produccion.MAX_BODY` y `produccion.locked` (lee el cuerpo antes del cerrojo, 413 sin leer) | SG-A, SG-B |
+| SG-02, S-260 | `app.PHOTO_ROUTES` y `api.PHOTO_ROUTES` en los `dispatch` | SG-C, SG-D |
+| SG-03 | `app.dispatch` guarda la foto dentro del `try`, después de sesión, rol y CSRF | SG-G |
+| SG-04 | `app._photo_suffix` (inicio del archivo) dentro de `_save_photo` | SG-E, SG-F |
+| SG-05, S-261 | `auth.credential_stamp`; la sesión guarda `stamp` y `session_of` / `current_session` la comparan | SG-H, SG-J, SG-L |
+| SG-06 | `cambiar_pin` y `crear_pin` (API) y `cambiar_pin` (web) renuevan el `stamp` de la sesión actual | SG-I, SG-K |
+| SG-07, S-262 | `api.VIEW_AS_BLOCKED` junto a `credential_paths` en `dispatch` | SG-M, SG-N |
+| CI | `.github/workflows/ci.yml` en la raíz (el de `api/.github` nunca corría): motor con PyJWT y web con tipos, pruebas y compilación | — |
+
+Evidencia: `docs/evidencia/desarrollo/50-endurecimiento-rojo.txt` y `50-endurecimiento-verde.txt`.
+
 ## Fuera de esta iteración (anotado)
 
 - Límite de intentos por IP y bloqueo que no sirva para dejar fuera a un vecino a propósito (hoy el bloqueo es por cuenta, S-68).
