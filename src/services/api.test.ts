@@ -38,4 +38,11 @@ describe('FE-C · cliente de la API', () => {
     await expect(api.post('/api/cotizar', {})).rejects.toMatchObject({ code: 'SUBTOTAL_BELOW_MINIMUM', message: 'Faltan S/ 3.20.', status: 422 });
     await expect(api.post('/api/cotizar', {})).rejects.toBeInstanceOf(ApiError);
   });
+
+  it('FE-SG-1 · una respuesta que no es JSON es un error normal de Yapa', async () => {
+    const api = createApi(async () => new Response('<html>502 Bad Gateway</html>', { status: 502 }));
+    await expect(api.get('/api/estado')).rejects.toMatchObject({ code: 'BAD_RESPONSE', status: 502 });
+    const ok = createApi(async () => new Response('<html>portada</html>', { status: 200 }));
+    await expect(ok.get('/api/estado')).rejects.toBeInstanceOf(ApiError);
+  });
 });
