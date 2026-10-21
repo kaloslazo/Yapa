@@ -25,6 +25,8 @@ class InMemoryStore:
         self.merge_requests: dict = {}  # zonas (iteración 5)
         self.email_codes: dict = {}  # códigos de correo: (cliente, motivo) -> resumen, vencimiento, envíos (iteración 40)
         self.notices: list = []  # avisos dentro de la app (iteración 42)
+        self.invites: dict = {}  # enlaces de invitación: código al azar -> dueño, si vale, registros (iteración 45)
+        self.signups: dict = {}  # registros a medio hacer, por correo (iteración 45)
         self.pin_requests: dict = {}  # "Olvidé mi PIN": id -> (cliente, hora) (iteración 39, S-199)
         self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
         self.bags: dict = {}  # armado: bolsas por pedido

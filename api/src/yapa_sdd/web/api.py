@@ -17,7 +17,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, metrics, notices, recovery, reference, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, invitations, metrics, notices, recovery, reference, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -268,6 +268,41 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         """GO-02."""
         recovery.link_google(store, session["principal"], google_identity(data), clock())
         return {"google_vinculado": True}
+
+    def mi_invitacion(environ, data, session):
+        """IN-01."""
+        return invitations.link_for(store, session["principal"], clock())
+
+    def mi_invitacion_renovar(environ, data, session):
+        """IN-02."""
+        return invitations.renew(store, session["principal"], clock())
+
+    def invitacion_ver(environ, data, session, token):
+        """IN-03."""
+        return invitations.preview(store, token)
+
+    def invitacion_correo(environ, data, session, token):
+        """IN-04."""
+        email, code = invitations.start_signup(store, token, data.get("nombre", ""), data.get("celular", ""),
+                                               data.get("correo", ""), bool(data.get("consentimiento")), clock())
+        try:
+            send_code(email, "Confirma tu correo en Yapa", "Estás creando tu cuenta de Yapa.", code)
+        except MailError:
+            raise BusinessRuleError("EMAIL_SEND_FAILED", "No pudimos enviar el correo. Revisa que esté bien escrito e inténtalo de nuevo.") from None
+        return {"enviado": True}
+
+    def invitacion_confirmar(environ, data, session, token):
+        """IN-05."""
+        customer = invitations.finish_signup(store, token, data.get("correo", ""), data.get("codigo", ""),
+                                             data.get("pin", ""), clock())
+        return open_session(customer.customer_id, "vecino")
+
+    def invitacion_google(environ, data, session, token):
+        """IN-06: primero el enlace, después el token de Google."""
+        invitations.resolve(store, token)
+        customer = invitations.signup_google(store, token, google_identity(data), data.get("celular", ""),
+                                             bool(data.get("consentimiento")), clock())
+        return open_session(customer.customer_id, "vecino")
 
     def cuenta_google_desvincular(environ, data, session):
         """GO-04."""
@@ -847,6 +882,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/sesion/google", {"POST": (sesion_google, None)}),
         (r"/api/cuenta/google", {"POST": (cuenta_google, "vecino")}),
         (r"/api/cuenta/google/desvincular", {"POST": (cuenta_google_desvincular, "vecino")}),
+        (r"/api/mi-invitacion", {"GET": (mi_invitacion, "vecino")}),
+        (r"/api/mi-invitacion/renovar", {"POST": (mi_invitacion_renovar, "vecino")}),
+        (r"/api/invitaciones/([\w-]+)", {"GET": (invitacion_ver, None)}),
+        (r"/api/invitaciones/([\w-]+)/correo", {"POST": (invitacion_correo, None)}),
+        (r"/api/invitaciones/([\w-]+)/confirmar", {"POST": (invitacion_confirmar, None)}),
+        (r"/api/invitaciones/([\w-]+)/google", {"POST": (invitacion_google, None)}),
         (r"/api/cuenta/correo", {"POST": (cuenta_correo, "vecino")}),
         (r"/api/cuenta/correo/verificar", {"POST": (cuenta_correo_verificar, "vecino")}),
         (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),

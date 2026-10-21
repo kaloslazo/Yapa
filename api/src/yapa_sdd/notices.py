@@ -183,3 +183,13 @@ def merge_answered(store: InMemoryStore, requester, target, accepted: bool, now:
     else:
         add(store, requester.admin_id, "UNION_RECHAZADA", "Tu pedido de unión fue rechazado",
             f"{target.name} no aceptó unirse por ahora.", now)
+
+
+def neighbor_joined(store: InMemoryStore, customer, inviter, zone, now: datetime) -> None:
+    """IN-07, S-242: quien invitó y el admin de la zona (si es otra persona) saben que llegó alguien. Solo en la app."""
+    first = (customer.name.split() or [""])[0]
+    add(store, inviter.customer_id, "VECINO_NUEVO", f"{first} se unió con tu enlace",
+        "Ya forma parte de tu zona. Lo ves en Mi zona.", now)
+    if zone.admin_id is not None and zone.admin_id != inviter.customer_id:
+        add(store, zone.admin_id, "VECINO_NUEVO", f"{first} se unió a tu zona",
+            f"Llegó con el enlace de {(inviter.name.split() or [''])[0]}. Lo ves en Mi zona.", now)

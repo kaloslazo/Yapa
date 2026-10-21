@@ -56,7 +56,8 @@ class GoogleVerifier:
             raise GoogleError(str(error)) from error
         if claims.get("iss") not in ISSUERS or claims.get("email_verified") not in (True, "true"):
             raise GoogleError("emisor o correo no verificado")
-        return {"sub": str(claims["sub"]), "email": str(claims.get("email", "")).strip().lower(), "email_verified": True}
+        return {"sub": str(claims["sub"]), "email": str(claims.get("email", "")).strip().lower(), "email_verified": True,
+            "name": str(claims.get("name") or "").strip()}  # IN-06: el nombre para el registro con enlace
 
 
 def google_from_env(env=None):

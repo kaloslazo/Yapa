@@ -47,6 +47,16 @@ def find_by_referral(store: InMemoryStore, code: str) -> Customer:
     raise BusinessRuleError("REFERRAL_NOT_FOUND", "Ese código de referido no existe.")
 
 
+def check_phone(store: InMemoryStore, phone) -> str:
+    """AV-03, S-134: 9 dígitos que empiezan con 9, sin repetir."""
+    phone = (phone or "").strip()
+    if not re.fullmatch(r"9\d{8}", phone):
+        raise BusinessRuleError("INVALID_PHONE", "El celular debe tener 9 dígitos y empezar con 9.")
+    if any(c.phone == phone for c in store.customers.values()):
+        raise BusinessRuleError("PHONE_ALREADY_REGISTERED", "Ese celular ya está registrado.")
+    return phone
+
+
 def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str, consent: bool, *, by: str,
                       now: datetime, email: str = "", referral: str = "") -> tuple[Customer, str]:
     """AV-02..AV-06. Devuelve el cliente y su PIN inicial, que no se guarda."""
@@ -54,11 +64,7 @@ def register_customer(store: InMemoryStore, name: str, phone: str, zone_id: str,
     name = (name or "").strip()
     if not name:  # AV-02
         raise BusinessRuleError("NAME_REQUIRED", "Escribe el nombre del vecino.")
-    phone = (phone or "").strip()
-    if not re.fullmatch(r"9\d{8}", phone):  # AV-03, S-134
-        raise BusinessRuleError("INVALID_PHONE", "El celular debe tener 9 dígitos y empezar con 9.")
-    if any(c.phone == phone for c in store.customers.values()):
-        raise BusinessRuleError("PHONE_ALREADY_REGISTERED", "Ese celular ya está registrado.")
+    phone = check_phone(store, phone)  # AV-03, S-134
     email = normalize_email(email, store)
     if zone_id not in store.zones:  # AV-04, S-138
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
