@@ -18,7 +18,7 @@ export interface MapUnion {
   reason: string;
 }
 
-interface ZonesMapProps {
+export interface ZonesMapProps {
   zones: MapZone[];
   unions?: MapUnion[];
   radius: number;

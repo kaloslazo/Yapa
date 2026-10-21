@@ -31,6 +31,8 @@ interface AuthDialogProps {
 
 const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equipo Yapa' } as const;
 
+export const LOGIN_HINT = 'Con tu correo, celular o número de cliente y tu PIN de 6 dígitos.';
+
 export function shareText(code: string) {
   return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
 }
@@ -198,7 +200,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       ) : (
         <>
           <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Entra a tu cuenta'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de Yapa.' : 'Con tu número de cliente y tu PIN de 6 dígitos.'}</p></div>
+            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Entra a tu cuenta'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de Yapa.' : LOGIN_HINT}</p></div>
             <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
           </div>
           <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar"><button className={audience === 'vecino' ? 'is-active' : ''} type="button" aria-pressed={audience === 'vecino'} onClick={() => { setAudience('vecino'); setFeedback(''); }}><Icon name="basket" size={15} />Soy vecino</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => { setAudience('admin'); setFeedback(''); }}><Icon name="user" size={15} />Equipo Yapa</button></div>
