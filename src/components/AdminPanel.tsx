@@ -19,6 +19,7 @@ interface AdminPanelProps {
   adminName: string;
   onClose: () => void;
   onLogout: () => void;
+  onViewAs?: (customerId: number) => Promise<void>;
   notify: (message: string, tone?: 'neutral' | 'success' | 'warning') => void;
 }
 
@@ -69,7 +70,7 @@ function Empty({ icon, title, text }: { icon: IconName; title: string; text: str
   return <div className="admin-orders-empty"><span className="admin-empty-icon"><Icon name={icon} size={23} /></span><div><strong>{title}</strong><p>{text}</p></div></div>;
 }
 
-export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelProps) {
+export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: AdminPanelProps) {
   const [section, setSection] = useState<Section>('resumen');
   const [cycle, setCycle] = useState('');
   const [pending, setPending] = useState<Partial<Record<Section, number>>>({});
@@ -99,7 +100,7 @@ export function AdminPanel({ adminName, onClose, onLogout, notify }: AdminPanelP
   }, [notify, refreshPending]);
 
   const current = SECTIONS.find((s) => s.id === section)!;
-  const props = { cycle, setCycle, run, notify };
+  const props = { cycle, setCycle, run, notify, onViewAs };
 
   return (
     <div className="admin-view">
@@ -146,6 +147,7 @@ interface SectionProps {
   setCycle: (cycle: string) => void;
   run: (action: () => Promise<unknown>, success: string) => Promise<boolean>;
   notify: AdminPanelProps['notify'];
+  onViewAs?: AdminPanelProps['onViewAs'];
 }
 
 const PROPOSAL_KIND: Record<string, { label: string; icon: IconName }> = {
@@ -403,7 +405,7 @@ function References({ run, notify }: SectionProps) {
   );
 }
 
-function Neighbors({ run, notify }: SectionProps) {
+function Neighbors({ run, notify, onViewAs }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/vecinos', notify);
   const { data: zoneData } = useLoad<Raw>('/api/zonas', notify);
   const { data: pinData, reload: reloadPins } = useLoad<Raw>('/api/admin/pin-solicitudes', notify);
@@ -440,7 +442,7 @@ function Neighbors({ run, notify }: SectionProps) {
           <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
         <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre, celular y correo para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
-      <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button></td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
+      <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button>{onViewAs ? <button className="text-button" type="button" onClick={() => void onViewAs(v.id)}>Ver como</button> : null}</td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
     </>
   );
 }

@@ -152,6 +152,7 @@ class ViewAsTests(DemoBase):
     # DM-G
     def test_dm_g_ver_como(self):
         client = self.debug()
+        self.assertTrue(client.get("/api/sesion")[1]["puede_ver_como"])  # el panel muestra el botón
         status, body, _ = client.post("/api/admin/ver-como", {"usuario": 101})
         self.assertEqual(status, 200, body)
         status, me, _ = client.get("/api/sesion")
@@ -168,6 +169,7 @@ class ViewAsTests(DemoBase):
     def test_dm_g_solo_el_admin_global(self):
         normal = ApiClient(self.api)
         normal.login(*TEAM, "admin")
+        self.assertFalse(normal.get("/api/sesion")[1]["puede_ver_como"])
         self.assertEqual(self.code_of(normal.post("/api/admin/ver-como", {"usuario": 101})), "NOT_DEBUG_ADMIN")
         neighbor = ApiClient(self.api)
         neighbor.login(101, PINS[101])

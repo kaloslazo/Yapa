@@ -327,7 +327,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                          "correo_avisos": customer.email_notices,
                          "tiene_pin": ("vecino", str(customer.customer_id)) in store.credentials})  # S-248
         else:
-            data.update({"nombre": "Equipo Yapa"})
+            data.update({"nombre": "Equipo Yapa", "puede_ver_como": session["principal"] in store.debug_admins})  # DM-06
         if session.get("viewing_as"):  # DM-06
             data["viendo_como"] = {"admin": session["viewing_as"]}
         return data

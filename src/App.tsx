@@ -307,6 +307,27 @@ export default function App() {
   };
   const goHomeFromInvite = () => { window.history.replaceState(null, '', '/'); setInviteCode(null); };
 
+  // iteración 48: el admin global abre la pantalla de otra persona y vuelve
+  const viewAs = async (customerId: number) => {
+    try {
+      const me = toAccount(await api.post<Raw>('/api/admin/ver-como', { usuario: customerId }));
+      api.setCsrf(me.csrf);
+      setAccount(me);
+      setAdminOpen(false);
+      goStore('catalog');
+      notify(`Estás viendo Yapa como ${me.name.split(' ')[0]}.`);
+    } catch (error) { fail(error); }
+  };
+  const backFromView = async () => {
+    try {
+      const me = toAccount(await api.post<Raw>('/api/sesion/volver'));
+      api.setCsrf(me.csrf);
+      setAccount(me);
+      setAdminOpen(true);
+      go('admin');
+    } catch (error) { fail(error); }
+  };
+
   const accountZone = zones.find((z) => z.id === account?.zoneId);
   const showAdmin = adminOpen && account?.role === 'admin';
 
@@ -318,7 +339,8 @@ export default function App() {
   return (
     <InviteContext.Provider value={inviteState}>
     <div className="app-shell">
-      {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} /> : <>
+      {account?.viewingAs ? <div className="view-as-bar" role="status"><span>Estás viendo Yapa como <strong>{account.name}</strong> ({account.role === 'admin_zona' ? 'admin de zona' : 'vecino'}).</span><button type="button" onClick={() => void backFromView()}>Volver a mi cuenta</button></div> : null}
+      {showAdmin ? <AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" fetchPriority="high" /><span>yapa</span></a>

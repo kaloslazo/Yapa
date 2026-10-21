@@ -49,6 +49,8 @@ export interface Account {
   emailVerified?: boolean;
   googleLinked?: boolean;
   hasPin?: boolean;
+  viewingAs?: string;
+  canViewAs?: boolean;
 }
 
 export interface Zone {
