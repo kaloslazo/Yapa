@@ -65,6 +65,34 @@ Motor (`tests/test_cierre_huecos.py`):
 
 Web (`vitest`): FE-SG-1 en `api.test.ts`; UX-01 en `authDialog.test.ts`; UX-02 en `week.test.ts`. FE-SG-2 se comprueba con `npm run build` sin aviso de tamaño.
 
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| SG-08, S-263 | `produccion.client_ip` | SG-O, y SG-P detrás del proxy |
+| SG-09, S-264 | `throttle.Throttle`; `counting_failures` en `api.py` (entrar, restablecer, confirmar el registro); `entrar` en `app.py` | SG-P (3), SG-Q |
+| SG-10, S-265 | `mails` en `pin_olvide` e `invitacion_correo` | SG-R |
+| SG-11, S-266 | `invitations.CODES_PER_HOUR` en `start_signup` | SG-S |
+| SG-12, S-267 | `zonas` en `api.py` | SG-T |
+| SG-13, S-268 | `mailer.DisabledMailer`, `mailer_from_env(server=...)`; `web/__main__.py` lo pide con `--base` | SG-U |
+| SG-14, S-269 | `produccion.CSP`, `SECURITY`, `HSTS`; `compose(secure=...)` las agrega a toda respuesta | SG-V (2) |
+| SG-15 | `open_session` borra las vencidas; `app.sessions` para la prueba | SG-W |
+| SG-16 | `sesion_volver` compara el `stamp` de la sesión del admin | SG-X |
+| FE-SG-1 | `services/api.ts` | `api.test.ts` |
+| FE-SG-2 | `LazyZonesMap.tsx` y `lazy(AdminPanel)` en `App.tsx`: el archivo principal pasa de 639 KB a 447 KB | `npm run build` sin aviso |
+| UX-01 | `AuthDialog.LOGIN_HINT` | `authDialog.test.ts` |
+| UX-02 | `utils/week.weekLabel` en la portada, `OrdersPage` y `ZonePage` | `week.test.ts` (3) |
+| UX-03 | `Catalog`: `title` y texto para lector de pantalla con `shortDate` | `week.test.ts` |
+| Pulido | `.nav-link` con `gap` (el ícono de Mi zona ya no queda pegado), `.nowrap` en "baja a S/ …" | revisado en el navegador |
+
+Cambios en pruebas existentes (escenario, no aserciones): `test_in_i_tope_diario` espacia los 21 registros cada 6 minutos y `test_in_m_pendientes` usa 20 enlaces desde 20 conexiones, porque S-265 y S-266 ya no dejan mandar 20 o 200 códigos en minutos desde un solo enlace y una sola dirección. Los topes que prueban (S-239) siguen iguales.
+
+Prueba real: la web construida servida por el motor (`--estaticos ../dist`) con la CSP: portada, Mi zona con el mapa de OpenStreetMap y el centro de operaciones cargan sin errores en la consola. Las dependencias de desarrollo se actualizaron con `npm audit fix` (0 vulnerabilidades).
+
+Para producción: Caddy (o el proxy que se use) debe correr en la misma máquina para que S-263 lea la dirección real; si no hay SMTP configurado, los correos no salen (S-268) y el motor lo avisa al arrancar.
+
+Evidencia: `docs/evidencia/desarrollo/51-cierre-huecos-rojo.txt`, `51-cierre-huecos-verde.txt`, `51-web-rojo.txt` y `51-web-verde.txt`.
+
 ## Fuera de esta iteración (anotado)
 
 - El bloqueo por cuenta (S-68) todavía sirve para dejar fuera a un vecino a propósito (5 fallos). Cambiarlo es una decisión del equipo: por ejemplo, bloquear la cuenta solo para la dirección que falló.

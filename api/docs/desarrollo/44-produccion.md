@@ -85,5 +85,6 @@ PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --escuchar 0.0.0.0 --puerto
 ## Fuera de esta iteración (anotado)
 
 - Las **solicitudes de unión de zona y de PIN** siguen en memoria: se pierden al reiniciar el motor. Se anotó en la lista de mejoras.
-- **HTTPS**: el motor habla HTTP. El certificado lo pone un servidor delante (por ejemplo Caddy) cuando se abra a internet. Sin eso, la cookie `Secure` no se activa.
+- **HTTPS**: el motor habla HTTP. El certificado lo pone un servidor delante (por ejemplo Caddy) cuando se abra a internet. Sin eso, la cookie `Secure` no se activa. El proxy debe estar en la misma máquina: los límites por dirección leen `X-Forwarded-For` solo si la conexión viene de `127.0.0.1` (iteración 51, S-263).
+- **Correo**: en modo servidor, sin `YAPA_SMTP_USER` y `YAPA_SMTP_PASSWORD` no sale ningún correo (iteración 51, S-268).
 - Límite de intentos de PIN por dirección IP.

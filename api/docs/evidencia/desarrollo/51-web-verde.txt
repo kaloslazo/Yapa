@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 /Users/kalosroots/personal/yapa
+
+
+ Test Files  14 passed (14)
+      Tests  99 passed (99)
+   Start at  18:16:49
+   Duration  2.21s (import 58%, environment 19%, transform 17%, tests 5%, worker 1%)
+

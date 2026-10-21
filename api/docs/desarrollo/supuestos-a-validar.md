@@ -168,3 +168,14 @@ S-38 (orden de errores del catálogo), S-47 y S-50..S-52 (detalles de métricas)
 | 74 | ¿Dónde se aceptan fotos? | Solo en el reclamo, la bolsa, la entrega y la entrega fallida, y solo si el archivo es de verdad una imagen (S-260). | | | |
 | 75 | ¿Cambiar el PIN saca a las demás sesiones? | Sí, todas menos la de quien lo cambió (S-261). | | | |
 | 76 | ¿Qué no puede hacer "ver como"? | Además del PIN, correo y Google: pedir la devolución del saldo, cancelar pedidos y ceder la zona (S-262). | | | |
+
+## Iteración 51 · Cierre de huecos para pasar a main (21/10/2026)
+
+| # | Pregunta | Propuesta | Carlos | Kalos | Aaron |
+|---|---|---|---|---|---|
+| 77 | ¿Cuántas entradas fallidas se permiten desde una misma conexión? | 30 en 15 minutos; alto porque muchos celulares comparten dirección (S-264). | | | |
+| 78 | ¿Cuántos correos con código desde una misma conexión y por enlace de invitación? | 10 por hora en cada caso (S-265, S-266). | | | |
+| 79 | ¿Qué ve de las zonas quien no entró? | Nombre, distrito, estado, vecinos y ubicación aproximada (100 m); sin contacto ni admin (S-267). | | | |
+| 80 | ¿Qué pasa en el servidor si falta el correo? | No sale ningún correo y se avisa al arrancar; nunca se escriben los códigos en la consola (S-268). | | | |
+| 81 | ¿Cambiamos el bloqueo por cuenta (hoy 5 fallos bloquean a la persona 15 min, aunque los cometa otro)? | Pendiente: por ejemplo, bloquear solo para la conexión que falló. | | | |
+

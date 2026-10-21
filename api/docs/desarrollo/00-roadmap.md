@@ -65,6 +65,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 48 | **Datos de demostración y cuentas de depuración** (semana actual en la base real, reloj de demostración, cuentas de prueba, admin global que ve como cualquiera) | pedido del dueño 21/10 | completa, ver `48-demostracion-y-depuracion.md` |
 | 49 | **Registro abierto con ubicación** y aprobación del admin de zona | idea del dueño 21/10 | pendiente (reservada) |
 | 50 | **Endurecimiento antes de abrir** (tope del cuerpo fuera del cerrojo, fotos solo donde se usan y con tipo real, cambiar el PIN cierra las sesiones, "ver como" sin sacar dinero, CI en la raíz) | revisión de seguridad 21/10 | completa, ver `50-endurecimiento-antes-de-abrir.md` |
+| 51 | **Cierre de huecos para pasar a `main`** (límites por dirección, zonas públicas sin contacto, correo apagado sin SMTP en servidor, CSP y HSTS, sesiones vencidas, semana en palabras, panel y mapa bajo demanda) | revisión de seguridad 21/10 | completa, ver `51-cierre-de-huecos-para-main.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

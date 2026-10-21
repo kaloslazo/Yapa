@@ -381,3 +381,15 @@
 - La prueba de "crear el PIN" simulaba la entrada con Google borrando la credencial después del login; ahora entra con Google de verdad (las aserciones no cambian).
 - Resultado: 571 pruebas del motor (14 nuevas, sin pruebas saltadas) y 93 del frontend.
 
+## Iteración 51 · Cierre de huecos para pasar a main (21/10/2026)
+
+- Spec: `51-cierre-de-huecos-para-main.md` (S-263..S-269, a validar). Cierra lo que la iteración 50 dejó anotado, para pasar la rama a `main`.
+- Límites por dirección (la real detrás de Caddy): 30 entradas fallidas en 15 minutos y 10 correos con código por hora; 10 códigos por hora por enlace de invitación. Antes se podía probar un PIN común contra todas las cuentas y mandar cientos de códigos desde el Gmail de Yapa.
+- `/api/zonas` ya no muestra el contacto de recepción ni el admin a quien no es del equipo, y a quien no entró le da la ubicación aproximada.
+- En el servidor sin SMTP los códigos ya no van a la consola (ni a los registros): no sale el correo y se avisa al arrancar.
+- Toda respuesta lleva CSP, `nosniff`, `X-Frame-Options` y, con https, HSTS. Las sesiones vencidas se borran; "volver" de "ver como" no reabre una sesión cuya clave cambió.
+- Web: "semana del 28 sep" en vez de `2026-W40` para el vecino, el ingreso dice que vale el correo o el celular, la insignia de ahorro dice cuándo se vio el precio, el panel del equipo y el mapa se bajan solo al abrirse (639 KB → 447 KB), y una respuesta que no es JSON ya no rompe la pantalla. `npm audit fix` en las dependencias de desarrollo.
+- Dos pruebas de la iteración 45 cambian de escenario (no de aserciones) porque los nuevos topes no dejan mandar 20 o 200 códigos en minutos desde un solo enlace.
+- Se comprobó en el navegador con la web construida y la CSP real (portada, mapa y centro de operaciones sin errores).
+- Resultado: 584 pruebas del motor (13 nuevas, ninguna saltada) y 99 del frontend (6 nuevas); tipos, compilación sin aviso de tamaño y 0 vulnerabilidades.
+
