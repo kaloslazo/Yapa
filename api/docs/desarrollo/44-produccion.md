@@ -55,6 +55,33 @@ Para el proyecto final se desplegará en un servidor (una máquina Windows prest
 | PR-L | Cabeceras | `GET /` | `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Cache-Control: no-cache` para `index.html` |
 | PR-M | Cerrojo | dos hilos llaman a una aplicación lenta envuelta con `locked` | nunca hay dos dentro a la vez |
 
+## Trazabilidad
+
+| Regla / supuesto | Código | Prueba |
+|---|---|---|
+| PR-01, PR-02, S-228, S-229 | `produccion.prepare_server_credentials` y su uso en `web/__main__.py` | PR-A, PR-B, PR-C, PR-D |
+| PR-03 | `auth.set_admin_password` (S-70) | PR-E |
+| PR-04, S-231 | `produccion.check_listen`, opción `--escuchar` | PR-F |
+| PR-05, S-230 | `create_api(secure_cookie=...)`, `produccion.secure_cookie` | PR-G (3 pruebas) |
+| PR-06, S-233 | `produccion.compose` (`/salud`) | PR-H |
+| PR-07, PR-08, PR-09, PR-10, S-234, S-235 | `produccion._static`, `_is_safe`, `compose`, opción `--estaticos` | PR-I, PR-J, PR-K, PR-L |
+| PR-11, S-232 | `produccion.locked`, `ThreadedServer` | PR-M |
+
+Pruebas de las propias pruebas (8 mutaciones a mano, revertidas, todas detectadas; las dos primeras que sobrevivieron llevaron a ampliar la spec y las pruebas): escuchar fuera sin `--base`, sin el chequeo de `..`, sin cabeceras de seguridad, cookie sin `Secure`, sin cerrojo, administrador faltante sin aviso, archivos estáticos aceptando `POST`, y un archivo con extensión que no existe devolviendo la portada.
+
+Prueba real: se arrancó el motor en modo servidor con una base nueva. Sin las variables del administrador **no arranca** y lo dice; con `--escuchar 0.0.0.0` y sin `--base` se rechaza; con ellas `/salud` responde, la portada y una ruta inventada devuelven la web, `/../api/pyproject.toml` da 404, el admin de demo (`admin-yapa`) **ya no entra** y el administrador del entorno sí, con la cookie `Secure` al declarar `YAPA_PUBLIC_URL` en `https://`.
+
+Evidencia: `docs/evidencia/desarrollo/44-produccion-rojo.txt` y `44-produccion-verde.txt` (496 pruebas del motor, 16 nuevas).
+
+## Cómo arrancar en modo servidor
+
+```bash
+# una vez: npm run build  (genera ../dist)
+export YAPA_ADMIN_USUARIO=...   YAPA_ADMIN_CLAVE=...        # solo el primer arranque (o para cambiarla)
+export YAPA_PUBLIC_URL=https://...                           # activa la cookie Secure y el botón de los correos
+PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --escuchar 0.0.0.0 --puerto 8100 --estaticos ../dist
+```
+
 ## Fuera de esta iteración (anotado)
 
 - Las **solicitudes de unión de zona y de PIN** siguen en memoria: se pierden al reiniciar el motor. Se anotó en la lista de mejoras.

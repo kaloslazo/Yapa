@@ -37,8 +37,8 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 
 ## Estado al 17/10/2026
 
-- Iteraciones 2 a 43 **completas y en verde** (480 pruebas del motor, 67 del frontend). El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-227. **El siguiente libre es S-228.**
+- Iteraciones 2 a 44 **completas y en verde** (496 pruebas del motor, 67 del frontend). El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-235. **El siguiente libre es S-236.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
 - `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
@@ -52,3 +52,5 @@ PYTHONPATH=src python -m yapa_sdd.web --base yapa.db --ahora 2026-09-16T10:00:00
 # credenciales de demo: se imprimen al arrancar (vecinos 101 y 105, admin admin-yapa)
 # vecinos nuevos: /admin/vecinos (el PIN se muestra una sola vez)
 ```
+
+Modo servidor (iteración 44, ver `docs/desarrollo/44-produccion.md`): `--base` sin `--demo` no crea credenciales de demo; el administrador sale de `YAPA_ADMIN_USUARIO` y `YAPA_ADMIN_CLAVE`; `--escuchar 0.0.0.0` exige `--base`; `--estaticos ../dist` sirve la web construida; `GET /salud` para el chequeo.

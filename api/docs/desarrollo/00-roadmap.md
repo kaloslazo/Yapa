@@ -58,6 +58,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 41 | **Entrar con Google** (vincular cuenta, verificación del token en el motor, opcional) | decisión del equipo 18/10 | completa, ver `41-entrar-con-google.md` |
 | 42 | **Avisos dentro de la app y por correo** (campana, ocho hechos, correo de lo importante) | decisión del equipo 18/10 | completa, ver `42-avisos.md` |
 | 43 | **Correos con diseño** (HTML con la marca, código destacado, texto plano de respaldo) | pedido del dueño 19/10 | completa, ver `43-correo-html.md` |
+| 44 | **Lista para producción** (administrador real por entorno, sin credenciales de demo, cookie segura, `/salud`, web servida por el motor, servidor con hilos y cerrojo) | despliegue en servidor para el proyecto final | completa, ver `44-produccion.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
 
 ## Registro

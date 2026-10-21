@@ -326,3 +326,12 @@
 - Se comprobó con 7 mutaciones que las pruebas detectan HTML sin escapar, una dirección de botón insegura, la ausencia de la parte HTML y el código sin su caja.
 - Primera versión con encabezado oscuro y marca en mayúscula, inventada y distinta de la app; el dueño pidió uniformar y se rehízo con la marca real (se revisó la barra de la app). Mutaciones del ajuste: 7 de 7 detectadas.
 - Resultado: 480 pruebas del motor (15 nuevas); el frontend no cambió (67).
+
+## Iteración 44 · Lista para producción (20/10/2026)
+
+- Spec: `44-produccion.md` (S-228..S-235, a validar). En modo servidor (`--base`) no se crean credenciales de demo; el administrador sale de `YAPA_ADMIN_USUARIO` y `YAPA_ADMIN_CLAVE` y, si falta y la base no tiene uno, el motor no arranca. Escuchar fuera de la propia máquina (`--escuchar`) exige `--base`.
+- La cookie de sesión lleva `Secure` si `YAPA_PUBLIC_URL` empieza con `https://`. `GET /salud` dice que el motor está vivo sin dar datos. `--estaticos` hace que el motor sirva la web construida (`dist`) con las rutas de la web, sin salirse de la carpeta y con cabeceras de seguridad.
+- El servidor atiende cada conexión en su hilo pero el motor ejecuta una petición a la vez (cerrojo global), porque el almacén no es seguro entre hilos.
+- Se comprobó con 8 mutaciones: dos sobrevivieron al inicio (el chequeo de `..` y un archivo inexistente con extensión), se ampliaron la spec y las pruebas y las 8 quedaron detectadas. Además se arrancó el motor de verdad en modo servidor y se probaron las negativas y el login.
+- Lo que sigue pendiente para abrir Yapa a internet: HTTPS (lo pone un servidor delante), que las solicitudes de unión y de PIN sobrevivan a un reinicio y un límite de intentos de PIN por IP.
+- Resultado: 496 pruebas del motor (16 nuevas); el frontend no cambió (67).
