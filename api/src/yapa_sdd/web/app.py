@@ -15,7 +15,6 @@ from email.policy import default as email_policy
 from pathlib import Path
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, metrics, reference, wallet, zones
@@ -137,6 +136,15 @@ def _money(value: str, what: str) -> Decimal:
     return Decimal(value)
 
 
+def _cookie(environ, name: str) -> str | None:
+    """CK-01, S-277: busca la cookie por nombre; las de otros servicios (como g_state de Google) se ignoran."""
+    for part in environ.get("HTTP_COOKIE", "").split(";"):
+        key, sep, value = part.strip().partition("=")
+        if sep and key == name:
+            return value or None  # CK-02: vale la primera
+    return None
+
+
 def _query(environ) -> dict[str, str]:
     return {key: values[0] for key, values in parse_qs(environ.get("QUERY_STRING", "")).items()}
 
@@ -157,8 +165,7 @@ def create_app(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     login_failures = Throttle(30, timedelta(minutes=15))  # SG-09, S-264
 
     def current_session(environ) -> tuple[str | None, Session | None]:
-        cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
-        token = cookie[COOKIE].value if COOKIE in cookie else None
+        token = _cookie(environ, COOKIE)
         session = sessions.get(token) if token else None
         if session and (clock() >= session.expires
                         or session.stamp != auth.credential_stamp(store, session.role, session.principal)):  # SG-05

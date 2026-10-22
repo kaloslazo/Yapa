@@ -13,7 +13,6 @@ import threading
 import traceback
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs
 
@@ -27,7 +26,7 @@ from ..order_changes import cancel_order
 from ..order_registration import quote_order, register_order, verify_payment
 from ..store import InMemoryStore
 from ..throttle import Throttle
-from .app import _form, _save_photo
+from .app import _cookie, _form, _save_photo
 from .produccion import client_ip
 
 
@@ -145,8 +144,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             send_all()
 
     def session_of(environ) -> tuple[str | None, dict | None]:
-        cookie = SimpleCookie(environ.get("HTTP_COOKIE", ""))
-        token = cookie[COOKIE].value if COOKIE in cookie else None
+        token = _cookie(environ, COOKIE)
         session = sessions.get(token) if token else None
         if session and (security() >= session["expires"]
                         or session["stamp"] != auth.credential_stamp(store, session["kind"], session["principal"])):  # SG-05
