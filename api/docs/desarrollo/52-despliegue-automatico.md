@@ -31,6 +31,7 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-05 | Si `GET /salud` no responde bien en 40 segundos, restaura la versión anterior, la arranca y termina con error. Si la nueva responde, el despliegue termina bien. |
 | DA-06 | Un paquete vacío, incompleto o sin la web (`dist/index.html`) o sin el motor se rechaza antes de tocar la versión que corre. |
 | DA-07 | Cada despliegue deja una línea en `C:\yapa\ci\despliegues.log` con hora, ejecución y resultado. |
+| DA-08 | El pie de la web muestra, en chico, el código del commit desplegado (los 7 primeros caracteres de `GITHUB_SHA`; `local` fuera de GitHub), para ver en producción si el despliegue cambió la versión. |
 
 ## Criterios de aceptación
 
@@ -43,9 +44,10 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-E | Paquete inválido | un zip vacío o sin `dist/index.html` | se rechaza, la versión que corre ni se detiene |
 | DA-F | Bajada desde GitHub | la función de descarga contra un artefacto real de una ejecución | el zip baja completo (sigue la redirección sin mandar el token al sitio de descarga) |
 | DA-G | Solo `main` despliega | revisión del flujo | el trabajo de despliegue tiene la condición de `push` y `main` |
-| DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola y `/salud` sigue bien |
+| DA-J | El pie muestra la versión | prueba de archivos de la web | la compilación define `__BUILD__` desde `GITHUB_SHA` y el pie lo usa |
+| DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola, el pie muestra el código del commit nuevo y `/salud` sigue bien |
 
-DA-H necesita que Kalos registre el runner y que se suba a `main`; se prueba cuando eso ocurra.
+DA-H necesita que se suba a `main`: el runner ya está registrado (21/10 19:26) y el cambio de prueba es la etiqueta de versión del pie (DA-08).
 
 ## Trazabilidad y resultados
 
@@ -57,6 +59,7 @@ DA-H necesita que Kalos registre el runner y que se suba a `main`; se prueba cua
 | DA-05, S-274 | `Esta-Sano` (40 segundos de reloj) y `Restaurar` | DA-D |
 | DA-06 | `Validar-Paquete` | DA-E |
 | DA-07 | `Log` en `C:\yapa\ci\despliegues.log` | DA-C, DA-D |
+| DA-08, DA-J | `vite.config.ts` (`__BUILD__` desde `GITHUB_SHA`), `vite-env.d.ts`, el pie de `App.tsx` | `scripts/publicAssets.test.ts` |
 | S-275 | `deploy/vps/instalar-runner.ps1`, `iniciar-runner.ps1` (sin servicio de Windows) | DA-H (pendiente) |
 
 Resultados (21/10/2026):
@@ -70,7 +73,7 @@ Resultados (21/10/2026):
 | DA-E | Un paquete vacío y uno sin `dist/index.html` se rechazan con código 1 **sin detener el motor** (mismo proceso antes y después) |
 | DA-F | Con la función real del script contra la ejecución real de GitHub: baja 765 KB, sigue la redirección sin mandar el token al almacén, y el paquete es válido |
 | DA-G | En GitHub, en una rama, el trabajo `Desplegar en la VPS` se **saltó** (`skipped`) |
-| DA-H | **Pendiente**: hace falta que Kalos registre el runner y que se suba a `main` |
+| DA-H | **Pendiente**: el runner ya está registrado; falta subir a `main` y ver que el pie cambie solo |
 | DA-I | **El paquete que construyó GitHub se desplegó en la VPS** con el mismo script (`-ZipLocal`, paquete bajado de la ejecución 39696047470): versión de Kalos con sus cabeceras (CSP, HSTS), zonas públicas sin contacto, y las cuentas de demostración siguen entrando |
 
 Hallazgos que cambiaron el trabajo:

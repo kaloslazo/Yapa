@@ -384,7 +384,7 @@ export default function App() {
               </main>}
         {!offline && view === 'store' && lines.length ? <MobileCartBar count={lines.length} subtotal={subtotal} onCheckout={() => void openCheckout()} /> : null}
 
-        <footer className="site-footer"><span>Yapa · compras que rinden · Diseño de Software, UTEC 2026-2</span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Centro de operaciones</button><span>Pagos con Yape y Plin verificados por el equipo</span></div></footer>
+        <footer className="site-footer"><span>Yapa · compras que rinden · Diseño de Software, UTEC 2026-2 <small className="build-tag" title="Versión desplegada">· {__BUILD__}</small></span><div className="footer-actions"><button className="footer-link" type="button" onClick={openAdmin}>Centro de operaciones</button><span>Pagos con Yape y Plin verificados por el equipo</span></div></footer>
       </>}
       <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`}><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} /><span>{toast.message}</span></div> : null}</div>
       {!showAdmin ? <>

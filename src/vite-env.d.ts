@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   readonly VITE_YAPA_AHORA?: string;
 }
 
+declare const __BUILD__: string; // vite.config.ts (DA-08)
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
