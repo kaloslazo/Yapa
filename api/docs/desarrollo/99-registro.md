@@ -400,3 +400,9 @@
 - El flujo se combinó con el de Kalos (`tests`, trabajos `motor` y `web`) en el mismo `ci.yml`. Los scripts de la VPS están en `deploy/vps/` como copia de referencia.
 - Se probó: validador de flujos, pruebas en GitHub, despliegue normal, marcha atrás con un motor roto, paquetes inválidos y la bajada real desde GitHub. El trayecto completo (DA-H) se probó el 21/10: se registró el runner (token generado por Kalos) y un push a `main` desplegó solo en 12 segundos, con la etiqueta del commit en el pie de la web como prueba.
 - Resultado: 584 pruebas del motor y 99 de la web en verde sobre el árbol integrado con lo de Kalos.
+
+## Iteración 53 · La sesión no se pierde por cookies de otros servicios (22/10/2026)
+
+- Spec: `53-cookies-de-otros-sitios.md` (S-277, a validar). En producción, después de verse el botón de Google, cada recarga sacaba al usuario: la cookie `g_state` de Google trae un JSON y `SimpleCookie` dejaba de leer la cabecera antes de llegar a la cookie de Yapa.
+- Ahora la API y la web HTML buscan su cookie por nombre y las ajenas se ignoran. Se comprobó con `curl` contra holayapa.app antes del arreglo (401 con `g_state` antes, 200 sin ella).
+- Resultado: 588 pruebas del motor (4 nuevas, ninguna saltada).

@@ -1,0 +1,9 @@
+test_ck_a_google_antes_no_saca_la_sesion (test_cookies_ajenas.ApiCookiesTest.test_ck_a_google_antes_no_saca_la_sesion) ... ok
+test_ck_b_google_despues_no_saca_la_sesion (test_cookies_ajenas.ApiCookiesTest.test_ck_b_google_despues_no_saca_la_sesion) ... ok
+test_ck_c_sin_cookie_de_yapa_no_hay_sesion (test_cookies_ajenas.ApiCookiesTest.test_ck_c_sin_cookie_de_yapa_no_hay_sesion) ... ok
+test_ck_d_web_html_con_google_antes (test_cookies_ajenas.WebCookiesTest.test_ck_d_web_html_con_google_antes) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.011s
+
+OK
