@@ -28,12 +28,11 @@ describe('archivos públicos (iteración 47)', () => {
     for (const url of new Set(used)) expect(() => statSync(join(ROOT, 'public', url)), url).not.toThrow();
   });
 
-  it('el pie de la web muestra la versión desplegada y sale del commit de GitHub (DA-J)', () => {
+  it('la versión desplegada sale del commit de GitHub y va oculta en la página, no en el pie (DA-J)', () => {
     const config = readFileSync(join(ROOT, 'vite.config.ts'), 'utf8');
     expect(config).toContain('GITHUB_SHA');
-    expect(config).toContain('__BUILD__');
-    expect(readFileSync(join(ROOT, 'src', 'App.tsx'), 'utf8')).toMatch(/<footer className="site-footer">[\s\S]*\{__BUILD__\}/);
-    expect(readFileSync(join(ROOT, 'src', 'vite-env.d.ts'), 'utf8')).toContain('declare const __BUILD__: string');
+    expect(config).toContain('yapa-build');
+    expect(readFileSync(join(ROOT, 'src', 'App.tsx'), 'utf8')).not.toContain('__BUILD__'); // nadie la ve en la pantalla
   });
 
   it('index.html tiene favicon y las etiquetas para compartir con la imagen en dirección completa (PU-F)', () => {

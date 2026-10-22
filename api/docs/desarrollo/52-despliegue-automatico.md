@@ -31,7 +31,7 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-05 | Si `GET /salud` no responde bien en 40 segundos, restaura la versión anterior, la arranca y termina con error. Si la nueva responde, el despliegue termina bien. |
 | DA-06 | Un paquete vacío, incompleto o sin la web (`dist/index.html`) o sin el motor se rechaza antes de tocar la versión que corre. |
 | DA-07 | Cada despliegue deja una línea en `C:\yapa\ci\despliegues.log` con hora, ejecución y resultado. |
-| DA-08 | El pie de la web muestra, en chico, el código del commit desplegado (los 7 primeros caracteres de `GITHUB_SHA`; `local` fuera de GitHub), para ver en producción si el despliegue cambió la versión. |
+| DA-08 | La página lleva, **sin mostrarse**, el código del commit desplegado (7 primeros caracteres de `GITHUB_SHA`; `local` fuera de GitHub) en `<meta name="yapa-build">`, para ver en producción si el despliegue cambió la versión (con ver código fuente o `curl`). En la primera prueba (21/10) estuvo visible en el pie; se ocultó una vez comprobado el despliegue. |
 
 ## Criterios de aceptación
 
@@ -44,8 +44,8 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-E | Paquete inválido | un zip vacío o sin `dist/index.html` | se rechaza, la versión que corre ni se detiene |
 | DA-F | Bajada desde GitHub | la función de descarga contra un artefacto real de una ejecución | el zip baja completo (sigue la redirección sin mandar el token al sitio de descarga) |
 | DA-G | Solo `main` despliega | revisión del flujo | el trabajo de despliegue tiene la condición de `push` y `main` |
-| DA-J | El pie muestra la versión | prueba de archivos de la web | la compilación define `__BUILD__` desde `GITHUB_SHA` y el pie lo usa |
-| DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola, el pie muestra el código del commit nuevo y `/salud` sigue bien |
+| DA-J | La versión va oculta | prueba de archivos de la web | la compilación pone `GITHUB_SHA` en el `<meta>` y la pantalla no la muestra |
+| DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola, la página lleva el código del commit nuevo y `/salud` sigue bien |
 
 DA-H se probó el 21/10: el runner se registró a las 19:26 y la prueba fue subir a `main` con la etiqueta de versión del pie (DA-08).
 
@@ -59,7 +59,7 @@ DA-H se probó el 21/10: el runner se registró a las 19:26 y la prueba fue subi
 | DA-05, S-274 | `Esta-Sano` (40 segundos de reloj) y `Restaurar` | DA-D |
 | DA-06 | `Validar-Paquete` | DA-E |
 | DA-07 | `Log` en `C:\yapa\ci\despliegues.log` | DA-C, DA-D |
-| DA-08, DA-J | `vite.config.ts` (`__BUILD__` desde `GITHUB_SHA`), `vite-env.d.ts`, el pie de `App.tsx` | `scripts/publicAssets.test.ts` |
+| DA-08, DA-J | `vite.config.ts` (complemento `yapa-build`, `GITHUB_SHA`) | `scripts/publicAssets.test.ts` |
 | S-275 | `deploy/vps/instalar-runner.ps1`, `iniciar-runner.ps1` (sin servicio de Windows) | DA-H (pendiente) |
 
 Resultados (21/10/2026):

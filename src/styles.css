@@ -974,5 +974,3 @@ form.admin-card .primary-button { width: auto; justify-self: start; }
 .view-as-bar { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; padding: 10px 16px; background: var(--ink); color: var(--on-ink); font-size: .875rem; }
 .view-as-bar button { min-height: 36px; padding: 0 16px; border: 1px solid var(--on-ink); border-radius: var(--radius-pill); background: none; color: var(--on-ink); font: inherit; font-weight: 600; cursor: pointer; }
 .view-as-bar button:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
-
-.build-tag { color: var(--muted); font-size: .72rem; opacity: .75; font-variant-numeric: tabular-nums; }
