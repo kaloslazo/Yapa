@@ -24,6 +24,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install PyJWT cryptography  # S-214: sin esto se saltan las pruebas de Google
+      - run: python -m compileall -q src  # sintaxis de todos los archivos, también los que ninguna prueba importa (p. ej. web/__main__.py)
       - run: PYTHONPATH=src python -m unittest discover -s tests -v
 
   web:

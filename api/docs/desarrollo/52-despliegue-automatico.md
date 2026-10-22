@@ -24,7 +24,7 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 
 | Regla | Comportamiento |
 |---|---|
-| DA-01 | El flujo de trabajo corre en cada subida a cualquier rama y en cada pull request hacia `main`: pruebas del motor, tipos, pruebas de la web y compilación. |
+| DA-01 | El flujo de trabajo corre en cada subida a cualquier rama y en cada pull request hacia `main`: **sintaxis de todo el motor**, pruebas del motor, tipos, pruebas de la web y compilación. La sintaxis se revisa aparte porque `web/__main__.py` (el arranque del motor) no lo importa ninguna prueba: con un error ahí, las 584 pruebas pasan igual. |
 | DA-02 | El paquete (`api/src` y `dist`, sin `__pycache__`) se guarda como artefacto de esa ejecución con la misma forma que el paquete manual, para usar el mismo despliegue. |
 | DA-03 | El trabajo de despliegue solo existe para una subida (`push`) a `refs/heads/main` y solo después de que pasaron las pruebas. Corre en el runner de la VPS con la etiqueta `yapa-vps`, en una fila (S-276). |
 | DA-04 | `desplegar-ci.ps1` descarga el artefacto de esa ejecución, respalda la base, para el motor, guarda la versión anterior, pone la nueva y arranca el motor. |
@@ -43,6 +43,7 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-D | Marcha atrás | el mismo script con un paquete cuyo motor no arranca | termina con error, la versión anterior vuelve a responder, la base intacta, el registro dice "restaurado" |
 | DA-E | Paquete inválido | un zip vacío o sin `dist/index.html` | se rechaza, la versión que corre ni se detiene |
 | DA-F | Bajada desde GitHub | la función de descarga contra un artefacto real de una ejecución | el zip baja completo (sigue la redirección sin mandar el token al sitio de descarga) |
+| DA-K | La sintaxis se revisa | un error en `web/__main__.py` | las pruebas del motor pasan, pero `python -m compileall` falla (código 1) y por eso el trabajo `motor` y el despliegue no corren |
 | DA-G | Solo `main` despliega | revisión del flujo | el trabajo de despliegue tiene la condición de `push` y `main` |
 | DA-J | La versión va oculta | prueba de archivos de la web | la compilación pone `GITHUB_SHA` en el `<meta>` y la pantalla no la muestra |
 | DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola, la página lleva el código del commit nuevo y `/salud` sigue bien |
@@ -74,6 +75,7 @@ Resultados (21/10/2026):
 | DA-F | Con la función real del script contra la ejecución real de GitHub: baja 765 KB, sigue la redirección sin mandar el token al almacén, y el paquete es válido |
 | DA-G | En GitHub, en una rama, el trabajo `Desplegar en la VPS` se **saltó** (`skipped`) |
 | DA-H | **Aprobado (21/10, 19:31)**: se subió a `main` (`7b1dead`); GitHub corrió `motor` y `web` y después `desplegar en la VPS` en el runner `vps-yapa`, que terminó en éxito en 12 s (19:31:20 a 19:31:32, según `despliegues.log`). En `holayapa.app` el archivo principal de la web pasó de `index-BVzhe2t8.js` a `index-BHVMNNAr.js`, el pie lleva la etiqueta `7b1dead`, `/salud` responde bien y las cuentas de demostración entran |
+| DA-K | Un error de sintaxis agregado a `web/__main__.py` **no lo detectan las 584 pruebas** (siguen en `OK`) pero `python -m compileall -q src` sale con código 1; sano, con código 0. El paso se agregó al trabajo `motor` |
 | DA-I | **El paquete que construyó GitHub se desplegó en la VPS** con el mismo script (`-ZipLocal`, paquete bajado de la ejecución 39696047470): versión de Kalos con sus cabeceras (CSP, HSTS), zonas públicas sin contacto, y las cuentas de demostración siguen entrando |
 
 Hallazgos que cambiaron el trabajo:
