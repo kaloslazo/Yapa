@@ -47,7 +47,7 @@ Hoy cada cambio se sube a mano: se arma el paquete, se copia a la VPS y se reini
 | DA-J | El pie muestra la versión | prueba de archivos de la web | la compilación define `__BUILD__` desde `GITHUB_SHA` y el pie lo usa |
 | DA-H | Todo en conjunto | una subida real a `main` con el runner registrado | la web cambia sola, el pie muestra el código del commit nuevo y `/salud` sigue bien |
 
-DA-H necesita que se suba a `main`: el runner ya está registrado (21/10 19:26) y el cambio de prueba es la etiqueta de versión del pie (DA-08).
+DA-H se probó el 21/10: el runner se registró a las 19:26 y la prueba fue subir a `main` con la etiqueta de versión del pie (DA-08).
 
 ## Trazabilidad y resultados
 
@@ -73,7 +73,7 @@ Resultados (21/10/2026):
 | DA-E | Un paquete vacío y uno sin `dist/index.html` se rechazan con código 1 **sin detener el motor** (mismo proceso antes y después) |
 | DA-F | Con la función real del script contra la ejecución real de GitHub: baja 765 KB, sigue la redirección sin mandar el token al almacén, y el paquete es válido |
 | DA-G | En GitHub, en una rama, el trabajo `Desplegar en la VPS` se **saltó** (`skipped`) |
-| DA-H | **Pendiente**: el runner ya está registrado; falta subir a `main` y ver que el pie cambie solo |
+| DA-H | **Aprobado (21/10, 19:31)**: se subió a `main` (`7b1dead`); GitHub corrió `motor` y `web` y después `desplegar en la VPS` en el runner `vps-yapa`, que terminó en éxito en 12 s (19:31:20 a 19:31:32, según `despliegues.log`). En `holayapa.app` el archivo principal de la web pasó de `index-BVzhe2t8.js` a `index-BHVMNNAr.js`, el pie lleva la etiqueta `7b1dead`, `/salud` responde bien y las cuentas de demostración entran |
 | DA-I | **El paquete que construyó GitHub se desplegó en la VPS** con el mismo script (`-ZipLocal`, paquete bajado de la ejecución 39696047470): versión de Kalos con sus cabeceras (CSP, HSTS), zonas públicas sin contacto, y las cuentas de demostración siguen entrando |
 
 Hallazgos que cambiaron el trabajo:
