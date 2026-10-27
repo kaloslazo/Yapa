@@ -171,7 +171,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const go = (action: () => void) => { onClose(); action(); };
 
   return (
-    <dialog ref={dialogRef} className="checkout-dialog auth-dialog" aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <dialog ref={dialogRef} className={`checkout-dialog auth-dialog ${account ? '' : 'auth-dialog--login'}`} aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       {account ? (
         <div className="auth-account-state">
           <div className="auth-dialog-topline"><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
@@ -198,12 +198,18 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
           <button className="auth-link auth-switch-account" type="button" onClick={() => void onLogout()}><Icon name="signout" size={15} /> Salir</button>
         </div>
       ) : (
-        <>
+        <div className="auth-screen">
+          <aside className="auth-aside" aria-hidden="true">
+            <div className="auth-brandline auth-brandline--light"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div>
+            <p className="auth-aside-quote">Lo que ahorramos entre vecinos vuelve a tu saldo.</p>
+            <ul className="auth-aside-points"><li><Icon name="check" size={16} weight="bold" />Precio de mayorista, sin salir de casa</li><li><Icon name="check" size={16} weight="bold" />Entrega los sábados en tu portería</li><li><Icon name="check" size={16} weight="bold" />Si el grupo no llega, te devolvemos todo</li></ul>
+            <img className="auth-aside-art" src="/images/brand/yapa-farmer-banner.webp" alt="" width="760" height="694" />
+          </aside>
+          <div className="auth-main">
           <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Entra a tu cuenta'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de Yapa.' : LOGIN_HINT}</p></div>
+            <div><div className="auth-brandline auth-brandline--mobile"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Hola de nuevo'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de operaciones de Yapa.' : LOGIN_HINT}</p></div>
             <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
           </div>
-          <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar"><button className={audience === 'vecino' ? 'is-active' : ''} type="button" aria-pressed={audience === 'vecino'} onClick={() => { setAudience('vecino'); setFeedback(''); }}><Icon name="basket" size={15} />Soy vecino</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => { setAudience('admin'); setFeedback(''); }}><Icon name="user" size={15} />Equipo Yapa</button></div>
           <form className="auth-form" onSubmit={submit}>
             <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o número de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
             <label className="auth-field"><span>{audience === 'admin' ? 'Contraseña' : 'PIN'}</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="current-password" placeholder={audience === 'admin' ? '' : '••••••'} required className={audience === 'vecino' ? 'pin-input' : ''} /></label>
@@ -226,7 +232,9 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
               {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele a un vecino de tu zona, o al admin de tu edificio, su enlace de invitación de Yapa.</li><li><span>2</span>Ábrelo en tu celular: te registras con tu correo o con Google en un minuto.</li><li><span>3</span>Quedas en su zona y, cuando recibas tu primer pedido, los dos ganan S/ 3.</li></ol> : null}
             </div>
           ) : null}
-        </>
+          <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo de Yapa? Entra aquí'}</button>
+          </div>
+        </div>
       )}
     </dialog>
   );

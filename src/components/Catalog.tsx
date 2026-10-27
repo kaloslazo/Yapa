@@ -29,7 +29,7 @@ export function Catalog({ products, categories, cart, category, query, onCategor
   return (
     <section className="catalog-column" aria-labelledby="catalog-title">
       <div className="section-heading">
-        <div><h2 id="catalog-title">Catálogo de esta semana</h2><p>Pagas el precio máximo. Si entre todos llegamos a un tramo, el precio baja y te devolvemos la diferencia.</p></div>
+        <div><h2 id="catalog-title">Catálogo de la semana</h2><p>Mientras más pedimos entre vecinos, más baja el precio. La diferencia vuelve a tu saldo.</p></div>
         <span className="catalog-count">{products.length} {products.length === 1 ? 'producto' : 'productos'}</span>
       </div>
       <div className="catalog-tools">
@@ -57,29 +57,32 @@ function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Produc
   const atLimit = quantity >= product.maxPerOrder;
   const tier = product.nextTier;
   const progress = tier ? Math.min((product.ordered / tier.from) * 100, 100) : 100;
+  const reference = product.supermarketSaving && product.supermarket ? product.supermarket : null;
   return (
     <article className={`product-card ${quantity ? 'has-quantity' : ''}`}>
       <div className="product-visual-wrap">
         <ProductVisual product={product} />
-        <span className="product-category">{product.category}</span>
-        {product.supermarketSaving ? <span className="saving-badge" title={product.supermarket?.seen ? `Precio de ${product.supermarket.source} visto el ${shortDate(product.supermarket.seen)}` : undefined}><Icon name="tag" size={13} weight="bold" />{Math.round(product.supermarketSaving)} % menos que en {product.supermarket?.source}{product.supermarket?.seen ? <span className="sr-only"> (precio visto el {shortDate(product.supermarket.seen)})</span> : null}</span> : null}
+        {reference ? <span className="saving-badge">−{Math.round(product.supermarketSaving ?? 0)} %</span> : null}
       </div>
       <div className="product-info">
-        <div className="product-title-row"><h3>{product.name}</h3>{quantity ? <span className="in-cart-label">{formatQuantity(quantity)} {product.unit}</span> : null}</div>
+        <h3>{product.name}</h3>
         <p>{product.detail}</p>
+        <div className="product-price">
+          <strong>{formatMoney(product.price)}</strong><span>/ {product.unit}</span>
+          {reference ? <s title={reference.seen ? `Precio de ${reference.source} visto el ${shortDate(reference.seen)}` : undefined}><span className="sr-only">En {reference.source} cuesta </span>{formatMoney(reference.price)}</s> : null}
+        </div>
         <div className="tier-progress" aria-label={tier ? `Entre todos llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}` : 'Ya estamos en el mejor precio'}>
-          <div className="tier-progress-copy"><Icon name="users" size={14} />{tier ? <span>Vamos {formatQuantity(product.ordered)} de {tier.from} {product.unit} · baja a <strong className="nowrap">{formatMoney(tier.price)}</strong></span> : <span><strong>¡Mejor precio alcanzado!</strong></span>}</div>
           <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
+          <small>{tier ? <>Baja a <strong className="nowrap">{formatMoney(tier.price)}</strong> desde {tier.from} {product.unit}</> : <strong>Mejor precio alcanzado</strong>}</small>
         </div>
         <div className="product-buy-row">
-          <div><strong>{formatMoney(product.price)}</strong><span>/ {product.unit} · máximo</span></div>
           {quantity ? (
             <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}>
               <button type="button" onClick={() => onDecrease(product)} aria-label={`Quitar de ${product.name}`}><Icon name="minus" size={14} /></button>
               <span>{formatQuantity(quantity)}</span>
               <button type="button" onClick={() => onAdd(product)} disabled={atLimit} aria-label={`Agregar más ${product.name}`}><Icon name="plus" size={14} /></button>
             </div>
-          ) : <button className="add-button" type="button" onClick={() => onAdd(product)}>Agregar</button>}
+          ) : <button className="add-button" type="button" onClick={() => onAdd(product)} aria-label={`Agregar ${product.name}`}><Icon name="plus" size={16} weight="bold" />Agregar</button>}
         </div>
       </div>
     </article>

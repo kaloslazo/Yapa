@@ -1,11 +1,11 @@
-# Yapa · Aplicación de SDD
+# Yapa · motor de reglas
 
-Repositorio académico del curso **Diseño de Software (EL3304)**, UTEC 2026-2, sección 1. Docente: Jaime Moshe Farfán Madariaga.
+Motor de Yapa: todas las reglas del negocio, con su spec, sus pruebas y su trazabilidad (Specification-Driven Development).
 
 | | |
 |---|---|
 | **Integrantes** | Carlos Bravo · Aaron Gonzales · Kalos Lazo |
-| **Metodología asignada** | Specification-Driven Development (SDD) |
+| **Metodología** | Specification-Driven Development (SDD) |
 | **Proyecto** | Yapa: compras grupales semanales de vecinos de Lince, Jesús María y La Victoria, con entrega el sábado en el punto de recepción de cada zona |
 | **Problema seleccionado** | Registrar el pedido semanal con precio máximo garantizado y pago anticipado, y **liquidar el ciclo** devolviendo como saldo el ahorro del grupo ("te devolvemos") |
 | **Tecnologías** | Python 3.11+ (solo biblioteca estándar), `unittest`, Markdown + Mermaid, Git, GitHub Actions |

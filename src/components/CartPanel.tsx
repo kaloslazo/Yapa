@@ -47,7 +47,7 @@ export function CartPanel({ lines, subtotal, savings, onAdd, onDecrease, onCheck
           <div className="free-delivery-note"><div className="free-delivery-copy"><Icon name="check" size={17} /><span>{minimumMessage(subtotal)}</span></div><div className="progress-track"><span style={{ width: `${progress}%` }} /></div></div>
           <SavingsNote savings={savings} />
           <div className="cart-summary"><div><span>Productos a precio máximo</span><strong>{formatMoney(subtotal)}</strong></div><div><span>Envío máximo</span><strong>{formatMoney(MAX_DELIVERY)}</strong></div><div className="summary-total"><span>Pagas hoy aprox.</span><strong>{formatMoney(subtotal + MAX_DELIVERY)}</strong></div></div>
-          <button className="primary-button checkout-button" type="button" onClick={onCheckout} disabled={subtotal < MIN_SUBTOTAL}>Continuar pedido <Icon name="arrow" size={17} /></button>
+          <button className="primary-button checkout-button" type="button" onClick={onCheckout} disabled={subtotal < MIN_SUBTOTAL}>{subtotal < MIN_SUBTOTAL ? `Te faltan ${formatMoney(minimumGap(subtotal, MIN_SUBTOTAL))}` : <>Continuar pedido <Icon name="arrow" size={17} /></>}</button>
           <p className="cart-footnote">Nunca pagas más que esto. Después de la entrega te devolvemos como saldo el ahorro por volumen y lo que sobre del envío.</p>
         </>
       ) : (
@@ -61,15 +61,20 @@ interface MobileCartBarProps {
   count: number;
   subtotal: number;
   onCheckout: () => void;
+  onOpenCart: () => void;
 }
 
-export function MobileCartBar({ count, subtotal, onCheckout }: MobileCartBarProps) {
+export function MobileCartBar({ count, subtotal, onCheckout, onOpenCart }: MobileCartBarProps) {
   const ready = subtotal >= MIN_SUBTOTAL;
-  const showCart = () => document.querySelector('#cart-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const progress = Math.min((subtotal / MIN_SUBTOTAL) * 100, 100);
   return (
     <div className="mobile-cart-bar" role="region" aria-label="Resumen de tu canasta">
-      <div><strong>{count} {count === 1 ? 'producto' : 'productos'} · {formatMoney(subtotal)}</strong><span>{minimumMessage(subtotal)}</span></div>
-      <button className="primary-button" type="button" onClick={ready ? onCheckout : showCart}>{ready ? 'Continuar pedido' : 'Ver canasta'}</button>
+      <button className="mobile-cart-summary" type="button" onClick={onOpenCart}>
+        <span className="mobile-cart-count">{count}</span>
+        <span><strong>{formatMoney(subtotal)}</strong><small>{ready ? 'Listo para pedir' : `Faltan ${formatMoney(minimumGap(subtotal, MIN_SUBTOTAL))} para el mínimo`}</small></span>
+      </button>
+      <button className="primary-button" type="button" onClick={ready ? onCheckout : onOpenCart}>{ready ? 'Pedir' : 'Ver canasta'} <Icon name="arrow" size={16} /></button>
+      <span className="mobile-cart-progress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></span>
     </div>
   );
 }

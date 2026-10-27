@@ -233,8 +233,8 @@ def page(title: str, body: str, csrf: str | None = None) -> str:
         f'<header><div class="bar"><a class="brand" href="/">{LOGO}Yapa</a>'
         f'<nav>{links}{session_link}</nav></div></header>'
         f"<main><h1>{escape(title)}</h1>{body}</main>"
-        "<footer>Yapa · compras de la semana entre vecinos de Lince, Jesús María y La Victoria · "
-        "Diseño de Software, UTEC 2026-2</footer></body></html>"
+        "<footer>Yapa · compras de la semana entre vecinos de Lince, Jesús María y La Victoria</footer>"
+        "</body></html>"
     )
 
 

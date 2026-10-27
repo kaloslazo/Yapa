@@ -70,6 +70,7 @@ export function CheckoutDialog({ open, quote, zone, cycleOpen, confirmation, onC
       {confirmation ? (
         <div className="success-state">
           <div className="success-icon"><Icon name="check" size={30} /></div>
+          <ol className="checkout-steps" aria-label="Pasos del pedido"><li className="is-done">Canasta</li><li className="is-done">Confirmar</li><li className="is-current" aria-current="step">Yapear</li></ol>
           <span className="dialog-step">Pedido {confirmation.id} registrado</span>
           <h2 id="checkout-title">¡Tu canasta ya está separada!</h2>
           {confirmation.toPay > 0 ? (
@@ -91,7 +92,7 @@ export function CheckoutDialog({ open, quote, zone, cycleOpen, confirmation, onC
         </div>
       ) : (
         <>
-          <div className="dialog-header"><div><span className="dialog-step">Último paso</span><h2 id="checkout-title">Confirma tu pedido</h2><p>Pagas el precio máximo; lo que ahorremos entre todos te lo devolvemos como saldo.</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
+          <div className="dialog-header"><div><ol className="checkout-steps" aria-label="Pasos del pedido"><li className="is-done">Canasta</li><li className="is-current" aria-current="step">Confirmar</li><li>Yapear</li></ol><h2 id="checkout-title">Confirma tu pedido</h2><p>Pagas el precio máximo. Lo que ahorremos entre todos vuelve a tu saldo.</p></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
           <form className="checkout-form" onSubmit={handleSubmit}>
             <fieldset>
               <legend><Icon name="pin" size={18} /> Entrega</legend>
@@ -100,7 +101,7 @@ export function CheckoutDialog({ open, quote, zone, cycleOpen, confirmation, onC
             {quote ? <details className="checkout-lines"><summary>{quote.lines.length} productos en tu canasta</summary><table><tbody>{quote.lines.map((line) => <tr key={line.id}><td>{line.name}</td><td>{formatQuantity(line.quantity)}</td><td>{formatMoney(line.total)}</td></tr>)}</tbody></table></details> : null}
             <fieldset>
               <legend><Icon name="wallet" size={18} /> ¿Cómo pagas?</legend>
-              <div className="choice-list choice-list--inline">{(['YAPE', 'PLIN'] as const).map((value) => <label className="choice-row" key={value}><input type="radio" name="paymentMethod" value={value} checked={method === value} onChange={() => setMethod(value)} /><span className="choice-mark" /><span className="choice-copy"><strong>{methodName(value)}</strong></span></label>)}</div>
+              <div className="pay-methods">{(['YAPE', 'PLIN'] as const).map((value) => <label className={`pay-method pay-method--${value.toLowerCase()}`} key={value}><input type="radio" name="paymentMethod" value={value} checked={method === value} onChange={() => setMethod(value)} /><span className="pay-method-logo" aria-hidden="true">{methodName(value).charAt(0)}</span><strong>{methodName(value)}</strong><Icon name="ok" size={20} weight="fill" className="pay-method-check" /></label>)}</div>
               {balance > 0 ? <label className="choice-row"><input type="checkbox" checked={useBalance} onChange={(event) => setUseBalance(event.target.checked)} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>Usar mi saldo</strong><small>Tienes {formatMoney(balance)} a favor</small></span></label> : null}
               <p className="field-hint">Al confirmar te damos un <strong>código de pago</strong> para el mensaje de tu {methodName(method)}. No tienes que escribir nada.</p>
             </fieldset>
@@ -110,11 +111,13 @@ export function CheckoutDialog({ open, quote, zone, cycleOpen, confirmation, onC
               <div><span>Envío máximo</span><strong>{formatMoney(quote?.delivery ?? 0)}</strong></div>
               {balanceUsed ? <div><span>Con tu saldo</span><strong>− {formatMoney(balanceUsed)}</strong></div> : null}
             </div>
-            <div className="dialog-total"><span>{toPay > 0 ? 'Yapeas hoy' : 'Total'}</span><strong>{formatMoney(toPay > 0 ? toPay : quote?.total ?? 0)}</strong></div>
-            {!cycleOpen ? <p className="auth-feedback auth-feedback--error" role="alert">El ciclo está cerrado: los pedidos se reciben de lunes a miércoles hasta las 20:00.</p> : null}
-            {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
-            <button className="primary-button" type="submit" disabled={submitting || !cycleOpen || !quote} aria-busy={submitting}>{submitting ? 'Guardando pedido…' : 'Confirmar pedido'} {!submitting ? <Icon name="arrow" size={17} /> : null}</button>
+            {!cycleOpen ? <p className="auth-feedback auth-feedback--error" role="alert"><strong>Los pedidos de esta semana ya cerraron.</strong> Recibimos pedidos de lunes a miércoles hasta las 20:00; tu canasta queda guardada.</p> : null}
+            {feedback ? <p className="auth-feedback auth-feedback--error" role="alert"><strong>No pudimos registrar tu pedido.</strong> {feedback}</p> : null}
             <p className="dialog-disclaimer">Nunca pagas más de lo que ves aquí. Si cancelas antes del miércoles 20:00, te devolvemos todo.</p>
+            <div className="dialog-footer">
+              <div className="dialog-total"><span>{toPay > 0 ? 'Yapeas hoy' : 'Total'}</span><strong>{formatMoney(toPay > 0 ? toPay : quote?.total ?? 0)}</strong></div>
+              <button className="primary-button" type="submit" disabled={submitting || !cycleOpen || !quote} aria-busy={submitting}>{submitting ? 'Guardando pedido…' : 'Confirmar pedido'} {!submitting ? <Icon name="arrow" size={17} /> : null}</button>
+            </div>
           </form>
         </>
       )}
