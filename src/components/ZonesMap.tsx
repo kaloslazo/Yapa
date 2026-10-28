@@ -43,8 +43,11 @@ export function ZonesMap({ zones, unions = [], radius, mergeDistance, highlightI
     if (!element || !placed.length) return undefined;
     let map: L.Map | null = null;
     try {
-      map = L.map(element, { scrollWheelZoom: false });
-      L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(map);
+      map = L.map(element, { scrollWheelZoom: false, zoomControl: false, attributionControl: false });
+      L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map);
+      L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
+      // el mapa base va en tonos apagados (CSS) para que resalten los colores de las zonas
+      L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION, className: 'zones-map-tiles' }).addTo(map);
       const colors = groupColors(placed.map((z) => z.group));
       const byId = new Map(placed.map((z) => [z.id, z]));
       const focusIds = highlightId ? new Set([highlightId]) : focusZoneIds(placed, unions);
@@ -55,8 +58,10 @@ export function ZonesMap({ zones, unions = [], radius, mergeDistance, highlightI
         const center = L.latLng(zone.lat, zone.lon);
         const color = colors[zone.group];
         const highlighted = zone.id === highlightId;
-        L.circle(center, { radius, color, weight: highlighted ? 4 : 2, fillColor: color, fillOpacity: highlighted ? 0.28 : 0.16 })
-          .bindTooltip(zone.name, { permanent: true, direction: 'center', className: 'zones-map-label' }).addTo(map);
+        L.circle(center, { radius, color, weight: highlighted ? 3 : 2, opacity: 0.9, fillColor: color, fillOpacity: highlighted ? 0.24 : 0.14 }).addTo(map);
+        // el punto marca la portería; la etiqueta va arriba para no tapar el círculo
+        L.circleMarker(center, { radius: 7, color: '#fffdf9', weight: 3, fillColor: color, fillOpacity: 1 })
+          .bindTooltip(zone.name, { permanent: true, direction: 'top', offset: [0, -10], className: 'zones-map-label' }).addTo(map);
         const area = center.toBounds(radius * 2);
         everything.extend(area);
         if (focusIds.has(zone.id)) focus.extend(area);
@@ -87,7 +92,7 @@ export function ZonesMap({ zones, unions = [], radius, mergeDistance, highlightI
   return (
     <div className="zones-map-wrap">
       <div className="zones-map" ref={host} role="region" aria-label={label} tabIndex={0} />
-      {drawableZones(zones).length > 1 ? <button className="text-button" type="button" onClick={() => showAll.current()}>Ver todas las zonas</button> : null}
+      {drawableZones(zones).length > 1 ? <button className="zones-map-all" type="button" onClick={() => showAll.current()}>Ver todas las zonas</button> : null}
     </div>
   );
 }
