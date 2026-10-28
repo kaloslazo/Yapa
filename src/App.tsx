@@ -186,7 +186,8 @@ export default function App() {
   const go = (hash: string) => { window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${hash}`); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const openAuth = (audience: AuthAudience = 'vecino') => { setAuthAudience(audience); setAuthOpen(true); };
   const needAccount = (message: string) => { openAuth('vecino'); notify(message, 'neutral', 'Tu canasta se queda guardada mientras entras.'); };
-  const goStore = (anchor = 'catalog') => { setAdminOpen(false); setView('store'); go(anchor); window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
+  // 'catalog' es el <main> entero: basta con volver arriba; bajar hasta él lo pegaba bajo el encabezado
+  const goStore = (anchor = 'catalog') => { setAdminOpen(false); setView('store'); go(anchor); if (anchor !== 'catalog') window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
   const openView = (next: View) => {
     if ((next === 'orders' || next === 'zone') && !account) { needAccount('Entra a tu cuenta para continuar.'); return; }
     setAdminOpen(false); setView(next); go(next);
