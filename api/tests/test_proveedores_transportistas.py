@@ -249,7 +249,8 @@ class ApiTests(Base):
         set_admin_password(self.store, ADMIN, ADMIN_PASS)
         set_pin(self.store, 101, PIN)
         self.now = FRIDAY
-        self.api = create_api(self.store, clock=lambda: self.now)
+        # sesiones con su propio reloj (DM-05): el negocio salta al sábado sin que venzan
+        self.api = create_api(self.store, clock=lambda: self.now, security_clock=lambda: FRIDAY)
         self.admin = ApiClient(self.api)
         self.assertEqual(self.admin.login(ADMIN, ADMIN_PASS, "admin")[0], 200)
 
@@ -330,8 +331,8 @@ class ApiTests(Base):
     # TR-B (API)
     def test_tr_b_driver_delivers_from_api(self):
         self.pack_all()
-        driver = self.driver_client()
         self.now = SATURDAY
+        driver = self.driver_client()
         status, _, _ = driver.post("/api/reparto/entregas", {"ciclo": CYCLE, "zona": "Z-JM-01", "foto": "fotos/e.jpg",
                                                               "recibe": "Sr. Ramos"})
         self.assertEqual(status, 200)
@@ -341,8 +342,8 @@ class ApiTests(Base):
     # TR-D (API)
     def test_tr_d_failed_delivery_from_api(self):
         self.pack_all()
-        driver = self.driver_client()
         self.now = SATURDAY
+        driver = self.driver_client()
         status, _, _ = driver.post("/api/reparto/entregas-fallidas", {"ciclo": CYCLE, "zona": "Z-JM-01",
                                                                        "foto": "fotos/p.jpg", "motivo": "PORTERIA_CERRADA"})
         self.assertEqual(status, 200)
@@ -350,8 +351,8 @@ class ApiTests(Base):
 
     # PV-A, PV-F, PV-H (API)
     def test_pv_offer_flow_from_api(self):
-        supplier = self.supplier_client()
         self.now = SATURDAY
+        supplier = self.supplier_client()
         status, data, _ = supplier.post("/api/proveedor/propuestas", {"ciclo": W39, "lista": OFFER})
         self.assertEqual((status, data["estado"]), (201, "PENDIENTE"))
         status, data, _ = self.admin.get("/api/admin/propuestas")
