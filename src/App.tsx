@@ -5,7 +5,7 @@ import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
-import { FaqSection, FinalCta, GuaranteeSection, HowItWorksSection } from './components/EditorialSections';
+import { FaqSection, HowItWorksSection } from './components/EditorialSections';
 import { InviteContext } from './components/InviteCard';
 import { InvitePage } from './components/InvitePage';
 import { PrivacyPage } from './components/PrivacyPage';
@@ -22,9 +22,7 @@ import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
 import { formatMoney } from './utils/format';
-import { weekLabel } from './utils/week';
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 import './styles.css';
 
 // FE-SG-2: el panel del equipo se baja solo cuando se abre
@@ -391,34 +389,27 @@ export default function App() {
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
               : <main id="catalog" className="page-content">
                 {account ? (
-                  <section className="greeting" aria-labelledby="page-title">
-                    <div><small>{state?.cycle ? capitalize(weekLabel(state.cycle)) : 'Esta semana'}</small><h1 id="page-title">Hola, {firstName}</h1><p>{state?.open ? 'Pedidos abiertos hasta el miércoles a las 20:00. Entregamos el sábado.' : 'Los pedidos de esta semana ya cerraron. Abrimos de nuevo el lunes.'}</p></div>
-                    {isNeighbor ? <button className="greeting-balance" type="button" onClick={() => openView('orders')}><small>Tu saldo</small><strong>{formatMoney(account.balance ?? 0)}</strong></button> : null}
+                  <section className="week-status" aria-labelledby="page-title">
+                    <div>
+                      <h1 id="page-title">Hola, {firstName}</h1>
+                      <p><span className={`status-dot ${state?.open ? 'is-open' : 'is-closed'}`} aria-hidden="true" />{state?.open ? <>Pedidos abiertos hasta el <strong>miércoles a las 20:00</strong>. Entregamos el sábado{accountZone ? ` en ${accountZone.name}` : ''}.</> : <>Los pedidos de esta semana <strong>ya cerraron</strong>. Abrimos de nuevo el lunes.</>}</p>
+                    </div>
+                    {isNeighbor && (account.balance ?? 0) > 0 ? <button className="balance-link" type="button" onClick={() => openView('orders')}><span>Tu saldo</span><strong>{formatMoney(account.balance ?? 0)}</strong><Icon name="arrow" size={16} /></button> : null}
                   </section>
-                ) : (
+                ) : <>
                   <section className="hero" aria-labelledby="page-title">
                     <div className="hero-copy">
-                      <p className="hero-eyebrow">Compras entre vecinos · Lima</p>
                       <h1 id="page-title">El mercado mayorista, en tu portería.</h1>
                       <p className="hero-lead">Juntamos los pedidos de tu edificio para comprar al por mayor. Pagas el precio máximo y lo que ahorremos entre todos vuelve a tu saldo.</p>
-                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo <Icon name="arrow" size={17} /></button><button className="secondary-button" type="button" onClick={() => openAuth('vecino')}>Ya tengo cuenta</button></div>
-                      <dl className="hero-proof">
-                        <div><dt>hasta</dt><dd>50 %</dd><dt>menos que en el súper</dt></div>
-                        <div><dt>entrega</dt><dd>Sábado</dd><dt>en tu portería</dt></div>
-                        <div><dt>si no llegamos</dt><dd>100 %</dd><dt>de vuelta</dt></div>
-                      </dl>
+                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo</button><button className="secondary-button" type="button" onClick={() => openAuth('vecino')}>Ya tengo cuenta</button></div>
+                      <p className="hero-week"><span className={`status-dot ${state?.open ? 'is-open' : 'is-closed'}`} aria-hidden="true" />{state?.open ? 'Esta semana: pide hasta el miércoles a las 20:00 y recibe el sábado.' : 'Los pedidos de esta semana cerraron. Abrimos de nuevo el lunes.'} Entregamos en Lince y Jesús María.</p>
                     </div>
                     <div className="hero-art"><img src="/images/brand/yapa-farmer-banner.webp" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div>
                   </section>
-                )}
-                <section className="week-strip" aria-label="Esta semana">
-                  <div><Icon name="calendar" size={18} /><span><strong>{state?.open ? 'Pide hasta el miércoles 20:00' : 'Pedidos cerrados'}</strong>{state?.open ? 'Entregamos el sábado' : 'Abrimos el lunes'}</span></div>
-                  <div><Icon name="users" size={18} /><span><strong>{state?.minimumGroup ?? 8} pedidos por grupo</strong>Si no llegamos, te devolvemos todo</span></div>
-                  <div><Icon name="wallet" size={18} /><span><strong>Yape o Plin</strong>Pagas con un código, sin escribir datos</span></div>
-                </section>
+                  <HowItWorksSection />
+                </>}
                 <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={scrollToCatalog} /></div>
-                <HowItWorksSection />
-                {!account ? <><GuaranteeSection /><FaqSection /><FinalCta onStart={scrollToCatalog} onLogin={() => openAuth('vecino')} /></> : null}
+                {account ? <HowItWorksSection /> : <FaqSection />}
               </main>}
         </div>
         {!offline && view === 'store' && lines.length ? <MobileCartBar count={lines.length} subtotal={subtotal} onCheckout={() => void openCheckout()} onOpenCart={() => openView('cart')} /> : null}

@@ -56,25 +56,16 @@ export function Catalog({ products, categories, cart, category, query, onCategor
 function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Product; quantity: number; onAdd: (product: Product) => void; onDecrease: (product: Product) => void }) {
   const atLimit = quantity >= product.maxPerOrder;
   const tier = product.nextTier;
-  const progress = tier ? Math.min((product.ordered / tier.from) * 100, 100) : 100;
   const reference = product.supermarketSaving && product.supermarket ? product.supermarket : null;
   return (
     <article className={`product-card ${quantity ? 'has-quantity' : ''}`}>
-      <div className="product-visual-wrap">
-        <ProductVisual product={product} />
-        {reference ? <span className="saving-badge">−{Math.round(product.supermarketSaving ?? 0)} %</span> : null}
-      </div>
+      <ProductVisual product={product} />
       <div className="product-info">
         <h3>{product.name}</h3>
         <p>{product.detail}</p>
-        <div className="product-price">
-          <strong>{formatMoney(product.price)}</strong><span>/ {product.unit}</span>
-          {reference ? <s title={reference.seen ? `Precio de ${reference.source} visto el ${shortDate(reference.seen)}` : undefined}><span className="sr-only">En {reference.source} cuesta </span>{formatMoney(reference.price)}</s> : null}
-        </div>
-        <div className="tier-progress" aria-label={tier ? `Entre todos llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}` : 'Ya estamos en el mejor precio'}>
-          <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
-          <small>{tier ? <>Baja a <strong className="nowrap">{formatMoney(tier.price)}</strong> desde {tier.from} {product.unit}</> : <strong>Mejor precio alcanzado</strong>}</small>
-        </div>
+        <div className="product-price"><strong>{formatMoney(product.price)}</strong><span>/ {product.unit}</span></div>
+        {reference ? <p className="product-reference" title={reference.seen ? `Precio visto el ${shortDate(reference.seen)}` : undefined}>{formatMoney(reference.price)} en {reference.source} · <strong className="nowrap">ahorras {Math.round(product.supermarketSaving ?? 0)} %</strong></p> : null}
+        <p className="product-tier">{tier ? <>Llevamos {formatQuantity(product.ordered)} de {tier.from} {product.unit}. Al llegar, baja a <strong className="nowrap">{formatMoney(tier.price)}</strong>.</> : 'Ya tiene el mejor precio de la semana.'}</p>
         <div className="product-buy-row">
           {quantity ? (
             <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}>
@@ -82,7 +73,7 @@ function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Produc
               <span>{formatQuantity(quantity)}</span>
               <button type="button" onClick={() => onAdd(product)} disabled={atLimit} aria-label={`Agregar más ${product.name}`}><Icon name="plus" size={14} /></button>
             </div>
-          ) : <button className="add-button" type="button" onClick={() => onAdd(product)} aria-label={`Agregar ${product.name}`}><Icon name="plus" size={16} weight="bold" />Agregar</button>}
+          ) : <button className="add-button" type="button" onClick={() => onAdd(product)} aria-label={`Agregar ${product.name}`}>Agregar</button>}
         </div>
       </div>
     </article>

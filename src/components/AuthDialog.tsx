@@ -199,15 +199,9 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
         </div>
       ) : (
         <div className="auth-screen">
-          <aside className="auth-aside" aria-hidden="true">
-            <div className="auth-brandline auth-brandline--light"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div>
-            <p className="auth-aside-quote">Lo que ahorramos entre vecinos vuelve a tu saldo.</p>
-            <ul className="auth-aside-points"><li><Icon name="check" size={16} weight="bold" />Precio de mayorista, sin salir de casa</li><li><Icon name="check" size={16} weight="bold" />Entrega los sábados en tu portería</li><li><Icon name="check" size={16} weight="bold" />Si el grupo no llega, te devolvemos todo</li></ul>
-            <img className="auth-aside-art" src="/images/brand/yapa-farmer-banner.webp" alt="" width="760" height="694" />
-          </aside>
           <div className="auth-main">
           <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline auth-brandline--mobile"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Hola de nuevo'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de operaciones de Yapa.' : LOGIN_HINT}</p></div>
+            <div><div className="auth-brandline auth-brandline--login"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Hola de nuevo'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de operaciones de Yapa.' : LOGIN_HINT}</p></div>
             <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
           </div>
           <form className="auth-form" onSubmit={submit}>
@@ -215,7 +209,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
             <label className="auth-field"><span>{audience === 'admin' ? 'Contraseña' : 'PIN'}</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="current-password" placeholder={audience === 'admin' ? '' : '••••••'} required className={audience === 'vecino' ? 'pin-input' : ''} /></label>
             {audience === 'vecino' && googleClientId ? <p className="auth-hint">Si te registraste con Google, entra con el botón de Google: no necesitas PIN.</p> : null}
             {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
-            <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'} {!busy ? <Icon name="arrow" size={17} /> : null}</button>
+            <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'}</button>
           </form>
           {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
           {audience === 'vecino' ? (
