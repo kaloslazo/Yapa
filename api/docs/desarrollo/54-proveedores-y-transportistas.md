@@ -91,3 +91,28 @@ Base: datos del piloto, ciclo 2026-W38 con 8 pedidos verificados en Z-JM-01 (5 k
 | PV-I | Reenviar después de rechazada: vuelve a pendiente | pendiente |
 | PV-J | En W38 cerrado, `SUP-FRESCOS` ve papa amarilla 40 kg, papa blanca 80 kg y cebolla 80 kg con su tramo y monto, `parcial: false`; `SUP-LIMPIEZA` no ve esos productos | totales |
 | PV-K | En W38 antes del cierre, el mismo pedido sale con `parcial: true` | parcial |
+
+## Trazabilidad
+
+| Regla | Código | Prueba |
+|---|---|---|
+| CX-01 | `partners._check_admin` | `test_cx_e_only_admin_creates`, `test_cx_e_neighbor_and_driver_cannot_create_accounts` |
+| CX-02 | `partners._check_user` (S-279) | `test_cx_b_invalid_user`, `test_cx_c_user_taken` |
+| CX-03 | `partners.create_driver`, `partners._check_password` | `test_cx_d_short_password`, `test_cx_d_driver_needs_name` |
+| CX-04 | `partners.create_supplier_account` (S-283) | `test_cx_f_supplier_must_be_allied`, `test_cx_g_new_supplier_is_registered_as_allied` |
+| CX-05 | `partners.deactivate` borra la credencial; `partners.set_password` reactiva; la sesión cae por SG-05 | `test_cx_h_deactivated_account_cannot_log_in_until_new_password`, `test_cx_h_deactivation_closes_session` |
+| CX-06 | `web/api.py` `KINDS`, `role_of` y el chequeo de rol de `dispatch` | `test_cx_i_each_account_only_uses_its_routes` |
+| TR-01 | `web/api.py` `reparto` (S-282) | `test_tr_a_route_without_neighbor_data` |
+| TR-02, TR-03 | `fulfillment.check_courier` en `deliver_zone` y `register_failed_delivery`; rutas `/api/reparto/entregas*` | `test_tr_b_*`, `test_tr_c_cannot_deliver_unpacked_orders`, `test_tr_d_*`, `test_tr_f_*` |
+| TR-04 | `pack_bag` sigue con `check_staff` | `test_tr_e_driver_does_not_pack` |
+| PV-01..PV-03 | `supplier_offers.submit_offer` | `test_pv_a_*`, `test_pv_b_cycle_already_open`, `test_pv_c_foreign_supplier_column`, `test_pv_d_foreign_product`, `test_pv_e_invalid_tiers`, `test_pv_only_supplier_accounts_send_offers` |
+| PV-04 | `supplier_offers.approve_offer` (usa `publish_catalog`) | `test_pv_f_*`, `test_pv_g_cannot_approve_twice` |
+| PV-05 | `supplier_offers.reject_offer` | `test_pv_h_reject_needs_reason`, `test_pv_i_resend_after_rejection_is_pending_again` |
+| PV-06 | `supplier_offers.supplier_order`; `web/api.py` `proveedor` | `test_pv_j_*`, `test_pv_k_partial_before_close`, `test_pv_offer_flow_from_api` |
+
+Web: el acceso del equipo tiene un selector Equipo · Reparto · Proveedor (`AuthDialog.tsx`); el reparto y el proveedor ven solo su pantalla (`PartnerPanel.tsx`), y el panel del equipo suma la sección "Proveedores y reparto" para crear cuentas y revisar listas (`AdminPanel.tsx`). La demo local crea `reparto-demo` y `frescos-demo` (`web/__main__.py`).
+
+Hallazgo al probar: en la prueba de la API, la sesión vencía al pasar el reloj del negocio del viernes al sábado; se le dio a la prueba un reloj de sesiones propio (DM-05), sin cambiar las reglas.
+
+Evidencia: `docs/evidencia/desarrollo/54-proveedores-transportistas-rojo.txt` (el módulo no existía) y `54-proveedores-transportistas-verde.txt`.
+
