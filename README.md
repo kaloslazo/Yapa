@@ -2,7 +2,7 @@
 
 Compras grupales semanales entre vecinos de Lince, Jesús María y La Victoria: cada vecino paga el precio máximo, Yapa compra al por mayor y lo que se ahorra entre todos vuelve como saldo ("te devolvemos").
 
-Curso EL3304 Diseño de Software, UTEC 2026-2, sección 1. Docente: Jaime Moshe Farfán Madariaga. Integrantes: Carlos Bravo, Aaron Gonzales y Kalos Lazo. Metodología: **Specification-Driven Development (SDD)**.
+En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aaron Gonzales y Kalos Lazo. Se desarrolla con **Specification-Driven Development (SDD)**: cada regla del negocio tiene su spec, su prueba y su código.
 
 ## Cómo está armado
 

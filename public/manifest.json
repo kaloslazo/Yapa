@@ -1,0 +1,15 @@
+{
+  "name": "Yapa · Compras entre vecinos",
+  "short_name": "Yapa",
+  "description": "Compras al por mayor entre vecinos en Lima. Lo que ahorramos vuelve a tu saldo.",
+  "lang": "es-PE",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f1e9",
+  "theme_color": "#fffdf9",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "64x64", "type": "image/png" }
+  ]
+}

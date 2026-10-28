@@ -33,6 +33,19 @@ const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equi
 
 export const LOGIN_HINT = 'Con tu correo, celular o número de cliente y tu PIN de 6 dígitos.';
 
+// seis casillas a la vista; un solo input real debajo para teclado numérico, gestores de claves y pegar
+function PinField({ label, name, value, onChange }: { label: string; name: string; value: string; onChange: (pin: string) => void }) {
+  return (
+    <label className="auth-field pin-field"><span>{label}</span>
+      <span className="pin-cells">
+        <input name={name} type="password" value={value} onChange={(event) => onChange(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" pattern="[0-9]*" maxLength={6} autoComplete="current-password" required aria-describedby={`${name}-ayuda`} />
+        {Array.from({ length: 6 }, (_, index) => <span key={index} className={`pin-cell ${index < value.length ? 'is-filled' : ''} ${index === Math.min(value.length, 5) ? 'is-next' : ''}`} aria-hidden="true" />)}
+      </span>
+      <small id={`${name}-ayuda`} className="sr-only">6 dígitos</small>
+    </label>
+  );
+}
+
 export function shareText(code: string) {
   return `Hola, compro las verduras de la semana con Yapa: pagamos precio de mayorista entre vecinos y lo que ahorramos nos vuelve. Pide tu alta con mi código ${code} y los dos ganamos S/ 3 de saldo.`;
 }
@@ -171,7 +184,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
   const go = (action: () => void) => { onClose(); action(); };
 
   return (
-    <dialog ref={dialogRef} className="checkout-dialog auth-dialog" aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <dialog ref={dialogRef} className={`checkout-dialog auth-dialog ${account ? '' : 'auth-dialog--login'}`} aria-labelledby="auth-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       {account ? (
         <div className="auth-account-state">
           <div className="auth-dialog-topline"><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
@@ -198,35 +211,43 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
           <button className="auth-link auth-switch-account" type="button" onClick={() => void onLogout()}><Icon name="signout" size={15} /> Salir</button>
         </div>
       ) : (
-        <>
-          <div className="dialog-header auth-dialog-header">
-            <div><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><h2 id="auth-title">{audience === 'admin' ? 'Acceso de operaciones' : 'Entra a tu cuenta'}</h2><p>{audience === 'admin' ? 'Solo para el equipo de Yapa.' : LOGIN_HINT}</p></div>
-            <button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button>
-          </div>
-          <div className="auth-audience-switch" role="group" aria-label="Elige cómo entrar"><button className={audience === 'vecino' ? 'is-active' : ''} type="button" aria-pressed={audience === 'vecino'} onClick={() => { setAudience('vecino'); setFeedback(''); }}><Icon name="basket" size={15} />Soy vecino</button><button className={audience === 'admin' ? 'is-active' : ''} type="button" aria-pressed={audience === 'admin'} onClick={() => { setAudience('admin'); setFeedback(''); }}><Icon name="user" size={15} />Equipo Yapa</button></div>
-          <form className="auth-form" onSubmit={submit}>
-            <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o número de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
-            <label className="auth-field"><span>{audience === 'admin' ? 'Contraseña' : 'PIN'}</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(audience === 'admin' ? event.target.value : event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode={audience === 'admin' ? 'text' : 'numeric'} autoComplete="current-password" placeholder={audience === 'admin' ? '' : '••••••'} required className={audience === 'vecino' ? 'pin-input' : ''} /></label>
-            {audience === 'vecino' && googleClientId ? <p className="auth-hint">Si te registraste con Google, entra con el botón de Google: no necesitas PIN.</p> : null}
-            {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
-            <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar a Yapa'} {!busy ? <Icon name="arrow" size={17} /> : null}</button>
-          </form>
-          {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} />{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
-          {audience === 'vecino' ? (
-            <div className="signup-help">
-              <button className="auth-link" type="button" onClick={() => setShowSignup((value) => !value)} aria-expanded={showSignup}>¿Todavía no tienes cuenta?</button>
-              <button className="auth-link" type="button" onClick={() => setShowForgot((value) => !value)} aria-expanded={showForgot}>¿Olvidaste tu PIN?</button>
-              {showForgot ? <div className="forgot-pin"><p>Escribe tu correo, celular o número de cliente arriba. Si verificaste tu correo, te mandamos un código ahí; si no, el equipo de Yapa te escribirá por WhatsApp al celular que registraste.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir ayuda con mi PIN</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}
-                <form className="forgot-code" onSubmit={(event) => { event.preventDefault(); void resetWithCode(); }}><strong>¿Ya tienes tu código?</strong>
-                  <label className="auth-field"><span>Código del correo</span><input value={forgotCode} onChange={(event) => setForgotCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label>
-                  <label className="auth-field"><span>PIN nuevo</span><input type="password" value={forgotPin} onChange={(event) => setForgotPin(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="new-password" placeholder="6 dígitos" className="pin-input" /></label>
-                  <button className="primary-button" type="submit" disabled={busy || !user.trim() || forgotCode.length !== 6 || forgotPin.length !== 6}>Cambiar mi PIN</button>
-                  {resetMessage ? <p className="auth-feedback" role="status">{resetMessage}</p> : null}
-                </form></div> : null}
-              {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele a un vecino de tu zona, o al admin de tu edificio, su enlace de invitación de Yapa.</li><li><span>2</span>Ábrelo en tu celular: te registras con tu correo o con Google en un minuto.</li><li><span>3</span>Quedas en su zona y, cuando recibas tu primer pedido, los dos ganan S/ 3.</li></ol> : null}
+        <div className="auth-screen">
+          <aside className="auth-aside" aria-hidden="true">
+            <div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div>
+            <p className="auth-aside-title">Lo que ahorramos entre vecinos vuelve a tu saldo.</p>
+            <img className="auth-aside-art" src="/images/brand/yapa-farmer-banner.webp" alt="" width="760" height="694" />
+          </aside>
+          <div className="auth-main">
+            <div className="auth-topbar"><div className="auth-brandline auth-brandline--login"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button></div>
+            <div className="auth-body">
+              <h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Entra a Yapa'}</h2>
+              <p className="auth-lead">{audience === 'admin' ? 'Solo para el equipo de operaciones de Yapa.' : LOGIN_HINT}</p>
+              <form className="auth-form" onSubmit={submit}>
+                <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o n.º de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
+                {audience === 'admin'
+                  ? <label className="auth-field"><span>Contraseña</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(event.target.value)} autoComplete="current-password" required /></label>
+                  : <PinField label="PIN" name="secreto" value={secret} onChange={setSecret} />}
+                {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
+                <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar'}</button>
+              </form>
+              {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o entra con</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} /><p className="auth-hint">Si te registraste con Google, no necesitas PIN.</p>{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
+              {audience === 'vecino' ? (
+                <div className="signup-help">
+                  <div className="auth-links"><button className="auth-link" type="button" onClick={() => { setShowForgot((value) => !value); setShowSignup(false); }} aria-expanded={showForgot}>Olvidé mi PIN</button><button className="auth-link" type="button" onClick={() => { setShowSignup((value) => !value); setShowForgot(false); }} aria-expanded={showSignup}>No tengo cuenta</button></div>
+                  {showForgot ? <div className="forgot-pin"><p>Escribe tu correo, celular o número de cliente arriba. Si verificaste tu correo, te mandamos un código ahí; si no, el equipo de Yapa te escribirá por WhatsApp al celular que registraste.</p><button className="secondary-button" type="button" disabled={!user.trim() || busy} onClick={() => void forgot()}>Pedir ayuda con mi PIN</button>{forgotMessage ? <p className="auth-feedback" role="status">{forgotMessage}</p> : null}
+                    <form className="forgot-code" onSubmit={(event) => { event.preventDefault(); void resetWithCode(); }}><strong>¿Ya tienes tu código?</strong>
+                      <label className="auth-field"><span>Código del correo</span><input value={forgotCode} onChange={(event) => setForgotCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6 dígitos" /></label>
+                      <label className="auth-field"><span>PIN nuevo</span><input type="password" value={forgotPin} onChange={(event) => setForgotPin(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="new-password" placeholder="6 dígitos" className="pin-input" /></label>
+                      <button className="primary-button" type="submit" disabled={busy || !user.trim() || forgotCode.length !== 6 || forgotPin.length !== 6}>Cambiar mi PIN</button>
+                      {resetMessage ? <p className="auth-feedback" role="status">{resetMessage}</p> : null}
+                    </form></div> : null}
+                  {showSignup ? <ol className="next-steps next-steps--compact"><li><span>1</span>Pídele a un vecino de tu zona, o al admin de tu edificio, su enlace de invitación de Yapa.</li><li><span>2</span>Ábrelo en tu celular: te registras con tu correo o con Google en un minuto.</li><li><span>3</span>Quedas en su zona y, cuando recibas tu primer pedido, los dos ganan S/ 3.</li></ol> : null}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </>
+            <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo de Yapa? Entra aquí'}</button>
+          </div>
+        </div>
       )}
     </dialog>
   );
