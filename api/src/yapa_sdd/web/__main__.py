@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from wsgiref.simple_server import make_server
 
-from .. import auth, invitations, persistence
+from .. import auth, invitations, partners, persistence
 from ..cycle import LIMA
 from ..demo import DEMO_NOW, demo_store, parse_demo_pins, seed_demo_base
 from ..domain import BusinessRuleError
@@ -20,6 +20,8 @@ from . import produccion
 
 DEMO_PINS = {101: "482915", 105: "739104", 116: "260318"}
 DEMO_ADMIN = ("admin-yapa", "yapa-admin-2026")
+DEMO_DRIVER = ("reparto-demo", "reparto-yapa-2026")  # iteración 54
+DEMO_SUPPLIER = ("frescos-demo", "frescos-yapa-2026")
 
 
 def _demo_credentials(store) -> None:
@@ -29,10 +31,15 @@ def _demo_credentials(store) -> None:
     for customer_id, pin in DEMO_PINS.items():
         auth.set_pin(store, customer_id, pin)
     auth.set_admin_password(store, *DEMO_ADMIN)
+    now = datetime.now(LIMA)
+    partners.create_driver(store, DEMO_DRIVER[0], "Reparto de prueba", DEMO_DRIVER[1], by=DEMO_ADMIN[0], now=now)
+    partners.create_supplier_account(store, DEMO_SUPPLIER[0], "SUP-FRESCOS", DEMO_SUPPLIER[1], by=DEMO_ADMIN[0], now=now)
     print("Credenciales de DEMO creadas (cámbialas antes de usar datos reales):")
     for customer_id, pin in DEMO_PINS.items():
         print(f"  vecino {customer_id} · PIN {pin}")
     print(f"  admin {DEMO_ADMIN[0]} · contraseña {DEMO_ADMIN[1]}")
+    print(f"  transportista {DEMO_DRIVER[0]} · contraseña {DEMO_DRIVER[1]}")
+    print(f"  proveedor {DEMO_SUPPLIER[0]} · contraseña {DEMO_SUPPLIER[1]}")
 
 
 def main() -> None:

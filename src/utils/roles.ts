@@ -7,6 +7,15 @@ export function homeFor(role: Role): Home {
   return role === 'admin' ? 'operaciones' : 'tienda';
 }
 
+// iteración 54: reparto y proveedores no compran ni operan; tienen su propia pantalla
+export function isPartner(role: Role): boolean {
+  return role === 'transportista' || role === 'proveedor';
+}
+
+export function isNeighborRole(role: Role): boolean {
+  return role === 'vecino' || role === 'admin_zona';
+}
+
 export function canOpenZonePanel(role: Role): boolean {
   return role === 'admin_zona';
 }

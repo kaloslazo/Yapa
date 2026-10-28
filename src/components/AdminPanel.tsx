@@ -9,6 +9,7 @@ import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
+import { PhotoForm } from './PhotoForm';
 import type { MapUnion, MapZone } from './ZonesMap';
 import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
@@ -24,7 +25,7 @@ interface AdminPanelProps {
   notify: (message: string, tone?: 'neutral' | 'success' | 'warning') => void;
 }
 
-type Section = 'resumen' | 'zonas' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos';
+type Section = 'resumen' | 'zonas' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos' | 'cuentas';
 
 const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
   { id: 'resumen', label: 'Resumen', icon: 'chart' },
@@ -37,9 +38,10 @@ const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
   { id: 'catalogo', label: 'Catálogo', icon: 'store' },
   { id: 'referencias', label: 'Precios de referencia', icon: 'tag' },
   { id: 'vecinos', label: 'Vecinos', icon: 'users' },
+  { id: 'cuentas', label: 'Proveedores y reparto', icon: 'truck' },
 ];
 
-const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN' };
+const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN', cuentas: 'listas por revisar' };
 const num = (value: unknown) => Number(value ?? 0);
 const CLAIM_STATUS: Record<string, string> = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente' };
 const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
@@ -78,8 +80,8 @@ export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: A
 
   const refreshPending = useCallback(async () => {
     try {
-      const [summary, claims, refunds, analysis, pins] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/pin-solicitudes')]);
-      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length, vecinos: pins.solicitudes.length });
+      const [summary, claims, refunds, analysis, pins, offers] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/pin-solicitudes'), api.get<Raw>('/api/admin/propuestas')]);
+      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length, vecinos: pins.solicitudes.length, cuentas: offers.propuestas.filter((o: Raw) => o.estado === 'PENDIENTE').length });
     } catch {
       setPending({});
     }
@@ -136,6 +138,7 @@ export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: A
             {section === 'catalogo' ? <CatalogAdmin {...props} /> : null}
             {section === 'referencias' ? <References {...props} /> : null}
             {section === 'vecinos' ? <Neighbors {...props} /> : null}
+            {section === 'cuentas' ? <Partners {...props} /> : null}
           </div>
         </main>
       </div>
@@ -240,19 +243,6 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
       </Card>
     </>
   );
-}
-
-function PhotoForm({ label, onSend, children }: { label: string; onSend: (form: FormData) => Promise<boolean>; children?: ReactNode }) {
-  const [busy, setBusy] = useState(false);
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const element = event.currentTarget;
-    setBusy(true);
-    const ok = await onSend(new FormData(element));
-    setBusy(false);
-    if (ok) element.reset();
-  };
-  return <form className="photo-form" onSubmit={submit}>{children}<label className="photo-field"><Icon name="camera" size={18} /><span>Foto</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required /></label><button className="admin-row-button" type="submit" disabled={busy}>{busy ? 'Subiendo…' : label}</button></form>;
 }
 
 function Packing({ cycle, setCycle, run, notify }: SectionProps) {
@@ -444,6 +434,73 @@ function Neighbors({ run, notify, onViewAs }: SectionProps) {
         <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre, celular y correo para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
       <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button>{onViewAs ? <button className="text-button" type="button" onClick={() => void onViewAs(v.id)}>Ver como</button> : null}</td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
+    </>
+  );
+}
+
+const OFFER_STATES: Record<string, string> = { PENDIENTE: 'Por revisar', APROBADA: 'Aprobada', RECHAZADA: 'Rechazada' };
+
+// iteración 54: cuentas de proveedores y transportistas, y las listas que mandan los proveedores
+function Partners({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/cuentas', notify);
+  const { data: offerData, reload: reloadOffers } = useLoad<Raw>('/api/admin/propuestas', notify);
+  const [form, setForm] = useState({ tipo: 'transportista', usuario: '', nombre: '', proveedor: '', contrasena: '' });
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<{ user: string; password: string } | null>(null);
+  if (!data || !offerData) return <p className="admin-muted">Cargando…</p>;
+  const supplier = form.tipo === 'proveedor';
+  const create = async (event: FormEvent) => {
+    event.preventDefault();
+    // un proveedor nuevo toma su código del usuario (S-283)
+    const body = form.proveedor === 'nuevo' ? { ...form, proveedor: `SUP-${form.usuario.toUpperCase()}` } : form;
+    const ok = await run(() => api.post('/api/admin/cuentas', body), `Cuenta ${form.usuario} creada. Pásale su usuario y contraseña por un canal privado.`);
+    if (ok) { setForm({ ...form, usuario: '', nombre: '', proveedor: '', contrasena: '' }); void reload(); }
+  };
+  const savePassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!editing) return;
+    const ok = await run(() => api.post(`/api/admin/cuentas/${editing.user}/contrasena`, { contrasena: editing.password }), `${editing.user} ya puede entrar con su contraseña nueva.`);
+    if (ok) { setEditing(null); void reload(); }
+  };
+  const offerKey = (o: Raw) => `${o.ciclo}/${o.proveedor}`;
+  const review = (o: Raw, decision: 'aprobar' | 'rechazar') => run(() => api.post(`/api/admin/propuestas/${o.ciclo}/${o.proveedor}/${decision}`, decision === 'rechazar' ? { motivo: reasons[offerKey(o)] ?? '' } : {}),
+    decision === 'aprobar' ? `Lista de ${o.nombre_proveedor} publicada para la semana ${o.ciclo}.` : `Lista devuelta a ${o.nombre_proveedor} con tu motivo.`).then(() => reloadOffers());
+  return (
+    <>
+      <Card title={`Listas de proveedores (${offerData.propuestas.length})`}>
+        {offerData.propuestas.length ? <div className="offer-list">{offerData.propuestas.map((o: Raw) => (
+          <article className="offer-card" key={offerKey(o)}>
+            <div className="stop-head"><strong>{o.nombre_proveedor}</strong><span>Semana {o.ciclo}</span><span className={`state-pill ${o.estado === 'APROBADA' ? 'state-pill--ok' : o.estado === 'RECHAZADA' ? 'state-pill--bad' : ''}`}>{OFFER_STATES[o.estado]}</span></div>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo</th><th>Tramos</th></tr></thead><tbody>{o.productos.map((p: Raw) => <tr key={p.id}><td>{p.nombre}<small className="admin-cell-note">{p.id}</small></td><td>{p.maximo} {p.unidad}</td><td><small>{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td></tr>)}</tbody></table></div>
+            {o.motivo ? <p className="admin-muted">Motivo: {o.motivo}</p> : null}
+            {o.estado === 'PENDIENTE' ? <div className="offer-actions">
+              <ConfirmAction label="Aprobar y publicar" question="Sus productos de esa semana se reemplazan por esta lista. ¿Publicar?" confirmLabel="Publicar" onConfirm={() => review(o, 'aprobar')} />
+              <label className="checkout-field"><span>Motivo para devolverla</span><input value={reasons[offerKey(o)] ?? ''} onChange={(event) => setReasons({ ...reasons, [offerKey(o)]: event.target.value })} placeholder="Ej.: falta la cebolla" /></label>
+              <button className="admin-row-button" type="button" onClick={() => void review(o, 'rechazar')}>Devolver</button>
+            </div> : null}
+          </article>
+        ))}</div> : <Empty icon="store" title="No hay listas" text="Cuando un proveedor mande su lista de la semana, aparece aquí para que la revises." />}
+      </Card>
+      <form className="admin-card" onSubmit={create}><div className="admin-card-heading"><div><h2>Crear una cuenta</h2></div></div>
+        <div className="segmented" role="radiogroup" aria-label="Tipo de cuenta">{[{ id: 'transportista', label: 'Transportista' }, { id: 'proveedor', label: 'Proveedor' }].map((k) => <label key={k.id} className={form.tipo === k.id ? 'is-selected' : ''}><input type="radio" name="tipo-cuenta" value={k.id} checked={form.tipo === k.id} onChange={() => setForm({ ...form, tipo: k.id })} />{k.label}</label>)}</div>
+        <div className="form-grid">
+          <label className="checkout-field"><span>Usuario</span><input value={form.usuario} onChange={(event) => setForm({ ...form, usuario: event.target.value.toLowerCase() })} placeholder={supplier ? 'mercado-norte' : 'reparto-1'} autoCapitalize="none" spellCheck={false} required /></label>
+          {supplier ? <label className="checkout-field"><span>Proveedor</span><select value={form.proveedor} onChange={(event) => setForm({ ...form, proveedor: event.target.value })} required><option value="">Elige…</option>{data.proveedores.map((p: Raw) => <option key={p.id} value={p.id}>{p.nombre}</option>)}<option value="nuevo">Otro proveedor (nuevo)</option></select></label> : null}
+          {!supplier || form.proveedor === 'nuevo' ? <label className="checkout-field"><span>{supplier ? 'Nombre del proveedor' : 'Nombre'}</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label> : null}
+          <label className="checkout-field"><span>Contraseña (10 o más caracteres)</span><input type="text" value={form.contrasena} onChange={(event) => setForm({ ...form, contrasena: event.target.value })} minLength={10} autoComplete="off" required /></label>
+        </div>
+        <button className="primary-button" type="submit">Crear cuenta</button>
+      </form>
+      <Card title={`Cuentas (${data.cuentas.length})`}>
+        {data.cuentas.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Usuario</th><th>Tipo</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.cuentas.map((c: Raw) => <tr key={c.usuario}>
+          <td><strong>{c.usuario}</strong><small className="admin-cell-note">{c.nombre}</small></td>
+          <td>{c.tipo === 'proveedor' ? 'Proveedor' : 'Transportista'}</td>
+          <td>{c.activa ? <span className="state-pill state-pill--ok">Activa</span> : <span className="state-pill state-pill--bad">Desactivada</span>}</td>
+          <td className="admin-row-actions">{c.activa ? <ConfirmAction label="Desactivar" question={`${c.usuario} no podrá entrar. ¿Desactivar?`} confirmLabel="Desactivar" onConfirm={() => run(() => api.post(`/api/admin/cuentas/${c.usuario}/desactivar`), `${c.usuario} ya no puede entrar.`).then(() => reload())} /> : null}{editing?.user === c.usuario
+            ? <form className="inline-form" onSubmit={savePassword}><label><span className="sr-only">Contraseña nueva</span><input value={editing?.password ?? ''} onChange={(event) => setEditing({ user: c.usuario, password: event.target.value })} minLength={10} placeholder="10 o más caracteres" autoComplete="off" autoFocus required /></label><button className="admin-row-button" type="submit">Guardar</button><button className="admin-row-button" type="button" onClick={() => setEditing(null)}>Cancelar</button></form>
+            : <button className="admin-row-button" type="button" onClick={() => setEditing({ user: c.usuario, password: '' })}>{c.activa ? 'Nueva contraseña' : 'Reactivar'}</button>}</td>
+        </tr>)}</tbody></table></div> : <Empty icon="users" title="Sin cuentas todavía" text="Crea una para cada transportista y para cada proveedor aliado." />}
+      </Card>
     </>
   );
 }

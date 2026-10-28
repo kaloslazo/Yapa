@@ -406,3 +406,11 @@
 - Spec: `53-cookies-de-otros-sitios.md` (S-277, a validar). En producción, después de verse el botón de Google, cada recarga sacaba al usuario: la cookie `g_state` de Google trae un JSON y `SimpleCookie` dejaba de leer la cabecera antes de llegar a la cookie de Yapa.
 - Ahora la API y la web HTML buscan su cookie por nombre y las ajenas se ignoran. Se comprobó con `curl` contra holayapa.app antes del arreglo (401 con `g_state` antes, 200 sin ella).
 - Resultado: 588 pruebas del motor (4 nuevas, ninguna saltada).
+
+## Iteración 54 · Cuentas para proveedores y transportistas (28/10/2026)
+
+- Spec: `54-proveedores-y-transportistas.md`, con los supuestos S-278..S-288, a validar por el equipo (el admin crea las cuentas, el transportista solo entrega y no ve datos de vecinos, el proveedor propone y el admin publica, al aprobar se reemplazan solo sus productos).
+- Pruebas antes del código: `docs/evidencia/desarrollo/54-proveedores-transportistas-rojo.txt`.
+- Implementación: módulos `partners.py` (cuentas) y `supplier_offers.py` (lista propuesta y pedido consolidado); `fulfillment.check_courier` deja entregar al transportista activo; la API suma los tipos de sesión `transportista` y `proveedor` con rutas propias. En la web, el acceso del equipo elige Equipo · Reparto · Proveedor y cada uno ve su pantalla.
+- Resultado: 607 pruebas del motor (37 nuevas) y 103 del frontend en verde; typecheck y build sin errores (`54-proveedores-transportistas-verde.txt`).
+

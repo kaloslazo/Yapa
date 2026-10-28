@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from . import cycle as cycles
+from . import partners
 from .domain import MIN_ORDERS_PER_GROUP, BusinessRuleError, Order
 from .settlement import CycleSettlement, settle_cycle
 from .store import InMemoryStore
@@ -55,6 +56,12 @@ def check_staff(store: InMemoryStore, by: str) -> None:
         raise BusinessRuleError("NOT_AUTHORIZED", "Solo el personal de Yapa puede hacer esto.")
 
 
+def check_courier(store: InMemoryStore, by: str) -> None:
+    """S-281: entregan el personal y los transportistas activos."""
+    if by not in store.admins and partners.active(store, by, partners.DRIVER) is None:
+        raise BusinessRuleError("NOT_AUTHORIZED", "Solo el personal de Yapa o su transportista puede registrar la entrega.")
+
+
 def check_photo(photo: str | None) -> str:
     photo = (photo or "").strip()
     if not photo:
@@ -97,7 +104,7 @@ def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: d
 
 def deliver_zone(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, photo: str, received_by: str,
                  now: datetime) -> Delivery:
-    check_staff(store, by)  # EN-01
+    check_courier(store, by)  # EN-01, TR-02
     zone = store.zones.get(zone_id)
     if zone is None:  # EN-02
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
@@ -132,7 +139,7 @@ def _ready_orders(store: InMemoryStore, cycle: str, zone_id: str) -> list[Order]
 def register_failed_delivery(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, photo: str, reason: str,
                              now: datetime) -> FailedDelivery:
     """EF-01..EF-03: la portería no recibió; queda registrado con evidencia y sin reintento (S-102)."""
-    check_staff(store, by)
+    check_courier(store, by)  # TR-03
     if zone_id not in store.zones:
         raise BusinessRuleError("ZONE_NOT_FOUND", "La zona no existe.")
     if (cycle, zone_id) in store.deliveries or (cycle, zone_id) in store.failed_deliveries:

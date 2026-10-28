@@ -7,13 +7,14 @@ import type { Account } from '../types';
 import { formatMoney } from '../utils/format';
 
 export type AuthAudience = 'vecino' | 'admin';
+export type LoginKind = AuthAudience | 'transportista' | 'proveedor';
 
 interface AuthDialogProps {
   open: boolean;
   account: Account | null;
   initialAudience?: AuthAudience;
   onClose: () => void;
-  onLogin: (kind: AuthAudience, user: string, secret: string) => Promise<Account>;
+  onLogin: (kind: LoginKind, user: string, secret: string) => Promise<Account>;
   onLogout: () => Promise<void>;
   onForgotPin: (user: string) => Promise<string>;
   googleClientId: string | null;
@@ -29,7 +30,9 @@ interface AuthDialogProps {
   onOpenOrders: () => void;
 }
 
-const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equipo Yapa' } as const;
+const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equipo Yapa', transportista: 'Transportista', proveedor: 'Proveedor' } as const;
+// iteración 54: en el acceso del equipo también entran el reparto y los proveedores, con usuario y contraseña
+const STAFF_KINDS: Array<{ id: Exclude<LoginKind, 'vecino'>; label: string }> = [{ id: 'admin', label: 'Equipo' }, { id: 'transportista', label: 'Reparto' }, { id: 'proveedor', label: 'Proveedor' }];
 
 export const LOGIN_HINT = 'Con tu correo, celular o número de cliente y tu PIN de 6 dígitos.';
 
@@ -53,6 +56,7 @@ export function shareText(code: string) {
 export function AuthDialog({ open, account, initialAudience = 'vecino', onClose, onLogin, onLogout, googleClientId, onGoogleLogin, onGoogleLink, onGoogleUnlink, onForgotPin, onResetPin, onSendEmail, onVerifyEmail, onCreatePin, onOpenAdmin, onOpenZone, onOpenOrders }: AuthDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [audience, setAudience] = useState<AuthAudience>(initialAudience);
+  const [staffKind, setStaffKind] = useState<Exclude<LoginKind, 'vecino'>>('admin');
   const [user, setUser] = useState('');
   const [secret, setSecret] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -101,7 +105,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
     setFeedback('');
     setBusy(true);
     try {
-      await onLogin(audience, user.trim(), secret);
+      await onLogin(audience === 'admin' ? staffKind : 'vecino', user.trim(), secret);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'No pudimos entrar. Inténtalo de nuevo.');
     } finally {
@@ -221,14 +225,15 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
             <div className="auth-topbar"><div className="auth-brandline auth-brandline--login"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button></div>
             <div className="auth-body">
               <h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Entra a Yapa'}</h2>
-              <p className="auth-lead">{audience === 'admin' ? 'Solo para el equipo de operaciones de Yapa.' : LOGIN_HINT}</p>
+              <p className="auth-lead">{audience === 'admin' ? 'Para el equipo, el reparto y los proveedores aliados de Yapa.' : LOGIN_HINT}</p>
               <form className="auth-form" onSubmit={submit}>
-                <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o n.º de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'admin-yapa' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
+                {audience === 'admin' ? <div className="segmented" role="radiogroup" aria-label="Entro como">{STAFF_KINDS.map((kind) => <label key={kind.id} className={staffKind === kind.id ? 'is-selected' : ''}><input type="radio" name="tipo" value={kind.id} checked={staffKind === kind.id} onChange={() => { setStaffKind(kind.id); setFeedback(''); }} />{kind.label}</label>)}</div> : null}
+                <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o n.º de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'tu usuario' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
                 {audience === 'admin'
                   ? <label className="auth-field"><span>Contraseña</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(event.target.value)} autoComplete="current-password" required /></label>
                   : <PinField label="PIN" name="secreto" value={secret} onChange={setSecret} />}
                 {feedback ? <p className="auth-feedback auth-feedback--error" role="alert">{feedback}</p> : null}
-                <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : audience === 'admin' ? 'Entrar al panel' : 'Entrar'}</button>
+                <button className="primary-button" type="submit" disabled={busy} aria-busy={busy}>{busy ? 'Entrando…' : 'Entrar'}</button>
               </form>
               {audience === 'vecino' && googleClientId ? <div className="google-login"><span className="google-divider">o entra con</span><GoogleButton clientId={googleClientId} text="signin_with" onCredential={(credential) => void googleAction(() => onGoogleLogin(credential))} /><p className="auth-hint">Si te registraste con Google, no necesitas PIN.</p>{googleMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{googleMessage}</p> : null}</div> : null}
               {audience === 'vecino' ? (
@@ -245,7 +250,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
                 </div>
               ) : null}
             </div>
-            <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo de Yapa? Entra aquí'}</button>
+            <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo, reparto o proveedor? Entra aquí'}</button>
           </div>
         </div>
       )}

@@ -40,6 +40,8 @@ class InMemoryStore:
         self.buffer: dict = {}  # colchón de reposición por producto
         self.buffer_uses: list = []  # S-122: a qué pedido fue cada reposición
         self.reference_prices: list = []  # S-125: precios del mercado y del supermercado
+        self.partners: dict = {}  # cuentas de proveedores y transportistas por usuario (iteración 54)
+        self.supplier_offers: dict = {}  # lista propuesta por el proveedor: (ciclo, proveedor) -> propuesta (S-284)
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1
