@@ -29,12 +29,18 @@ Cuentas de la demo:
 | Vecina y admin de zona (Ana Torres, Los Álamos) | `101` | PIN `482915` |
 | Vecina (Carmen Díaz) | `105` | PIN `739104` |
 | Equipo Yapa | `admin-yapa` | `yapa-admin-2026` |
+| Transportista (entrar como Reparto) | `reparto-demo` | `reparto-yapa-2026` |
+| Proveedor de frescos (entrar como Proveedor) | `frescos-demo` | `frescos-yapa-2026` |
+
+El equipo, el reparto y los proveedores entran desde "¿Eres del equipo, reparto o proveedor? Entra aquí" en la pantalla de ingreso.
 
 ## Qué se puede hacer
 
 - **Vecino:** armar la canasta (cada producto muestra cuánto falta para el siguiente descuento y el ahorro frente al supermercado), pagar con Yape o Plin con el código que da Yapa, usar su saldo, ver lo que le devolvieron, cancelar con un botón, reclamar con foto e invitar vecinos con su código.
 - **Admin de zona:** avance de su edificio hacia el mínimo de 8 pedidos, quién ya pidió, mapa con el radio de 300 m y las zonas cercanas para unirse, beneficios (envío gratis, 5 % las primeras 4 semanas y S/ 3 por invitado) y transferencia del rol.
-- **Equipo Yapa:** verificar pagos, armar con foto, entregar, liquidar, resolver reclamos y devoluciones, conciliación del dinero, métricas del piloto, catálogo semanal, precios de referencia y alta de vecinos con consentimiento.
+- **Equipo Yapa:** verificar pagos, armar con foto, entregar, liquidar, crear las cuentas de reparto y proveedores, aprobar sus listas, resolver reclamos y devoluciones, conciliación del dinero, métricas del piloto, catálogo semanal, precios de referencia y alta de vecinos con consentimiento.
+- **Transportista:** paradas de la semana con las bolsas de cada pedido y cómo llegar; registra la entrega con foto y nombre de quien recibe, o por qué no se pudo. No ve datos de los vecinos.
+- **Proveedor aliado:** cuánto le compra Yapa de cada producto a su precio por tramo, y su lista de la semana siguiente para que el equipo la apruebe.
 
 ## Verificación
 
