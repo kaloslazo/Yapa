@@ -5,6 +5,7 @@ import { formatMoney } from '../utils/format';
 import { weekLabel } from '../utils/week';
 import { Icon } from './Icon';
 import { PhotoForm } from './PhotoForm';
+import { PartnerSkeleton } from './Skeleton';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -57,7 +58,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
   const [cycle, setCycle] = useState('');
   const { data, reload } = useData(`/api/reparto${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
-  if (!data) return <p className="partner-muted" aria-busy="true">Cargando el reparto…</p>;
+  if (!data) return <PartnerSkeleton />;
   const stops: Raw[] = data.paradas;
   const done = stops.filter((s) => s.estado !== 'pendiente').length;
   const send = async (path: string, form: FormData, extra: Record<string, string>, title: string, detail: string) => {
@@ -120,7 +121,7 @@ function SupplierHome({ notify }: { notify: Notify }) {
   const { data, reload } = useData(`/api/proveedor${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [list, setList] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  if (!data) return <p className="partner-muted" aria-busy="true">Cargando…</p>;
+  if (!data) return <PartnerSkeleton />;
   const order = data.pedido;
   const next: Raw | undefined = data.propuestas.find((o: Raw) => o.ciclo === data.proximo);
   const text = list ?? next?.lista ?? data.lista_actual;

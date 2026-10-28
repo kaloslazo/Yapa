@@ -10,6 +10,7 @@ import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
+import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
 import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
@@ -27,19 +28,21 @@ interface AdminPanelProps {
 
 type Section = 'resumen' | 'zonas' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos' | 'cuentas';
 
-const SECTIONS: Array<{ id: Section; label: string; icon: IconName }> = [
-  { id: 'resumen', label: 'Resumen', icon: 'chart' },
-  { id: 'zonas', label: 'Zonas', icon: 'map' },
-  { id: 'armado', label: 'Armado y entrega', icon: 'truck' },
-  { id: 'reclamos', label: 'Reclamos', icon: 'receipt' },
-  { id: 'devoluciones', label: 'Devoluciones', icon: 'undo' },
-  { id: 'conciliacion', label: 'Conciliación', icon: 'scale' },
-  { id: 'metricas', label: 'Métricas', icon: 'chart' },
-  { id: 'catalogo', label: 'Catálogo', icon: 'store' },
-  { id: 'referencias', label: 'Precios de referencia', icon: 'tag' },
-  { id: 'vecinos', label: 'Vecinos', icon: 'users' },
-  { id: 'cuentas', label: 'Proveedores y reparto', icon: 'truck' },
+// la barra lateral agrupa las secciones por tarea; el texto corto va bajo el título de cada página
+const SECTIONS: Array<{ id: Section; label: string; icon: IconName; group: string; hint: string }> = [
+  { id: 'resumen', label: 'Resumen', icon: 'list', group: 'Semana', hint: 'Pagos por verificar, pedidos y qué grupos llegan al mínimo.' },
+  { id: 'armado', label: 'Armado y entrega', icon: 'box', group: 'Semana', hint: 'Foto de cada bolsa y de cada entrega.' },
+  { id: 'reclamos', label: 'Reclamos', icon: 'receipt', group: 'Semana', hint: 'Lo que faltó o llegó mal, con su foto.' },
+  { id: 'devoluciones', label: 'Devoluciones', icon: 'undo', group: 'Semana', hint: 'Dinero por devolver a Yape o Plin.' },
+  { id: 'zonas', label: 'Zonas', icon: 'map', group: 'Vecinos', hint: 'Mapa de zonas, uniones posibles y sugerencias.' },
+  { id: 'vecinos', label: 'Vecinos', icon: 'users', group: 'Vecinos', hint: 'Altas, PIN y solicitudes.' },
+  { id: 'catalogo', label: 'Catálogo', icon: 'store', group: 'Productos', hint: 'Lista de la semana con sus tramos de precio.' },
+  { id: 'referencias', label: 'Precios de referencia', icon: 'tag', group: 'Productos', hint: 'Lo que cuesta en el mercado y el supermercado.' },
+  { id: 'cuentas', label: 'Proveedores y reparto', icon: 'truck', group: 'Productos', hint: 'Cuentas de proveedores y transportistas, y sus listas.' },
+  { id: 'conciliacion', label: 'Conciliación', icon: 'scale', group: 'Dinero', hint: 'Que lo cobrado, el saldo y lo devuelto cuadren.' },
+  { id: 'metricas', label: 'Métricas', icon: 'chart', group: 'Dinero', hint: 'Cómo va el piloto semana a semana.' },
 ];
+const GROUPS = [...new Set(SECTIONS.map((s) => s.group))];
 
 const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN', cuentas: 'listas por revisar' };
 const num = (value: unknown) => Number(value ?? 0);
@@ -113,19 +116,22 @@ export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: A
             <img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" />
             <span><strong>yapa</strong><small>operaciones</small></span>
           </a>
-          <div className="admin-sidebar-label">Centro de control</div>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {SECTIONS.map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {PENDING_NOUN[s.id] ?? 'pendientes'}</span></strong> : null}</button>)}
+            {GROUPS.map((group) => <div className="admin-nav-group" key={group}><span className="admin-sidebar-label">{group}</span>{SECTIONS.filter((s) => s.group === group).map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {PENDING_NOUN[s.id] ?? 'pendientes'}</span></strong> : null}</button>)}</div>)}
           </nav>
-          <div className="admin-sidebar-spacer" />
-          <a className="admin-back-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="arrow" size={16} className="admin-back-arrow" />Ver la tienda</a>
-          <div className="admin-sidebar-user"><span className="admin-avatar"><Icon name="user" size={17} /></span><span><small>Sesión activa</small><strong>{adminName}</strong></span><button className="icon-button" type="button" onClick={onLogout} aria-label="Salir"><Icon name="signout" size={17} /></button></div>
+          <div className="admin-sidebar-footer">
+            <div className="admin-sidebar-user"><span className="admin-avatar" aria-hidden="true">{adminName.trim().charAt(0).toUpperCase() || 'Y'}</span><span><strong>{adminName}</strong><small>Equipo de operaciones</small></span></div>
+            <div className="admin-sidebar-actions">
+              <a className="admin-footer-button" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="store" size={16} />Tienda</a>
+              <button className="admin-footer-button" type="button" onClick={onLogout}><Icon name="signout" size={16} />Salir</button>
+            </div>
+          </div>
         </aside>
 
         <main className="admin-main" id="admin-overview">
           <header className="admin-topbar">
-            <div><h1>{current.label}</h1></div>
-            <div className="admin-top-actions"><a className="admin-store-link" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}>Tienda <Icon name="arrow" size={16} /></a></div>
+            <span className="admin-topbar-icon" aria-hidden="true"><Icon name={current.icon} size={22} /></span>
+            <div><span className="admin-topbar-group">{current.group}</span><h1>{current.label}</h1><p>{current.hint}</p></div>
           </header>
           <div className="admin-page-content">
             {section === 'resumen' ? <Summary {...props} /> : null}
@@ -166,7 +172,7 @@ function Zones({ cycle, setCycle, notify }: SectionProps) {
   const { data } = useLoad<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const mapZones = useMemo<MapZone[]>(() => (data?.zonas ?? []).map((z: Raw) => ({ id: z.id, name: z.nombre, group: z.grupo, lat: z.lat, lon: z.lon })), [data]);
   const mapUnions = useMemo<MapUnion[]>(() => (data?.uniones ?? []).map((u: Raw) => ({ a: u.a, b: u.b, distance: u.distancia_m, reason: u.motivo })), [data]);
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const colors = groupColors(mapZones.map((z) => z.group));
   const nameOf = (id: string) => data.zonas.find((z: Raw) => z.id === id)?.nombre ?? id;
   const missing = data.zonas.length - drawableZones(mapZones).length;
@@ -178,7 +184,7 @@ function Zones({ cycle, setCycle, notify }: SectionProps) {
         <LazyZonesMap zones={mapZones} unions={mapUnions} radius={data.radio_m} mergeDistance={data.union_m} label="Mapa de las zonas de Yapa con su radio y las uniones posibles" />
         {missing ? <p className="admin-muted">{missing} {missing === 1 ? 'zona no tiene' : 'zonas no tienen'} ubicación y no se dibuja{missing === 1 ? '' : 'n'}.</p> : null}
         <ul className="zones-legend">{[...new Set(mapZones.map((z) => z.group))].map((g) => <li key={g}><span className="zones-dot" style={{ background: colors[g] }} />{mapZones.filter((z) => z.group === g).map((z) => z.name).join(' + ')}</li>)}</ul>
-        {data.uniones.length ? <ul className="zones-unions">{data.uniones.map((u: Raw) => <li key={`${u.a}-${u.b}`} className={u.motivo ? 'is-blocked' : 'is-ok'}><strong>{nameOf(u.a)} ↔ {nameOf(u.b)}</strong> <span>{unionLabel(u.distancia_m, u.motivo)}</span></li>)}</ul> : <p className="admin-muted">Ninguna zona está a {data.union_m} m o menos de otra de un grupo distinto.</p>}
+        {data.uniones.length ? <ul className="zones-unions">{data.uniones.map((u: Raw) => <li key={`${u.a}-${u.b}`} className={u.motivo ? 'is-blocked' : 'is-ok'}><span className="zones-union-icon" aria-hidden="true"><Icon name={u.motivo ? 'no' : 'merge'} size={16} /></span><strong>{nameOf(u.a)} ↔ {nameOf(u.b)}</strong><span>{unionLabel(u.distancia_m, u.motivo)}</span></li>)}</ul> : <p className="admin-muted">Ninguna zona está a {data.union_m} m o menos de otra de un grupo distinto.</p>}
       </Card>
 
       <Card title={`Propuestas del sistema (${data.propuestas.length})`}>
@@ -199,7 +205,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<Raw | null>(null);
   useEffect(() => { setConfirming(false); setResult(null); }, [cycle]);
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const pending: Order[] = data.por_verificar.map(toOrder);
   const orders: Order[] = data.pedidos.map(toOrder);
   const k = data.indicadores;
@@ -248,7 +254,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
 function Packing({ cycle, setCycle, run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>(`/api/admin/armado${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const orders: Order[] = data.pedidos.map(toOrder);
   const send = (path: string, form: FormData, extra: Record<string, string>, success: string) => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
@@ -283,7 +289,7 @@ function ClaimPhoto({ route, who }: { route: string; who: string }) {
 
 function Claims({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/reclamos', notify);
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const review = (id: number, decision: 'aprobar' | 'rechazar') => run(() => api.post(`/api/admin/reclamos/${id}/revisar`, { decision }), `Reclamo ${id} ${decision === 'aprobar' ? 'aprobado: se devuelve como saldo' : 'rechazado'}.`).then(() => reload());
   const pending = data.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE');
   const done = data.reclamos.filter((c: Raw) => c.estado !== 'PENDIENTE');
@@ -300,7 +306,7 @@ function Claims({ run, notify }: SectionProps) {
 function Refunds({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/devoluciones', notify);
   const [codes, setCodes] = useState<Record<number, string>>({});
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const pay = (id: number) => run(() => api.post(`/api/admin/devoluciones/${id}/pagar`, { codigo: codes[id] ?? '' }), `Devolución ${id} marcada como pagada.`).then(() => reload());
   return (
     <Card eyebrow="Plazo: hasta 30 días" title={`Por devolver a Yape o Plin (${data.devoluciones.length})`}>
@@ -311,7 +317,7 @@ function Refunds({ run, notify }: SectionProps) {
 
 function Balance({ notify }: SectionProps) {
   const { data } = useLoad<Raw>('/api/admin/conciliacion', notify);
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const rows: Array<[string, string]> = [['Recibido por Yape y Plin', data.recibido], ['En curso (pedidos sin liquidar)', data.en_curso], ['Retenido por Yapa', data.retenido], ['Deuda con vecinos (saldos y devoluciones)', data.deuda], ['Devoluciones ya pagadas', data.devoluciones_pagadas]];
   return (
     <>
@@ -348,7 +354,7 @@ function Metrics({ notify }: SectionProps) {
           <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? data.recompra.error.mensaje : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
         </section>
         <Card title="Margen antes de costos operativos"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th><th>Margen</th></tr></thead><tbody>{margins.map((m: Raw) => <tr key={m.pedido} className={m.negativo ? 'is-negative' : ''}><td>{m.pedido}</td><td>{formatMoney(num(m.cobrado))}</td><td>{formatMoney(num(m.reclamos))}</td><td>{formatMoney(num(m.proveedor))}</td><td>{formatMoney(num(m.parada))}</td><td><strong>{formatMoney(num(m.margen))}</strong></td></tr>)}</tbody></table></div></Card>
-      </> : <p className="admin-muted">Cargando…</p>}
+      </> : <AdminSkeleton />}
     </>
   );
 }
@@ -358,7 +364,7 @@ function CatalogAdmin({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>(`/api/admin/catalogo${week ? `?ciclo=${week}` : ''}`, notify);
   const [text, setText] = useState('');
   useEffect(() => { if (data) setText(data.lista); }, [data]);
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const deactivate = (id: string) => run(() => api.post('/api/admin/catalogo/desactivar', { ciclo: data.ciclo, producto: id }), 'Producto desactivado para esa semana.').then(() => reload());
   const publish = () => run(() => api.post('/api/admin/catalogo', { ciclo: data.ciclo, lista: text }), `Catálogo de la semana ${data.ciclo} publicado.`).then(() => reload());
   return (
@@ -379,7 +385,7 @@ function References({ run, notify }: SectionProps) {
   const [price, setPrice] = useState('');
   const [source, setSource] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const save = (event: FormEvent) => { event.preventDefault(); void run(() => api.post('/api/admin/referencias', { producto: product || data.productos[0]?.id, tipo: kind, precio: price, fuente: source, fecha: date }), 'Precio de referencia guardado.').then((ok) => { if (ok) { setPrice(''); void reload(); } }); };
   const cell = (ref: Raw | undefined) => ref ? <><strong>{formatMoney(num(ref.precio))}</strong><small className="admin-cell-note">{ref.fuente} · {ref.visto} · {Math.round(num(ref.ahorro))} % de ahorro</small></> : <span className="admin-muted">—</span>;
   return (
@@ -403,7 +409,7 @@ function Neighbors({ run, notify, onViewAs }: SectionProps) {
   const [form, setForm] = useState({ nombre: '', celular: '', correo: '', zona: '', referido: '', consentimiento: false });
   const [created, setCreated] = useState<Raw | null>(null);
   const [query, setQuery] = useState('');
-  if (!data) return <p className="admin-muted">Cargando…</p>;
+  if (!data) return <AdminSkeleton />;
   const shown: Raw[] = filterNeighbors(data.vecinos, query);
   const zones: Zone[] = (zoneData?.zonas ?? []).map(toZone);
   const register = async (event: FormEvent) => {
@@ -447,7 +453,7 @@ function Partners({ run, notify }: SectionProps) {
   const [form, setForm] = useState({ tipo: 'transportista', usuario: '', nombre: '', proveedor: '', contrasena: '' });
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<{ user: string; password: string } | null>(null);
-  if (!data || !offerData) return <p className="admin-muted">Cargando…</p>;
+  if (!data || !offerData) return <AdminSkeleton />;
   const supplier = form.tipo === 'proveedor';
   const create = async (event: FormEvent) => {
     event.preventDefault();
