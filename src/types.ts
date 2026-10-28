@@ -35,7 +35,7 @@ export interface Product {
   emoji: string;
 }
 
-export type Role = 'vecino' | 'admin_zona' | 'admin';
+export type Role = 'vecino' | 'admin_zona' | 'admin' | 'transportista' | 'proveedor';
 
 export interface Account {
   user: string | number;
@@ -51,6 +51,7 @@ export interface Account {
   hasPin?: boolean;
   viewingAs?: string;
   canViewAs?: boolean;
+  supplierId?: string | null;
 }
 
 export interface Zone {

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { AuthDialog, type AuthAudience } from './components/AuthDialog';
+import { AuthDialog, type AuthAudience, type LoginKind } from './components/AuthDialog';
 import { Catalog } from './components/Catalog';
 import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
@@ -19,7 +19,7 @@ import type { Account, CartState, CycleState, Notice, Order, Product, Quote, Ref
 import { cartSubtotal, stepDown, stepUp } from './utils/cart';
 import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
-import { canOpenZonePanel, homeFor } from './utils/roles';
+import { canOpenZonePanel, homeFor, isNeighborRole, isPartner } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
 import { formatMoney } from './utils/format';
 
@@ -34,6 +34,7 @@ function WeekFacts({ open, place }: { open: boolean; place?: string }) {
 
 // FE-SG-2: el panel del equipo se baja solo cuando se abre
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
+const PartnerPanel = lazy(() => import('./components/PartnerPanel').then((module) => ({ default: module.PartnerPanel })));
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -146,17 +147,17 @@ export default function App() {
     setInvite({ code: raw.codigo, today: raw.hoy, total: raw.total });
   }, []);
   useEffect(() => {
-    if (!account || account.role === 'admin') { setInvite(null); return; }
+    if (!account || !isNeighborRole(account.role)) { setInvite(null); return; }
     loadInvite().catch(() => setInvite(null));
   }, [account, loadInvite]);
 
   useEffect(() => {
-    if (!account || account.role === 'admin') { setMyOrders(null); setMyZone(null); return; }
+    if (!account || !isNeighborRole(account.role)) { setMyOrders(null); setMyZone(null); return; }
     if (view === 'orders') loadOrders().catch(fail);
     if (view === 'zone') loadZone().catch(fail);
   }, [account, view, loadOrders, loadZone, fail]);
 
-  const isNeighbor = account !== null && account.role !== 'admin';
+  const isNeighbor = account !== null && isNeighborRole(account.role);
   const accountUser = account?.user;
   useEffect(() => {
     if (!isNeighbor) { setNotices([]); setUnreadNotices(0); return; }
@@ -229,7 +230,7 @@ export default function App() {
 
   const openCheckout = async () => {
     if (!account) { needAccount('Entra a tu cuenta para registrar el pedido.'); return; }
-    if (account.role === 'admin') { notify('Esta cuenta es del equipo', 'warning', 'Para comprar, entra con una cuenta de vecino.'); return; }
+    if (!isNeighborRole(account.role)) { notify('Esta cuenta no es de vecino', 'warning', 'Para comprar, entra con una cuenta de vecino.'); return; }
     try {
       setQuote(toQuote(await api.post<Raw>('/api/cotizar', { lineas: cartBody() })));
       setConfirmation(null);
@@ -296,13 +297,13 @@ export default function App() {
 
   // --- sesión ---
 
-  const login = async (kind: AuthAudience, user: string, secret: string) => finishLogin(toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret })));
+  const login = async (kind: LoginKind, user: string, secret: string) => finishLogin(toAccount(await api.post<Raw>('/api/sesion', { tipo: kind, usuario: user, secreto: secret })));
   const loginWithGoogle = async (credential: string) => { finishLogin(toAccount(await api.post<Raw>('/api/sesion/google', { credential }))); };
   const finishLogin = (me: Account) => {
     api.setCsrf(me.csrf);
     setAccount(me);
     setAuthOpen(false);
-    notify(`Hola, ${me.name.split(' ')[0]}`, 'success', me.role === 'admin' ? 'Entraste al centro de operaciones.' : me.balance ? `Tienes ${formatMoney(me.balance)} de saldo para tu próxima compra.` : 'Ya puedes armar tu canasta de la semana.');
+    notify(`Hola, ${me.name.split(' ')[0]}`, 'success', me.role === 'admin' ? 'Entraste al centro de operaciones.' : me.role === 'transportista' ? 'Aquí tienes las paradas de la semana.' : me.role === 'proveedor' ? 'Aquí ves lo que te compramos y mandas tu lista.' : me.balance ? `Tienes ${formatMoney(me.balance)} de saldo para tu próxima compra.` : 'Ya puedes armar tu canasta de la semana.');
     if (homeFor(me.role) === 'operaciones') { setAdminOpen(true); go('admin'); }
     return me;
   };
@@ -347,7 +348,16 @@ export default function App() {
   const accountZone = zones.find((z) => z.id === account?.zoneId);
   const showAdmin = adminOpen && account?.role === 'admin';
 
+  const toastRegion = (
+    <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`} role={toast.tone === 'warning' ? 'alert' : 'status'}>
+      <span className="toast-icon"><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} weight="bold" /></span>
+      <div className="toast-copy"><strong>{toast.title}</strong>{toast.detail ? <span>{toast.detail}</span> : null}{toast.action ? <button className="toast-action" type="button" onClick={() => { toast.action?.run(); setToast(null); }}>{toast.action.label}</button> : null}</div>
+      <button className="toast-close" type="button" onClick={() => setToast(null)} aria-label="Cerrar aviso"><Icon name="close" size={16} /></button>
+    </div> : null}</div>
+  );
+
   if (window.location.pathname.replace(/\/$/, '') === '/privacidad') return <PrivacyPage />;
+  if (account && isPartner(account.role)) return <Suspense fallback={<div className="partner-view" aria-busy="true" />}><PartnerPanel account={account} notify={notify} onLogout={() => void logout()} />{toastRegion}</Suspense>;
   if (inviteCode) return <InvitePage code={inviteCode} googleClientId={googleClientId} signedIn={Boolean(account)} onJoined={joinedByInvite} onGoHome={goHomeFromInvite} />;
 
   const inviteState = { url: invite ? inviteLink(window.location.origin, invite.code) : null, today: invite?.today ?? 0, total: invite?.total ?? 0, renew: async () => { try { await loadInvite(true); notify('Tu enlace nuevo ya está activo', 'success', 'El anterior dejó de funcionar. Compártelo solo con vecinos de tu zona.'); } catch (error) { fail(error, 'No pudimos renovar tu enlace'); } } };
@@ -433,11 +443,7 @@ export default function App() {
           <button type="button" onClick={() => openAuth('vecino')}><span className="tab-icon">{account ? <span className="account-avatar account-avatar--sm" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : <Icon name="user" size={23} />}</span>{account ? 'Cuenta' : 'Entrar'}</button>
         </nav>
       </>}
-      <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`} role={toast.tone === 'warning' ? 'alert' : 'status'}>
-        <span className="toast-icon"><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} weight="bold" /></span>
-        <div className="toast-copy"><strong>{toast.title}</strong>{toast.detail ? <span>{toast.detail}</span> : null}{toast.action ? <button className="toast-action" type="button" onClick={() => { toast.action?.run(); setToast(null); }}>{toast.action.label}</button> : null}</div>
-        <button className="toast-close" type="button" onClick={() => setToast(null)} aria-label="Cerrar aviso"><Icon name="close" size={16} /></button>
-      </div> : null}</div>
+      {toastRegion}
       {!showAdmin ? <>
         <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} googleClientId={googleClientId} onGoogleLogin={loginWithGoogle} onGoogleLink={async (credential) => { await api.post('/api/cuenta/google', { credential }); await loadAccount(); }} onGoogleUnlink={async () => { await api.post('/api/cuenta/google/desvincular'); await loadAccount(); }} onResetPin={async (user, code, pin) => (await api.post<{ mensaje: string }>('/api/pin/restablecer', { usuario: user, codigo: code, pin })).mensaje} onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }} onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }} onForgotPin={async (user) => (await api.post<{ mensaje: string }>('/api/pin/olvide', { usuario: user })).mensaje} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
