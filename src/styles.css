@@ -1012,13 +1012,9 @@ button, a, .tab-bar, .mobile-cart-bar { -webkit-user-select: none; user-select: 
 .hero-lead { max-width: 520px; margin-top: 20px; color: var(--copy); font-size: 1.125rem; line-height: 1.55; }
 .hero-actions { gap: 12px; margin-top: 28px; }
 .hero-actions .secondary-button { min-height: 48px; padding: 0 22px; font-size: .9375rem; }
-.hero-week { display: flex; align-items: baseline; gap: 8px; max-width: 520px; margin-top: 28px; color: var(--copy); font-size: .9375rem; }
 .hero-copy { padding-bottom: 48px; }
 .hero-art { display: flex; align-self: end; justify-content: center; }
 .hero-art img { display: block; width: 100%; max-width: 380px; height: auto; }
-.status-dot { flex: 0 0 auto; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--green); vertical-align: 1px; }
-.hero-week .status-dot { margin-right: 0; }
-.status-dot.is-closed { background: var(--muted); }
 
 /* saludo para quien ya entró: una línea con lo que importa esta semana */
 .week-status { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 4px 0 0; }
@@ -1067,10 +1063,21 @@ button, a, .tab-bar, .mobile-cart-bar { -webkit-user-select: none; user-select: 
 .product-price { display: flex; align-items: baseline; gap: 4px; margin-top: 12px; }
 .product-price strong { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .product-price > span { color: var(--copy); font-size: .875rem; }
-.product-info > .product-reference { margin-top: 2px; color: var(--copy); font-size: .8125rem; font-variant-numeric: tabular-nums; }
-.product-reference strong { color: var(--green); font-weight: 700; }
-.product-info > .product-tier { margin-top: 10px; padding: 8px 10px; border-radius: var(--radius-field); background: var(--paper); color: var(--copy); font-size: .8125rem; line-height: 1.45; }
-.product-tier strong { color: var(--ink); font-weight: 700; }
+.product-reference { display: flex; align-items: center; gap: 8px; min-height: 22px; margin-top: 4px; color: var(--copy); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.product-reference s { color: var(--copy); }
+.product-saving { margin-left: auto; color: var(--green); font-weight: 750; white-space: nowrap; }
+.store-logo { display: block; width: auto; height: 18px; max-width: 72px; object-fit: contain; }
+.store-name { display: inline-flex; align-items: center; gap: 4px; max-width: 110px; overflow: hidden; color: var(--ink); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.store-name .icon { flex: 0 0 auto; color: var(--copy); }
+.product-tier { display: grid; gap: 4px; margin-top: 12px; }
+.tier-bar { display: block; height: 6px; overflow: hidden; border-radius: 3px; background: var(--paper-strong); }
+.tier-bar span { display: block; height: 100%; border-radius: inherit; background: var(--green); transition: width .4s ease; }
+.product-tier small { color: var(--copy); font-size: .8125rem; }
+.product-tier strong { color: var(--green); font-weight: 750; }
+.week-facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 24px 0 0; padding: 0; color: var(--ink); font-size: .9375rem; font-weight: 550; list-style: none; }
+.week-facts li { display: inline-flex; align-items: center; gap: 8px; }
+.week-facts .icon { color: var(--accent-dark); }
+.week-status .week-facts { margin-top: 10px; }
 .product-buy-row { padding-top: 14px; }
 .product-buy-row .quantity-control, .product-buy-row .add-button { flex: 1; }
 .add-button { min-height: 44px; border: 0; border-radius: var(--radius-pill); background: var(--accent); color: #fff; font-size: .9375rem; }
@@ -1262,7 +1269,7 @@ button, a, .tab-bar, .mobile-cart-bar { -webkit-user-select: none; user-select: 
   .hero-lead { margin-top: 14px; font-size: 1rem; }
   .hero-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 24px; }
   .hero-actions .primary-button, .hero-actions .secondary-button { width: 100%; }
-  .hero-week { margin-top: 20px; font-size: .875rem; }
+  .week-facts { flex-direction: column; margin-top: 20px; }
   .hero-art img { max-width: 240px; }
   .week-status { align-items: stretch; flex-direction: column; gap: 14px; padding-bottom: 20px; }
   .balance-link { justify-content: space-between; }
@@ -1316,6 +1323,5 @@ button, a, .tab-bar, .mobile-cart-bar { -webkit-user-select: none; user-select: 
   .product-info { padding: 10px 6px 6px; }
   .product-info > p:not([class]) { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .product-price strong { font-size: 1.1875rem; }
-  .product-info > .product-tier { font-size: .75rem; }
   .product-buy-row { flex-direction: row; padding-top: 12px; }
 }

@@ -1,5 +1,6 @@
 import type { CartState, Product } from '../types';
 import { Icon } from './Icon';
+import { StoreMark } from './StoreMark';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { shortDate } from '../utils/week';
@@ -56,6 +57,7 @@ export function Catalog({ products, categories, cart, category, query, onCategor
 function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Product; quantity: number; onAdd: (product: Product) => void; onDecrease: (product: Product) => void }) {
   const atLimit = quantity >= product.maxPerOrder;
   const tier = product.nextTier;
+  const progress = tier ? Math.min((product.ordered / tier.from) * 100, 100) : 100;
   const reference = product.supermarketSaving && product.supermarket ? product.supermarket : null;
   return (
     <article className={`product-card ${quantity ? 'has-quantity' : ''}`}>
@@ -64,8 +66,15 @@ function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Produc
         <h3>{product.name}</h3>
         <p>{product.detail}</p>
         <div className="product-price"><strong>{formatMoney(product.price)}</strong><span>/ {product.unit}</span></div>
-        {reference ? <p className="product-reference" title={reference.seen ? `Precio visto el ${shortDate(reference.seen)}` : undefined}>{formatMoney(reference.price)} en {reference.source} · <strong className="nowrap">ahorras {Math.round(product.supermarketSaving ?? 0)} %</strong></p> : null}
-        <p className="product-tier">{tier ? <>Llevamos {formatQuantity(product.ordered)} de {tier.from} {product.unit}. Al llegar, baja a <strong className="nowrap">{formatMoney(tier.price)}</strong>.</> : 'Ya tiene el mejor precio de la semana.'}</p>
+        {reference ? <div className="product-reference" title={reference.seen ? `Precio en ${reference.source}, visto el ${shortDate(reference.seen)}` : undefined}>
+          <StoreMark source={reference.source} />
+          <s><span className="sr-only">En {reference.source} cuesta </span>{formatMoney(reference.price)}</s>
+          <span className="product-saving">−{Math.round(product.supermarketSaving ?? 0)} %</span>
+        </div> : null}
+        <div className="product-tier" role="img" aria-label={tier ? `Llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}; al llegar, baja a ${formatMoney(tier.price)}` : 'Ya tiene el mejor precio de la semana'} title={tier ? `Llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}` : undefined}>
+          <span className="tier-bar"><span style={{ width: `${progress}%` }} /></span>
+          <small>{tier ? <>Baja a <strong>{formatMoney(tier.price)}</strong></> : 'Mejor precio'}</small>
+        </div>
         <div className="product-buy-row">
           {quantity ? (
             <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}>

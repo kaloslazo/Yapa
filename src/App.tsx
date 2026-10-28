@@ -25,6 +25,13 @@ import { formatMoney } from './utils/format';
 
 import './styles.css';
 
+// fecha límite y entrega, en dos datos cortos
+function WeekFacts({ open, place }: { open: boolean; place?: string }) {
+  return (
+    <ul className="week-facts">{open ? <><li><Icon name="calendar" size={18} />Pide hasta el miércoles, 8 p. m.</li><li><Icon name="truck" size={18} />{place ? `Llega el sábado a ${place}` : 'Llega el sábado'}</li></> : <li><Icon name="calendar" size={18} />Pedidos cerrados. Abrimos el lunes.</li>}</ul>
+  );
+}
+
 // FE-SG-2: el panel del equipo se baja solo cuando se abre
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
 
@@ -207,7 +214,7 @@ export default function App() {
     const current = cart[product.id] || 0;
     if (current >= product.maxPerOrder) { notify(`Llegaste al máximo de ${product.name}`, 'warning', `Cada vecino puede pedir hasta ${product.maxPerOrder} ${product.unit} por semana, para que alcance para todos.`); return; }
     setCart((c) => ({ ...c, [product.id]: stepUp(product, c[product.id] || 0) }));
-    if (!current) notify(`${product.name} está en tu canasta`, 'success', `${formatMoney(product.price)} por ${product.unit} como máximo. Si el grupo llega al siguiente tramo, pagas menos.`, { label: 'Ver canasta', run: () => openView('cart') });
+    if (!current) notify(`${product.name} está en tu canasta`, 'success', `${formatMoney(product.price)} / ${product.unit}. Si pedimos más entre todos, baja.`, { label: 'Ver canasta', run: () => openView('cart') });
   };
   const decreaseProduct = (product: Product) => setCart((c) => {
     const next = { ...c };
@@ -392,7 +399,7 @@ export default function App() {
                   <section className="week-status" aria-labelledby="page-title">
                     <div>
                       <h1 id="page-title">Hola, {firstName}</h1>
-                      <p><span className={`status-dot ${state?.open ? 'is-open' : 'is-closed'}`} aria-hidden="true" />{state?.open ? <>Pedidos abiertos hasta el <strong>miércoles a las 20:00</strong>. Entregamos el sábado{accountZone ? ` en ${accountZone.name}` : ''}.</> : <>Los pedidos de esta semana <strong>ya cerraron</strong>. Abrimos de nuevo el lunes.</>}</p>
+                      <WeekFacts open={Boolean(state?.open)} place={accountZone?.name} />
                     </div>
                     {isNeighbor && (account.balance ?? 0) > 0 ? <button className="balance-link" type="button" onClick={() => openView('orders')}><span>Tu saldo</span><strong>{formatMoney(account.balance ?? 0)}</strong><Icon name="arrow" size={16} /></button> : null}
                   </section>
@@ -402,7 +409,7 @@ export default function App() {
                       <h1 id="page-title">El mercado mayorista, en tu portería.</h1>
                       <p className="hero-lead">Juntamos los pedidos de tu edificio para comprar al por mayor. Pagas el precio máximo y lo que ahorremos entre todos vuelve a tu saldo.</p>
                       <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo</button><button className="secondary-button" type="button" onClick={() => openAuth('vecino')}>Ya tengo cuenta</button></div>
-                      <p className="hero-week"><span className={`status-dot ${state?.open ? 'is-open' : 'is-closed'}`} aria-hidden="true" />{state?.open ? 'Esta semana: pide hasta el miércoles a las 20:00 y recibe el sábado.' : 'Los pedidos de esta semana cerraron. Abrimos de nuevo el lunes.'} Entregamos en Lince y Jesús María.</p>
+                      <WeekFacts open={Boolean(state?.open)} />
                     </div>
                     <div className="hero-art"><img src="/images/brand/yapa-farmer-banner.webp" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div>
                   </section>

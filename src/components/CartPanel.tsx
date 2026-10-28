@@ -41,7 +41,7 @@ export function CartPanel({ lines, subtotal, savings, onAdd, onDecrease, onCheck
         <>
           <div className="cart-lines">{lines.map(({ product, quantity }) => <div className="cart-line" key={product.id}>
             <ProductVisual product={product} className="mini-art" />
-            <div className="cart-line-copy"><strong>{product.name}</strong><span>{formatMoney(product.price)} / {product.unit} · máximo</span></div>
+            <div className="cart-line-copy"><strong>{product.name}</strong><span>{formatMoney(product.price)} / {product.unit}</span></div>
             <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}><button type="button" onClick={() => onDecrease(product)} aria-label={`Quitar de ${product.name}`}><Icon name="minus" size={14} /></button><span>{formatQuantity(quantity)}</span><button type="button" onClick={() => onAdd(product)} disabled={quantity >= product.maxPerOrder} aria-label={`Agregar más ${product.name}`}><Icon name="plus" size={14} /></button></div>
           </div>)}</div>
           <div className="cart-summary"><div><span>Productos a precio máximo</span><strong>{formatMoney(subtotal)}</strong></div><div><span>Envío máximo</span><strong>{formatMoney(MAX_DELIVERY)}</strong></div>{savings > 0 ? <div className="summary-saving"><span>Ahorro frente al súper</span><strong>{formatMoney(savings)}</strong></div> : null}<div className="summary-total"><span>Pagas hoy, como máximo</span><strong>{formatMoney(subtotal + MAX_DELIVERY)}</strong></div></div>
