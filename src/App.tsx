@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { AdminSkeleton, PartnerSkeleton } from './components/Skeleton';
-import { AuthDialog, type AuthAudience, type LoginKind } from './components/AuthDialog';
+import { AuthPage, type LoginKind } from './components/AuthPage';
+import { AccountPage } from './components/AccountPage';
 import { Catalog } from './components/Catalog';
 import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
@@ -23,6 +24,7 @@ import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor, isNeighborRole, isPartner, isStaff } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
 import { formatMoney } from './utils/format';
+import { authHref, authRouteFromLocation, type AuthPageId, type ReturnView, type StaffLoginKind } from './utils/authRoutes';
 
 import './styles.css';
 
@@ -39,7 +41,7 @@ const PartnerPanel = lazy(() => import('./components/PartnerPanel').then((module
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
-type View = 'store' | 'orders' | 'cart' | 'zone';
+type View = 'store' | 'orders' | 'cart' | 'zone' | 'account';
 
 // saludo al entrar según el rol; el vecino recibe el de su saldo
 const WELCOME: Partial<Record<Role, string>> = {
@@ -52,7 +54,10 @@ const WELCOME: Partial<Record<Role, string>> = {
   proveedor: 'Aquí ves lo que te compramos y mandas tu lista.',
 };
 
-const viewFromHash = (): View => ({ '#orders': 'orders', '#cart': 'cart', '#zone': 'zone' } as Record<string, View>)[window.location.hash] ?? 'store';
+const viewFromHash = (): View => ({ '#orders': 'orders', '#cart': 'cart', '#zone': 'zone', '#cuenta': 'account' } as Record<string, View>)[window.location.hash] ?? 'store';
+const VIEW_HASH: Record<View, string> = { store: 'catalog', orders: 'orders', cart: 'cart', zone: 'zone', account: 'cuenta' };
+const RETURN_TO_VIEW: Record<ReturnView, View> = { cart: 'cart', orders: 'orders', zone: 'zone', cuenta: 'account' };
+const authRouteNow = () => authRouteFromLocation(window.location.pathname, window.location.search);
 
 export default function App() {
   const [catalog, setCatalog] = useState<Product[]>([]);
@@ -66,8 +71,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [view, setView] = useState<View>(viewFromHash);
   const [adminOpen, setAdminOpen] = useState(() => window.location.hash === '#admin');
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authAudience, setAuthAudience] = useState<AuthAudience>('vecino');
+  const [authRoute, setAuthRoute] = useState(authRouteNow); // /entrar y /equipo: el acceso tiene su propia página
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [confirmation, setConfirmation] = useState<Order | null>(null);
@@ -188,7 +192,7 @@ export default function App() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
   useEffect(() => {
-    const sync = () => { setAdminOpen(window.location.hash === '#admin'); setView(viewFromHash()); };
+    const sync = () => { setAdminOpen(window.location.hash === '#admin'); setView(viewFromHash()); setAuthRoute(authRouteNow()); };
     window.addEventListener('hashchange', sync);
     window.addEventListener('popstate', sync);
     return () => { window.removeEventListener('hashchange', sync); window.removeEventListener('popstate', sync); };
@@ -197,16 +201,34 @@ export default function App() {
   // --- navegación ---
 
   const go = (hash: string) => { window.history.pushState(null, '', `${window.location.pathname}${window.location.search}#${hash}`); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const openAuth = (audience: AuthAudience = 'vecino') => { setAuthAudience(audience); setAuthOpen(true); };
-  const needAccount = (message: string) => { openAuth('vecino'); notify(message, 'neutral', 'Tu canasta se queda guardada mientras entras.'); };
+  const openAuth = (page: AuthPageId = 'entrar', options: { rol?: StaffLoginKind; volver?: ReturnView } = {}) => {
+    window.history.pushState(null, '', authHref(page, options));
+    setAuthRoute(authRouteNow());
+  };
+  // vuelve a la tienda sin dejar /entrar en el historial: Atrás no reabre el acceso
+  const leaveAuth = (next: View = 'store') => {
+    window.history.replaceState(null, '', `/#${VIEW_HASH[next]}`);
+    setAuthRoute({ page: null });
+    setAdminOpen(false);
+    setView(next);
+    window.scrollTo({ top: 0 });
+  };
+  const needAccount = (message: string, volver?: ReturnView) => { openAuth('entrar', { volver }); notify(message, 'neutral', 'Tu canasta se queda guardada mientras entras.'); };
+  const openAccount = () => (account ? openView('account') : openAuth('entrar'));
+  // con la sesión ya abierta, /entrar y /equipo no tienen nada que mostrar
+  useEffect(() => {
+    if (!account || !authRoute.page) return;
+    leaveAuth(authRoute.volver ? RETURN_TO_VIEW[authRoute.volver] : 'store');
+    if (homeFor(account.role) === 'operaciones') { setAdminOpen(true); go('admin'); }
+  }, [account, authRoute.page]);
   // 'catalog' es el <main> entero: basta con volver arriba; bajar hasta él lo pegaba bajo el encabezado
   const goStore = (anchor = 'catalog') => { setAdminOpen(false); setView('store'); go(anchor); if (anchor !== 'catalog') window.requestAnimationFrame(() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
   const openView = (next: View) => {
-    if ((next === 'orders' || next === 'zone') && !account) { needAccount('Entra a tu cuenta para continuar.'); return; }
-    setAdminOpen(false); setView(next); go(next);
+    if ((next === 'orders' || next === 'zone' || next === 'account') && !account) { needAccount('Entra a tu cuenta para continuar.', next === 'account' ? 'cuenta' : next); return; }
+    setAdminOpen(false); setView(next); go(VIEW_HASH[next]);
   };
   const openAdmin = () => {
-    if (account?.role !== 'admin') { openAuth('admin'); return; }
+    if (account?.role !== 'admin') { openAuth('equipo', { rol: 'admin' }); return; }
     setAdminOpen(true); go('admin');
   };
 
@@ -241,7 +263,7 @@ export default function App() {
   // --- pedido ---
 
   const openCheckout = async () => {
-    if (!account) { needAccount('Entra a tu cuenta para registrar el pedido.'); return; }
+    if (!account) { needAccount('Entra a tu cuenta para registrar el pedido.', 'cart'); return; }
     if (!isNeighborRole(account.role)) { notify('Esta cuenta no es de vecino', 'warning', 'Para comprar, entra con una cuenta de vecino.'); return; }
     try {
       setQuote(toQuote(await api.post<Raw>('/api/cotizar', { lineas: cartBody() })));
@@ -314,7 +336,8 @@ export default function App() {
   const finishLogin = (me: Account) => {
     api.setCsrf(me.csrf);
     setAccount(me);
-    setAuthOpen(false);
+    const back = authRoute.volver;
+    leaveAuth(back ? RETURN_TO_VIEW[back] : 'store');
     notify(`Hola, ${me.name.split(' ')[0]}`, 'success', WELCOME[me.role] ?? (me.balance ? `Tienes ${formatMoney(me.balance)} de saldo para tu próxima compra.` : 'Ya puedes armar tu canasta de la semana.'));
     if (homeFor(me.role) === 'operaciones') { setAdminOpen(true); go('admin'); }
     return me;
@@ -323,10 +346,7 @@ export default function App() {
     try { await api.delete('/api/sesion'); } catch { /* la sesión ya no existe */ }
     api.setCsrf('');
     setAccount(null);
-    setAuthOpen(false);
-    setAdminOpen(false);
-    setView('store');
-    go('catalog');
+    leaveAuth('store');
   };
 
   const joinedByInvite = (raw: Raw) => {
@@ -370,6 +390,11 @@ export default function App() {
   );
 
   if (window.location.pathname.replace(/\/$/, '') === '/privacidad') return <PrivacyPage />;
+  if (authRoute.page && !account) return <><AuthPage page={authRoute.page} initialRole={authRoute.rol} googleClientId={googleClientId} onLogin={login} onGoogleLogin={loginWithGoogle}
+    onForgotPin={async (user) => (await api.post<{ mensaje: string }>('/api/pin/olvide', { usuario: user })).mensaje}
+    onResetPin={async (user, code, pin) => (await api.post<{ mensaje: string }>('/api/pin/restablecer', { usuario: user, codigo: code, pin })).mensaje}
+    onSwitch={(page) => { window.history.replaceState(null, '', authHref(page, { volver: authRoute.volver })); setAuthRoute(authRouteNow()); }}
+    onBack={() => leaveAuth('store')} />{toastRegion}</>;
   if (account && isPartner(account.role)) return <Suspense fallback={<div className="partner-view"><main className="partner-main"><PartnerSkeleton /></main></div>}><PartnerPanel account={account} notify={notify} onLogout={() => void logout()} />{toastRegion}</Suspense>;
   if (account && staffOnly) return <div className="app-shell"><Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account.name} role={account.role} notify={notify} onLogout={() => void logout()} /></Suspense>{toastRegion}</div>;
   if (inviteCode) return <InvitePage code={inviteCode} googleClientId={googleClientId} signedIn={Boolean(account)} onJoined={joinedByInvite} onGoHome={goHomeFromInvite} />;
@@ -398,9 +423,9 @@ export default function App() {
             {tabs.map((tab) => <button key={tab.id} className={`nav-link ${view === tab.id ? 'is-active' : ''}`} type="button" aria-current={view === tab.id ? 'page' : undefined} onClick={() => openTab(tab.id)}>{tab.id === 'zone' && account && canOpenZonePanel(account.role) ? <Icon name="crown" size={15} /> : null}{tab.id === 'store' ? 'Comprar' : tab.id === 'orders' ? 'Mis pedidos' : tab.label}{tab.id === 'cart' && lines.length ? <span className="nav-badge">{lines.length}</span> : null}</button>)}
           </nav>
           <div className="topbar-actions">
-            {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={() => openAuth('vecino')} /> : null}
+            {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={openAccount} /> : null}
             <button className="location-button" type="button" onClick={() => (account ? openView('zone') : notify('Dónde entregamos', 'neutral', 'Lince y Jesús María ya reciben pedidos. La Victoria abre muy pronto.'))}><Icon name="pin" size={16} /><span>{accountZone?.name ?? 'Elige tu zona'}</span></button>
-            <button className="account-button" type="button" onClick={() => openAuth('vecino')} aria-label={account ? `Tu cuenta, ${firstName}` : 'Entrar a Yapa'}>{account ? <span className="account-avatar" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : <Icon name="user" size={17} />}<span className="account-label">{account ? firstName : 'Entrar'}</span></button>
+            <button className="account-button" type="button" onClick={openAccount} aria-label={account ? `Tu cuenta, ${firstName}` : 'Entrar a Yapa'}>{account ? <span className="account-avatar" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : <Icon name="user" size={17} />}<span className="account-label">{account ? firstName : 'Entrar'}</span></button>
           </div>
         </header>
 
@@ -418,6 +443,10 @@ export default function App() {
             onWithdrawMerge={(id) => zoneAction(() => api.post(`/api/solicitudes/${id}/retirar`), 'Retiraste la solicitud', 'Tu zona sigue contando sola.')()}
             onLeaveGroup={(zoneId) => zoneAction(() => api.post(`/api/zonas/${zoneId}/separar`), 'Tu zona vuelve a contar sola', 'Para llegar al mínimo cuentan solo los pedidos de tu zona.')()}
             onTransfer={(zoneId, newAdmin) => zoneAction(() => api.post(`/api/zonas/${zoneId}/transferir`, { nuevo: newAdmin }), 'Transferiste el rol de admin', '¡Gracias por organizar tu edificio! Sigues en la zona como vecino.')()} />
+            : view === 'account' && account ? <AccountPage account={account} googleClientId={googleClientId} onLogout={logout} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')}
+              onGoogleLink={async (credential) => { await api.post('/api/cuenta/google', { credential }); await loadAccount(); }} onGoogleUnlink={async () => { await api.post('/api/cuenta/google/desvincular'); await loadAccount(); }}
+              onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }}
+              onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }} />
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
               : <main id="catalog" className="page-content">
                 {account ? (
@@ -433,7 +462,7 @@ export default function App() {
                     <div className="hero-copy">
                       <h1 id="page-title">El mercado mayorista, en tu portería.</h1>
                       <p className="hero-lead">Juntamos los pedidos de tu edificio para comprar al por mayor. Pagas el precio máximo y lo que ahorremos entre todos vuelve a tu saldo.</p>
-                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo</button><button className="secondary-button" type="button" onClick={() => openAuth('vecino')}>Ya tengo cuenta</button></div>
+                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo</button><button className="secondary-button" type="button" onClick={() => openAuth('entrar')}>Ya tengo cuenta</button></div>
                       <WeekFacts open={Boolean(state?.open)} />
                     </div>
                     <div className="hero-art"><img src="/images/brand/yapa-farmer-banner.webp" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div>
@@ -454,12 +483,11 @@ export default function App() {
 
         <nav className="tab-bar" aria-label="Navegación">
           {tabs.map((tab) => <button key={tab.id} type="button" className={view === tab.id ? 'is-active' : ''} aria-current={view === tab.id ? 'page' : undefined} onClick={() => openTab(tab.id)}><span className="tab-icon"><Icon name={tab.icon} size={23} weight={view === tab.id ? 'fill' : 'regular'} />{tab.id === 'cart' && lines.length ? <span className="tab-count">{lines.length}</span> : null}</span>{tab.label}</button>)}
-          <button type="button" onClick={() => openAuth('vecino')}><span className="tab-icon">{account ? <span className="account-avatar account-avatar--sm" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : <Icon name="user" size={23} />}</span>{account ? 'Cuenta' : 'Entrar'}</button>
+          <button type="button" className={view === 'account' ? 'is-active' : ''} aria-current={view === 'account' ? 'page' : undefined} onClick={openAccount}><span className="tab-icon">{account ? <span className="account-avatar account-avatar--sm" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : <Icon name="user" size={23} />}</span>{account ? 'Cuenta' : 'Entrar'}</button>
         </nav>
       </>}
       {toastRegion}
       {!showAdmin ? <>
-        <AuthDialog open={authOpen} account={account} initialAudience={authAudience} onClose={() => setAuthOpen(false)} onLogin={login} onLogout={logout} googleClientId={googleClientId} onGoogleLogin={loginWithGoogle} onGoogleLink={async (credential) => { await api.post('/api/cuenta/google', { credential }); await loadAccount(); }} onGoogleUnlink={async () => { await api.post('/api/cuenta/google/desvincular'); await loadAccount(); }} onResetPin={async (user, code, pin) => (await api.post<{ mensaje: string }>('/api/pin/restablecer', { usuario: user, codigo: code, pin })).mensaje} onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }} onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }} onForgotPin={async (user) => (await api.post<{ mensaje: string }>('/api/pin/olvide', { usuario: user })).mensaje} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')} />
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
       </> : null}
     </div>

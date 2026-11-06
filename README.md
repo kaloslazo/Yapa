@@ -36,7 +36,7 @@ Cuentas de la demo:
 | Atención al cliente (entrar como Atención) | `atencion-demo` | `atencion-yapa-2026` |
 | Portería de Edificio Los Álamos (entrar como Portería) | `porteria-demo` | `porteria-yapa-2026` |
 
-El equipo, el reparto y los proveedores entran desde "¿Eres del equipo, reparto o proveedor? Entra aquí" en la pantalla de ingreso.
+Los vecinos entran en `/entrar`; el equipo, el reparto y los proveedores en `/equipo`. Para mandarle a cada persona su acceso con el rol ya elegido: `/equipo?rol=compras`, `armador`, `atencion`, `porteria`, `transportista`, `proveedor` o `admin`.
 
 ## Demo en línea (Render)
 

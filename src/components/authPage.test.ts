@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LOGIN_HINT } from './AuthDialog';
+import { LOGIN_HINT } from './AuthPage';
 
 describe('UX-01 · el ingreso dice con qué se entra', () => {
   it('correo, celular o número de cliente', () => {
