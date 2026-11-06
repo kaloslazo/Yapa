@@ -38,6 +38,19 @@ Cuentas de la demo:
 
 El equipo, el reparto y los proveedores entran desde "¿Eres del equipo, reparto o proveedor? Entra aquí" en la pantalla de ingreso.
 
+## Demo en línea (Render)
+
+`Dockerfile` y `render.yaml` arman la web y el motor en un solo servicio gratis. En Render: **New > Blueprint**, elige este repo y escribe las claves que pide:
+
+| Variable | Qué es |
+|---|---|
+| `YAPA_ADMIN_USUARIO`, `YAPA_ADMIN_CLAVE` | administrador del equipo |
+| `YAPA_DEBUG_CLAVE` | clave del admin global de la demostración (10 caracteres o más) |
+| `YAPA_DEMO_PINS` | PIN de las cuentas de prueba, p. ej. `101=482915,105=739104,116=260318` |
+| `YAPA_PUBLIC_URL` | la URL que da Render (`https://….onrender.com`), para las cookies seguras |
+
+El plan gratis se duerme sin visitas (tarda unos segundos en despertar) y borra el disco al reiniciar, así que la semana de demostración se vuelve a sembrar en cada arranque. Las cuentas del equipo, reparto y proveedor se crean desde "Cuentas del equipo".
+
 ## Qué se puede hacer
 
 - **Vecino:** armar la canasta (cada producto muestra cuánto falta para el siguiente descuento y el ahorro frente al supermercado), pagar con Yape o Plin con el código que da Yapa, usar su saldo, ver lo que le devolvieron, cancelar con un botón, reclamar con foto e invitar vecinos con su código.

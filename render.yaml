@@ -1,0 +1,19 @@
+# Render: New > Blueprint, elige este repo. Las claves se escriben en el panel de Render, no aquí.
+services:
+  - type: web
+    name: yapa
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /salud
+    envVars:
+      - key: YAPA_ADMIN_USUARIO
+        sync: false
+      - key: YAPA_ADMIN_CLAVE
+        sync: false
+      - key: YAPA_DEBUG_CLAVE
+        sync: false
+      - key: YAPA_DEMO_PINS
+        sync: false
+      - key: YAPA_PUBLIC_URL
+        sync: false
