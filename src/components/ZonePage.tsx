@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Zone } from '../types';
 import { Icon } from './Icon';
-import { shareText } from './AuthDialog';
+import { shareText } from './AccountPage';
 import { InviteBody, InviteContext } from './InviteCard';
 import { ConfirmAction } from './ConfirmAction';
 import { ReceptionCard } from './ReceptionCard';
