@@ -414,3 +414,29 @@
 - Implementación: módulos `partners.py` (cuentas) y `supplier_offers.py` (lista propuesta y pedido consolidado); `fulfillment.check_courier` deja entregar al transportista activo; la API suma los tipos de sesión `transportista` y `proveedor` con rutas propias. En la web, el acceso del equipo elige Equipo · Reparto · Proveedor y cada uno ve su pantalla.
 - Resultado: 607 pruebas del motor (37 nuevas) y 103 del frontend en verde; typecheck y build sin errores (`54-proveedores-transportistas-verde.txt`).
 
+## Iteración 55 · Cuentas para compras, armado, atención y portería (06/11/2026)
+
+- Spec: `55-personal-por-rol.md`, con los supuestos S-289..S-294 a validar por el equipo:
+  - el admin crea las cuatro cuentas;
+  - cada rol hace solo su trabajo, sin ver montos que no le tocan;
+  - la portería pertenece a una zona;
+  - confirman la recepción la portería o el admin de zona.
+- Pruebas antes del código: `docs/evidencia/desarrollo/55-personal-por-rol-rojo.txt`.
+- Implementación en el motor:
+  - `partners.create_staff` y `partners.can`;
+  - `fulfillment.check_role` reemplaza a `check_staff` en el armado, el colchón y los reclamos;
+  - `customers` deja que atención atienda los PIN;
+  - el módulo nuevo `reception.py` y el aviso `notices.in_building`.
+- Implementación en la API: las rutas aceptan una tupla de roles; se suman `/api/compras*`, `/api/porteria*` y `/api/zona/recepcion*`.
+- Implementación en la web:
+  - un selector con siete roles en el acceso del equipo;
+  - el panel del equipo con secciones según el rol, incluidas "Compra de la semana" y "Pedidos de PIN";
+  - la pantalla de portería;
+  - la tarjeta de recepción en el panel del admin de zona;
+  - "Cuentas del equipo" para crear los seis tipos de cuenta.
+- Hallazgos al probar:
+  - la lista de armado mostraba los pagos al armador;
+  - con el ciclo abierto y sin pedidos, compras decía "Cerrado".
+  - Los dos se especificaron y se probaron antes de corregirlos.
+- Resultado: 638 pruebas del motor (31 nuevas) y 110 del frontend (7 nuevas) en verde; typecheck y build sin errores (`55-personal-por-rol-verde.txt`). La demo se probó en el navegador: compras con la W39, y la portería confirmando Los Álamos con el aviso al vecino 101.
+

@@ -50,16 +50,16 @@ class FailedDelivery:
     registered_at: datetime
 
 
-def check_staff(store: InMemoryStore, by: str) -> None:
-    """S-40: el personal de Yapa son los administradores."""
-    if by not in store.admins:
-        raise BusinessRuleError("NOT_AUTHORIZED", "Solo el personal de Yapa puede hacer esto.")
-
-
 def check_courier(store: InMemoryStore, by: str) -> None:
     """S-281: entregan el personal y los transportistas activos."""
     if by not in store.admins and partners.active(store, by, partners.DRIVER) is None:
         raise BusinessRuleError("NOT_AUTHORIZED", "Solo el personal de Yapa o su transportista puede registrar la entrega.")
+
+
+def check_role(store: InMemoryStore, by, *kinds: str) -> None:
+    """S-289: el personal de Yapa, o la cuenta activa del rol que hace ese trabajo."""
+    if not partners.can(store, by, *kinds):
+        raise BusinessRuleError("NOT_AUTHORIZED", "Esta acción no es para tu tipo de cuenta.")
 
 
 def check_photo(photo: str | None) -> str:
@@ -84,7 +84,7 @@ def is_attended(store: InMemoryStore, order: Order) -> bool:
 
 
 def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: datetime) -> Bag:
-    check_staff(store, by)  # AR-01
+    check_role(store, by, partners.PACKER)  # AR-01, AM-02
     order = store.orders.get(order_id)
     if order is None:  # AR-02
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")

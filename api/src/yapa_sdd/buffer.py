@@ -10,7 +10,8 @@ from datetime import datetime
 from decimal import Decimal
 
 from .domain import BusinessRuleError, is_multiple
-from .fulfillment import check_staff, is_attended
+from . import partners
+from .fulfillment import check_role, is_attended
 from .order_registration import _to_quantity
 from .store import InMemoryStore
 
@@ -52,7 +53,7 @@ def _quantity(quantity, step: Decimal) -> Decimal:
 
 
 def add_to_buffer(store: InMemoryStore, cycle: str, product_id: str, quantity, *, by: str) -> BufferStock:
-    check_staff(store, by)  # CO-01
+    check_role(store, by, partners.BUYER)  # CO-01, CP-04
     product = store.catalog_for(cycle).get(product_id)
     if product is None:  # CO-02
         raise BusinessRuleError("PRODUCT_NOT_AVAILABLE", f"{product_id} no está en el catálogo del ciclo.")
@@ -71,7 +72,7 @@ def add_to_buffer(store: InMemoryStore, cycle: str, product_id: str, quantity, *
 def use_buffer(store: InMemoryStore, product_id: str, quantity, *, order_id: int, by: str,
                now: datetime) -> BufferStock:
     """CO-05: reponer un faltante de un pedido con lo guardado; el valor baja en proporción."""
-    check_staff(store, by)  # CO-01
+    check_role(store, by, partners.BUYER)  # CO-01, CP-04
     order = store.orders.get(order_id)
     if order is None:  # CO-06
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")

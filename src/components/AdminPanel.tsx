@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { api } from '../services/api';
 import { toOrder, toZone } from '../services/mappers';
-import type { Order, Zone } from '../types';
+import type { Order, Role, Zone } from '../types';
 import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
 import { formatMoney } from '../utils/format';
@@ -14,37 +14,33 @@ import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
 import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
+import { groupsOf, sectionsFor, type Section } from '../utils/adminSections';
+import { ROLE_LABELS } from '../utils/roles';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
 
 interface AdminPanelProps {
   adminName: string;
-  onClose: () => void;
+  role: Role;
+  onClose?: () => void; // solo el admin vuelve a la tienda; compras, armado y atención no compran
+
   onLogout: () => void;
   onViewAs?: (customerId: number) => Promise<void>;
   notify: (message: string, tone?: 'neutral' | 'success' | 'warning') => void;
 }
 
-type Section = 'resumen' | 'zonas' | 'armado' | 'reclamos' | 'devoluciones' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos' | 'cuentas';
-
-// la barra lateral agrupa las secciones por tarea; el texto corto va bajo el título de cada página
-const SECTIONS: Array<{ id: Section; label: string; icon: IconName; group: string; hint: string }> = [
-  { id: 'resumen', label: 'Resumen', icon: 'list', group: 'Semana', hint: 'Pagos por verificar, pedidos y qué grupos llegan al mínimo.' },
-  { id: 'armado', label: 'Armado y entrega', icon: 'box', group: 'Semana', hint: 'Foto de cada bolsa y de cada entrega.' },
-  { id: 'reclamos', label: 'Reclamos', icon: 'receipt', group: 'Semana', hint: 'Lo que faltó o llegó mal, con su foto.' },
-  { id: 'devoluciones', label: 'Devoluciones', icon: 'undo', group: 'Semana', hint: 'Dinero por devolver a Yape o Plin.' },
-  { id: 'zonas', label: 'Zonas', icon: 'map', group: 'Vecinos', hint: 'Mapa de zonas, uniones posibles y sugerencias.' },
-  { id: 'vecinos', label: 'Vecinos', icon: 'users', group: 'Vecinos', hint: 'Altas, PIN y solicitudes.' },
-  { id: 'catalogo', label: 'Catálogo', icon: 'store', group: 'Productos', hint: 'Lista de la semana con sus tramos de precio.' },
-  { id: 'referencias', label: 'Precios de referencia', icon: 'tag', group: 'Productos', hint: 'Lo que cuesta en el mercado y el supermercado.' },
-  { id: 'cuentas', label: 'Proveedores y reparto', icon: 'truck', group: 'Productos', hint: 'Cuentas de proveedores y transportistas, y sus listas.' },
-  { id: 'conciliacion', label: 'Conciliación', icon: 'scale', group: 'Dinero', hint: 'Que lo cobrado, el saldo y lo devuelto cuadren.' },
-  { id: 'metricas', label: 'Métricas', icon: 'chart', group: 'Dinero', hint: 'Cómo va el piloto semana a semana.' },
-];
-const GROUPS = [...new Set(SECTIONS.map((s) => s.group))];
-
-const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN', cuentas: 'listas por revisar' };
+const PENDING_NOUN: Partial<Record<Section, string>> = { zonas: 'propuestas', vecinos: 'solicitudes de PIN', pines: 'solicitudes de PIN', cuentas: 'listas por revisar' };
+// iteración 55: contadores de la barra lateral; cada rol pide solo los de sus secciones
+const PENDING: Partial<Record<Section, (cycle: string) => Promise<number>>> = {
+  resumen: async (cycle) => num((await api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`)).indicadores.por_verificar),
+  reclamos: async () => (await api.get<Raw>('/api/admin/reclamos')).reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length,
+  devoluciones: async () => (await api.get<Raw>('/api/admin/devoluciones')).devoluciones.length,
+  zonas: async (cycle) => (await api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`)).propuestas.length,
+  vecinos: async () => (await api.get<Raw>('/api/admin/pin-solicitudes')).solicitudes.length,
+  pines: async () => (await api.get<Raw>('/api/admin/pin-solicitudes')).solicitudes.length,
+  cuentas: async () => (await api.get<Raw>('/api/admin/propuestas')).propuestas.filter((o: Raw) => o.estado === 'PENDIENTE').length,
+};
 const num = (value: unknown) => Number(value ?? 0);
 const CLAIM_STATUS: Record<string, string> = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente' };
 const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
@@ -76,19 +72,21 @@ function Empty({ icon, title, text }: { icon: IconName; title: string; text: str
   return <div className="admin-orders-empty"><span className="admin-empty-icon"><Icon name={icon} size={23} /></span><div><strong>{title}</strong><p>{text}</p></div></div>;
 }
 
-export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: AdminPanelProps) {
-  const [section, setSection] = useState<Section>('resumen');
+export function AdminPanel({ adminName, role, onClose, onLogout, onViewAs, notify }: AdminPanelProps) {
+  const sections = useMemo(() => sectionsFor(role), [role]);
+  const [section, setSection] = useState<Section>(sections[0]?.id ?? 'resumen');
   const [cycle, setCycle] = useState('');
   const [pending, setPending] = useState<Partial<Record<Section, number>>>({});
 
   const refreshPending = useCallback(async () => {
     try {
-      const [summary, claims, refunds, analysis, pins, offers] = await Promise.all([api.get<Raw>(`/api/admin/resumen${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/reclamos'), api.get<Raw>('/api/admin/devoluciones'), api.get<Raw>(`/api/admin/analisis${cycle ? `?ciclo=${cycle}` : ''}`), api.get<Raw>('/api/admin/pin-solicitudes'), api.get<Raw>('/api/admin/propuestas')]);
-      setPending({ resumen: num(summary.indicadores.por_verificar), reclamos: claims.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE').length, devoluciones: refunds.devoluciones.length, zonas: analysis.propuestas.length, vecinos: pins.solicitudes.length, cuentas: offers.propuestas.filter((o: Raw) => o.estado === 'PENDIENTE').length });
+      const counted = sections.filter((s) => PENDING[s.id]);
+      const counts = await Promise.all(counted.map((s) => PENDING[s.id]!(cycle)));
+      setPending(Object.fromEntries(counted.map((s, i) => [s.id, counts[i]])));
     } catch {
       setPending({});
     }
-  }, [cycle]);
+  }, [cycle, sections]);
   useEffect(() => { void refreshPending(); }, [refreshPending, section]);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'auto' }); }, [section]);
@@ -105,24 +103,25 @@ export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: A
     }
   }, [notify, refreshPending]);
 
-  const current = SECTIONS.find((s) => s.id === section)!;
-  const props = { cycle, setCycle, run, notify, onViewAs };
+  const current = sections.find((s) => s.id === section) ?? sections[0];
+  const props = { cycle, setCycle, run, notify, onViewAs, role };
+  const roleLabel = role === 'admin' ? 'Equipo de operaciones' : ROLE_LABELS[role];
 
   return (
     <div className="admin-view">
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Navegación de operaciones">
-          <a className="admin-brand" href="#admin" aria-label="Yapa, centro de operaciones" onClick={(event) => { event.preventDefault(); setSection('resumen'); }}>
+          <a className="admin-brand" href="#admin" aria-label="Yapa, centro de operaciones" onClick={(event) => { event.preventDefault(); setSection(sections[0].id); }}>
             <img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" />
             <span><strong>yapa</strong><small>operaciones</small></span>
           </a>
           <nav className="admin-nav" aria-label="Secciones del panel">
-            {GROUPS.map((group) => <div className="admin-nav-group" key={group}><span className="admin-sidebar-label">{group}</span>{SECTIONS.filter((s) => s.group === group).map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {PENDING_NOUN[s.id] ?? 'pendientes'}</span></strong> : null}</button>)}</div>)}
+            {groupsOf(sections).map((group) => <div className="admin-nav-group" key={group}><span className="admin-sidebar-label">{group}</span>{sections.filter((s) => s.group === group).map((s) => <button key={s.id} type="button" className={`admin-nav-link ${section === s.id ? 'is-active' : ''}`} aria-current={section === s.id ? 'page' : undefined} onClick={(event) => { setSection(s.id); event.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}><Icon name={s.icon} size={18} /><span>{s.label}</span>{pending[s.id] ? <strong>{pending[s.id]}<span className="sr-only"> {PENDING_NOUN[s.id] ?? 'pendientes'}</span></strong> : null}</button>)}</div>)}
           </nav>
           <div className="admin-sidebar-footer">
-            <div className="admin-sidebar-user"><span className="admin-avatar" aria-hidden="true">{adminName.trim().charAt(0).toUpperCase() || 'Y'}</span><span><strong>{adminName}</strong><small>Equipo de operaciones</small></span></div>
+            <div className="admin-sidebar-user"><span className="admin-avatar" aria-hidden="true">{adminName.trim().charAt(0).toUpperCase() || 'Y'}</span><span><strong>{adminName}</strong><small>{roleLabel}</small></span></div>
             <div className="admin-sidebar-actions">
-              <a className="admin-footer-button" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="store" size={16} />Tienda</a>
+              {onClose ? <a className="admin-footer-button" href="#catalog" onClick={(event) => { event.preventDefault(); onClose(); }}><Icon name="store" size={16} />Tienda</a> : null}
               <button className="admin-footer-button" type="button" onClick={onLogout}><Icon name="signout" size={16} />Salir</button>
             </div>
           </div>
@@ -136,9 +135,11 @@ export function AdminPanel({ adminName, onClose, onLogout, onViewAs, notify }: A
           <div className="admin-page-content">
             {section === 'resumen' ? <Summary {...props} /> : null}
             {section === 'zonas' ? <Zones {...props} /> : null}
+            {section === 'compras' ? <Purchases {...props} /> : null}
             {section === 'armado' ? <Packing {...props} /> : null}
             {section === 'reclamos' ? <Claims {...props} /> : null}
             {section === 'devoluciones' ? <Refunds {...props} /> : null}
+            {section === 'pines' ? <PinRequests {...props} /> : null}
             {section === 'conciliacion' ? <Balance {...props} /> : null}
             {section === 'metricas' ? <Metrics {...props} /> : null}
             {section === 'catalogo' ? <CatalogAdmin {...props} /> : null}
@@ -158,6 +159,7 @@ interface SectionProps {
   run: (action: () => Promise<unknown>, success: string) => Promise<boolean>;
   notify: AdminPanelProps['notify'];
   onViewAs?: AdminPanelProps['onViewAs'];
+  role: Role;
 }
 
 const PROPOSAL_KIND: Record<string, { label: string; icon: IconName }> = {
@@ -251,7 +253,8 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
   );
 }
 
-function Packing({ cycle, setCycle, run, notify }: SectionProps) {
+function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
+  const packer = role === 'armador'; // S-290: el armador solo arma; la entrega la registra el reparto
   const { data, reload } = useLoad<Raw>(`/api/admin/armado${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
   if (!data) return <AdminSkeleton />;
@@ -262,12 +265,12 @@ function Packing({ cycle, setCycle, run, notify }: SectionProps) {
   };
   return (
     <>
-      <section className="admin-intro"><div><h2>Foto de cada bolsa y de cada entrega</h2><p>Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <section className="admin-intro"><div><h2>{packer ? 'Foto de cada bolsa' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Registra cada bolsa con su foto: sin bolsas, el reparto no puede entregar la zona.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
       <Card title={`Entregas por zona (${data.paradas.length})`}>
         {data.paradas.length ? <div className="stop-list">{data.paradas.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
           <div className="stop-card" key={zone.id}>
             <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
-            {!p.entrega && !p.fallida ? <div className="stop-actions">
+            {!packer && !p.entrega && !p.fallida ? <div className="stop-actions">
               <PhotoForm label="Registrar entrega" onSend={(form) => send('/api/admin/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.name} registrada.`)}><label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contact} required /></label></PhotoForm>
               <details><summary>No pudimos entregar</summary><div className="segmented">{FAILURES.map((f) => <button key={f.value} type="button" className={failure === f.value ? 'is-active' : ''} onClick={() => setFailure(f.value)}>{f.label}</button>)}</div><PhotoForm label="Registrar entrega fallida" onSend={(form) => send('/api/admin/entregas-fallidas', form, { ciclo: data.ciclo, zona: zone.id, motivo: failure }, 'Entrega fallida registrada: se devuelve todo menos el envío.')} /></details>
             </div> : null}
@@ -426,10 +429,9 @@ function Neighbors({ run, notify, onViewAs }: SectionProps) {
   };
   const resetPin = (id: number, celular: string | null) => run(async () => { const r = await api.post<Raw>(`/api/admin/vecinos/${id}/pin`); setCreated({ ...r, nombre: data.vecinos.find((v: Raw) => v.id === id)?.nombre, celular }); }, 'PIN nuevo generado.');
   const dismissPin = (id: number) => run(() => api.post(`/api/admin/pin-solicitudes/${id}/descartar`), 'Solicitud descartada.').then(() => reloadPins());
-  const welcome = (c: Raw) => `Hola ${String(c.nombre ?? '').split(' ')[0]}, ya estás en Yapa. Entra con tu número de cliente ${c.id} y tu PIN ${c.pin}. Te recomendamos cambiarlo al entrar.`;
   return (
     <>
-      {created ? <section className="pin-banner"><Icon name="ok" size={30} weight="duotone" /><div><strong>Cliente {created.id} · PIN {created.pin}</strong><span>Se muestra una sola vez. Envíaselo por WhatsApp.</span></div><a className="primary-button" href={`https://wa.me/${created.celular ? `51${created.celular}` : ''}?text=${encodeURIComponent(welcome(created))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Enviar</a><button className="icon-button" type="button" onClick={() => setCreated(null)} aria-label="Cerrar"><Icon name="close" size={18} /></button></section> : null}
+      {created ? <PinBanner created={created} onClose={() => setCreated(null)} /> : null}
       {pinData?.solicitudes.length ? <Card title={`Solicitudes de PIN (${pinData.solicitudes.length})`}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Vecino</th><th>Celular registrado</th><th>Pidió</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pinData.solicitudes.map((r: Raw) => <tr key={r.id}><td><strong>{r.vecino}</strong><small className="admin-cell-note">Cliente {r.cliente}</small></td><td>{r.celular ?? 'Sin celular'}</td><td>{new Date(r.hora).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}</td><td className="row-actions"><button className="admin-row-button" type="button" onClick={() => void resetPin(r.cliente, r.celular).then(() => reloadPins())}>Nuevo PIN y escribir</button><ConfirmAction label="Descartar" className="text-button" confirmLabel="Sí, descartar" question={<>¿Descartar? El PIN de {r.vecino} no cambia.</>} onConfirm={() => dismissPin(r.id)} /></td></tr>)}</tbody></table></div><p className="admin-muted">El PIN nuevo se manda al celular que el vecino registró: así solo lo recibe quien tiene ese teléfono.</p></Card> : null}
       <form className="admin-card" onSubmit={register}><div className="admin-card-heading"><div><h2>Dar de alta a un vecino</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Nombre</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label>
@@ -447,20 +449,107 @@ function Neighbors({ run, notify, onViewAs }: SectionProps) {
 const OFFER_STATES: Record<string, string> = { PENDIENTE: 'Por revisar', APROBADA: 'Aprobada', RECHAZADA: 'Rechazada' };
 
 // iteración 54: cuentas de proveedores y transportistas, y las listas que mandan los proveedores
+function PinBanner({ created, onClose }: { created: Raw; onClose: () => void }) {
+  const welcome = `Hola ${String(created.nombre ?? '').split(' ')[0]}, ya estás en Yapa. Entra con tu número de cliente ${created.id} y tu PIN ${created.pin}. Te recomendamos cambiarlo al entrar.`;
+  return <section className="pin-banner"><Icon name="ok" size={30} weight="duotone" /><div><strong>Cliente {created.id} · PIN {created.pin}</strong><span>Se muestra una sola vez. Envíaselo por WhatsApp.</span></div><a className="primary-button" href={`https://wa.me/${created.celular ? `51${created.celular}` : ''}?text=${encodeURIComponent(welcome)}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Enviar</a><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={18} /></button></section>;
+}
+
+// iteración 55, AT-03: atención responde los "Olvidé mi PIN" sin ver la lista completa de vecinos
+function PinRequests({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/pin-solicitudes', notify);
+  const [created, setCreated] = useState<Raw | null>(null);
+  if (!data) return <AdminSkeleton />;
+  const resetPin = (r: Raw) => run(async () => { const result = await api.post<Raw>(`/api/admin/vecinos/${r.cliente}/pin`); setCreated({ ...result, nombre: r.vecino, celular: r.celular }); }, 'PIN nuevo generado.').then(() => reload());
+  const dismiss = (id: number) => run(() => api.post(`/api/admin/pin-solicitudes/${id}/descartar`), 'Solicitud descartada.').then(() => reload());
+  return (
+    <>
+      {created ? <PinBanner created={created} onClose={() => setCreated(null)} /> : null}
+      <Card eyebrow="Olvidé mi PIN" title={`Por atender (${data.solicitudes.length})`}>
+        {data.solicitudes.length ? <><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Vecino</th><th>Celular registrado</th><th>Pidió</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.solicitudes.map((r: Raw) => <tr key={r.id}><td><strong>{r.vecino}</strong><small className="admin-cell-note">Cliente {r.cliente}</small></td><td>{r.celular ?? 'Sin celular'}</td><td>{new Date(r.hora).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}</td><td className="row-actions"><button className="admin-row-button" type="button" onClick={() => void resetPin(r)}>Nuevo PIN y escribir</button><ConfirmAction label="Descartar" className="text-button" confirmLabel="Sí, descartar" question={<>¿Descartar? El PIN de {r.vecino} no cambia.</>} onConfirm={() => dismiss(r.id)} /></td></tr>)}</tbody></table></div><p className="admin-muted">El PIN nuevo se manda al celular que el vecino registró: así solo lo recibe quien tiene ese teléfono.</p></> : <Empty icon="ok" title="Nadie pidió ayuda con su PIN" text="Cuando un vecino use «Olvidé mi PIN» y no tenga correo verificado, aparece aquí." />}
+      </Card>
+    </>
+  );
+}
+
+// iteración 55, CP-01..CP-03: el encargado de compras ve qué comprar a cada proveedor y maneja el colchón
+function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>(`/api/compras${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  const [add, setAdd] = useState({ producto: '', cantidad: '' });
+  const [use, setUse] = useState({ producto: '', cantidad: '', pedido: '' });
+  if (!data) return <AdminSkeleton />;
+  const suppliers: Raw[] = data.proveedores;
+  const total = suppliers.reduce((sum, p) => sum + num(p.total), 0);
+  const buffer: Raw = data.colchon;
+  const used = Math.min(100, (num(buffer.valor) / Math.max(num(buffer.tope), 1)) * 100);
+  const partial = Boolean(data.parcial);
+  const addStock = async (event: FormEvent) => {
+    event.preventDefault();
+    if (await run(() => api.post('/api/compras/colchon', { ciclo: data.ciclo, ...add }), `Se guardó ${add.cantidad} de ${add.producto} en el colchón.`)) { setAdd({ producto: '', cantidad: '' }); void reload(); }
+  };
+  const useStock = async (event: FormEvent) => {
+    event.preventDefault();
+    if (await run(() => api.post('/api/compras/colchon/usar', use), `Se repuso ${use.cantidad} de ${use.producto} al pedido ${use.pedido}.`)) { setUse({ producto: '', cantidad: '', pedido: '' }); void reload(); }
+  };
+  return (
+    <>
+      <section className="admin-intro"><div><h2>Lo que hay que comprar</h2><p>{partial ? 'Los pedidos siguen abiertos hasta el miércoles a las 20:00: las cantidades todavía pueden subir.' : 'Cantidades finales: solo cuentan los pedidos de grupos que llegaron al mínimo.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <div className="purchase-stats">
+        <div className="purchase-stat"><span>Proveedores</span><strong>{suppliers.length}</strong></div>
+        <div className="purchase-stat"><span>Total a pagar</span><strong>{formatMoney(total)}</strong></div>
+        <div className="purchase-stat"><span>Estado</span><strong>{partial ? <span className="state-pill">Abierto</span> : <span className="state-pill state-pill--ok">Cerrado</span>}</strong></div>
+      </div>
+      {suppliers.length ? suppliers.map((p) => (
+        <Card key={p.id} eyebrow={p.id} title={p.nombre} aside={<strong className="purchase-total">{formatMoney(num(p.total))}</strong>}>
+          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Tramo</th><th>Precio</th><th>Monto</th></tr></thead><tbody>{p.lineas.map((l: Raw) => <tr key={l.producto}><td><strong>{l.nombre}</strong><small className="admin-cell-note">{l.producto}</small></td><td>{l.cantidad} {l.unidad}</td><td><small>desde {l.desde}</small></td><td>{formatMoney(num(l.precio))}</td><td><strong>{formatMoney(num(l.monto))}</strong></td></tr>)}</tbody></table></div>
+        </Card>
+      )) : <Card title="Sin compras esta semana"><Empty icon="cart" title="Todavía no hay nada que comprar" text="Aparece cuando hay pedidos de grupos que llegan al mínimo." /></Card>}
+      <Card eyebrow="Colchón de reposición" title={`${formatMoney(num(buffer.valor))} de ${formatMoney(num(buffer.tope))}`}>
+        <div className="buffer-meter" role="meter" aria-valuemin={0} aria-valuemax={num(buffer.tope)} aria-valuenow={num(buffer.valor)} aria-label="Valor guardado en el colchón"><span style={{ width: `${used}%` }} /></div>
+        {buffer.stock.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr></thead><tbody>{buffer.stock.map((b: Raw) => <tr key={b.producto}><td>{b.producto}</td><td>{b.cantidad}</td><td>{formatMoney(num(b.valor))}</td></tr>)}</tbody></table></div> : <p className="admin-muted">El colchón está vacío. Solo se guardan productos de limpieza, que no se malogran.</p>}
+        <div className="buffer-forms">
+          <form className="buffer-form" onSubmit={addStock}><h3>Guardar en el colchón</h3>
+            <label className="checkout-field"><span>Código del producto</span><input value={add.producto} onChange={(event) => setAdd({ ...add, producto: event.target.value.toUpperCase() })} placeholder="LIMPIATODO-GALON" spellCheck={false} required /></label>
+            <label className="checkout-field"><span>Cantidad</span><input value={add.cantidad} onChange={(event) => setAdd({ ...add, cantidad: event.target.value })} inputMode="decimal" placeholder="2" required /></label>
+            <button className="primary-button" type="submit">Guardar</button>
+          </form>
+          <form className="buffer-form" onSubmit={useStock}><h3>Reponer un faltante</h3>
+            <label className="checkout-field"><span>Pedido</span><input value={use.pedido} onChange={(event) => setUse({ ...use, pedido: event.target.value })} inputMode="numeric" placeholder="12" required /></label>
+            <label className="checkout-field"><span>Código del producto</span><input value={use.producto} onChange={(event) => setUse({ ...use, producto: event.target.value.toUpperCase() })} placeholder="LIMPIATODO-GALON" spellCheck={false} required /></label>
+            <label className="checkout-field"><span>Cantidad</span><input value={use.cantidad} onChange={(event) => setUse({ ...use, cantidad: event.target.value })} inputMode="decimal" placeholder="1" required /></label>
+            <button className="admin-row-button" type="submit">Reponer</button>
+          </form>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+// iteración 55: los seis tipos de cuenta que crea el admin (S-278, S-289)
+const ACCOUNT_KINDS: Array<{ id: Role; icon: IconName; does: string; example: string }> = [
+  { id: 'armador', icon: 'box', does: 'Arma las bolsas con su foto', example: 'armado-1' },
+  { id: 'compras', icon: 'cart', does: 'Compra y maneja el colchón', example: 'compras-1' },
+  { id: 'atencion', icon: 'headset', does: 'Reclamos, devoluciones y PIN', example: 'atencion-1' },
+  { id: 'porteria', icon: 'building', does: 'Recibe las bolsas en su edificio', example: 'porteria-alamos' },
+  { id: 'transportista', icon: 'truck', does: 'Entrega los sábados', example: 'reparto-1' },
+  { id: 'proveedor', icon: 'store', does: 'Manda su lista semanal', example: 'mercado-norte' },
+];
+
 function Partners({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/cuentas', notify);
   const { data: offerData, reload: reloadOffers } = useLoad<Raw>('/api/admin/propuestas', notify);
-  const [form, setForm] = useState({ tipo: 'transportista', usuario: '', nombre: '', proveedor: '', contrasena: '' });
+  const [form, setForm] = useState({ tipo: 'armador', usuario: '', nombre: '', proveedor: '', zona: '', contrasena: '' });
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<{ user: string; password: string } | null>(null);
   if (!data || !offerData) return <AdminSkeleton />;
   const supplier = form.tipo === 'proveedor';
+  const concierge = form.tipo === 'porteria';
+  const kind = ACCOUNT_KINDS.find((k) => k.id === form.tipo)!;
   const create = async (event: FormEvent) => {
     event.preventDefault();
     // un proveedor nuevo toma su código del usuario (S-283)
     const body = form.proveedor === 'nuevo' ? { ...form, proveedor: `SUP-${form.usuario.toUpperCase()}` } : form;
     const ok = await run(() => api.post('/api/admin/cuentas', body), `Cuenta ${form.usuario} creada. Pásale su usuario y contraseña por un canal privado.`);
-    if (ok) { setForm({ ...form, usuario: '', nombre: '', proveedor: '', contrasena: '' }); void reload(); }
+    if (ok) { setForm({ ...form, usuario: '', nombre: '', proveedor: '', zona: '', contrasena: '' }); void reload(); }
   };
   const savePassword = async (event: FormEvent) => {
     event.preventDefault();
@@ -487,25 +576,26 @@ function Partners({ run, notify }: SectionProps) {
           </article>
         ))}</div> : <Empty icon="store" title="No hay listas" text="Cuando un proveedor mande su lista de la semana, aparece aquí para que la revises." />}
       </Card>
-      <form className="admin-card" onSubmit={create}><div className="admin-card-heading"><div><h2>Crear una cuenta</h2></div></div>
-        <div className="segmented" role="radiogroup" aria-label="Tipo de cuenta">{[{ id: 'transportista', label: 'Transportista' }, { id: 'proveedor', label: 'Proveedor' }].map((k) => <label key={k.id} className={form.tipo === k.id ? 'is-selected' : ''}><input type="radio" name="tipo-cuenta" value={k.id} checked={form.tipo === k.id} onChange={() => setForm({ ...form, tipo: k.id })} />{k.label}</label>)}</div>
+      <form className="admin-card" onSubmit={create}><div className="admin-card-heading"><div><span className="admin-eyebrow">Solo el admin crea cuentas</span><h2>Crear una cuenta</h2></div></div>
+        <div className="role-picker" role="radiogroup" aria-label="Tipo de cuenta">{ACCOUNT_KINDS.map((k) => <label key={k.id} className={`role-option ${form.tipo === k.id ? 'is-selected' : ''}`}><input type="radio" name="tipo-cuenta" value={k.id} checked={form.tipo === k.id} onChange={() => setForm({ ...form, tipo: k.id, proveedor: '', zona: '' })} /><Icon name={k.icon} size={20} /><span><strong>{ROLE_LABELS[k.id]}</strong><small>{k.does}</small></span></label>)}</div>
         <div className="form-grid">
-          <label className="checkout-field"><span>Usuario</span><input value={form.usuario} onChange={(event) => setForm({ ...form, usuario: event.target.value.toLowerCase() })} placeholder={supplier ? 'mercado-norte' : 'reparto-1'} autoCapitalize="none" spellCheck={false} required /></label>
+          <label className="checkout-field"><span>Usuario</span><input value={form.usuario} onChange={(event) => setForm({ ...form, usuario: event.target.value.toLowerCase() })} placeholder={kind.example} autoCapitalize="none" spellCheck={false} required /></label>
+          {concierge ? <label className="checkout-field"><span>Zona que recibe</span><select value={form.zona} onChange={(event) => setForm({ ...form, zona: event.target.value })} required><option value="">Elige…</option>{data.zonas.map((z: Raw) => <option key={z.id} value={z.id}>{z.nombre} · {z.distrito}</option>)}</select></label> : null}
           {supplier ? <label className="checkout-field"><span>Proveedor</span><select value={form.proveedor} onChange={(event) => setForm({ ...form, proveedor: event.target.value })} required><option value="">Elige…</option>{data.proveedores.map((p: Raw) => <option key={p.id} value={p.id}>{p.nombre}</option>)}<option value="nuevo">Otro proveedor (nuevo)</option></select></label> : null}
-          {!supplier || form.proveedor === 'nuevo' ? <label className="checkout-field"><span>{supplier ? 'Nombre del proveedor' : 'Nombre'}</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label> : null}
+          {!supplier || form.proveedor === 'nuevo' ? <label className="checkout-field"><span>{supplier ? 'Nombre del proveedor' : concierge ? 'Nombre (conserje o encargado)' : 'Nombre'}</span><input value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} required /></label> : null}
           <label className="checkout-field"><span>Contraseña (10 o más caracteres)</span><input type="text" value={form.contrasena} onChange={(event) => setForm({ ...form, contrasena: event.target.value })} minLength={10} autoComplete="off" required /></label>
         </div>
         <button className="primary-button" type="submit">Crear cuenta</button>
       </form>
       <Card title={`Cuentas (${data.cuentas.length})`}>
-        {data.cuentas.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Usuario</th><th>Tipo</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.cuentas.map((c: Raw) => <tr key={c.usuario}>
+        {data.cuentas.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.cuentas.map((c: Raw) => <tr key={c.usuario}>
           <td><strong>{c.usuario}</strong><small className="admin-cell-note">{c.nombre}</small></td>
-          <td>{c.tipo === 'proveedor' ? 'Proveedor' : 'Transportista'}</td>
+          <td>{ROLE_LABELS[c.tipo as Role] ?? c.tipo}{c.zona ? <small className="admin-cell-note">{c.zona}</small> : null}</td>
           <td>{c.activa ? <span className="state-pill state-pill--ok">Activa</span> : <span className="state-pill state-pill--bad">Desactivada</span>}</td>
           <td className="admin-row-actions">{c.activa ? <ConfirmAction label="Desactivar" question={`${c.usuario} no podrá entrar. ¿Desactivar?`} confirmLabel="Desactivar" onConfirm={() => run(() => api.post(`/api/admin/cuentas/${c.usuario}/desactivar`), `${c.usuario} ya no puede entrar.`).then(() => reload())} /> : null}{editing?.user === c.usuario
             ? <form className="inline-form" onSubmit={savePassword}><label><span className="sr-only">Contraseña nueva</span><input value={editing?.password ?? ''} onChange={(event) => setEditing({ user: c.usuario, password: event.target.value })} minLength={10} placeholder="10 o más caracteres" autoComplete="off" autoFocus required /></label><button className="admin-row-button" type="submit">Guardar</button><button className="admin-row-button" type="button" onClick={() => setEditing(null)}>Cancelar</button></form>
             : <button className="admin-row-button" type="button" onClick={() => setEditing({ user: c.usuario, password: '' })}>{c.activa ? 'Nueva contraseña' : 'Reactivar'}</button>}</td>
-        </tr>)}</tbody></table></div> : <Empty icon="users" title="Sin cuentas todavía" text="Crea una para cada transportista y para cada proveedor aliado." />}
+        </tr>)}</tbody></table></div> : <Empty icon="users" title="Sin cuentas todavía" text="Crea una para cada persona del equipo, cada portería, cada transportista y cada proveedor aliado." />}
       </Card>
     </>
   );

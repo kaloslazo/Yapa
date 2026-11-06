@@ -1,13 +1,14 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { GoogleButton } from './GoogleButton';
 import { InviteBody, InviteContext } from './InviteCard';
 import type { Account } from '../types';
 import { formatMoney } from '../utils/format';
+import { ROLE_LABELS } from '../utils/roles';
 
 export type AuthAudience = 'vecino' | 'admin';
-export type LoginKind = AuthAudience | 'transportista' | 'proveedor';
+export type LoginKind = AuthAudience | 'transportista' | 'proveedor' | 'compras' | 'armador' | 'atencion' | 'porteria';
 
 interface AuthDialogProps {
   open: boolean;
@@ -30,9 +31,16 @@ interface AuthDialogProps {
   onOpenOrders: () => void;
 }
 
-const ROLE_NAMES = { vecino: 'Vecino', admin_zona: 'Admin de zona', admin: 'Equipo Yapa', transportista: 'Transportista', proveedor: 'Proveedor' } as const;
-// iteración 54: en el acceso del equipo también entran el reparto y los proveedores, con usuario y contraseña
-const STAFF_KINDS: Array<{ id: Exclude<LoginKind, 'vecino'>; label: string }> = [{ id: 'admin', label: 'Equipo' }, { id: 'transportista', label: 'Reparto' }, { id: 'proveedor', label: 'Proveedor' }];
+// iteraciones 54 y 55: en el acceso del equipo entran todos los que no son vecinos, cada uno con su usuario y contraseña
+const STAFF_KINDS: Array<{ id: Exclude<LoginKind, 'vecino'>; label: string; icon: IconName }> = [
+  { id: 'admin', label: 'Administración', icon: 'gear' },
+  { id: 'compras', label: 'Compras', icon: 'cart' },
+  { id: 'armador', label: 'Armado', icon: 'box' },
+  { id: 'atencion', label: 'Atención', icon: 'headset' },
+  { id: 'porteria', label: 'Portería', icon: 'building' },
+  { id: 'transportista', label: 'Reparto', icon: 'truck' },
+  { id: 'proveedor', label: 'Proveedor', icon: 'store' },
+];
 
 export const LOGIN_HINT = 'Con tu correo, celular o número de cliente y tu PIN de 6 dígitos.';
 
@@ -192,7 +200,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
       {account ? (
         <div className="auth-account-state">
           <div className="auth-dialog-topline"><div className="auth-brandline"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar"><Icon name="close" size={20} /></button></div>
-          <span className={`role-badge role-badge--${account.role}`}>{account.role === 'admin_zona' ? <Icon name="crown" size={14} /> : null}{ROLE_NAMES[account.role]}</span>
+          <span className={`role-badge role-badge--${account.role}`}>{account.role === 'admin_zona' ? <Icon name="crown" size={14} /> : null}{ROLE_LABELS[account.role]}</span>
           <h2 id="auth-title">Hola, {account.name.split(' ')[0]}</h2>
           {account.role !== 'admin' ? <div className="auth-account-detail"><strong>Saldo a favor: {formatMoney(account.balance ?? 0)}</strong><span>Cliente n.º {account.user}</span></div> : <p>Tienes acceso al centro de operaciones de Yapa.</p>}
           {account.role !== 'admin' ? (account.emailVerified ? <p className="email-ok"><Icon name="ok" size={16} /> Correo verificado: {account.email}</p> : (
@@ -225,9 +233,9 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
             <div className="auth-topbar"><div className="auth-brandline auth-brandline--login"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div><button className="icon-button" type="button" onClick={onClose} aria-label="Cerrar acceso"><Icon name="close" size={20} /></button></div>
             <div className="auth-body">
               <h2 id="auth-title">{audience === 'admin' ? 'Acceso del equipo' : 'Entra a Yapa'}</h2>
-              <p className="auth-lead">{audience === 'admin' ? 'Para el equipo, el reparto y los proveedores aliados de Yapa.' : LOGIN_HINT}</p>
+              <p className="auth-lead">{audience === 'admin' ? 'Para el equipo de Yapa, las porterías, el reparto y los proveedores aliados. Elige tu rol.' : LOGIN_HINT}</p>
               <form className="auth-form" onSubmit={submit}>
-                {audience === 'admin' ? <div className="segmented" role="radiogroup" aria-label="Entro como">{STAFF_KINDS.map((kind) => <label key={kind.id} className={staffKind === kind.id ? 'is-selected' : ''}><input type="radio" name="tipo" value={kind.id} checked={staffKind === kind.id} onChange={() => { setStaffKind(kind.id); setFeedback(''); }} />{kind.label}</label>)}</div> : null}
+                {audience === 'admin' ? <fieldset className="staff-kinds"><legend>Entro como</legend>{STAFF_KINDS.map((kind) => <label key={kind.id} className={`staff-kind ${staffKind === kind.id ? 'is-selected' : ''}`}><input type="radio" name="tipo" value={kind.id} checked={staffKind === kind.id} onChange={() => { setStaffKind(kind.id); setFeedback(''); }} /><Icon name={kind.icon} size={20} /><span>{kind.label}</span></label>)}</fieldset> : null}
                 <label className="auth-field"><span>{audience === 'admin' ? 'Usuario' : 'Correo, celular o n.º de cliente'}</span><input name="usuario" value={user} onChange={(event) => setUser(event.target.value)} inputMode="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder={audience === 'admin' ? 'tu usuario' : 'tucorreo@gmail.com o 9XXXXXXXX'} required /></label>
                 {audience === 'admin'
                   ? <label className="auth-field"><span>Contraseña</span><input name="secreto" type="password" value={secret} onChange={(event) => setSecret(event.target.value)} autoComplete="current-password" required /></label>
@@ -250,7 +258,7 @@ export function AuthDialog({ open, account, initialAudience = 'vecino', onClose,
                 </div>
               ) : null}
             </div>
-            <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo, reparto o proveedor? Entra aquí'}</button>
+            <button className="auth-link auth-audience-link" type="button" onClick={() => { setAudience(audience === 'admin' ? 'vecino' : 'admin'); setFeedback(''); }}>{audience === 'admin' ? '← Volver al ingreso de vecinos' : '¿Eres del equipo, portería, reparto o proveedor? Entra aquí'}</button>
           </div>
         </div>
       )}

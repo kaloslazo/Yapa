@@ -16,11 +16,11 @@ import { OrdersPage, type Claimable, type ClaimRecord, type MyOrders } from './c
 import { ZonePage, type MyZone } from './components/ZonePage';
 import { api, ApiError } from './services/api';
 import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } from './services/mappers';
-import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Zone } from './types';
+import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Role, Zone } from './types';
 import { cartSubtotal, stepDown, stepUp } from './utils/cart';
 import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
-import { canOpenZonePanel, homeFor, isNeighborRole, isPartner } from './utils/roles';
+import { canOpenZonePanel, homeFor, isNeighborRole, isPartner, isStaff } from './utils/roles';
 import { readStored, writeStored } from './utils/storage';
 import { formatMoney } from './utils/format';
 
@@ -40,6 +40,17 @@ const PartnerPanel = lazy(() => import('./components/PartnerPanel').then((module
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
 type View = 'store' | 'orders' | 'cart' | 'zone';
+
+// saludo al entrar según el rol; el vecino recibe el de su saldo
+const WELCOME: Partial<Record<Role, string>> = {
+  admin: 'Entraste al centro de operaciones.',
+  compras: 'Aquí ves lo que hay que comprar esta semana.',
+  armador: 'Aquí tienes los pedidos por armar.',
+  atencion: 'Aquí tienes los reclamos, devoluciones y pedidos de PIN.',
+  porteria: 'Aquí ves las bolsas que llegan a tu edificio.',
+  transportista: 'Aquí tienes las paradas de la semana.',
+  proveedor: 'Aquí ves lo que te compramos y mandas tu lista.',
+};
 
 const viewFromHash = (): View => ({ '#orders': 'orders', '#cart': 'cart', '#zone': 'zone' } as Record<string, View>)[window.location.hash] ?? 'store';
 
@@ -304,7 +315,7 @@ export default function App() {
     api.setCsrf(me.csrf);
     setAccount(me);
     setAuthOpen(false);
-    notify(`Hola, ${me.name.split(' ')[0]}`, 'success', me.role === 'admin' ? 'Entraste al centro de operaciones.' : me.role === 'transportista' ? 'Aquí tienes las paradas de la semana.' : me.role === 'proveedor' ? 'Aquí ves lo que te compramos y mandas tu lista.' : me.balance ? `Tienes ${formatMoney(me.balance)} de saldo para tu próxima compra.` : 'Ya puedes armar tu canasta de la semana.');
+    notify(`Hola, ${me.name.split(' ')[0]}`, 'success', WELCOME[me.role] ?? (me.balance ? `Tienes ${formatMoney(me.balance)} de saldo para tu próxima compra.` : 'Ya puedes armar tu canasta de la semana.'));
     if (homeFor(me.role) === 'operaciones') { setAdminOpen(true); go('admin'); }
     return me;
   };
@@ -348,6 +359,7 @@ export default function App() {
 
   const accountZone = zones.find((z) => z.id === account?.zoneId);
   const showAdmin = adminOpen && account?.role === 'admin';
+  const staffOnly = account && account.role !== 'admin' && isStaff(account.role); // compras, armado y atención no compran
 
   const toastRegion = (
     <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`} role={toast.tone === 'warning' ? 'alert' : 'status'}>
@@ -359,6 +371,7 @@ export default function App() {
 
   if (window.location.pathname.replace(/\/$/, '') === '/privacidad') return <PrivacyPage />;
   if (account && isPartner(account.role)) return <Suspense fallback={<div className="partner-view"><main className="partner-main"><PartnerSkeleton /></main></div>}><PartnerPanel account={account} notify={notify} onLogout={() => void logout()} />{toastRegion}</Suspense>;
+  if (account && staffOnly) return <div className="app-shell"><Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account.name} role={account.role} notify={notify} onLogout={() => void logout()} /></Suspense>{toastRegion}</div>;
   if (inviteCode) return <InvitePage code={inviteCode} googleClientId={googleClientId} signedIn={Boolean(account)} onJoined={joinedByInvite} onGoHome={goHomeFromInvite} />;
 
   const inviteState = { url: invite ? inviteLink(window.location.origin, invite.code) : null, today: invite?.today ?? 0, total: invite?.total ?? 0, renew: async () => { try { await loadInvite(true); notify('Tu enlace nuevo ya está activo', 'success', 'El anterior dejó de funcionar. Compártelo solo con vecinos de tu zona.'); } catch (error) { fail(error, 'No pudimos renovar tu enlace'); } } };
@@ -377,7 +390,7 @@ export default function App() {
     <InviteContext.Provider value={inviteState}>
     <div className={`app-shell ${showAdmin ? '' : 'has-tab-bar'}`}>
       {account?.viewingAs ? <div className="view-as-bar" role="status"><span>Estás viendo Yapa como <strong>{account.name}</strong> ({account.role === 'admin_zona' ? 'admin de zona' : 'vecino'}).</span><button type="button" onClick={() => void backFromView()}>Volver a mi cuenta</button></div> : null}
-      {showAdmin ? <Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account?.name ?? ''} notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /></Suspense> : <>
+      {showAdmin ? <Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account?.name ?? ''} role="admin" notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /></Suspense> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" fetchPriority="high" /><span>yapa</span></a>

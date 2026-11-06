@@ -5,13 +5,14 @@ import { formatMoney } from '../utils/format';
 import { weekLabel } from '../utils/week';
 import { Icon } from './Icon';
 import { PhotoForm } from './PhotoForm';
+import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
 type Notify = (message: string, tone?: 'neutral' | 'success' | 'warning', detail?: string) => void;
 
-// iteración 54: el transportista y el proveedor tienen su propia pantalla, sin tienda ni panel del equipo
+// iteraciones 54 y 55: el transportista, el proveedor y la portería tienen su propia pantalla, sin tienda ni panel del equipo
 interface PartnerPanelProps {
   account: Account;
   notify: Notify;
@@ -39,16 +40,17 @@ function WeekSelect({ cycles, value, onChange }: { cycles: string[]; value: stri
   return <label className="partner-week"><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>{weekLabel(c)}</option>)}</select></label>;
 }
 
+const SCREENS: Record<string, string> = { transportista: 'reparto', proveedor: 'proveedores', porteria: 'portería' };
+
 export function PartnerPanel({ account, notify, onLogout }: PartnerPanelProps) {
-  const driver = account.role === 'transportista';
   return (
     <div className="partner-view">
       <header className="partner-topbar">
-        <div className="partner-brand"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span><small>{driver ? 'reparto' : 'proveedores'}</small></div>
+        <div className="partner-brand"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span><small>{SCREENS[account.role]}</small></div>
         <button className="partner-logout" type="button" onClick={onLogout}><Icon name="signout" size={18} />Salir</button>
       </header>
       <main className="partner-main" id="contenido">
-        {driver ? <DriverRoute name={account.name} notify={notify} /> : <SupplierHome notify={notify} />}
+        {account.role === 'transportista' ? <DriverRoute name={account.name} notify={notify} /> : account.role === 'porteria' ? <ConciergeHome name={account.name} notify={notify} /> : <SupplierHome notify={notify} />}
       </main>
     </div>
   );
@@ -112,6 +114,32 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
           </li>
         );
       })}</ol> : <div className="partner-empty"><Icon name="truck" size={26} /><strong>{data.cerrado ? 'No hay paradas esta semana' : 'Todavía no hay paradas'}</strong><p>{data.cerrado ? 'Ningún grupo llegó al mínimo de pedidos.' : 'Aparecen cuando cierran los pedidos, el miércoles a las 8 p. m.'}</p></div>}
+    </>
+  );
+}
+
+// iteración 55, PO-01..PO-04: la portería ve las bolsas de su edificio y confirma que llegaron
+function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
+  const [cycle, setCycle] = useState('');
+  const { data, reload } = useData(`/api/porteria${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  if (!data) return <PartnerSkeleton />;
+  const confirm = async () => {
+    try {
+      await api.post('/api/porteria/recepciones', { ciclo: data.ciclo });
+      notify('Recepción confirmada', 'success', 'Cada vecino recibió el aviso para bajar a recoger sus bolsas.');
+      await reload();
+    } catch (error) {
+      notify('No se pudo confirmar', 'warning', error instanceof Error ? error.message : undefined);
+    }
+  };
+  return (
+    <>
+      <section className="partner-head">
+        <h1>Hola, {name.split(' ')[0]}</h1>
+        <WeekSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} />
+      </section>
+      <ReceptionCard data={data} onConfirm={confirm} />
+      <p className="partner-note"><Icon name="info" size={18} />Solo ves el nombre de cada vecino y cuántas bolsas lleva. Lo que compró y lo que pagó es privado.</p>
     </>
   );
 }

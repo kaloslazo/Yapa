@@ -31,6 +31,10 @@ Cuentas de la demo:
 | Equipo Yapa | `admin-yapa` | `yapa-admin-2026` |
 | Transportista (entrar como Reparto) | `reparto-demo` | `reparto-yapa-2026` |
 | Proveedor de frescos (entrar como Proveedor) | `frescos-demo` | `frescos-yapa-2026` |
+| Encargado de compras (entrar como Compras) | `compras-demo` | `compras-yapa-2026` |
+| Armador (entrar como Armado) | `armado-demo` | `armado-yapa-2026` |
+| Atención al cliente (entrar como Atención) | `atencion-demo` | `atencion-yapa-2026` |
+| Portería de Edificio Los Álamos (entrar como Portería) | `porteria-demo` | `porteria-yapa-2026` |
 
 El equipo, el reparto y los proveedores entran desde "¿Eres del equipo, reparto o proveedor? Entra aquí" en la pantalla de ingreso.
 

@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, invitations, metrics, notices, partners, recovery, reference, supplier_offers, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, invitations, metrics, notices, partners, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -30,7 +30,12 @@ from .app import _cookie, _form, _save_photo
 from .produccion import client_ip
 
 
-KINDS = ("vecino", "admin", partners.DRIVER, partners.SUPPLIER)
+KINDS = ("vecino", "admin", partners.DRIVER, partners.SUPPLIER, *partners.STAFF_KINDS)  # CX-06, CX-09
+PACKING = ("admin", partners.PACKER)  # CX-09: rutas que el admin comparte con cada rol
+BUYING = ("admin", partners.BUYER)
+ATTENDING = ("admin", partners.SUPPORT)
+PHOTO_VIEWERS = ("admin", partners.PACKER, partners.SUPPORT)
+PACKER_ORDER = ("id", "ciclo", "zona", "estado", "entregado", "vecino", "bolsas")  # AM-01, S-290: sin montos ni pagos
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
 PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas",
@@ -169,7 +174,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def role_of(session: dict) -> str:
         """S-157: el admin de zona es un vecino que administra una zona."""
-        if session["kind"] in ("admin", partners.DRIVER, partners.SUPPLIER):  # CX-06
+        if session["kind"] != "vecino":  # CX-06, CX-09
             return session["kind"]
         administers = any(z.admin_id == session["principal"] for z in store.zones.values())
         return "admin_zona" if administers else "vecino"
@@ -366,7 +371,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             data.update({"nombre": "Equipo Yapa", "puede_ver_como": session["principal"] in store.debug_admins})  # DM-06
         else:
             partner = store.partners[session["principal"]]
-            data.update({"nombre": partner.name, "proveedor": partner.supplier_id})
+            data.update({"nombre": partner.name, "proveedor": partner.supplier_id, "zona": partner.zone_id})
         if session.get("viewing_as"):  # DM-06
             data["viendo_como"] = {"admin": session["viewing_as"]}
         return data
@@ -703,11 +708,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                           "entrega": ({"recibe": delivery.received_by, "foto": delivery.photo,
                                        "pedidos": len(delivery.order_ids)} if delivery else None),
                           "fallida": bool(failed)})
-        return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops,
-                "pedidos": [order_json(o, names, clock()) | {
-                    "vecino": store.customers[o.customer_id].name,
-                    "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])]}
-                    for o in attended]}
+        orders = [order_json(o, names, clock()) | {
+            "vecino": store.customers[o.customer_id].name,
+            "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])]} for o in attended]
+        if session["kind"] == partners.PACKER:  # AM-01, S-290
+            orders = [{key: o[key] for key in PACKER_ORDER} | {
+                "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad")} for line in o["lineas"]]} for o in orders]
+        return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
     def admin_bolsa(environ, data, session):
         bag = fulfillment.pack_bag(store, _int(data.get("pedido"), "Número de pedido"), by=session["principal"],
@@ -925,11 +932,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def partner_json(partner) -> dict:
         return {"usuario": partner.user, "tipo": partner.kind, "nombre": partner.name, "proveedor": partner.supplier_id,
-                "activa": partner.active}
+                "zona": partner.zone_id, "activa": partner.active}
 
     def admin_cuentas(environ, data, session):
         return {"cuentas": [partner_json(p) for p in sorted(store.partners.values(), key=lambda p: p.user)],
-                "proveedores": [{"id": s.supplier_id, "nombre": s.name} for s in store.suppliers.values() if s.allied]}
+                "proveedores": [{"id": s.supplier_id, "nombre": s.name} for s in store.suppliers.values() if s.allied],
+                "zonas": [{"id": z.zone_id, "nombre": z.name, "distrito": z.district}
+                          for z in sorted(store.zones.values(), key=lambda z: z.zone_id)]}
 
     def admin_cuenta_crear(environ, data, session):
         """CX-01..CX-04."""
@@ -940,8 +949,11 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         elif data.get("tipo") == partners.SUPPLIER:
             partner = partners.create_supplier_account(store, user, str(data.get("proveedor", "")), password,
                                                        by=session["principal"], now=clock(), name=str(data.get("nombre", "")))
+        elif data.get("tipo") in partners.STAFF_KINDS:  # CX-07, CX-08
+            partner = partners.create_staff(store, user, data["tipo"], str(data.get("nombre", "")), password,
+                                            by=session["principal"], now=clock(), zone_id=data.get("zona"))
         else:
-            raise BusinessRuleError("INVALID_INPUT", "Elige si la cuenta es de proveedor o de transportista.")
+            raise BusinessRuleError("INVALID_INPUT", "Elige el tipo de cuenta.")
         return partner_json(partner), [], "201 Created"
 
     def admin_cuenta_desactivar(environ, data, session, user):
@@ -986,9 +998,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         """PV-06."""
         supplier_id = store.partners[session["principal"]].supplier_id
         order = supplier_offers.supplier_order(store, query_cycle(environ), supplier_id, clock())
-        order["lineas"] = [line | {"cantidad": qty(line["cantidad"]), "desde": qty(line["desde"]),
-                                   "precio": money(line["precio"]), "monto": money(line["monto"])} for line in order["lineas"]]
-        order["total"] = money(order["total"])
+        order = supplier_lines(order)
         offers = sorted((o for o in store.supplier_offers.values() if o.supplier_id == supplier_id),
                         key=lambda o: o.cycle, reverse=True)
         current = cycle.cycle_id(clock())
@@ -1014,7 +1024,67 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return offer_json(supplier_offers.reject_offer(store, cycle_id, supplier_id, str(data.get("motivo", "")),
                                                        by=session["principal"], now=clock()))
 
-    # ruta (expresión) -> método -> (función, rol requerido)
+    def supplier_lines(order: dict) -> dict:
+        order["lineas"] = [line | {"cantidad": qty(line["cantidad"]), "desde": qty(line["desde"]),
+                                   "precio": money(line["precio"]), "monto": money(line["monto"])} for line in order["lineas"]]
+        order["total"] = money(order["total"])
+        return order
+
+    def compras(environ, data, session):
+        """CP-01, S-291: lo que hay que comprarle a cada proveedor aliado en el ciclo, y el colchón."""
+        cycle_id = query_cycle(environ)
+        suppliers = []
+        for supplier in sorted(store.suppliers.values(), key=lambda s: s.supplier_id):
+            if not supplier.allied:
+                continue
+            order = supplier_lines(supplier_offers.supplier_order(store, cycle_id, supplier.supplier_id, clock()))
+            if order["lineas"]:
+                suppliers.append({"id": supplier.supplier_id, "nombre": supplier.name} | order)
+        return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
+                "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session)}
+
+    def compras_colchon(environ, data, session):
+        """CP-02."""
+        stock = buffer.add_to_buffer(store, str(data.get("ciclo", "")).strip(), str(data.get("producto", "")),
+                                     data.get("cantidad"), by=session["principal"])
+        return {"producto": stock.product_id, "cantidad": qty(stock.quantity), "valor": money(stock.value)}
+
+    def compras_colchon_usar(environ, data, session):
+        """CP-03."""
+        stock = buffer.use_buffer(store, str(data.get("producto", "")), data.get("cantidad"),
+                                  order_id=_int(data.get("pedido"), "Número de pedido"), by=session["principal"], now=clock())
+        return {"producto": stock.product_id, "cantidad": qty(stock.quantity), "valor": money(stock.value)}
+
+    def concierge_zone(session) -> str:
+        return store.partners[session["principal"]].zone_id
+
+    def administered_zone(session) -> str:
+        zone = next((z for z in store.zones.values() if z.admin_id == session["principal"]), None)
+        if zone is None:  # PO-02
+            raise BusinessRuleError("FOREIGN_ZONE", "Solo el admin de la zona ve y confirma su recepción.")
+        return zone.zone_id
+
+    def confirm_in(zone_id, data, session) -> dict:
+        received = reception.confirm_reception(store, str(data.get("ciclo", "")).strip(), zone_id,
+                                               by=session["principal"], now=clock())
+        tell(notices.in_building, received)  # PO-04
+        return reception.for_zone(store, received.cycle, zone_id)
+
+    def porteria(environ, data, session):
+        """PO-01, S-293."""
+        return reception.for_zone(store, query_cycle(environ), concierge_zone(session)) | {"ciclos": known_cycles()}
+
+    def porteria_recepcion(environ, data, session):
+        return confirm_in(concierge_zone(session), data, session)
+
+    def zona_recepcion(environ, data, session):
+        """PO-01 para el admin de zona (S-294)."""
+        return reception.for_zone(store, query_cycle(environ), administered_zone(session))
+
+    def zona_recepcion_confirmar(environ, data, session):
+        return confirm_in(administered_zone(session), data, session)
+
+    # ruta (expresión) -> método -> (función, rol requerido o tupla de roles, CX-09)
     routes = [
         (r"/api/estado", {"GET": (estado, None)}),
         (r"/api/catalogo", {"GET": (catalogo, None)}),
@@ -1041,17 +1111,17 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/solicitudes/(\d+)/rechazar", {"POST": (solicitud_rechazar, "vecino")}),
         (r"/api/solicitudes/(\d+)/retirar", {"POST": (solicitud_retirar, "vecino")}),
         (r"/api/admin/resumen", {"GET": (admin_resumen, "admin")}),
-        (r"/api/admin/foto", {"GET": (admin_foto, "admin")}),
+        (r"/api/admin/foto", {"GET": (admin_foto, PHOTO_VIEWERS)}),
         (r"/api/admin/pedidos/(\d+)/verificar", {"POST": (admin_verificar, "admin")}),
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
-        (r"/api/admin/armado", {"GET": (admin_armado, "admin")}),
-        (r"/api/admin/bolsas", {"POST": (admin_bolsa, "admin")}),
+        (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
+        (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
         (r"/api/admin/entregas", {"POST": (admin_entrega, "admin")}),
         (r"/api/admin/entregas-fallidas", {"POST": (admin_entrega_fallida, "admin")}),
-        (r"/api/admin/reclamos", {"GET": (admin_reclamos, "admin")}),
-        (r"/api/admin/reclamos/(\d+)/revisar", {"POST": (admin_revisar, "admin")}),
-        (r"/api/admin/devoluciones", {"GET": (admin_devoluciones, "admin")}),
-        (r"/api/admin/devoluciones/(\d+)/pagar", {"POST": (admin_devolucion_pagar, "admin")}),
+        (r"/api/admin/reclamos", {"GET": (admin_reclamos, ATTENDING)}),
+        (r"/api/admin/reclamos/(\d+)/revisar", {"POST": (admin_revisar, ATTENDING)}),
+        (r"/api/admin/devoluciones", {"GET": (admin_devoluciones, ATTENDING)}),
+        (r"/api/admin/devoluciones/(\d+)/pagar", {"POST": (admin_devolucion_pagar, ATTENDING)}),
         (r"/api/admin/conciliacion", {"GET": (admin_conciliacion, "admin")}),
         (r"/api/admin/metricas", {"GET": (admin_metricas, "admin")}),
         (r"/api/admin/analisis", {"GET": (admin_analisis, "admin")}),
@@ -1059,7 +1129,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/catalogo/desactivar", {"POST": (admin_catalogo_desactivar, "admin")}),
         (r"/api/admin/referencias", {"GET": (admin_referencias, "admin"), "POST": (admin_referencia_registrar, "admin")}),
         (r"/api/admin/vecinos", {"GET": (admin_vecinos, "admin"), "POST": (admin_vecino_alta, "admin")}),
-        (r"/api/admin/vecinos/(\d+)/pin", {"POST": (admin_vecino_pin, "admin")}),
+        (r"/api/admin/vecinos/(\d+)/pin", {"POST": (admin_vecino_pin, ATTENDING)}),
         (r"/api/pin/olvide", {"POST": (pin_olvide, None)}),
         (r"/api/pin/restablecer", {"POST": (pin_restablecer, None)}),
         (r"/api/sesion/google", {"POST": (sesion_google, None)}),
@@ -1073,8 +1143,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/invitaciones/([\w-]+)/google", {"POST": (invitacion_google, None)}),
         (r"/api/cuenta/correo", {"POST": (cuenta_correo, "vecino")}),
         (r"/api/cuenta/correo/verificar", {"POST": (cuenta_correo_verificar, "vecino")}),
-        (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, "admin")}),
-        (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, "admin")}),
+        (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, ATTENDING)}),
+        (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, ATTENDING)}),
         (r"/api/admin/colchon", {"GET": (admin_colchon, "admin")}),
         (r"/api/avisos", {"GET": (avisos, "vecino")}),
         (r"/api/avisos/leer", {"POST": (avisos_leer, "vecino")}),
@@ -1090,6 +1160,13 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/reparto/entregas-fallidas", {"POST": (reparto_entrega_fallida, partners.DRIVER)}),
         (r"/api/proveedor", {"GET": (proveedor, partners.SUPPLIER)}),
         (r"/api/proveedor/propuestas", {"POST": (proveedor_propuesta, partners.SUPPLIER)}),
+        (r"/api/compras", {"GET": (compras, BUYING)}),
+        (r"/api/compras/colchon", {"POST": (compras_colchon, BUYING)}),
+        (r"/api/compras/colchon/usar", {"POST": (compras_colchon_usar, BUYING)}),
+        (r"/api/porteria", {"GET": (porteria, partners.CONCIERGE)}),
+        (r"/api/porteria/recepciones", {"POST": (porteria_recepcion, partners.CONCIERGE)}),
+        (r"/api/zona/recepcion", {"GET": (zona_recepcion, "vecino")}),
+        (r"/api/zona/recepciones", {"POST": (zona_recepcion_confirmar, "vecino")}),
     ]
     compiled = [(re.compile(pattern + r"/?"), methods) for pattern, methods in routes]
 
@@ -1108,7 +1185,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         _, session = session_of(environ)
         if role and session is None:
             raise ApiError("401 Unauthorized", "LOGIN_REQUIRED", "Entra a tu cuenta para seguir.")
-        if role in KINDS and session["kind"] != role:  # CX-06
+        if (isinstance(role, tuple) or role in KINDS) and session["kind"] not in (role if isinstance(role, tuple) else (role,)):  # CX-06, CX-09
             raise ApiError("403 Forbidden", "FORBIDDEN", "Esta acción no es para tu tipo de cuenta.")
         if method == "POST" and session is not None and session.get("viewing_as") and (path.rstrip("/") in credential_paths or VIEW_AS_BLOCKED.fullmatch(path.rstrip("/"))):
             raise BusinessRuleError("DEBUG_SESSION_READONLY", "Desde \"ver como\" no se pueden cambiar el PIN, el correo ni la cuenta de Google, ni sacar dinero o ceder una zona.")  # DM-08, SG-07
