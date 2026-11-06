@@ -1,10 +1,12 @@
-import { useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Zone } from '../types';
 import { Icon } from './Icon';
 import { shareText } from './AuthDialog';
 import { InviteBody, InviteContext } from './InviteCard';
 import { ConfirmAction } from './ConfirmAction';
+import { ReceptionCard } from './ReceptionCard';
+import { api } from '../services/api';
 import type { MapUnion, MapZone } from './ZonesMap';
 import { LazyZonesMap } from './LazyZonesMap';
 import { neighborsLabel, unionReason } from '../utils/zoneMap';
@@ -84,6 +86,33 @@ function ProgressRing({ value, total }: { value: number; total: number }) {
   );
 }
 
+// iteración 55, PO-F: si la zona recibe por su admin (o no tiene cuenta de portería), él confirma la recepción
+function ZoneReception() {
+  const [data, setData] = useState<Record<string, any> | null>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [message, setMessage] = useState('');
+  const load = useCallback(async () => {
+    try { setData(await api.get('/api/zona/recepcion')); } catch { setData(null); }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  if (!data || (data.estado === 'pendiente' && !data.pedidos.length)) return null; // sin nada que entregar, el avance del grupo ya lo dice
+  const confirm = async () => {
+    try {
+      await api.post('/api/zona/recepciones', { ciclo: data.ciclo });
+      setMessage('Listo: cada vecino recibió el aviso para recoger sus bolsas.');
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'No se pudo confirmar.');
+    }
+  };
+  return (
+    <section className="zone-reception" aria-labelledby="zone-reception-title">
+      <h2 id="zone-reception-title"><Icon name="box" size={20} /> Entrega de esta semana</h2>
+      <ReceptionCard data={data} onConfirm={confirm} />
+      {message ? <p className="zone-reception-message" role="status">{message}</p> : null}
+    </section>
+  );
+}
+
 function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; data: MyZone; userId: number } & Pick<ZonePageProps, 'onActivate' | 'onRequestMerge' | 'onAnswerMerge' | 'onWithdrawMerge' | 'onLeaveGroup' | 'onTransfer'>) {
   const [kind, setKind] = useState('PORTERIA');
   const [contact, setContact] = useState('');
@@ -106,6 +135,8 @@ function AdminPanel({ panel, data, userId, ...actions }: { panel: ZonePanel; dat
         </div>
         <ProgressRing value={panel.progress.verified} total={panel.progress.minimum} />
       </section>
+
+      {panel.status === 'ACTIVA' ? <ZoneReception /> : null}
 
       {panel.status !== 'ACTIVA' ? (
         <form className="customer-main-card activate-card" onSubmit={(event: FormEvent) => { event.preventDefault(); void actions.onActivate(panel.id, kind, contact); }}>

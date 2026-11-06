@@ -4,6 +4,7 @@ import {
   ArrowsMerge,
   Basket,
   Bell,
+  Buildings,
   CalendarBlank,
   Camera,
   CaretDown,
@@ -15,7 +16,9 @@ import {
   Crown,
   Gear,
   Gift,
+  Headset,
   Info,
+  Key,
   Leaf,
   ListChecks,
   MagnifyingGlass,
@@ -28,6 +31,7 @@ import {
   Receipt,
   Scales,
   ShareNetwork,
+  ShoppingCart,
   SignOut,
   Storefront,
   Tag,
@@ -86,6 +90,10 @@ const icons = {
   no: XCircle,
   basket: Basket,
   bell: Bell,
+  key: Key,
+  headset: Headset,
+  building: Buildings,
+  cart: ShoppingCart,
 } satisfies Record<string, ComponentType<PhosphorIconProps>>;
 
 export type IconName = keyof typeof icons;

@@ -35,7 +35,8 @@ export interface Product {
   emoji: string;
 }
 
-export type Role = 'vecino' | 'admin_zona' | 'admin' | 'transportista' | 'proveedor';
+export type StaffRole = 'compras' | 'armador' | 'atencion';
+export type Role = 'vecino' | 'admin_zona' | 'admin' | 'transportista' | 'proveedor' | 'porteria' | StaffRole;
 
 export interface Account {
   user: string | number;
