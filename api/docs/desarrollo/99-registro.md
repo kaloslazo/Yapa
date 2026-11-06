@@ -440,3 +440,12 @@
   - Los dos se especificaron y se probaron antes de corregirlos.
 - Resultado: 638 pruebas del motor (31 nuevas) y 110 del frontend (7 nuevas) en verde; typecheck y build sin errores (`55-personal-por-rol-verde.txt`). La demo se probó en el navegador: compras con la W39, y la portería confirmando Los Álamos con el aviso al vecino 101.
 
+## Acceso en páginas propias (06/11/2026)
+
+- Solo cambia la web; el motor no se tocó y no hay reglas ni supuestos nuevos.
+- El modal de acceso se reemplazó por páginas completas:
+  - `/entrar` para los vecinos;
+  - `/equipo` para el personal, y `/equipo?rol=porteria` llega con ese rol ya elegido;
+  - "Mi cuenta" (`#cuenta`) como una vista más de la tienda.
+- Después de entrar se vuelve a donde se estaba (canasta, pedidos, zona) y Atrás no reabre el acceso. `volver` solo acepta vistas de la tienda (`src/utils/authRoutes.ts`), así un link no puede mandar a otro sitio.
+- Pruebas: `src/utils/authRoutes.test.ts`. Revisado en el navegador en escritorio y en celular.
