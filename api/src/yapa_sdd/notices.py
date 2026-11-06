@@ -144,6 +144,14 @@ def delivered(store: InMemoryStore, delivery, now: datetime) -> None:
             f"Tu pedido {order_id} de la semana {delivery.cycle} ya está en {zone}. Lo recibió {delivery.received_by}.", now)
 
 
+def in_building(store: InMemoryStore, received, now: datetime) -> None:
+    """PO-04, S-294: quien recibe en la zona confirmó que las bolsas están en el edificio."""
+    zone = store.zones[received.zone_id].name
+    for order_id in received.order_ids:
+        add(store, store.orders[order_id].customer_id, "EN_EDIFICIO", "Tus bolsas ya están en el edificio",
+            f"Tu pedido {order_id} de la semana {received.cycle} ya está en {zone}. Pásalo a recoger cuando puedas.", now)
+
+
 def delivery_failed(store: InMemoryStore, failure, now: datetime) -> None:
     zone = store.zones[failure.zone_id].name
     why = FAILURE_TEXT.get(failure.reason, "no se pudo recibir")

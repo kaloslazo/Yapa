@@ -1,6 +1,7 @@
-"""Cuentas de proveedores y transportistas (iteración 54).
+"""Cuentas de proveedores y transportistas (iteración 54) y del personal por rol (iteración 55).
 
-Spec: docs/desarrollo/54-proveedores-y-transportistas.md. Las crea el administrador (S-278).
+Specs: docs/desarrollo/54-proveedores-y-transportistas.md y 55-personal-por-rol.md. Las crea el administrador
+(S-278, S-289).
 """
 
 from __future__ import annotations
@@ -16,6 +17,12 @@ from .store import InMemoryStore
 
 DRIVER = "transportista"
 SUPPLIER = "proveedor"
+BUYER = "compras"  # S-291
+PACKER = "armador"  # S-290
+SUPPORT = "atencion"  # S-292
+CONCIERGE = "porteria"  # S-293
+STAFF_KINDS = (BUYER, PACKER, SUPPORT, CONCIERGE)
+STAFF_NAMES = {BUYER: "encargado de compras", PACKER: "armador", SUPPORT: "atención al cliente", CONCIERGE: "portería"}
 USER = re.compile(r"[a-z0-9-]{3,30}")  # S-279
 
 
@@ -28,6 +35,7 @@ class Partner:
     created_at: datetime
     supplier_id: str | None = None
     active: bool = True
+    zone_id: str | None = None  # S-293: la zona de la portería
 
 
 def _check_admin(store: InMemoryStore, by: str) -> None:
@@ -83,6 +91,26 @@ def create_supplier_account(store: InMemoryStore, user: str, supplier_id: str, p
     return _save(store, Partner(user, SUPPLIER, supplier.name, by, now, supplier_id=supplier_id), password)
 
 
+def create_staff(store: InMemoryStore, user: str, kind: str, name: str, password: str, *, by: str, now: datetime,
+                 zone_id: str | None = None) -> Partner:
+    """CX-07, CX-08, S-289: compras, armado, atención o portería; la portería apunta a su zona."""
+    _check_admin(store, by)
+    if kind not in STAFF_KINDS:
+        raise BusinessRuleError("INVALID_INPUT", "Elige compras, armado, atención o portería.")
+    user = _check_user(store, user)
+    name = (name or "").strip()
+    if not name:
+        raise BusinessRuleError("NAME_REQUIRED", f"Escribe el nombre de la persona de {STAFF_NAMES[kind]}.")
+    if kind != CONCIERGE:
+        zone_id = None
+    elif (zone_id or "").strip() not in store.zones:
+        raise BusinessRuleError("ZONE_NOT_FOUND", "Elige la zona de esta portería.")
+    else:
+        zone_id = zone_id.strip()
+    _check_password(password)
+    return _save(store, Partner(user, kind, name, by, now, zone_id=zone_id), password)
+
+
 def _find(store: InMemoryStore, user: str) -> Partner:
     partner = store.partners.get(user)
     if partner is None:
@@ -110,3 +138,8 @@ def set_password(store: InMemoryStore, user: str, password: str, *, by: str) -> 
 def active(store: InMemoryStore, user: str, kind: str) -> Partner | None:
     partner = store.partners.get(user)
     return partner if partner is not None and partner.kind == kind and partner.active else None
+
+
+def can(store: InMemoryStore, by, *kinds: str) -> bool:
+    """El administrador, o una cuenta activa de alguno de esos tipos (AM-02, CP-04, AT-04)."""
+    return by in store.admins or any(active(store, by, kind) is not None for kind in kinds)

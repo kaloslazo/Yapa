@@ -10,6 +10,7 @@ import unicodedata
 import secrets
 from datetime import datetime
 
+from . import partners
 from .auth import _check_pin, set_pin
 from .domain import BusinessRuleError, Customer
 from .store import InMemoryStore
@@ -129,9 +130,14 @@ def request_pin_help(store: InMemoryStore, user, now: datetime) -> None:
     store.pin_requests[max(store.pin_requests, default=0) + 1] = (customer_id, now)
 
 
+def _check_support(store: InMemoryStore, by: str) -> None:
+    if not partners.can(store, by, partners.SUPPORT):  # AT-04, S-292
+        raise BusinessRuleError("NOT_AUTHORIZED", "Solo el administrador o atención al cliente atienden los PIN.")
+
+
 def dismiss_pin_request(store: InMemoryStore, request_id: int, *, by: str) -> None:
     """OP-08, S-198."""
-    _check_admin(store, by)
+    _check_support(store, by)
     if request_id not in store.pin_requests:
         raise BusinessRuleError("PIN_REQUEST_NOT_FOUND", "Esa solicitud ya no está.")
     del store.pin_requests[request_id]
@@ -139,7 +145,7 @@ def dismiss_pin_request(store: InMemoryStore, request_id: int, *, by: str) -> No
 
 def reset_pin(store: InMemoryStore, customer_id: int, *, by: str) -> str:
     """AV-07, S-137: PIN nuevo; una credencial nueva también quita el bloqueo."""
-    _check_admin(store, by)
+    _check_support(store, by)
     if customer_id not in store.customers:
         raise BusinessRuleError("CUSTOMER_NOT_FOUND", "El cliente no está registrado.")
     pin = new_pin()

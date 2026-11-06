@@ -9,9 +9,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
-from . import wallet
+from . import partners, wallet
 from .domain import BusinessRuleError, Order, ceil_cents, is_multiple
-from .fulfillment import check_photo, check_staff
+from .fulfillment import check_photo, check_role
 from .store import InMemoryStore
 
 
@@ -77,7 +77,7 @@ def file_claim(store: InMemoryStore, order_id: int, *, customer_id: int, product
 
 
 def review_claim(store: InMemoryStore, claim_id: int, *, by: str, approve: bool, now: datetime) -> Claim:
-    check_staff(store, by)  # RV-01
+    check_role(store, by, partners.SUPPORT)  # RV-01, AT-04
     claim = store.claims.get(claim_id)
     if claim is None:  # RV-02
         raise BusinessRuleError("CLAIM_NOT_FOUND", "El reclamo no existe.")

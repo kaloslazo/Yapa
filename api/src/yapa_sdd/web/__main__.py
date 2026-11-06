@@ -22,6 +22,12 @@ DEMO_PINS = {101: "482915", 105: "739104", 116: "260318"}
 DEMO_ADMIN = ("admin-yapa", "yapa-admin-2026")
 DEMO_DRIVER = ("reparto-demo", "reparto-yapa-2026")  # iteración 54
 DEMO_SUPPLIER = ("frescos-demo", "frescos-yapa-2026")
+DEMO_STAFF = (  # iteración 55: usuario, contraseña, tipo, nombre, zona
+    ("compras-demo", "compras-yapa-2026", partners.BUYER, "Compras de prueba", None),
+    ("armado-demo", "armado-yapa-2026", partners.PACKER, "Armado de prueba", None),
+    ("atencion-demo", "atencion-yapa-2026", partners.SUPPORT, "Atención de prueba", None),
+    ("porteria-demo", "porteria-yapa-2026", partners.CONCIERGE, "Portería Los Álamos", "Z-LINCE-01"),
+)
 
 
 def _demo_credentials(store) -> None:
@@ -34,12 +40,16 @@ def _demo_credentials(store) -> None:
     now = datetime.now(LIMA)
     partners.create_driver(store, DEMO_DRIVER[0], "Reparto de prueba", DEMO_DRIVER[1], by=DEMO_ADMIN[0], now=now)
     partners.create_supplier_account(store, DEMO_SUPPLIER[0], "SUP-FRESCOS", DEMO_SUPPLIER[1], by=DEMO_ADMIN[0], now=now)
+    for user, password, kind, name, zone_id in DEMO_STAFF:
+        partners.create_staff(store, user, kind, name, password, by=DEMO_ADMIN[0], now=now, zone_id=zone_id)
     print("Credenciales de DEMO creadas (cámbialas antes de usar datos reales):")
     for customer_id, pin in DEMO_PINS.items():
         print(f"  vecino {customer_id} · PIN {pin}")
     print(f"  admin {DEMO_ADMIN[0]} · contraseña {DEMO_ADMIN[1]}")
     print(f"  transportista {DEMO_DRIVER[0]} · contraseña {DEMO_DRIVER[1]}")
     print(f"  proveedor {DEMO_SUPPLIER[0]} · contraseña {DEMO_SUPPLIER[1]}")
+    for user, password, kind, _, zone_id in DEMO_STAFF:
+        print(f"  {partners.STAFF_NAMES[kind]} {user} · contraseña {password}" + (f" · zona {zone_id}" if zone_id else ""))
 
 
 def main() -> None:
