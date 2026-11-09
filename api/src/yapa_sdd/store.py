@@ -46,6 +46,8 @@ class InMemoryStore:
         self.purchases: dict = {}  # compra real: ciclo -> lo que llegó del proveedor (iteración 56, S-295)
         self.shortages: list = []  # faltantes de compra y dañados al armar, por pedido (S-296, S-297)
         self.incidents: dict = {}  # incidencias de atención (S-300)
+        self.freights: dict = {}  # flete de compra: ciclo -> empresa y monto (iteración 58, S-306)
+        self.dispatches: dict = {}  # salida a reparto: (ciclo, zona) -> salida (S-308)
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1

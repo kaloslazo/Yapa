@@ -77,15 +77,16 @@ export function CheckoutDialog({ open, quote, zone, cycleOpen, confirmation, onC
             <div className="pay-card">
               <span>Yapea ahora</span>
               <strong className="pay-amount">{formatMoney(confirmation.toPay)}</strong>
-              <span>por {methodName(confirmation.method)} y escribe este código en el mensaje:</span>
+              {confirmation.payTo ? <span className="pay-to">al Plin <strong>{confirmation.payTo.number}</strong> · {confirmation.payTo.holder}<small>También puedes pagarlo desde Yape.</small></span> : null}
+              <span>desde tu {methodName(confirmation.method)} y escribe este código en el mensaje:</span>
               <button className="pay-code" type="button" onClick={() => void copyCode(confirmation.paymentCode)} aria-label={`Copiar el código ${confirmation.paymentCode}`}>{confirmation.paymentCode}<Icon name={copied ? 'check' : 'copy'} size={18} /></button>
               <small>{copied ? '¡Copiado!' : 'Toca el código para copiarlo'} · con él verificamos tu pago</small>
             </div>
           ) : <div className="savings-note"><Icon name="wallet" size={20} /><span>Tu saldo cubrió todo: <strong>no tienes que yapear</strong>.</span></div>}
           <ol className="next-steps">
             <li><span>1</span>Verificamos tu pago<small>hoy</small></li>
-            <li><span>2</span>Compramos al por mayor<small>jueves</small></li>
-            <li><span>3</span>Entregamos en tu portería, con foto<small>sábado</small></li>
+            <li><span>2</span>Compramos al por mayor y lo traemos nosotros<small>jueves</small></li>
+            <li><span>3</span>Armamos tu bolsa y salimos a tu zona: lo sigues en Mis pedidos<small>sábado</small></li>
             <li><span>4</span>Te devolvemos lo ahorrado como saldo<small>al liquidar</small></li>
           </ol>
           <div className="success-actions"><button className="primary-button" type="button" onClick={onOpenOrders}>Ver mis pedidos <Icon name="arrow" size={17} /></button><button className="secondary-button" type="button" onClick={onClose}>Seguir comprando</button></div>

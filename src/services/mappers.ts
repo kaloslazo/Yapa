@@ -55,6 +55,8 @@ export function toOrder(raw: Raw): Order {
     lines: (raw.lineas ?? []).map(toLine), settlement: toSettlement(raw.liquidacion),
     bags: raw.bolsas?.map((b: Raw) => ({ number: b.numero, photo: b.foto })),
     labels: raw.rotulos,
+    tracking: raw.seguimiento?.map((s: Raw) => ({ step: s.paso, done: Boolean(s.hecho) })),
+    payTo: raw.pagar_a ? { number: raw.pagar_a.numero, holder: raw.pagar_a.titular } : undefined,
   };
 }
 

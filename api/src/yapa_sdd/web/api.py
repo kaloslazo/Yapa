@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, incidents, insights, invitations, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -114,7 +114,7 @@ def _body(environ) -> tuple[dict, dict]:
 
 
 def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None,
-               background_mail: bool = True, secure_cookie: bool = False, security_clock=None):
+               background_mail: bool = True, secure_cookie: bool = False, security_clock=None, payee: dict | None = None):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
@@ -210,6 +210,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "lineas": [{"id": l.product_id, "nombre": names.get(l.product_id, l.product_id), "cantidad": qty(l.quantity),
                         "precio_max": money(l.max_unit_price), "total": money(l.max_total)} for l in order.lines],
         }
+        data["seguimiento"] = logistics.tracking(store, order)  # SG-01
+        if payee and order.payment_status == "POR_VERIFICAR" and order.paid_external > 0:  # PL-01, S-305: falta pagar
+            data["pagar_a"] = dict(payee)
         if settled:
             comparison = reference.order_comparison(store, order.order_id)
             data["liquidacion"] = {
@@ -708,7 +711,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             stops.append({"zona": zone_json(store.zones[zone_id]),
                           "entrega": ({"recibe": delivery.received_by, "foto": delivery.photo,
                                        "pedidos": len(delivery.order_ids)} if delivery else None),
-                          "fallida": bool(failed)})
+                          "fallida": bool(failed), "en_camino": (cycle_id, zone_id) in store.dispatches})  # S-308
         orders = [order_json(o, names, clock()) | {
             "vecino": store.customers[o.customer_id].name,
             "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])],
@@ -780,7 +783,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         except BusinessRuleError as error:
             repurchase = {"error": {"codigo": error.code, "mensaje": str(error)}}
         compared = reference.reference_savings(store, cycle_id)
-        return {"ciclo": cycle_id, "ciclos": known_cycles(),
+        costs, freight, estimated = logistics.real_costs(store, cycle_id)  # MR-01, MR-02
+        summary = metrics.net_margin_summary(store, cycle_id, costs) if margins else None
+        real = {"flete": money(freight), "estimado": estimated, "por_pedido": money(costs.purchase_trip),
+                "promedio": money(summary.average_net_margin) if summary else None,
+                "pierden": summary.losing_orders if summary else 0}
+        return {"ciclo": cycle_id, "ciclos": known_cycles(), "margen_real": real,
                 "margenes": [{"pedido": m.order_id, "cobrado": money(m.revenue), "reclamos": money(m.claims),
                               "proveedor": money(m.product_cost), "parada": money(m.stop_cost),
                               "margen": money(m.margin), "negativo": m.order_id in alerts}
@@ -978,7 +986,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         for zone_id in sorted({o.zone_id for o in attended}):
             zone = store.zones[zone_id]
             delivery = store.deliveries.get((cycle_id, zone_id))
-            state = "entregada" if delivery else "fallida" if (cycle_id, zone_id) in store.failed_deliveries else "pendiente"
+            state = "entregada" if delivery else "fallida" if (cycle_id, zone_id) in store.failed_deliveries \
+                else "en_camino" if (cycle_id, zone_id) in store.dispatches else "pendiente"  # S-308
             stops.append({"zona": {"id": zone.zone_id, "nombre": zone.name, "distrito": zone.district, "lat": zone.lat,
                                    "lon": zone.lon, "recibe": zone.reception_kind, "contacto": zone.reception_contact},
                           "estado": state, "recibio": delivery.received_by if delivery else None,
@@ -986,6 +995,18 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                       for o in attended if o.zone_id == zone_id]})
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "cerrado": clock() >= cycle.closes_at(cycle_id),
                 "paradas": stops}
+
+    def reparto_salida(environ, data, session):
+        """SR-01, SR-02: el reparto sale hacia una zona."""
+        dispatch = logistics.dispatch_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
+                                           by=session["principal"], now=clock())
+        return {"zona": dispatch.zone_id, "pedidos": len(dispatch.order_ids)}
+
+    def compras_flete(environ, data, session):
+        """FL-01..FL-04."""
+        freight = logistics.register_freight(store, str(data.get("ciclo", "")).strip(), data.get("empresa"),
+                                             data.get("monto"), by=session["principal"], now=clock())
+        return {"ciclo": freight.cycle, "empresa": freight.company, "monto": money(freight.amount)}
 
     def reparto_entrega(environ, data, session):
         return admin_entrega(environ, data, session)  # TR-02: mismas reglas; el motor revisa quién entrega
@@ -1053,7 +1074,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "faltantes": [shortage_json(s) for s in store.shortages if s.cycle == cycle_id]}
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
                 "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session),
-                "compra_real": real}
+                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id))}
+
+    def freight_json(f) -> dict | None:
+        return {"empresa": f.company, "monto": money(f.amount)} if f else None
 
     def shortage_json(s) -> dict:
         return {"pedido": s.order_id, "producto": s.product_id, "cantidad": qty(s.quantity),
@@ -1173,6 +1197,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),
         (r"/api/admin/incidencias/(\d+)/cerrar", {"POST": (admin_incidencia_cerrar, ATTENDING)}),
         (r"/api/admin/entregas", {"POST": (admin_entrega, "admin")}),
+        (r"/api/admin/salidas", {"POST": (reparto_salida, "admin")}),
         (r"/api/admin/entregas-fallidas", {"POST": (admin_entrega_fallida, "admin")}),
         (r"/api/admin/reclamos", {"GET": (admin_reclamos, ATTENDING)}),
         (r"/api/admin/reclamos/(\d+)/revisar", {"POST": (admin_revisar, ATTENDING)}),
@@ -1214,6 +1239,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/propuestas/(\d{4}-W\d{2})/([\w-]+)/rechazar", {"POST": (admin_propuesta_rechazar, "admin")}),
         (r"/api/reparto", {"GET": (reparto, partners.DRIVER)}),
         (r"/api/reparto/entregas", {"POST": (reparto_entrega, partners.DRIVER)}),
+        (r"/api/reparto/salidas", {"POST": (reparto_salida, partners.DRIVER)}),
         (r"/api/reparto/entregas-fallidas", {"POST": (reparto_entrega_fallida, partners.DRIVER)}),
         (r"/api/proveedor", {"GET": (proveedor, partners.SUPPLIER)}),
         (r"/api/proveedor/propuestas", {"POST": (proveedor_propuesta, partners.SUPPLIER)}),
@@ -1221,6 +1247,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/compras/colchon", {"POST": (compras_colchon, BUYING)}),
         (r"/api/compras/colchon/usar", {"POST": (compras_colchon_usar, BUYING)}),
         (r"/api/compras/recibido", {"POST": (compras_recibido, BUYING)}),
+        (r"/api/compras/flete", {"POST": (compras_flete, BUYING)}),
         (r"/api/porteria", {"GET": (porteria, partners.CONCIERGE)}),
         (r"/api/porteria/recepciones", {"POST": (porteria_recepcion, partners.CONCIERGE)}),
         (r"/api/zona/recepcion", {"GET": (zona_recepcion, "vecino")}),

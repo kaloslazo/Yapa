@@ -108,6 +108,8 @@ export interface Order {
   settlement: Settlement | null;
   bags?: Array<{ number: number; photo: string }>;
   labels?: string[]; // S-298: rótulo de cada bolsa
+  tracking?: Array<{ step: string; done: boolean }>; // S-309: los siete pasos del pedido
+  payTo?: { number: string; holder: string }; // S-305: el Plin de Yapa
 }
 
 export interface Quote {

@@ -380,6 +380,7 @@ a { color: inherit; text-decoration: none; }
 .orders-page-route small { color: var(--muted); font-size: .8125rem; }
 .orders-page-route strong { font-weight: 600; }
 .order-timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.order-timeline--seven { grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); row-gap: 10px; } /* S-309: siete pasos; en el celular bajan a otra fila */
 .order-timeline li { display: grid; gap: 6px; }
 .order-timeline li span { height: 6px; overflow: hidden; border-radius: var(--radius-pill); background: var(--paper-strong); color: transparent; font-size: 0; }
 .order-timeline li.is-complete span { background: var(--green); }
@@ -670,6 +671,7 @@ code { padding: 1px 6px; border-radius: 6px; background: var(--paper); font-fami
 .checkout-lines td:last-child, .order-lines td:last-child { text-align: right; font-weight: 600; }
 .pay-card { display: grid; justify-items: center; gap: 6px; width: 100%; margin: 6px 0 4px; padding: 20px; border: 2px solid var(--yellow-soft); border-radius: var(--radius-card); background: var(--canvas); text-align: center; }
 .pay-card > span { color: var(--copy); font-size: .9rem; }
+.pay-to { display: grid; gap: 2px; } .pay-to small { color: var(--muted); font-size: .8rem; } /* S-305 */
 .pay-amount { font-variant-numeric: tabular-nums; color: var(--ink); font-size: 2.6rem; letter-spacing: -0.03em; }
 .pay-code { display: inline-flex; align-items: center; gap: 10px; margin: 4px 0; padding: 12px 20px; border: 2px dashed var(--green); border-radius: var(--radius-note); background: #fff; color: var(--green); font-family: ui-monospace, Consolas, monospace; font-size: 1.35rem; font-weight: 800; letter-spacing: .04em; cursor: copy; }
 .pay-card small { color: var(--muted); }

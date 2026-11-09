@@ -68,6 +68,18 @@ def check_listen(host: str, base) -> None:
         raise BusinessRuleError("UNSAFE_LISTEN", "Escuchar fuera de esta máquina exige --base (nunca con datos de demo).")
 
 
+DEMO_PAYEE = {"numero": "999 000 111", "titular": "Yapa (cuenta de prueba)"}  # S-305: número de prueba, solo en la demo
+
+
+def payee(env, demo: bool) -> dict | None:
+    """S-305: el Plin negocios donde paga el vecino; sin configurar, el servidor no inventa un número."""
+    number = (env.get("YAPA_PLIN_NUMERO") or "").strip()
+    holder = (env.get("YAPA_PLIN_TITULAR") or "").strip()
+    if number and holder:
+        return {"numero": number, "titular": holder}
+    return dict(DEMO_PAYEE) if demo else None
+
+
 def secure_cookie(env) -> bool:
     """S-230."""
     return (env.get("YAPA_PUBLIC_URL") or "").lower().startswith("https://")

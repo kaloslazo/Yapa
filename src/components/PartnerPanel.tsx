@@ -62,7 +62,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
   if (!data) return <PartnerSkeleton />;
   const stops: Raw[] = data.paradas;
-  const done = stops.filter((s) => s.estado !== 'pendiente').length;
+  const done = stops.filter((s) => s.estado === 'entregada' || s.estado === 'fallida').length;
   const send = async (path: string, form: FormData, extra: Record<string, string>, title: string, detail: string) => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
     try {
@@ -92,7 +92,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
             <div className="route-stop-head">
               <span className="route-stop-number" aria-hidden="true">{stop.estado === 'entregada' ? <Icon name="check" size={16} /> : index + 1}</span>
               <div><h2>{zone.nombre}</h2><p>{zone.distrito}</p></div>
-              <span className={`route-state route-state--${stop.estado}`}>{stop.estado === 'entregada' ? 'Entregada' : stop.estado === 'fallida' ? 'No se pudo' : 'Pendiente'}</span>
+              <span className={`route-state route-state--${stop.estado}`}>{stop.estado === 'entregada' ? 'Entregada' : stop.estado === 'fallida' ? 'No se pudo' : stop.estado === 'en_camino' ? 'En camino' : 'Pendiente'}</span>
             </div>
             <dl className="route-facts">
               <div><dt>Recibe</dt><dd>{zone.contacto || RECEIVERS[zone.recibe] || 'Recepción'}</dd></div>
@@ -100,8 +100,9 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
             </dl>
             <ul className="route-orders" aria-label="Pedidos de la parada">{stop.pedidos.map((o: Raw) => <li key={o.id} className={o.bolsas ? '' : 'is-missing'}>N.º {o.id}<span>{o.bolsas ? `${o.bolsas} ${o.bolsas === 1 ? 'bolsa' : 'bolsas'}` : 'sin armar'}</span></li>)}</ul>
             {zone.lat != null && zone.lon != null ? <a className="route-map" href={`https://www.google.com/maps/dir/?api=1&destination=${zone.lat},${zone.lon}`} target="_blank" rel="noreferrer"><Icon name="map" size={17} />Cómo llegar</a> : null}
-            {stop.estado === 'pendiente' ? (unpacked ? <p className="partner-note partner-note--warn"><Icon name="warning" size={18} />Faltan armar {unpacked} {unpacked === 1 ? 'pedido' : 'pedidos'}. Avisa al equipo antes de salir.</p> : (
+            {stop.estado === 'pendiente' || stop.estado === 'en_camino' ? (unpacked ? <p className="partner-note partner-note--warn"><Icon name="warning" size={18} />Faltan armar {unpacked} {unpacked === 1 ? 'pedido' : 'pedidos'}. Avisa al equipo antes de salir.</p> : (
               <div className="route-actions">
+                {stop.estado === 'pendiente' ? <button className="secondary-button" type="button" onClick={() => void send('/api/reparto/salidas', new FormData(), { ciclo: data.ciclo, zona: zone.id }, `Saliste hacia ${zone.nombre}`, 'Cada vecino recibe el aviso de que su pedido va en camino.')}><Icon name="truck" size={17} />Salí hacia esta zona</button> : null}
                 <PhotoForm label="Entregué" onSend={(form) => send('/api/reparto/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.nombre} registrada`, 'Los vecinos reciben el aviso con tu foto.')}>
                   <label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contacto} autoComplete="off" required /></label>
                 </PhotoForm>

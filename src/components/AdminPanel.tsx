@@ -273,6 +273,7 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
           <div className="stop-card" key={zone.id}>
             <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
             {!packer && !p.entrega && !p.fallida ? <div className="stop-actions">
+              {p.en_camino ? <span className="state-pill"><Icon name="truck" size={13} /> En camino</span> : <button className="admin-row-button" type="button" onClick={() => void send('/api/admin/salidas', new FormData(), { ciclo: data.ciclo, zona: zone.id }, `El reparto salió hacia ${zone.name}: los vecinos reciben el aviso.`)}>Salió el reparto</button>}
               <PhotoForm label="Registrar entrega" onSend={(form) => send('/api/admin/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.name} registrada.`)}><label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contact} required /></label></PhotoForm>
               <details><summary>No pudimos entregar</summary><div className="segmented">{FAILURES.map((f) => <button key={f.value} type="button" className={failure === f.value ? 'is-active' : ''} onClick={() => setFailure(f.value)}>{f.label}</button>)}</div><PhotoForm label="Registrar entrega fallida" onSend={(form) => send('/api/admin/entregas-fallidas', form, { ciclo: data.ciclo, zona: zone.id, motivo: failure }, 'Entrega fallida registrada: se devuelve todo menos el envío.')} /></details>
             </div> : null}
@@ -358,6 +359,11 @@ function Metrics({ notify }: SectionProps) {
           <div className="admin-kpi"><span className="admin-kpi-label">Frente al supermercado</span><strong>{data.frente_a.SUPERMERCADO?.porcentaje ? `${data.frente_a.SUPERMERCADO.porcentaje} %` : '—'}</strong><small>{data.frente_a.SUPERMERCADO?.canastas ?? 0} canastas comparadas</small></div>
           <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? data.recompra.error.mensaje : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
         </section>
+        {data.margen_real ? <section className="admin-kpis">
+          <div className={`admin-kpi ${data.margen_real.pierden ? 'admin-kpi--attention' : ''}`}><span className="admin-kpi-label">Margen real</span><strong>{data.margen_real.promedio != null ? formatMoney(num(data.margen_real.promedio)) : '—'}</strong><small>por pedido, con flete, armado y atención; cobro por Plin sin comisión</small></div>
+          <div className="admin-kpi"><span className="admin-kpi-label">Flete de la compra</span><strong>{formatMoney(num(data.margen_real.flete))}</strong><small>{data.margen_real.estimado ? 'estimado: compras aún no lo registra' : 'registrado por compras'} · {formatMoney(num(data.margen_real.por_pedido))} por pedido</small></div>
+          <div className="admin-kpi"><span className="admin-kpi-label">Pedidos que pierden</span><strong>{data.margen_real.pierden}</strong><small>con los costos reales</small></div>
+        </section> : null}
         <Card title="Margen antes de costos operativos"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Cobrado</th><th>Reclamos</th><th>Proveedor</th><th>Parada</th><th>Margen</th></tr></thead><tbody>{margins.map((m: Raw) => <tr key={m.pedido} className={m.negativo ? 'is-negative' : ''}><td>{m.pedido}</td><td>{formatMoney(num(m.cobrado))}</td><td>{formatMoney(num(m.reclamos))}</td><td>{formatMoney(num(m.proveedor))}</td><td>{formatMoney(num(m.parada))}</td><td><strong>{formatMoney(num(m.margen))}</strong></td></tr>)}</tbody></table></div></Card>
       </> : <AdminSkeleton />}
     </>
@@ -510,8 +516,13 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>(`/api/compras${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [add, setAdd] = useState({ producto: '', cantidad: '' });
   const [use, setUse] = useState({ producto: '', cantidad: '', pedido: '' });
+  const [freight, setFreight] = useState({ empresa: '', monto: '' });
   if (!data) return <AdminSkeleton />;
   const suppliers: Raw[] = data.proveedores;
+  const registerFreight = async (event: FormEvent) => {
+    event.preventDefault();
+    if (await run(() => api.post('/api/compras/flete', { ciclo: data.ciclo, ...freight }), `Flete de ${freight.empresa} registrado.`)) void reload();
+  };
   const total = suppliers.reduce((sum, p) => sum + num(p.total), 0);
   const buffer: Raw = data.colchon;
   const used = Math.min(100, (num(buffer.valor) / Math.max(num(buffer.tope), 1)) * 100);
@@ -553,6 +564,13 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
           : <form onSubmit={registerPurchase}><p className="admin-muted">Corrige solo lo que llegó de menos. Lo que falte se repone primero con el colchón y el resto se descuenta a los últimos pedidos, que lo reciben de vuelta como saldo. El reparto no sale hasta registrar esto.</p>
             <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Pedido</th><th>Llegó</th></tr></thead><tbody>{ordered.map((l) => <tr key={l.producto}><td><strong>{l.nombre}</strong></td><td>{l.cantidad} {l.unidad}</td><td><input className="admin-inline-input" name={l.producto} defaultValue={l.cantidad} inputMode="decimal" aria-label={`Cuánto llegó de ${l.nombre}`} /></td></tr>)}</tbody></table></div>
             <button className="primary-button" type="submit">Registrar la compra</button></form>}
+      </Card> : null}
+      {!partial && ordered.length ? <Card eyebrow="Lo paga Yapa: el proveedor no entrega" title="Flete de la compra">
+        {data.flete ? <p className="admin-muted"><strong>{data.flete.empresa}</strong> · {formatMoney(num(data.flete.monto))}. Se reparte entre los pedidos de la semana en el margen real.</p>
+          : <form className="buffer-form" onSubmit={registerFreight}><p className="admin-muted">Registra lo que pagaste por traer la compra del mercado. Sin esto, las métricas estiman S/ 180.</p>
+            <label className="checkout-field"><span>Empresa</span><input value={freight.empresa} onChange={(event) => setFreight({ ...freight, empresa: event.target.value })} maxLength={80} placeholder="Fletes Santa Anita" required /></label>
+            <label className="checkout-field"><span>Monto (S/)</span><input value={freight.monto} onChange={(event) => setFreight({ ...freight, monto: event.target.value })} inputMode="decimal" placeholder="120.00" required /></label>
+            <button className="primary-button" type="submit">Registrar flete</button></form>}
       </Card> : null}
       <Card eyebrow="Colchón de reposición" title={`${formatMoney(num(buffer.valor))} de ${formatMoney(num(buffer.tope))}`}>
         <div className="buffer-meter" role="meter" aria-valuemin={0} aria-valuemax={num(buffer.tope)} aria-valuenow={num(buffer.valor)} aria-label="Valor guardado en el colchón"><span style={{ width: `${used}%` }} /></div>

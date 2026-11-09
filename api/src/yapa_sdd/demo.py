@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from decimal import Decimal as D
 
-from . import auth, cycle, fulfillment, persistence, purchase, reference
+from . import auth, cycle, fulfillment, logistics, persistence, purchase, reference
 from .cycle import LIMA
 from .domain import BusinessRuleError, Customer, Zone
 from .order_registration import quote_order, register_order, verify_payment
@@ -86,6 +86,8 @@ def demo_store(now: datetime | None = None) -> InMemoryStore:
             fulfillment.pack_bag(store, order.order_id, by=ADMIN, photo=f"fotos/w39-pedido-{order.order_id}.jpg",
                                  now=w39_saturday)
     purchase.register_purchase(store, cycle39, {}, by=ADMIN, now=w39_saturday)  # S-299: llegó todo
+    logistics.register_freight(store, cycle39, "Fletes Santa Anita (demo)", D("120"), by=ADMIN, now=w39_saturday)  # S-306
+    logistics.dispatch_zone(store, cycle39, "Z-LINCE-01", by=ADMIN, now=w39_saturday)  # S-308
     fulfillment.deliver_zone(store, cycle39, "Z-LINCE-01", by=ADMIN, photo="fotos/w39-entrega-alamos.jpg",
                              received_by="Portería Los Álamos", now=w39_saturday)
     fulfillment.close_cycle(store, cycle39, at=w39_saturday)

@@ -74,13 +74,13 @@ function Outcome({ order }: { order: Order }) {
 
 function Timeline({ order }: { order: Order }) {
   if (!['REGISTRADO', 'LIQUIDADO'].includes(order.status)) return null;
-  const steps = [
+  const steps = order.tracking?.map((t) => ({ label: t.step, done: t.done })) ?? [ // S-309: el motor da los siete pasos
     { label: 'Pedido', done: true },
     { label: 'Pago verificado', done: order.payment === 'VERIFICADO' },
     { label: 'Entregado', done: order.delivered || order.status === 'LIQUIDADO' },
     { label: 'Te devolvemos', done: order.status === 'LIQUIDADO' },
   ];
-  return <ol className="order-timeline order-timeline--four" aria-label={`Avance del pedido ${order.id}`}>{steps.map((step, index) => <li className={step.done ? 'is-complete' : ''} key={step.label}><span>{step.done ? <Icon name="check" size={13} weight="bold" /> : index + 1}</span><small>{step.label}</small></li>)}</ol>;
+  return <ol className={`order-timeline ${steps.length > 4 ? 'order-timeline--seven' : 'order-timeline--four'}`} aria-label={`Avance del pedido ${order.id}`}>{steps.map((step, index) => <li className={step.done ? 'is-complete' : ''} key={step.label}><span>{step.done ? <Icon name="check" size={13} weight="bold" /> : index + 1}</span><small>{step.label}</small></li>)}</ol>;
 }
 
 function CancelActions({ order, onCancel }: { order: Order; onCancel: OrdersPageProps['onCancel'] }) {
