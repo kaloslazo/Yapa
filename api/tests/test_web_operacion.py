@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import CYCLE, Scenario
+from test_settlement import CYCLE, Scenario, buy_all
 from web_client import WebClient, fast_hashing
 
 from yapa_sdd import wallet
@@ -64,9 +64,11 @@ class WebOperationBase(unittest.TestCase):
     def pack_all(self, orders=None):
         for order in orders or self.orders:
             pack_bag(self.store, order.order_id, by=ADMIN, photo="fotos/bolsa.jpg", now=FRIDAY)
+        buy_all(self.store, CYCLE)  # S-299
 
     def delivered_and_settled(self):
         self.pack_all()
+        buy_all(self.store, CYCLE)
         deliver_zone(self.store, CYCLE, "Z-JM-01", by=ADMIN, photo="fotos/entrega.jpg", received_by="Sr. Ramos",
                      now=SATURDAY)
         settle_cycle(self.store, CYCLE, at=SATURDAY)

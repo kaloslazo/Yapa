@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import CYCLE, Scenario
+from test_settlement import CYCLE, Scenario, buy_all
 
 from yapa_sdd.cycle import LIMA
 from yapa_sdd.fulfillment import pack_bag, register_failed_delivery
@@ -24,6 +24,7 @@ class FailedZoneMetricsSpecTests(unittest.TestCase):
         orders = self.s.orders("Z-JM-01", 8)
         for order in orders:
             pack_bag(self.store, order.order_id, by=STAFF, photo="bolsa.jpg", now=SATURDAY)
+        buy_all(self.store, CYCLE)
         register_failed_delivery(self.store, CYCLE, "Z-JM-01", by=STAFF, photo="puerta.jpg",
                                  reason="NADIE_RECIBE", now=SATURDAY)
         settle_cycle(self.store, CYCLE, at=SATURDAY)

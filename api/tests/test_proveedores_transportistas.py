@@ -5,7 +5,7 @@ from decimal import Decimal as D
 import unittest
 
 from api_client import ApiClient
-from test_settlement import CYCLE, NOW, Scenario
+from test_settlement import CYCLE, NOW, Scenario, buy_all
 from web_client import fast_hashing
 
 from yapa_sdd import partners, supplier_offers
@@ -48,6 +48,7 @@ class Base(unittest.TestCase):
     def pack_all(self):
         for order in self.orders:
             pack_bag(self.store, order.order_id, by=ADMIN, photo="fotos/bolsa.jpg", now=FRIDAY)
+        buy_all(self.store, CYCLE)  # S-299
 
     def offer(self, text=OFFER, now=SATURDAY, by=SUPPLIER):
         return supplier_offers.submit_offer(self.store, W39, text, by=by, now=now)
@@ -113,6 +114,7 @@ class DriverTests(Base):
         self.driver()
 
     def deliver(self, by=DRIVER):
+        buy_all(self.store, CYCLE)
         return deliver_zone(self.store, CYCLE, "Z-JM-01", by=by, photo="fotos/entrega.jpg", received_by="Sr. Ramos",
                             now=SATURDAY)
 
@@ -130,6 +132,7 @@ class DriverTests(Base):
     # TR-D
     def test_tr_d_driver_registers_failed_delivery(self):
         self.pack_all()
+        buy_all(self.store, CYCLE)
         failure = register_failed_delivery(self.store, CYCLE, "Z-JM-01", by=DRIVER, photo="fotos/puerta.jpg",
                                            reason="PORTERIA_CERRADA", now=SATURDAY)
         self.assertEqual(failure.registered_by, DRIVER)

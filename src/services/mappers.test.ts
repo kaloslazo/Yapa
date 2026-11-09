@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toAccount } from './mappers';
+import { toAccount, toOrder } from './mappers';
 
 const base = { usuario: 107, nombre: 'Raith Bravo', rol: 'vecino', csrf: 't', correo: 'r***@gmail.com', correo_verificado: true };
 
@@ -19,5 +19,17 @@ describe('cuenta del vecino', () => {
 
   it('si el motor no lo dice, no inventa nada (el admin no tiene PIN de vecino)', () => {
     expect(toAccount({ usuario: 'admin-yapa', nombre: 'Equipo', rol: 'admin', csrf: 't' }).hasPin).toBeUndefined();
+  });
+});
+
+describe('pedido en la lista de armado', () => {
+  it('trae el rótulo de cada bolsa (iteración 56, S-298)', () => {
+    const order = toOrder({ id: 1, ciclo: '2026-W38', zona: 'Z-JM-01', lineas: [], bolsas: [{ numero: 1, foto: 'f.jpg' }],
+      rotulos: ['Pedido 1 · Residencial San Felipe · Bolsa 1 de 1'] });
+    expect(order.labels).toEqual(['Pedido 1 · Residencial San Felipe · Bolsa 1 de 1']);
+  });
+
+  it('sin rótulos, no inventa ninguno', () => {
+    expect(toOrder({ id: 2, lineas: [] }).labels).toBeUndefined();
   });
 });

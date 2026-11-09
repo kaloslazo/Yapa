@@ -16,6 +16,14 @@ CYCLE = "2026-W38"
 BASKET = [("PAPA-AMARILLA", "5"), ("PAPA-BLANCA", "10"), ("CEBOLLA-ROJA", "10")]
 
 
+def buy_all(store, cycle=CYCLE):
+    """S-299 (iteración 56): compras registra la compra completa antes de despachar."""
+    from yapa_sdd import cycle as cycles
+    from yapa_sdd.purchase import register_purchase
+    if cycle not in store.purchases:
+        register_purchase(store, cycle, {}, by="admin-yapa", now=cycles.closes_at(cycle))
+
+
 class Scenario:
     def __init__(self):
         self.store = pilot_store()

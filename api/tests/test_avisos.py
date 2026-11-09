@@ -79,6 +79,7 @@ class AvisosBase(unittest.TestCase):
         admin = self.admin()
         for order_id in range(1, 9):
             self.assertEqual(admin.post("/api/admin/bolsas", {"pedido": order_id, "foto": f"b{order_id}.jpg"})[0], 200)
+        self.assertEqual(admin.post("/api/compras/recibido", {"ciclo": "2026-W38", "recibido": {}})[0], 200)  # S-299
         return admin
 
     def delivered(self):
@@ -148,6 +149,7 @@ class NoticeFlowTests(AvisosBase):
         admin = self.admin()
         for order_id in range(2, 10):
             self.assertEqual(admin.post("/api/admin/bolsas", {"pedido": order_id, "foto": f"b{order_id}.jpg"})[0], 200)
+        admin.post("/api/compras/recibido", {"ciclo": "2026-W38", "recibido": {}})  # S-299
         admin.post("/api/admin/entregas", {"ciclo": "2026-W38", "zona": SAN_FELIPE, "foto": "e.jpg", "recibe": "Sr. Ramos"})
         self.assertEqual(admin.post("/api/admin/ciclos/2026-W38/liquidar")[0], 200)
         self.assertNotIn("LIQUIDADO", self.kinds(801))
@@ -162,6 +164,7 @@ class NoticeFlowTests(AvisosBase):
         admin = self.admin()
         for order_id in range(1, 9):
             admin.post("/api/admin/bolsas", {"pedido": order_id, "foto": f"b{order_id}.jpg"})
+        admin.post("/api/compras/recibido", {"ciclo": "2026-W38", "recibido": {}})  # S-299
         admin.post("/api/admin/entregas", {"ciclo": "2026-W38", "zona": SAN_FELIPE, "foto": "e.jpg", "recibe": "Sr. Ramos"})
         self.assertEqual(admin.post("/api/admin/ciclos/2026-W38/liquidar")[0], 200)
         text = next(n for n in self.notices_of(809) if n["tipo"] == "LIQUIDADO")["texto"]

@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
+from test_settlement import buy_all
 from web_client import WebClient, fast_hashing
 
 from yapa_sdd.audit import money_balance
@@ -77,6 +78,7 @@ class WholeWeekTest(unittest.TestCase):
         admin = self.admin()
         for order_id in range(1, 9):
             self.assertEqual(admin.post("/admin/bolsa", {"pedido": str(order_id), "foto": f"b{order_id}.jpg"})[0], 200)
+        buy_all(self.store, CYCLE)  # S-299: la compra real se registra en la API (/api/compras/recibido)
         status, _, _ = admin.post("/admin/entrega", {"ciclo": CYCLE, "zona": "Z-JM-01", "foto": "entrega.jpg",
                                                      "recibe": "Sr. Ramos"})
         self.assertEqual(status, 200)
@@ -102,8 +104,8 @@ class WholeWeekTest(unittest.TestCase):
         self.assertBalanced("reclamo aprobado")
 
         # 5. Devolución del saldo pedida y pagada
-        self.assertEqual(balance(self.store, 801), D("5.38"))  # 3.36 de ahorro + 2.02 del reclamo
-        self.assertEqual(vecino.post("/cuenta/devolucion", {"monto": "5.00"})[0], 200)
+        self.assertEqual(balance(self.store, 801), D("4.62"))  # S-301: 2.52 de ahorro (3.36 × 75 %) + 2.10 del reclamo
+        self.assertEqual(vecino.post("/cuenta/devolucion", {"monto": "4.00"})[0], 200)  # S-301: ya no alcanza para 5.00
         refund_id = max(r.refund_id for r in self.store.refunds.values() if r.customer_id == 801)
         self.assertEqual(admin.post("/admin/devoluciones/pagar", {"reembolso": str(refund_id),
                                                                   "codigo": "YP-1"})[0], 200)
@@ -117,7 +119,7 @@ class WholeWeekTest(unittest.TestCase):
         self.assertIn("S/ 0.00", html)
         final = money_balance(self.store)
         self.assertEqual(final.received, D("671.00"))  # 11 pedidos × S/ 61.00
-        self.assertEqual(final.refunds_paid, D("5.00"))
+        self.assertEqual(final.refunds_paid, D("4.00"))
 
 
 if __name__ == "__main__":

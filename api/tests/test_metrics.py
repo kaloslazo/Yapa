@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import BASKET, CYCLE, Scenario
+from test_settlement import BASKET, CYCLE, Scenario, buy_all
 
 from yapa_sdd.claims import file_claim, review_claim
 from yapa_sdd.cycle import LIMA
@@ -74,6 +74,7 @@ class MetricsSpecTests(unittest.TestCase):
         orders = self.s.orders("Z-JM-01", 8)
         for order in orders:
             pack_bag(self.store, order.order_id, by=ADMIN, photo="fotos/bolsa.jpg", now=FRIDAY)
+        buy_all(self.store, CYCLE)
         deliver_zone(self.store, CYCLE, "Z-JM-01", by=ADMIN, photo="fotos/entrega.jpg", received_by="Sr. Ramos",
                      now=SATURDAY)
         claimed = orders[1]

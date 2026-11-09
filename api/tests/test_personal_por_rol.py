@@ -5,7 +5,7 @@ from decimal import Decimal as D
 import unittest
 
 from api_client import ApiClient
-from test_settlement import CYCLE, NOW, Scenario
+from test_settlement import CYCLE, NOW, Scenario, buy_all
 from web_client import fast_hashing
 
 from yapa_sdd import customers, notices, partners, reception, wallet
@@ -56,6 +56,7 @@ class Base(unittest.TestCase):
 
     def deliver(self):
         self.pack_all()
+        buy_all(self.store, CYCLE)
         return deliver_zone(self.store, CYCLE, "Z-JM-01", by=ADMIN, photo="fotos/entrega.jpg", received_by="Sr. Ramos",
                             now=SATURDAY)
 

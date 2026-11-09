@@ -124,6 +124,7 @@ class ApiSpecTests(unittest.TestCase):
         admin = self.admin()
         for order_id in range(1, 9):
             self.assertEqual(admin.post("/api/admin/bolsas", {"pedido": order_id, "foto": f"b{order_id}.jpg"})[0], 200)
+        self.assertEqual(admin.post("/api/compras/recibido", {"ciclo": "2026-W38", "recibido": {}})[0], 200)  # S-299
         status, _, _ = admin.post("/api/admin/entregas", {"ciclo": "2026-W38", "zona": "Z-JM-01",
                                                           "foto": "entrega.jpg", "recibe": "Sr. Ramos"})
         self.assertEqual(status, 200)

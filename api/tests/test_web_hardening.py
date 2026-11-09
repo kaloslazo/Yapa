@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import CYCLE, Scenario
+from test_settlement import CYCLE, Scenario, buy_all
 from web_client import WebClient, fast_hashing
 
 from yapa_sdd.auth import set_admin_password, set_pin
@@ -36,6 +36,7 @@ class WebHardeningSpecTests(unittest.TestCase):
         for order in self.orders:
             status, _, _ = self.admin.post("/admin/bolsa", {"pedido": str(order.order_id), "foto": "bolsa.jpg"})
             self.assertEqual(status, 200)
+        buy_all(self.store, CYCLE)  # S-299
 
     # HA-01 (web)
     def test_ha01_neighbor_registers_location(self):

@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import CYCLE, NOW, Scenario
+from test_settlement import CYCLE, NOW, Scenario, buy_all
 
 from yapa_sdd import wallet
 from yapa_sdd.buffer import add_to_buffer, buffer_value, use_buffer
@@ -38,6 +38,7 @@ class FulfillmentBase(unittest.TestCase):
         return pack_bag(self.store, order.order_id, by=by, photo=photo, now=now)
 
     def deliver(self, zone_id="Z-JM-01", photo="fotos/entrega.jpg", received_by="Sr. Ramos", by=ADMIN):
+        buy_all(self.store, CYCLE)
         return deliver_zone(self.store, CYCLE, zone_id, by=by, photo=photo, received_by=received_by, now=SATURDAY)
 
     def pack_and_deliver(self):

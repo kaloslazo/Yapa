@@ -7,7 +7,7 @@ import unittest
 
 from test_catalog import MONDAY, SATURDAY as CATALOG_SATURDAY, W39, product, w39_catalog
 from test_fulfillment import ADMIN, FRIDAY, FulfillmentBase
-from test_settlement import CYCLE
+from test_settlement import CYCLE, buy_all
 from web_client import WebClient, fast_hashing
 
 from yapa_sdd.auth import set_admin_password
@@ -44,6 +44,7 @@ class PackingAfterCloseTests(GapsBase):
     def test_hc_a_no_bags_after_failed_delivery(self):
         for order in self.orders + [self.cleaning]:
             self.pack(order)
+        buy_all(self.store, CYCLE)
         register_failed_delivery(self.store, CYCLE, "Z-JM-01", by=ADMIN, photo="fotos/porteria.jpg",
                                  reason="PORTERIA_CERRADA", now=FRIDAY)
         self.assertRule("ZONE_ALREADY_CLOSED", self.pack, self.first)

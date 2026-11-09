@@ -9,13 +9,14 @@ describe('secciones del panel por rol', () => {
     expect(ids('admin')).toContain('resumen');
     expect(ids('admin')).toContain('compras');
     expect(ids('admin')).toContain('cuentas');
+    expect(ids('admin')).toContain('incidencias'); // iteración 56
     expect(ids('admin')).not.toContain('pines');
   });
 
   it('cada rol ve solo lo suyo', () => {
     expect(ids('armador')).toEqual(['armado']);
     expect(ids('compras')).toEqual(['compras']);
-    expect(ids('atencion')).toEqual(['reclamos', 'devoluciones', 'pines']);
+    expect(ids('atencion')).toEqual(['reclamos', 'incidencias', 'devoluciones', 'pines']); // S-300
   });
 
   it('nadie fuera del equipo ve secciones', () => {

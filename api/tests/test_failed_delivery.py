@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal as D
 import unittest
 
-from test_settlement import CYCLE, Scenario
+from test_settlement import CYCLE, Scenario, buy_all
 
 from yapa_sdd.claims import file_claim
 from yapa_sdd.cycle import LIMA
@@ -34,6 +34,7 @@ class FailedDeliverySpecTests(unittest.TestCase):
         return orders
 
     def fail(self, zone_id="Z-JM-01", reason="PORTERIA_CERRADA", photo="puerta.jpg", by=STAFF):
+        buy_all(self.store, CYCLE)
         return register_failed_delivery(self.store, CYCLE, zone_id, by=by, photo=photo, reason=reason, now=SATURDAY)
 
     # EF-A
@@ -83,6 +84,7 @@ class FailedDeliverySpecTests(unittest.TestCase):
     def test_ef_e_close_cycle_requires_all_zones(self):
         jm = self.packed("Z-JM-01", 8)
         self.packed("Z-LINCE-01", 8)
+        buy_all(self.store, CYCLE)
         deliver_zone(self.store, CYCLE, "Z-JM-01", by=STAFF, photo="entrega.jpg", received_by="Sr. Ramos",
                      now=SATURDAY)
         with self.assertRaises(BusinessRuleError) as raised:
@@ -95,6 +97,7 @@ class FailedDeliverySpecTests(unittest.TestCase):
     def test_ef_f_close_cycle_settles_when_complete(self):
         self.packed("Z-JM-01", 8)
         self.packed("Z-LINCE-01", 8)
+        buy_all(self.store, CYCLE)
         deliver_zone(self.store, CYCLE, "Z-JM-01", by=STAFF, photo="entrega.jpg", received_by="Sr. Ramos",
                      now=SATURDAY)
         self.fail(zone_id="Z-LINCE-01", reason="NADIE_RECIBE")

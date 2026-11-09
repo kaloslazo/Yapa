@@ -1,0 +1,140 @@
+ERROR: test_compra_real (unittest.loader._FailedTest.test_compra_real)
+ImportError: Failed to import test module: test_compra_real
+ImportError: cannot import name 'incidents' from 'yapa_sdd' (/Users/kalosroots/personal/utec/yapa/yapa-app/api/src/yapa_sdd/__init__.py)
+ERROR: test_au_c_whole_week (test_e2e_week.WholeWeekTest.test_au_c_whole_week)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_a_register_failure_once (test_failed_delivery.FailedDeliverySpecTests.test_ef_a_register_failure_once)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_b_refund_minus_real_delivery (test_failed_delivery.FailedDeliverySpecTests.test_ef_b_refund_minus_real_delivery)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_c_orders_must_be_packed (test_failed_delivery.FailedDeliverySpecTests.test_ef_c_orders_must_be_packed)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_c_required_data (test_failed_delivery.FailedDeliverySpecTests.test_ef_c_required_data)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_d_no_claims_on_failed_zone (test_failed_delivery.FailedDeliverySpecTests.test_ef_d_no_claims_on_failed_zone)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_e_close_cycle_requires_all_zones (test_failed_delivery.FailedDeliverySpecTests.test_ef_e_close_cycle_requires_all_zones)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ef_f_close_cycle_settles_when_complete (test_failed_delivery.FailedDeliverySpecTests.test_ef_f_close_cycle_settles_when_complete)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_mg_a_loss_is_visible (test_failed_zone_metrics.FailedZoneMetricsSpecTests.test_mg_a_loss_is_visible)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_mg_c_savings_unchanged (test_failed_zone_metrics.FailedZoneMetricsSpecTests.test_mg_c_savings_unchanged)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rc_a_claim_in_time_is_pending (test_fulfillment.ClaimSpecTests.test_rc_a_claim_in_time_is_pending)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rc_b_claim_window_is_24_hours (test_fulfillment.ClaimSpecTests.test_rc_b_claim_window_is_24_hours)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rc_c_order_must_be_delivered_and_own (test_fulfillment.ClaimSpecTests.test_rc_c_order_must_be_delivered_and_own)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rc_d_reason_and_photo (test_fulfillment.ClaimSpecTests.test_rc_d_reason_and_photo)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rc_e_invalid_items (test_fulfillment.ClaimSpecTests.test_rc_e_invalid_items)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_en_a_zone_delivery_is_recorded (test_fulfillment.DeliverySpecTests.test_en_a_zone_delivery_is_recorded)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_en_b_all_or_nothing (test_fulfillment.DeliverySpecTests.test_en_b_all_or_nothing)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_en_c_delivery_requires_photo_and_receiver (test_fulfillment.DeliverySpecTests.test_en_c_delivery_requires_photo_and_receiver)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_en_d_zone_is_delivered_once (test_fulfillment.DeliverySpecTests.test_en_d_zone_is_delivered_once)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_en_e_invalid_zone_or_person (test_fulfillment.DeliverySpecTests.test_en_e_invalid_zone_or_person)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rv_a_approved_claim_returns_the_article_as_balance (test_fulfillment.ReviewSpecTests.test_rv_a_approved_claim_returns_the_article_as_balance)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rv_b_rejected_claim_moves_no_money (test_fulfillment.ReviewSpecTests.test_rv_b_rejected_claim_moves_no_money)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rv_c_approval_needs_settled_cycle (test_fulfillment.ReviewSpecTests.test_rv_c_approval_needs_settled_cycle)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rv_d_invalid_reviews (test_fulfillment.ReviewSpecTests.test_rv_d_invalid_reviews)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_rv_e_missing_item_is_not_returned_twice (test_fulfillment.ReviewSpecTests.test_rv_e_missing_item_is_not_returned_twice)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_hc_a_no_bags_after_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_delivery)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_hc_a_no_bags_after_failed_delivery (test_gaps_packing.PackingAfterCloseTests.test_hc_a_no_bags_after_failed_delivery)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_mt_c_missing_items_and_approved_claims (test_metrics.MetricsSpecTests.test_mt_c_missing_items_and_approved_claims)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_concierge_flow_from_api (test_personal_por_rol.ApiTests.test_po_concierge_flow_from_api)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_f_zone_admin_confirms_from_api (test_personal_por_rol.ApiTests.test_po_f_zone_admin_confirms_from_api)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_a_concierge_sees_its_zone_without_money (test_personal_por_rol.ReceptionTests.test_po_a_concierge_sees_its_zone_without_money)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_b_concierge_confirms_and_neighbors_are_told (test_personal_por_rol.ReceptionTests.test_po_b_concierge_confirms_and_neighbors_are_told)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_c_confirms_only_once (test_personal_por_rol.ReceptionTests.test_po_c_confirms_only_once)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_deactivated_concierge_cannot_confirm (test_personal_por_rol.ReceptionTests.test_po_deactivated_concierge_cannot_confirm)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_e_concierge_of_other_zone (test_personal_por_rol.ReceptionTests.test_po_e_concierge_of_other_zone)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_f_zone_admin_confirms_other_neighbor_cannot (test_personal_por_rol.ReceptionTests.test_po_f_zone_admin_confirms_other_neighbor_cannot)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_po_g_other_accounts_cannot_confirm (test_personal_por_rol.ReceptionTests.test_po_g_other_accounts_cannot_confirm)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_at_a_support_approves_claim (test_personal_por_rol.SupportTests.test_at_a_support_approves_claim)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_at_b_packer_does_not_review_claims (test_personal_por_rol.SupportTests.test_at_b_packer_does_not_review_claims)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_a_route_without_neighbor_data (test_proveedores_transportistas.ApiTests.test_tr_a_route_without_neighbor_data)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_b_driver_delivers_from_api (test_proveedores_transportistas.ApiTests.test_tr_b_driver_delivers_from_api)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_d_failed_delivery_from_api (test_proveedores_transportistas.ApiTests.test_tr_d_failed_delivery_from_api)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_b_driver_delivers_a_zone (test_proveedores_transportistas.DriverTests.test_tr_b_driver_delivers_a_zone)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_c_cannot_deliver_unpacked_orders (test_proveedores_transportistas.DriverTests.test_tr_c_cannot_deliver_unpacked_orders)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_d_driver_registers_failed_delivery (test_proveedores_transportistas.DriverTests.test_tr_d_driver_registers_failed_delivery)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_f_deactivated_driver_cannot_deliver (test_proveedores_transportistas.DriverTests.test_tr_f_deactivated_driver_cannot_deliver)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_tr_f_supplier_cannot_deliver (test_proveedores_transportistas.DriverTests.test_tr_f_supplier_cannot_deliver)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_retiro_datos (unittest.loader._FailedTest.test_retiro_datos)
+ImportError: Failed to import test module: test_retiro_datos
+ImportError: cannot import name 'purchase' from 'yapa_sdd' (/Users/kalosroots/personal/utec/yapa/yapa-app/api/src/yapa_sdd/__init__.py)
+ERROR: test_ha09_failed_delivery_from_web (test_web_hardening.WebHardeningSpecTests.test_ha09_failed_delivery_from_web)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_ha10_settle_from_web_requires_closed_zones (test_web_hardening.WebHardeningSpecTests.test_ha10_settle_from_web_requires_closed_zones)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_oa09_delivery (test_web_operacion.AdminOperationTests.test_oa09_delivery)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_oa10_review_claims (test_web_operacion.AdminOperationTests.test_oa10_review_claims)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_oa13_access (test_web_operacion.CrossCuttingTests.test_oa13_access)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+ERROR: test_oa07_file_claim (test_web_operacion.NeighborMoneyAndClaimTests.test_oa07_file_claim)
+ModuleNotFoundError: No module named 'yapa_sdd.purchase'
+FAIL: test_api_g_whole_week (test_api.ApiSpecTests.test_api_g_whole_week)
+AssertionError: 404 != 200
+FAIL: test_av_m_correo_de_entrega (test_avisos.EmailNoticeTests.test_av_m_correo_de_entrega)
+AssertionError: 404 != 200
+FAIL: test_av_n_sin_correo_verificado (test_avisos.EmailNoticeTests.test_av_n_sin_correo_verificado)
+AssertionError: 404 != 200
+FAIL: test_av_o_apagado_y_encendido (test_avisos.EmailNoticeTests.test_av_o_apagado_y_encendido)
+AssertionError: 404 != 200
+FAIL: test_av_q_una_sola_vez (test_avisos.EmailNoticeTests.test_av_q_una_sola_vez)
+AssertionError: 404 != 200
+FAIL: test_av_r_correo_caido (test_avisos.EmailNoticeTests.test_av_r_correo_caido)
+AssertionError: 404 != 200
+FAIL: test_av_r_un_correo_caido_no_se_reintenta (test_avisos.EmailNoticeTests.test_av_r_un_correo_caido_no_se_reintenta)
+AssertionError: 404 != 200
+FAIL: test_av_s_sin_secretos (test_avisos.EmailNoticeTests.test_av_s_sin_secretos)
+AssertionError: 404 != 200
+FAIL: test_av_c_entrega (test_avisos.NoticeFlowTests.test_av_c_entrega)
+AssertionError: 404 != 200
+FAIL: test_av_d_liquidacion (test_avisos.NoticeFlowTests.test_av_d_liquidacion)
+AssertionError: 404 != 200
+FAIL: test_av_e_entrega_fallida (test_avisos.NoticeFlowTests.test_av_e_entrega_fallida)
+AssertionError: 404 != 200
+FAIL: test_av_f_reclamos (test_avisos.NoticeFlowTests.test_av_f_reclamos)
+AssertionError: 404 != 200
+FAIL: test_av_u_persistencia (test_avisos.PersistenceTests.test_av_u_persistencia)
+AssertionError: 404 != 200
+Ran 640 tests in 1.432s
+FAILED (failures=13, errors=55, skipped=4)

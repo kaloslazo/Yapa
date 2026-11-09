@@ -1,0 +1,90 @@
+
+ RUN  v5.0.5 /Users/kalosroots/personal/utec/yapa/yapa-app
+
+ ❯ src/utils/adminSections.test.ts (4 tests | 2 failed) 9ms
+   ❯ secciones del panel por rol (4)
+     × el admin ve todo el panel, sin la sección propia de atención 5ms
+     × cada rol ve solo lo suyo 3ms
+ ❯ src/services/mappers.test.ts (5 tests | 1 failed) 14ms
+   ❯ pedido en la lista de armado (2)
+     × trae el rótulo de cada bolsa (iteración 56, S-298) 11ms
+ ❯ src/components/faq.test.ts (1 test | 1 failed) 4ms
+   ❯ preguntas frecuentes (1)
+     × "¿Cuánto voy a pagar?" explica el 75 % y el 25 % 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/faq.test.ts > preguntas frecuentes > "¿Cuánto voy a pagar?" explica el 75 % y el 25 %
+TypeError: Cannot read properties of undefined (reading 'find')
+ ❯ src/components/faq.test.ts:7:25
+      5| describe('preguntas frecuentes', () => {
+      6|   it('"¿Cuánto voy a pagar?" explica el 75 % y el 25 %', () => {
+      7|     const answer = faqs.find((f) => f.q === '¿Cuánto voy a pagar?')?.a…
+       |                         ^
+      8|     expect(answer).toContain('75 %');
+      9|     expect(answer).toContain('25 %');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/services/mappers.test.ts > pedido en la lista de armado > trae el rótulo de cada bolsa (iteración 56, S-298)
+AssertionError: expected undefined to deeply equal [ Array(1) ]
+
+- Expected:
+[
+  "Pedido 1 · Residencial San Felipe · Bolsa 1 de 1",
+]
+
++ Received:
+undefined
+
+ ❯ src/services/mappers.test.ts:29:26
+     27|     const order = toOrder({ id: 1, ciclo: '2026-W38', zona: 'Z-JM-01',…
+     28|       rotulos: ['Pedido 1 · Residencial San Felipe · Bolsa 1 de 1'] });
+     29|     expect(order.labels).toEqual(['Pedido 1 · Residencial San Felipe ·…
+       |                          ^
+     30|   });
+     31|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/utils/adminSections.test.ts > secciones del panel por rol > el admin ve todo el panel, sin la sección propia de atención
+AssertionError: expected [ 'resumen', 'compras', …(10) ] to include 'incidencias'
+ ❯ src/utils/adminSections.test.ts:12:26
+     10|     expect(ids('admin')).toContain('compras');
+     11|     expect(ids('admin')).toContain('cuentas');
+     12|     expect(ids('admin')).toContain('incidencias'); // iteración 56
+       |                          ^
+     13|     expect(ids('admin')).not.toContain('pines');
+     14|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/utils/adminSections.test.ts > secciones del panel por rol > cada rol ve solo lo suyo
+AssertionError: expected [ 'reclamos', 'devoluciones', 'pines' ] to deeply equal [ 'reclamos', 'incidencias', …(2) ]
+
+- Expected
++ Received
+
+  [
+    "reclamos",
+-   "incidencias",
+    "devoluciones",
+    "pines",
+  ]
+
+ ❯ src/utils/adminSections.test.ts:19:29
+     17|     expect(ids('armador')).toEqual(['armado']);
+     18|     expect(ids('compras')).toEqual(['compras']);
+     19|     expect(ids('atencion')).toEqual(['reclamos', 'incidencias', 'devol…
+       |                             ^
+     20|   });
+     21|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed | 15 passed (18)
+      Tests  4 failed | 113 passed (117)
+   Start at  10:44:55
+   Duration  1.92s (import 72%, environment 19%, tests 5%, transform 4%, worker 1%)
+

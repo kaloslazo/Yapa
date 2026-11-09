@@ -45,4 +45,4 @@ Eran dos decisiones urgentes pendientes (`supuestos-a-validar.md`, preguntas 49 
 
 ## Cambios en pruebas anteriores (por S-301)
 
-`test_e2e_week` (AU-C) liquida con `close_cycle` por la web: el saldo esperado del vecino 801 baja por el 25 % retenido. Se recalcula en la prueba antes del código; la conciliación sigue exigiendo 0.
+`test_e2e_week` (AU-C) liquida con `close_cycle` por la web. El saldo del vecino 801 pasa de S/ 5,38 a **S/ 4,62**: 2,52 de ahorro (3,36 × 75 %) + 2,10 del reclamo (el precio final de la cebolla sube de 2,016 a 2,100). Como ya no alcanza para pedir S/ 5,00 de vuelta, la prueba pide S/ 4,00 y las devoluciones pagadas quedan en S/ 4,00. La conciliación sigue exigiendo 0 en cada paso.
