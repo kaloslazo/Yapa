@@ -16,6 +16,7 @@ from yapa_sdd.auth import set_admin_password, set_pin
 from yapa_sdd.cycle import LIMA
 from yapa_sdd.domain import BusinessRuleError
 from yapa_sdd.fulfillment import close_cycle, deliver_zone, pack_bag
+from yapa_sdd.web import produccion
 from yapa_sdd.web.api import create_api
 
 
@@ -196,8 +197,7 @@ class ApiTests(Base):
     # PL-A
     def test_pl_a_order_says_where_to_pay(self):
         self.now = datetime(2026, 9, 16, 10, 0, tzinfo=LIMA)
-        lines = [{"id": "PAPA-AMARILLA", "cantidad": "5"}, {"id": "PAPA-BLANCA", "cantidad": "10"},
-                 {"id": "CEBOLLA-ROJA", "cantidad": "10"}]
+        lines = {"PAPA-AMARILLA": "5", "PAPA-BLANCA": "10", "CEBOLLA-ROJA": "10"}
         for payee in (PAYEE, None):
             api = self.api(payee)
             store_orders = len(self.store.orders)
@@ -208,6 +208,15 @@ class ApiTests(Base):
             self.assertEqual(len(neighbor.get("/api/mis-pedidos")[1]["pedidos"][0]["seguimiento"]), 7)
             neighbor.post(f"/api/pedidos/{order['id']}/cancelar", {"destino": "SALDO"})
             self.assertEqual(len(self.store.orders), store_orders + 1)
+
+
+class PayeeConfigTests(unittest.TestCase):
+    # PL-A (configuración)
+    def test_pl_a_payee_from_environment(self):
+        env = {"YAPA_PLIN_NUMERO": "987 654 321", "YAPA_PLIN_TITULAR": "Yapa SAC"}
+        self.assertEqual(produccion.payee(env, demo=False), {"numero": "987 654 321", "titular": "Yapa SAC"})
+        self.assertIsNone(produccion.payee({}, demo=False))  # el servidor no inventa un número
+        self.assertEqual(produccion.payee({}, demo=True), PAYEE)
 
 
 if __name__ == "__main__":
