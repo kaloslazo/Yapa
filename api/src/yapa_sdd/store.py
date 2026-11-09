@@ -43,12 +43,16 @@ class InMemoryStore:
         self.partners: dict = {}  # cuentas de proveedores, transportistas y personal por usuario (iteraciones 54 y 55)
         self.supplier_offers: dict = {}  # lista propuesta por el proveedor: (ciclo, proveedor) -> propuesta (S-284)
         self.receptions: dict = {}  # recepción en el edificio: (ciclo, zona) -> confirmación (iteración 55, S-294)
+        self.purchases: dict = {}  # compra real: ciclo -> lo que llegó del proveedor (iteración 56, S-295)
+        self.shortages: list = []  # faltantes de compra y dañados al armar, por pedido (S-296, S-297)
+        self.incidents: dict = {}  # incidencias de atención (S-300)
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1
         self._next_order_id = 1
         self._next_refund_id = 1
         self._next_notice_id = 1
+        self._next_incident_id = 1
 
     def add_customer(self, customer: Customer) -> None:
         self.customers[customer.customer_id] = customer

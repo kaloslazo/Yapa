@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, insights, invitations, metrics, notices, partners, reception, recovery, reference, supplier_offers, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, incidents, insights, invitations, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -39,7 +39,7 @@ PACKER_ORDER = ("id", "ciclo", "zona", "estado", "entregado", "vecino", "bolsas"
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
 PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas",
-                "/api/reparto/entregas", "/api/reparto/entregas-fallidas"}  # S-260, TR-02
+                "/api/reparto/entregas", "/api/reparto/entregas-fallidas", "/api/admin/danados"}  # S-260, TR-02, DA-04
 VIEW_AS_BLOCKED = re.compile(r"/api/(saldo/devolucion|pedidos/\d+/cancelar|zonas/[\w-]+/transferir)")  # S-262
 LOGIN_FAILURES = (30, timedelta(minutes=15))  # S-264
 MAILS_PER_IP = (10, timedelta(hours=1))  # S-265
@@ -82,13 +82,14 @@ def _money_in(value, what: str) -> Decimal:
 
 
 FLAGS = ("usar_saldo", "consentimiento", "avisos_correo")  # los únicos datos de sí o no
+STRUCTURED = ("lineas", "recibido")  # cada ruta valida su forma (cotizar y pedir; CR-04)
 
 
 def _scalars(data: dict) -> dict:
     """AD-04, S-171: los datos son texto, número o sí/no; un número se lee como su texto."""
     clean = {}
     for key, value in data.items():
-        if key == "lineas" or key in FLAGS or value is None or isinstance(value, str):
+        if key in STRUCTURED or key in FLAGS or value is None or isinstance(value, str):
             clean[key] = value
         elif isinstance(value, (int, float)) and not isinstance(value, bool):
             clean[key] = str(value)
@@ -710,9 +711,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                           "fallida": bool(failed)})
         orders = [order_json(o, names, clock()) | {
             "vecino": store.customers[o.customer_id].name,
-            "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])]} for o in attended]
+            "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])],
+            "rotulos": fulfillment.bag_labels(store, o.order_id)} for o in attended]  # RT-01
         if session["kind"] == partners.PACKER:  # AM-01, S-290
-            orders = [{key: o[key] for key in PACKER_ORDER} | {
+            orders = [{key: o[key] for key in PACKER_ORDER + ("rotulos",)} | {
                 "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad")} for line in o["lineas"]]} for o in orders]
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
@@ -879,6 +881,11 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             store, customers.resolve_login(store, data.get("usuario")), data.get("codigo"), data.get("pin"), clock()))
         return {"mensaje": "Listo: ya puedes entrar con tu PIN nuevo."}
 
+    def cuenta_retirar(environ, data, session):
+        """RD-01..RD-06: el vecino retira su consentimiento; su sesión se cierra en la siguiente llamada (SG-05)."""
+        customers.withdraw_consent(store, session["principal"], data.get("confirmar"), now=clock())
+        return {"mensaje": "Listo. Borramos tus datos personales y cerramos tu cuenta."}
+
     def cuenta_correo(environ, data, session):
         """CR-02, CR-09."""
         email, code = recovery.start_email_verification(store, session["principal"], data.get("correo"), clock())
@@ -1040,8 +1047,54 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             order = supplier_lines(supplier_offers.supplier_order(store, cycle_id, supplier.supplier_id, clock()))
             if order["lineas"]:
                 suppliers.append({"id": supplier.supplier_id, "nombre": supplier.name} | order)
+        bought = store.purchases.get(cycle_id)
+        real = None if bought is None else {  # CR-05: lo que faltó y a qué pedido fue
+            "recibido": {p: qty(q) for p, q in bought.received.items()},
+            "faltantes": [shortage_json(s) for s in store.shortages if s.cycle == cycle_id]}
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
-                "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session)}
+                "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session),
+                "compra_real": real}
+
+    def shortage_json(s) -> dict:
+        return {"pedido": s.order_id, "producto": s.product_id, "cantidad": qty(s.quantity),
+                "colchon": qty(s.from_buffer), "origen": s.source}
+
+    def compras_recibido(environ, data, session):
+        """CR-01..CR-05: lo que llegó del proveedor; lo que falta se reparte solo."""
+        received = data.get("recibido") or {}
+        if not isinstance(received, dict) or not all(
+                isinstance(v, (str, int, float)) and not isinstance(v, bool) for v in received.values()):
+            raise BusinessRuleError("INVALID_INPUT", "Indica lo recibido por producto.")
+        cycle_id = str(data.get("ciclo", "")).strip()
+        purchase.register_purchase(store, cycle_id, received, by=session["principal"], now=clock())
+        return {"ciclo": cycle_id, "faltantes": [shortage_json(s) for s in store.shortages if s.cycle == cycle_id]}
+
+    def admin_danado(environ, data, session):
+        """DA-01..DA-06."""
+        shortage = purchase.register_damaged(store, _int(data.get("pedido"), "Número de pedido"),
+                                             str(data.get("producto", "")), data.get("cantidad"),
+                                             by=session["principal"], photo=data.get("foto", ""), now=clock())
+        return shortage_json(shortage)
+
+    def incident_json(i) -> dict:
+        return {"id": i.incident_id, "pedido": i.order_id, "tipo": i.kind, "descripcion": i.description,
+                "estado": i.status, "nota": i.note, "abierta": i.opened_at.isoformat(),
+                "cerrada": i.closed_at.isoformat() if i.closed_at else None}
+
+    def admin_incidencias(environ, data, session):
+        return {"incidencias": [incident_json(i) for i in sorted(store.incidents.values(),
+                                                                 key=lambda i: (i.status != "ABIERTA", -i.incident_id))]}
+
+    def admin_incidencia_abrir(environ, data, session):
+        """IN-01, IN-02."""
+        return incident_json(incidents.open_incident(store, _int(data.get("pedido"), "Número de pedido"),
+                                                     str(data.get("tipo", "")), data.get("descripcion"),
+                                                     by=session["principal"], now=clock()))
+
+    def admin_incidencia_cerrar(environ, data, session, incident_id):
+        """IN-03."""
+        return incident_json(incidents.close_incident(store, _int(incident_id, "Incidencia"), data.get("nota"),
+                                                      by=session["principal"], now=clock()))
 
     def compras_colchon(environ, data, session):
         """CP-02."""
@@ -1116,6 +1169,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
         (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
         (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
+        (r"/api/admin/danados", {"POST": (admin_danado, PACKING)}),
+        (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),
+        (r"/api/admin/incidencias/(\d+)/cerrar", {"POST": (admin_incidencia_cerrar, ATTENDING)}),
         (r"/api/admin/entregas", {"POST": (admin_entrega, "admin")}),
         (r"/api/admin/entregas-fallidas", {"POST": (admin_entrega_fallida, "admin")}),
         (r"/api/admin/reclamos", {"GET": (admin_reclamos, ATTENDING)}),
@@ -1142,6 +1198,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/invitaciones/([\w-]+)/confirmar", {"POST": (invitacion_confirmar, None)}),
         (r"/api/invitaciones/([\w-]+)/google", {"POST": (invitacion_google, None)}),
         (r"/api/cuenta/correo", {"POST": (cuenta_correo, "vecino")}),
+        (r"/api/cuenta/retirar-consentimiento", {"POST": (cuenta_retirar, "vecino")}),
         (r"/api/cuenta/correo/verificar", {"POST": (cuenta_correo_verificar, "vecino")}),
         (r"/api/admin/pin-solicitudes", {"GET": (admin_pin_solicitudes, ATTENDING)}),
         (r"/api/admin/pin-solicitudes/(\d+)/descartar", {"POST": (admin_pin_descartar, ATTENDING)}),
@@ -1163,6 +1220,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/compras", {"GET": (compras, BUYING)}),
         (r"/api/compras/colchon", {"POST": (compras_colchon, BUYING)}),
         (r"/api/compras/colchon/usar", {"POST": (compras_colchon_usar, BUYING)}),
+        (r"/api/compras/recibido", {"POST": (compras_recibido, BUYING)}),
         (r"/api/porteria", {"GET": (porteria, partners.CONCIERGE)}),
         (r"/api/porteria/recepciones", {"POST": (porteria_recepcion, partners.CONCIERGE)}),
         (r"/api/zona/recepcion", {"GET": (zona_recepcion, "vecino")}),

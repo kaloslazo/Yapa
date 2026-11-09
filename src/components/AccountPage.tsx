@@ -14,6 +14,7 @@ interface AccountPageProps {
   onSendEmail: (email: string) => Promise<void>;
   onVerifyEmail: (code: string) => Promise<void>;
   onCreatePin: (pin: string) => Promise<void>;
+  onWithdraw: (confirmation: string) => Promise<void>; // iteración 57, Ley 29733
   onLogout: () => Promise<void>;
   onOpenAdmin: () => void;
   onOpenZone: () => void;
@@ -25,7 +26,7 @@ export function shareText(code: string) {
 }
 
 // la cuenta del vecino: antes vivía en el mismo modal que el ingreso; ahora es una vista más, como Mis pedidos
-export function AccountPage({ account, googleClientId, onGoogleLink, onGoogleUnlink, onSendEmail, onVerifyEmail, onCreatePin, onLogout, onOpenAdmin, onOpenZone, onOpenOrders }: AccountPageProps) {
+export function AccountPage({ account, googleClientId, onGoogleLink, onGoogleUnlink, onSendEmail, onVerifyEmail, onCreatePin, onWithdraw, onLogout, onOpenAdmin, onOpenZone, onOpenOrders }: AccountPageProps) {
   const { url: inviteUrl } = useContext(InviteContext);
   const [busy, setBusy] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -35,6 +36,8 @@ export function AccountPage({ account, googleClientId, onGoogleLink, onGoogleUnl
   const [newPin, setNewPin] = useState('');
   const [pinMessage, setPinMessage] = useState('');
   const [googleMessage, setGoogleMessage] = useState('');
+  const [withdrawWord, setWithdrawWord] = useState('');
+  const [withdrawMessage, setWithdrawMessage] = useState('');
   const neighbor = account.role !== 'admin';
 
   const run = async (action: () => Promise<void>, onError: (message: string) => void, fallback: string) => {
@@ -128,6 +131,18 @@ export function AccountPage({ account, googleClientId, onGoogleLink, onGoogleUnl
         {neighbor && inviteUrl ? <section className="account-card referral-card"><InviteBody /><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></section>
           : account.referralCode ? <section className="account-card referral-card"><span>Tu código para invitar vecinos</span><strong>{account.referralCode}</strong><a className="secondary-button" href={`https://wa.me/?text=${encodeURIComponent(shareText(account.referralCode))}`} target="_blank" rel="noreferrer"><Icon name="whatsapp" size={17} /> Compartir por WhatsApp</a><small>Cuando tu invitado recibe su primer pedido, los dos ganan S/ 3 de saldo.</small></section> : null}
       </div>
+
+      {neighbor ? (
+        <details className="account-card account-withdraw">
+          <summary>Retirar mi consentimiento y cerrar mi cuenta</summary>
+          <p>Borramos tu nombre, celular, correo, ubicación y tu cuenta de Google. Tus pedidos y pagos quedan guardados sin tus datos, porque la ley nos pide conservarlos. Antes debes tener tu saldo en cero, sin pedidos por liquidar ni reclamos pendientes.</p>
+          <form onSubmit={(event) => { event.preventDefault(); void run(() => onWithdraw(withdrawWord), setWithdrawMessage, 'No pudimos cerrar tu cuenta. Inténtalo de nuevo.'); }}>
+            <label className="auth-field"><span>Escribe RETIRAR para confirmar</span><input value={withdrawWord} onChange={(event) => { setWithdrawWord(event.target.value); setWithdrawMessage(''); }} autoComplete="off" spellCheck={false} /></label>
+            <button className="secondary-button" type="submit" disabled={busy || withdrawWord !== 'RETIRAR'}>Cerrar mi cuenta</button>
+          </form>
+          {withdrawMessage ? <p className="auth-feedback auth-feedback--error" role="alert">{withdrawMessage}</p> : null}
+        </details>
+      ) : null}
 
       <button className="auth-link auth-switch-account" type="button" onClick={() => void onLogout()}><Icon name="signout" size={15} /> Salir de mi cuenta</button>
     </main>

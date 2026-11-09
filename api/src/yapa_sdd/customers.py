@@ -10,7 +10,7 @@ import unicodedata
 import secrets
 from datetime import datetime
 
-from . import partners
+from . import partners, wallet
 from .auth import _check_pin, set_pin
 from .domain import BusinessRuleError, Customer
 from .store import InMemoryStore
@@ -153,3 +153,37 @@ def reset_pin(store: InMemoryStore, customer_id: int, *, by: str) -> str:
     for request_id in [r for r, (customer, _) in store.pin_requests.items() if customer == customer_id]:  # OP-07
         del store.pin_requests[request_id]
     return pin
+
+
+WITHDRAWN_NAME = "Vecino retirado"  # S-304
+
+
+def withdraw_consent(store: InMemoryStore, customer_id: int, confirmation, *, now: datetime) -> Customer:
+    """RD-01..RD-06, S-303, S-304 (Ley 29733): se borra lo que identifica al vecino; su dinero queda registrado."""
+    customer = store.customers.get(customer_id)
+    if customer is None or customer.withdrawn_at is not None:  # RD-06
+        raise BusinessRuleError("CUSTOMER_NOT_FOUND", "La cuenta no existe.")
+    if confirmation != "RETIRAR":  # RD-01
+        raise BusinessRuleError("CONFIRMATION_REQUIRED", "Escribe RETIRAR para confirmar.")
+    if any(o.customer_id == customer_id and o.status == "REGISTRADO" for o in store.orders.values()):  # RD-02
+        raise BusinessRuleError("HAS_ACTIVE_ORDER", "Tienes un pedido sin liquidar. Espera a que se liquide o cancélalo.")
+    if wallet.balance(store, customer_id) > 0 or any(  # RD-03
+            r.customer_id == customer_id and r.status == "PENDIENTE" for r in store.refunds.values()):
+        raise BusinessRuleError("BALANCE_PENDING", "Primero pide la devolución de tu saldo y espera a que te llegue.")
+    if any(c.customer_id == customer_id and c.status == "PENDIENTE" for c in store.claims.values()):  # RD-04
+        raise BusinessRuleError("CLAIM_PENDING", "Tienes un reclamo pendiente. Espera a que lo revisemos.")
+    if any(z.admin_id == customer_id for z in store.zones.values()):  # RD-05
+        raise BusinessRuleError("ZONE_ADMIN_MUST_TRANSFER", "Eres admin de una zona. Pasa el rol a otro vecino primero.")
+    anonymous = Customer(customer_id, WITHDRAWN_NAME, customer.zone_id, suspended=True, referred_by=customer.referred_by,
+                         email_notices=False, withdrawn_at=now)
+    store.customers[customer_id] = anonymous
+    store.credentials.pop(("vecino", str(customer_id)), None)
+    for invite in store.invites.values():
+        if invite["customer_id"] == customer_id:
+            invite["active"] = False
+    store.notices[:] = [n for n in store.notices if n.customer_id != customer_id]
+    for request_id in [r for r, (c, _) in store.pin_requests.items() if c == customer_id]:
+        del store.pin_requests[request_id]
+    for key in [k for k in store.email_codes if k[0] == customer_id]:
+        del store.email_codes[key]
+    return anonymous

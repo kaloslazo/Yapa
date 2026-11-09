@@ -446,7 +446,8 @@ export default function App() {
             : view === 'account' && account ? <AccountPage account={account} googleClientId={googleClientId} onLogout={logout} onOpenAdmin={openAdmin} onOpenZone={() => openView('zone')} onOpenOrders={() => openView('orders')}
               onGoogleLink={async (credential) => { await api.post('/api/cuenta/google', { credential }); await loadAccount(); }} onGoogleUnlink={async () => { await api.post('/api/cuenta/google/desvincular'); await loadAccount(); }}
               onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }}
-              onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }} />
+              onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }}
+              onWithdraw={async (confirmation) => { await api.post('/api/cuenta/retirar-consentimiento', { confirmar: confirmation }); api.setCsrf(''); setAccount(null); leaveAuth('store'); notify('Cerramos tu cuenta', 'success', 'Borramos tus datos personales. Gracias por haber comprado con Yapa.'); }} />
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
               : <main id="catalog" className="page-content">
                 {account ? (

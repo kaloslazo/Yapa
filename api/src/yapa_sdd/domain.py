@@ -116,6 +116,7 @@ class Customer:
     email_verified_at: datetime | None = None  # S-202: solo un correo verificado sirve para recuperar
     google_sub: str | None = None  # S-211: identificador estable de su cuenta de Google
     email_notices: bool = True  # S-217: quiere también los avisos importantes por correo
+    withdrawn_at: datetime | None = None  # S-304: retiró su consentimiento; sus datos se anonimizaron
 
 
 @dataclass(frozen=True)

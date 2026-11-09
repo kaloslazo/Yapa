@@ -44,6 +44,7 @@ const PENDING: Partial<Record<Section, (cycle: string) => Promise<number>>> = {
 const num = (value: unknown) => Number(value ?? 0);
 const CLAIM_STATUS: Record<string, string> = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente' };
 const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
+const INCIDENT_KINDS = [{ value: 'ENTREGA', label: 'Entrega' }, { value: 'BOLSA', label: 'Bolsa' }, { value: 'TRATO', label: 'Trato' }, { value: 'OTRO', label: 'Otro' }]; // S-300
 const FAILURES = [{ value: 'PORTERIA_CERRADA', label: 'Portería cerrada' }, { value: 'NADIE_RECIBE', label: 'No había quién reciba' }, { value: 'PORTERIA_RECHAZA', label: 'La portería no aceptó' }];
 
 function useLoad<T>(path: string | null, notify: AdminPanelProps['notify']) {
@@ -138,6 +139,7 @@ export function AdminPanel({ adminName, role, onClose, onLogout, onViewAs, notif
             {section === 'compras' ? <Purchases {...props} /> : null}
             {section === 'armado' ? <Packing {...props} /> : null}
             {section === 'reclamos' ? <Claims {...props} /> : null}
+            {section === 'incidencias' ? <Incidents {...props} /> : null}
             {section === 'devoluciones' ? <Refunds {...props} /> : null}
             {section === 'pines' ? <PinRequests {...props} /> : null}
             {section === 'conciliacion' ? <Balance {...props} /> : null}
@@ -277,7 +279,7 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
           </div>); })}</div> : <Empty icon="truck" title="No hay zonas que se atiendan" text="Ningún grupo llegó al mínimo en esta semana." />}
       </Card>
       <Card title={`Bolsas por pedido (${orders.length})`}>
-        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Productos</th><th>Bolsas</th><th>Foto de bolsa</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}<small className="admin-cell-note">{o.zoneId}</small></td><td><small>{o.lines.map((l) => `${l.name} ${formatQuantity(l.quantity)}`).join(' · ')}</small></td><td>{o.bags?.length ? <span className="state-pill state-pill--ok">{o.bags.length}</span> : <span className="state-pill">0</span>}</td><td><PhotoForm label="Agregar bolsa" onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(o.id) }, `Bolsa del pedido ${o.id} registrada.`)} /></td></tr>)}</tbody></table></div> : <Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." />}
+        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Productos</th><th>Bolsas</th><th>Foto de bolsa</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}<small className="admin-cell-note">{o.zoneId}</small></td><td><small>{o.lines.map((l) => `${l.name} ${formatQuantity(l.quantity)}`).join(' · ')}</small></td><td>{o.bags?.length ? <span className="state-pill state-pill--ok">{o.bags.length}</span> : <span className="state-pill">0</span>}{o.labels?.length ? <ul className="bag-labels">{o.labels.map((label) => <li key={label}>{label}</li>)}</ul> : null}</td><td><PhotoForm label="Agregar bolsa" onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(o.id) }, `Bolsa del pedido ${o.id} registrada.`)} /><details><summary>Algo llegó dañado</summary><PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(o.id) }, `Dañado del pedido ${o.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{o.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm></details></td></tr>)}</tbody></table></div> : <Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." />}
       </Card>
     </>
   );
@@ -472,6 +474,38 @@ function PinRequests({ run, notify }: SectionProps) {
 }
 
 // iteración 55, CP-01..CP-03: el encargado de compras ve qué comprar a cada proveedor y maneja el colchón
+function Incidents({ run, notify }: SectionProps) {
+  const { data, reload } = useLoad<Raw>('/api/admin/incidencias', notify);
+  const [draft, setDraft] = useState({ pedido: '', tipo: 'ENTREGA', descripcion: '' });
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  if (!data) return <AdminSkeleton />;
+  const open = async (event: FormEvent) => {
+    event.preventDefault();
+    if (await run(() => api.post('/api/admin/incidencias', draft), `Incidencia del pedido ${draft.pedido} registrada.`)) { setDraft({ pedido: '', tipo: 'ENTREGA', descripcion: '' }); void reload(); }
+  };
+  const close = (id: number) => run(() => api.post(`/api/admin/incidencias/${id}/cerrar`, { nota: notes[id] ?? '' }), `Incidencia ${id} cerrada.`).then(() => reload());
+  const kind = (value: string) => INCIDENT_KINDS.find((k) => k.value === value)?.label ?? value;
+  const opened = data.incidencias.filter((i: Raw) => i.estado === 'ABIERTA');
+  const closed = data.incidencias.filter((i: Raw) => i.estado !== 'ABIERTA');
+  return (
+    <>
+      <Card eyebrow="No mueve dinero" title="Registrar una incidencia">
+        <form className="buffer-form" onSubmit={open}>
+          <label className="checkout-field"><span>Pedido</span><input value={draft.pedido} onChange={(event) => setDraft({ ...draft, pedido: event.target.value })} inputMode="numeric" placeholder="12" required /></label>
+          <div className="segmented">{INCIDENT_KINDS.map((k) => <button key={k.value} type="button" className={draft.tipo === k.value ? 'is-active' : ''} onClick={() => setDraft({ ...draft, tipo: k.value })}>{k.label}</button>)}</div>
+          <label className="checkout-field"><span>Qué pasó</span><textarea value={draft.descripcion} onChange={(event) => setDraft({ ...draft, descripcion: event.target.value })} maxLength={500} rows={3} required /></label>
+          <button className="primary-button" type="submit">Registrar</button>
+          <small>Si hay que devolver dinero, va por un reclamo o una devolución.</small>
+        </form>
+      </Card>
+      <Card title={`Abiertas (${opened.length})`}>
+        {opened.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Pedido</th><th>Tipo</th><th>Qué pasó</th><th>Nota de cierre</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{opened.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td><strong className="admin-order-code">{i.pedido}</strong></td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small></td><td><input className="admin-inline-input" value={notes[i.id] ?? ''} onChange={(event) => setNotes((n) => ({ ...n, [i.id]: event.target.value }))} placeholder="Qué se hizo" aria-label={`Nota para cerrar la incidencia ${i.id}`} /></td><td><button className="admin-row-button" type="button" disabled={!notes[i.id]?.trim()} onClick={() => void close(i.id)}>Cerrar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin incidencias abiertas" text="Aquí quedan las que registres al atender a un vecino." />}
+      </Card>
+      {closed.length ? <Card title="Cerradas"><div className="admin-table-wrap"><table className="admin-table"><tbody>{closed.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td>{i.pedido}</td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small></td><td><small>{i.nota}</small></td></tr>)}</tbody></table></div></Card> : null}
+    </>
+  );
+}
+
 function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>(`/api/compras${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [add, setAdd] = useState({ producto: '', cantidad: '' });
@@ -485,6 +519,15 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
   const addStock = async (event: FormEvent) => {
     event.preventDefault();
     if (await run(() => api.post('/api/compras/colchon', { ciclo: data.ciclo, ...add }), `Se guardó ${add.cantidad} de ${add.producto} en el colchón.`)) { setAdd({ producto: '', cantidad: '' }); void reload(); }
+  };
+  const real: Raw | null = data.compra_real;
+  const ordered: Raw[] = suppliers.flatMap((p) => p.lineas);
+  const registerPurchase = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const recibido: Record<string, string> = {};
+    for (const l of ordered) { const got = String(form.get(l.producto) ?? '').trim(); if (got && got !== String(l.cantidad)) recibido[l.producto] = got; } // CR-04: solo lo que faltó
+    if (await run(() => api.post('/api/compras/recibido', { ciclo: data.ciclo, recibido }), Object.keys(recibido).length ? 'Compra registrada: lo que faltó se repone con el colchón o se devuelve a los vecinos.' : 'Compra registrada: llegó todo.')) void reload();
   };
   const useStock = async (event: FormEvent) => {
     event.preventDefault();
@@ -503,6 +546,14 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
           <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Tramo</th><th>Precio</th><th>Monto</th></tr></thead><tbody>{p.lineas.map((l: Raw) => <tr key={l.producto}><td><strong>{l.nombre}</strong><small className="admin-cell-note">{l.producto}</small></td><td>{l.cantidad} {l.unidad}</td><td><small>desde {l.desde}</small></td><td>{formatMoney(num(l.precio))}</td><td><strong>{formatMoney(num(l.monto))}</strong></td></tr>)}</tbody></table></div>
         </Card>
       )) : <Card title="Sin compras esta semana"><Empty icon="cart" title="Todavía no hay nada que comprar" text="Aparece cuando hay pedidos de grupos que llegan al mínimo." /></Card>}
+      {!partial && ordered.length ? <Card eyebrow="Después de recibir al proveedor" title={real ? 'Compra registrada' : 'Lo que llegó'}>
+        {real ? (real.faltantes.length
+          ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Producto</th><th>Faltó</th><th>Repuesto del colchón</th><th>Origen</th></tr></thead><tbody>{real.faltantes.map((f: Raw, i: number) => <tr key={i}><td><strong className="admin-order-code">{f.pedido}</strong></td><td>{f.producto}</td><td>{f.cantidad}</td><td>{f.colchon}</td><td>{f.origen === 'DANADO' ? 'Dañado al armar' : 'Faltó en la compra'}</td></tr>)}</tbody></table></div>
+          : <p className="admin-muted">Llegó todo. El reparto ya puede salir.</p>)
+          : <form onSubmit={registerPurchase}><p className="admin-muted">Corrige solo lo que llegó de menos. Lo que falte se repone primero con el colchón y el resto se descuenta a los últimos pedidos, que lo reciben de vuelta como saldo. El reparto no sale hasta registrar esto.</p>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Pedido</th><th>Llegó</th></tr></thead><tbody>{ordered.map((l) => <tr key={l.producto}><td><strong>{l.nombre}</strong></td><td>{l.cantidad} {l.unidad}</td><td><input className="admin-inline-input" name={l.producto} defaultValue={l.cantidad} inputMode="decimal" aria-label={`Cuánto llegó de ${l.nombre}`} /></td></tr>)}</tbody></table></div>
+            <button className="primary-button" type="submit">Registrar la compra</button></form>}
+      </Card> : null}
       <Card eyebrow="Colchón de reposición" title={`${formatMoney(num(buffer.valor))} de ${formatMoney(num(buffer.tope))}`}>
         <div className="buffer-meter" role="meter" aria-valuemin={0} aria-valuemax={num(buffer.tope)} aria-valuenow={num(buffer.valor)} aria-label="Valor guardado en el colchón"><span style={{ width: `${used}%` }} /></div>
         {buffer.stock.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr></thead><tbody>{buffer.stock.map((b: Raw) => <tr key={b.producto}><td>{b.producto}</td><td>{b.cantidad}</td><td>{formatMoney(num(b.valor))}</td></tr>)}</tbody></table></div> : <p className="admin-muted">El colchón está vacío. Solo se guardan productos de limpieza, que no se malogran.</p>}

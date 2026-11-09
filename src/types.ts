@@ -107,6 +107,7 @@ export interface Order {
   lines: OrderLine[];
   settlement: Settlement | null;
   bags?: Array<{ number: number; photo: string }>;
+  labels?: string[]; // S-298: rótulo de cada bolsa
 }
 
 export interface Quote {

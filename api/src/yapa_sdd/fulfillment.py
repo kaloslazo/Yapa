@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 
 from . import cycle as cycles
 from . import partners
@@ -16,6 +17,7 @@ from .store import InMemoryStore
 
 
 FAILURE_REASONS = frozenset({"PORTERIA_CERRADA", "NADIE_RECIBE", "PORTERIA_RECHAZA"})  # S-105
+OPERATING_SAVINGS_SHARE = Decimal("0.25")  # S-301: parte del ahorro que retiene Yapa en la liquidación real
 
 
 @dataclass(frozen=True)
@@ -121,10 +123,25 @@ def deliver_zone(store: InMemoryStore, cycle: str, zone_id: str, *, by: str, pho
         raise BusinessRuleError("NOTHING_TO_DELIVER", "La zona no tiene pedidos para entregar.")
     if any(not store.bags.get(order.order_id) for order in orders):  # EN-05
         raise BusinessRuleError("ORDERS_NOT_PACKED", "Hay pedidos de la zona sin armar.")
+    _check_purchase(store, cycle)  # BD-01
     delivery = Delivery(cycle, zone_id, tuple(o.order_id for o in orders), photo, receiver,
                         zone.reception_kind, by, now)
     store.deliveries[(cycle, zone_id)] = delivery
     return delivery
+
+
+def _check_purchase(store: InMemoryStore, cycle: str) -> None:
+    """BD-01, S-299: la zona no sale hasta saber qué faltó en la compra."""
+    if cycle not in store.purchases:
+        raise BusinessRuleError("PURCHASE_NOT_REGISTERED", "Primero compras registra lo que llegó del proveedor.")
+
+
+def bag_labels(store: InMemoryStore, order_id: int) -> list[str]:
+    """RT-01, S-298: "Pedido N · Zona · Bolsa n de T"."""
+    order = store.orders[order_id]
+    bags = store.bags.get(order_id, [])
+    zone = store.zones[order.zone_id].name
+    return [f"Pedido {order_id} · {zone} · Bolsa {bag.number} de {len(bags)}" for bag in bags]
 
 
 def _ready_orders(store: InMemoryStore, cycle: str, zone_id: str) -> list[Order]:
@@ -148,6 +165,7 @@ def register_failed_delivery(store: InMemoryStore, cycle: str, zone_id: str, *, 
     if reason not in FAILURE_REASONS:
         raise BusinessRuleError("INVALID_FAILURE_REASON", "Indica si la portería estaba cerrada, no había nadie o no aceptó.")
     orders = _ready_orders(store, cycle, zone_id)  # EF-02
+    _check_purchase(store, cycle)  # BD-01
     failure = FailedDelivery(cycle, zone_id, tuple(o.order_id for o in orders), photo, reason, by, now)
     store.failed_deliveries[(cycle, zone_id)] = failure
     return failure
@@ -160,4 +178,6 @@ def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleS
     pending = sorted(z for z in zones if (cycle, z) not in store.deliveries and (cycle, z) not in store.failed_deliveries)
     if pending:
         raise BusinessRuleError("ZONES_PENDING", "Falta entregar o registrar la falla de: " + ", ".join(pending) + ".")
-    return settle_cycle(store, cycle, missing, at=at)
+    from .purchase import missing_for_settlement  # CR-06 (purchase importa este módulo)
+    missing = list(missing) + missing_for_settlement(store, cycle)
+    return settle_cycle(store, cycle, missing, at=at, savings_share=OPERATING_SAVINGS_SHARE)  # S-301

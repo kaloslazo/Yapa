@@ -65,6 +65,10 @@ def set_admin_password(store: InMemoryStore, admin_id: str, password: str) -> No
 
 def credential_stamp(store: InMemoryStore, kind: str, user) -> bytes | None:
     """SG-05, S-261: la sal identifica la credencial; una credencial nueva tiene otra y cierra las sesiones viejas."""
+    if kind == "vecino":  # RD-06: quien nació con Google no tiene PIN; retirarse igual cierra su sesión
+        customer = store.customers.get(int(user)) if str(user).isdigit() else None
+        if customer is not None and customer.withdrawn_at is not None:
+            return b"retirado"
     credential = store.credentials.get((kind, str(user)))
     return credential.salt if credential else None
 

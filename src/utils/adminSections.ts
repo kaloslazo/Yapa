@@ -1,7 +1,7 @@
 import type { IconName } from '../components/Icon';
 import type { Role } from '../types';
 
-export type Section = 'resumen' | 'zonas' | 'armado' | 'compras' | 'reclamos' | 'devoluciones' | 'pines' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos' | 'cuentas';
+export type Section = 'resumen' | 'zonas' | 'armado' | 'compras' | 'reclamos' | 'incidencias' | 'devoluciones' | 'pines' | 'conciliacion' | 'metricas' | 'catalogo' | 'referencias' | 'vecinos' | 'cuentas';
 
 export interface SectionInfo {
   id: Section;
@@ -18,6 +18,7 @@ export const SECTIONS: SectionInfo[] = [
   { id: 'compras', label: 'Compra de la semana', icon: 'cart', group: 'Semana', hint: 'Cuánto comprarle a cada proveedor y el colchón de reposición.', roles: ['admin', 'compras'] },
   { id: 'armado', label: 'Armado y entrega', icon: 'box', group: 'Semana', hint: 'Foto de cada bolsa y de cada entrega.', roles: ['admin', 'armador'] },
   { id: 'reclamos', label: 'Reclamos', icon: 'receipt', group: 'Atención', hint: 'Lo que faltó o llegó mal, con su foto.', roles: ['admin', 'atencion'] },
+  { id: 'incidencias', label: 'Incidencias', icon: 'warning', group: 'Atención', hint: 'Lo que cuentan los vecinos, sin mover dinero.', roles: ['admin', 'atencion'] },
   { id: 'devoluciones', label: 'Devoluciones', icon: 'undo', group: 'Atención', hint: 'Dinero por devolver a Yape o Plin.', roles: ['admin', 'atencion'] },
   { id: 'pines', label: 'Pedidos de PIN', icon: 'key', group: 'Atención', hint: 'Vecinos que olvidaron su PIN.', roles: ['atencion'] },
   { id: 'zonas', label: 'Zonas', icon: 'map', group: 'Vecinos', hint: 'Mapa de zonas, uniones posibles y sugerencias.', roles: ['admin'] },
