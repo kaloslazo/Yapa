@@ -1,7 +1,8 @@
 # Pruebas en cada subida y pull request (jobs motor y web, de Kalos) + despliegue automático (iteración 52,
 # api/docs/desarrollo/52-despliegue-automatico.md):
 #   - Cada subida a cualquier rama y cada pull request corren las pruebas y arman el paquete (DA-01, DA-02).
-#   - Solo una subida a main despliega en la VPS (S-270), y solo si pasaron motor y web (S-271).
+#   - Solo una subida a main despliega (S-270), y solo si pasaron motor y web (S-271). Desde el 09/11/2026 en AWS
+#     Lightsail (deploy/aws/README.md); antes en la VPS con un runner propio (deploy/vps/).
 name: tests
 
 on:
@@ -60,19 +61,38 @@ jobs:
           retention-days: 14
 
   desplegar:
-    name: desplegar en la VPS
+    # AWS Lightsail (deploy/aws/README.md). Reemplaza al runner de la VPS (iteración 52), que quedó desconectado.
+    name: desplegar en AWS
     needs: [motor, web]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, windows, yapa-vps]
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     concurrency:
       group: despliegue-yapa
       cancel-in-progress: false
+    env:
+      AWS_HOST: ${{ secrets.AWS_HOST }}
     steps:
-      # Sin acciones de GitHub: el Windows de la VPS no corre Node 24. Solo comandos.
-      # El script vive en la VPS (S-273): el repositorio solo lo llama.
-      - name: Descargar el paquete y reemplazar la versión
-        shell: powershell
+      - name: Sin servidor configurado, no se despliega
+        if: env.AWS_HOST == ''
+        run: echo "Falta el secreto AWS_HOST (deploy/aws/README.md); las pruebas pasaron y no se despliega."
+      - uses: actions/checkout@v4
+        if: env.AWS_HOST != ''
+        with:
+          sparse-checkout: deploy/aws
+      - uses: actions/download-artifact@v4
+        if: env.AWS_HOST != ''
+        with:
+          name: yapa-app
+          path: paquete
+      - name: Subir el paquete y cambiar la versión
+        if: env.AWS_HOST != ''
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: C:\yapa\ci\desplegar-ci.ps1 -Repo "${{ github.repository }}" -RunId "${{ github.run_id }}"
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null ~/llave && printf '%s\n' "$AWS_SSH_KEY" > ~/llave
+          mkdir -p ~/.ssh && ssh-keyscan -H "$AWS_HOST" >> ~/.ssh/known_hosts
+          tar -czf yapa.tar.gz -C paquete .
+          scp -i ~/llave yapa.tar.gz deploy/aws/desplegar.sh "ubuntu@$AWS_HOST:/tmp/"
+          ssh -i ~/llave "ubuntu@$AWS_HOST" "sudo install -m 755 /tmp/desplegar.sh /opt/yapa/bin/desplegar.sh && sudo /opt/yapa/bin/desplegar.sh /tmp/yapa.tar.gz ${{ github.sha }}"
+          rm -f ~/llave
