@@ -33,3 +33,16 @@ describe('pedido en la lista de armado', () => {
     expect(toOrder({ id: 2, lineas: [] }).labels).toBeUndefined();
   });
 });
+
+describe('seguimiento y a dónde pagar (iteración 58)', () => {
+  it('trae los pasos del pedido y cuáles ya pasaron (S-309)', () => {
+    const order = toOrder({ id: 3, lineas: [], seguimiento: [{ paso: 'Pedido', hecho: true }, { paso: 'Comprado', hecho: false }] });
+    expect(order.tracking).toEqual([{ step: 'Pedido', done: true }, { step: 'Comprado', done: false }]);
+  });
+
+  it('trae el Plin de Yapa cuando hay que pagar (S-305)', () => {
+    const order = toOrder({ id: 4, lineas: [], pagar_a: { numero: '999 000 111', titular: 'Yapa (cuenta de prueba)' } });
+    expect(order.payTo).toEqual({ number: '999 000 111', holder: 'Yapa (cuenta de prueba)' });
+    expect(toOrder({ id: 5, lineas: [] }).payTo).toBeUndefined();
+  });
+});

@@ -1,0 +1,66 @@
+
+ RUN  v5.0.5 /Users/kalosroots/personal/utec/yapa/yapa-app
+
+ ❯ src/services/mappers.test.ts (7 tests | 2 failed) 6ms
+   ❯ seguimiento y a dónde pagar (iteración 58) (2)
+     × trae los pasos del pedido y cuáles ya pasaron (S-309) 3ms
+     × trae el Plin de Yapa cuando hay que pagar (S-305) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/mappers.test.ts > seguimiento y a dónde pagar (iteración 58) > trae los pasos del pedido y cuáles ya pasaron (S-309)
+AssertionError: expected undefined to deeply equal [ Array(2) ]
+
+- Expected:
+[
+  {
+    "done": true,
+    "step": "Pedido",
+  },
+  {
+    "done": false,
+    "step": "Comprado",
+  },
+]
+
++ Received:
+undefined
+
+ ❯ src/services/mappers.test.ts:40:28
+     38|   it('trae los pasos del pedido y cuáles ya pasaron (S-309)', () => {
+     39|     const order = toOrder({ id: 3, lineas: [], seguimiento: [{ paso: '…
+     40|     expect(order.tracking).toEqual([{ step: 'Pedido', done: true }, { …
+       |                            ^
+     41|   });
+     42|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/services/mappers.test.ts > seguimiento y a dónde pagar (iteración 58) > trae el Plin de Yapa cuando hay que pagar (S-305)
+AssertionError: expected undefined to deeply equal { number: '999 000 111', …(1) }
+
+- Expected:
+{
+  "holder": "Yapa (cuenta de prueba)",
+  "number": "999 000 111",
+}
+
++ Received:
+undefined
+
+ ❯ src/services/mappers.test.ts:45:25
+     43|   it('trae el Plin de Yapa cuando hay que pagar (S-305)', () => {
+     44|     const order = toOrder({ id: 4, lineas: [], pagar_a: { numero: '999…
+     45|     expect(order.payTo).toEqual({ number: '999 000 111', holder: 'Yapa…
+       |                         ^
+     46|     expect(toOrder({ id: 5, lineas: [] }).payTo).toBeUndefined();
+     47|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 17 passed (18)
+      Tests  2 failed | 117 passed (119)
+   Start at  16:14:25
+   Duration  1.61s (import 71%, environment 20%, tests 4%, transform 3%, worker 1%)
+
