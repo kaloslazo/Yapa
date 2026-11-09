@@ -26,7 +26,7 @@ BUYER, PACKER, DRIVER = "compras-1", "armado-1", "reparto-1"
 BEFORE_CLOSE = datetime(2026, 9, 16, 19, 59, tzinfo=LIMA)
 FRIDAY = datetime(2026, 9, 18, 10, 0, tzinfo=LIMA)
 SATURDAY = datetime(2026, 9, 19, 9, 0, tzinfo=LIMA)
-PAYEE = {"numero": "999 000 111", "titular": "Yapa (cuenta de prueba)"}
+PAYEE = {"numero": "999 000 111", "titular": "Yapa (cuenta simulada, proyecto UTEC)"}
 STEPS = ["Pedido", "Pago verificado", "Comprado", "Armado", "En camino", "Entregado", "Te devolvemos"]
 
 
@@ -215,7 +215,7 @@ class PayeeConfigTests(unittest.TestCase):
     def test_pl_a_payee_from_environment(self):
         env = {"YAPA_PLIN_NUMERO": "987 654 321", "YAPA_PLIN_TITULAR": "Yapa SAC"}
         self.assertEqual(produccion.payee(env, demo=False), {"numero": "987 654 321", "titular": "Yapa SAC"})
-        self.assertIsNone(produccion.payee({}, demo=False))  # el servidor no inventa un número
+        self.assertEqual(produccion.payee({}, demo=False), PAYEE)  # S-305: proyecto académico, cuenta simulada
         self.assertEqual(produccion.payee({}, demo=True), PAYEE)
 
 
