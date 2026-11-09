@@ -1,0 +1,5 @@
+ERROR: test_logistica (unittest.loader._FailedTest.test_logistica)
+ImportError: Failed to import test module: test_logistica
+ImportError: cannot import name 'logistics' from 'yapa_sdd' (/Users/kalosroots/personal/utec/yapa/yapa-app/api/src/yapa_sdd/__init__.py)
+Ran 661 tests in 1.062s
+FAILED (errors=1, skipped=4)
