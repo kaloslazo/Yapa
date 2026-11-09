@@ -80,3 +80,20 @@ Escenario base: el de las iteraciones 7 y 16 más 2 galones de limpiatodo. W38, 
 ## Cambios en pruebas anteriores (por S-299)
 
 Las pruebas que entregan o registran una falla agregan, **en su preparación**, "compras registra la compra completa" antes de despachar (ayudante `buy_all` de `test_settlement.py`, o `POST /api/compras/recibido` en las de la API). No cambia ningún número que verifican. Archivos: `test_fulfillment`, `test_failed_delivery`, `test_failed_zone_metrics`, `test_gaps_packing`, `test_metrics`, `test_personal_por_rol`, `test_proveedores_transportistas`, `test_web_operacion`, `test_web_hardening`, `test_api`, `test_avisos` y `test_e2e_week`. El bloqueo se revisa **al final** de la entrega (después de EN-01..EN-05 y EF-01..EF-02), así que los errores que ya verificaban esas pruebas no cambian. La semana de demostración (`demo.py`) también registra la compra.
+
+## Trazabilidad
+
+| Regla | Código | Pruebas (`tests/test_compra_real.py`) |
+|---|---|---|
+| CR-01..CR-04, S-295 | `purchase.register_purchase` | `test_cr_d_invalid_items`, `test_cr_d_before_close_and_roles` |
+| CR-05, S-296 | `purchase.register_purchase` (desde el pedido más alto), `purchase._from_buffer` (uso anotado, S-122) | `test_cr_a_*`, `test_cr_b_*`, `test_cr_c_*` |
+| CR-06 | `fulfillment.close_cycle` + `purchase.missing_for_settlement` | `test_cr_a_*`, `test_cr_e_*`, `test_da_a_*` |
+| DA-01..DA-06, S-297 | `purchase.register_damaged` | `test_da_a_*`, `test_da_b_*`, `test_da_c_*` |
+| RT-01, S-298 | `fulfillment.bag_labels`; `rotulos` en `GET /api/admin/armado` | `test_rt_a_labels`, `test_api_a_*` |
+| BD-01, S-299 | `fulfillment._check_purchase` al final de `deliver_zone` y `register_failed_delivery` | `test_bd_a_dispatch_waits_for_purchase` |
+| IN-01..IN-04, S-300 | `incidents.open_incident`, `incidents.close_incident` | `test_in_a_*`, `test_in_b_*` |
+| API-A | `web/api.py`: `compras_recibido`, `admin_danado`, `admin_incidencias*`, `compra_real` en `compras` | `test_api_a_purchase_damaged_labels_and_incidents` |
+| Web | Compras → "Lo que llegó"; Armado → rótulos y "Algo llegó dañado"; Atención → Incidencias (`AdminPanel.tsx`) | `src/utils/adminSections.test.ts`, `src/services/mappers.test.ts` |
+
+Evidencia: `docs/evidencia/desarrollo/56-57-motor-rojo.txt`, `56-57-web-rojo.txt`, `56-57-motor-verde.txt` y `56-57-web-verde.txt`.
+

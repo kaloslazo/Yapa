@@ -46,3 +46,15 @@ Eran dos decisiones urgentes pendientes (`supuestos-a-validar.md`, preguntas 49 
 ## Cambios en pruebas anteriores (por S-301)
 
 `test_e2e_week` (AU-C) liquida con `close_cycle` por la web. El saldo del vecino 801 pasa de S/ 5,38 a **S/ 4,62**: 2,52 de ahorro (3,36 × 75 %) + 2,10 del reclamo (el precio final de la cebolla sube de 2,016 a 2,100). Como ya no alcanza para pedir S/ 5,00 de vuelta, la prueba pide S/ 4,00 y las devoluciones pagadas quedan en S/ 4,00. La conciliación sigue exigiendo 0 en cada paso.
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| AH-01, S-301 | `fulfillment.OPERATING_SAVINGS_SHARE` en `close_cycle` (usa RA-01 de `settle_cycle`) | `test_retiro_datos.test_ah_a_*` |
+| AH-02 | `audit.money_balance` sin cambios | `test_e2e_week.test_au_c_whole_week` |
+| S-302 | `faqs` en `src/components/EditorialSections.tsx` | `src/components/faq.test.ts` |
+| RD-01..RD-05, S-303 | `customers.withdraw_consent` | `test_rd_b_*` |
+| RD-06, S-304 | `customers.withdraw_consent` (anonimiza); `auth.credential_stamp` cierra la sesión también a quien entra con Google; `Customer.withdrawn_at` | `test_rd_a_*`, `test_rd_c_*`, `test_rd_d_api_closes_the_session` |
+| Web | Mi cuenta → "Retirar mi consentimiento y cerrar mi cuenta" (`AccountPage.tsx`, `App.tsx`) | revisión manual |
+

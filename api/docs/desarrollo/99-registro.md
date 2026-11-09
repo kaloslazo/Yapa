@@ -449,3 +449,19 @@
   - "Mi cuenta" (`#cuenta`) como una vista más de la tienda.
 - Después de entrar se vuelve a donde se estaba (canasta, pedidos, zona) y Atrás no reabre el acceso. `volver` solo acepta vistas de la tienda (`src/utils/authRoutes.ts`), así un link no puede mandar a otro sitio.
 - Pruebas: `src/utils/authRoutes.test.ts`. Revisado en el navegador en escritorio y en celular.
+
+## Iteración 56 · Compra real, dañados, rótulos, bloqueo del despacho e incidencias (09/11/2026)
+
+- Spec: `56-compra-real-y-armado.md` (S-295..S-300). Kalos decidió el 09/11 cómo tocan el dinero el faltante del proveedor y el dañado al armar: primero el colchón y, si no alcanza, se descuenta a los últimos pedidos registrados y vuelve como saldo en la liquidación.
+- Pruebas antes del código (`56-57-motor-rojo.txt`, `56-57-web-rojo.txt`).
+- El bloqueo del despacho (S-299) obligó a que las pruebas que entregan registren la compra en su preparación. El chequeo va **al final** de la entrega, así que ningún error que ya se verificaba cambió.
+- Implementación: módulos `purchase.py` e `incidents.py`; `bag_labels` y el bloqueo en `fulfillment.py`; `close_cycle` suma los faltantes que no cubrió el colchón. Web: "Lo que llegó" en Compras, rótulos y "Algo llegó dañado" en Armado, y la sección Incidencias para atención.
+- Queda fuera "ver la app como un vecino desde atención" (decisión de privacidad).
+
+## Iteración 57 · 25 % del ahorro y retiro del consentimiento (09/11/2026)
+
+- Spec: `57-ahorro-retenido-y-retiro-de-datos.md` (S-301..S-304). Cierra las decisiones urgentes 49 (Yapa retiene el 25 %) y 67 (retiro del consentimiento: se anonimiza).
+- El 25 % se aplica en la liquidación operativa (`close_cycle`); `settle_cycle` sigue en 0 % como cálculo puro, así las specs anteriores conservan sus ejemplos. Solo cambió la semana completa (AU-C): el vecino 801 termina con S/ 4,62 en vez de S/ 5,38, y la conciliación sigue en 0.
+- La portada dice el reparto: 75 % al vecino y 25 % para la operación (Ley 29571).
+- Resultado: 660 pruebas del motor (22 nuevas) y 117 del frontend (7 nuevas) en verde; typecheck y build sin errores (`56-57-motor-verde.txt`, `56-57-web-verde.txt`).
+

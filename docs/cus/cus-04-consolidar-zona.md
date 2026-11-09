@@ -25,9 +25,9 @@ Actores: **vecino** (crea su zona o se une), **admin de zona** (activa la recepc
 | ID | Requerimiento | Origen | Criterio de aceptación |
 |---|---|---|---|
 | RF-04.6 | Solo cuentan los pedidos con pago verificado; un grupo con menos de 8 queda `NO_ATENDIDO` y recibe el 100 % al medio de pago. | LQ-01, LQ-02, C-06 | 7 pedidos → reembolso total. |
-| RF-04.7 | El tramo de cada producto se decide con la cantidad pedida entre todos los pedidos atendidos; el precio final nunca supera el máximo cobrado. | LQ-03, LQ-04, C-08 | 200 kg de papa en W39 → S/ 3,696 por kg. |
+| RF-04.7 | El tramo de cada producto se decide con la cantidad pedida entre todos los pedidos atendidos; el precio final nunca supera el máximo cobrado. Yapa retiene el 25 % de esa baja: precio final = tramo + 25 % × (máximo − tramo). | LQ-03, LQ-04, C-08, S-301 | 80 kg de cebolla: tramo S/ 2,016, máximo S/ 2,352 → precio final S/ 2,100. |
 | RF-04.8 | El envío real es el costo de la parada ÷ pedidos de la zona, con tope de S/ 5. | LQ-05 | Parada de S/ 40 con 8 pedidos → S/ 5,00. |
-| RF-04.9 | Los faltantes no se cobran; el saldo a favor = pagado − final, nunca negativo, se abona a la billetera. | LQ-06..LQ-08, BS-08 | El pedido queda `LIQUIDADO`. |
+| RF-04.9 | Los faltantes (los del reporte, los de la compra real y los dañados que no cubrió el colchón, CR-06) no se cobran; el saldo a favor = pagado − final, nunca negativo, se abona a la billetera. | LQ-06..LQ-08, BS-08 | El pedido queda `LIQUIDADO`. |
 | RF-04.10 | El ciclo solo se cierra cuando cada zona atendida está entregada o fallida; la liquidación es todo o nada y una sola vez. | EF-06, BS-11, BS-15 | Zona pendiente → `ZONES_PENDING`; liquidar dos veces → `CYCLE_ALREADY_SETTLED`. |
 | RF-04.11 | El resumen muestra el tramo alcanzado y el precio final de cada producto, el total devuelto y el reembolsado. | LQ-09 | Visible para el vecino en Mi cuenta ("Te devolvemos"). |
 

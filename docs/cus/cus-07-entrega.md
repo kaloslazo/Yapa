@@ -2,7 +2,7 @@
 
 **Fuente de las reglas:** `api/docs/desarrollo/07-armado-entrega-reclamos.md` (EN, S-42), `16-entrega-fallida-cierre.md` (EF), `54-proveedores-y-transportistas.md` (TR, S-282) y `55-personal-por-rol.md` (PO, S-293, S-294).
 
-**Estado:** implementado el reparto del transportista, la entrega con foto, la entrega fallida y la confirmación de la portería. **No hay cálculo de rutas** y queda pendiente **bloquear el despacho si hay diferencias** (iteración 56). Las rutas quedan a decisión del equipo; con las zonas del piloto el orden de paradas se arma a mano.
+**Estado:** completo. Reparto del transportista, entrega con foto, entrega fallida, confirmación de la portería y bloqueo del despacho hasta registrar la compra (iteración 56). **El cálculo de rutas queda fuera del alcance** (decisión del 09/11/2026): con pocas zonas en el piloto, el orden de paradas se arma a mano.
 
 ## 0. Objetivo y frontera
 
@@ -21,7 +21,7 @@ Actores: **transportista** (cuenta propia), **portería** (cuenta por zona), **a
 | RF-07.5 | Una zona se entrega o falla una sola vez por ciclo. | EN-02, EF-03 | La segunda vez → `ZONE_ALREADY_CLOSED`. |
 | RF-07.6 | La portería de la zona o su admin confirman la recepción una sola vez, y cada vecino recibe el aviso "Tus bolsas ya están en el edificio". | PO-02..PO-04, S-294 | Portería de otra zona → `FOREIGN_ZONE`; confirmar dos veces → `ALREADY_CONFIRMED`. |
 | RF-07.7 | La portería ve las entregas de su zona con el nombre del vecino y sus bolsas, sin productos, montos ni celulares. | PO-01, S-293 | — |
-| RF-07.8 | *(Pendiente, iteración 56)* Bloquear el despacho de una zona si hay diferencias entre lo armado y lo pedido. | Tabla 3 del Informe PC3 | Necesita la regla del equipo. |
+| RF-07.8 | Una zona no se entrega ni se marca como fallida hasta que compras registre la compra real del ciclo. | BD-01, S-299 | Sin compra → `PURCHASE_NOT_REGISTERED`. |
 
 ## 2. Ficha
 
@@ -50,6 +50,7 @@ Actores: **transportista** (cuenta propia), **portería** (cuenta por zona), **a
 | FA-01 | Nadie recibe. | El transportista registra la falla con foto y motivo; la zona queda `fallida`. |
 | FA-02 | Falta armar un pedido. | `ORDERS_NOT_PACKED`; la zona sigue pendiente. |
 | FA-03 | La zona no tiene pedidos atendidos. | `NOTHING_TO_DELIVER`. |
+| FA-04 | Compras todavía no registra lo que llegó. | `PURCHASE_NOT_REGISTERED`; la zona espera. |
 | EX-01 | Se intenta entregar o fallar dos veces. | `ZONE_ALREADY_DELIVERED` / `ZONE_ALREADY_CLOSED`. |
 | EX-02 | Confirma una portería de otra zona o un vecino que no administra la zona. | `FOREIGN_ZONE` / `NOT_AUTHORIZED`. |
 

@@ -1,6 +1,6 @@
 # Yapa — Modelo de datos y arquitectura
 
-Describe cómo está construido Yapa hoy (iteración 55). Las clases y atributos salen del código en `api/src/yapa_sdd/`; los casos de uso están en [`cus/`](cus/README.md).
+Describe cómo está construido Yapa hoy (iteración 57). Las clases y atributos salen del código en `api/src/yapa_sdd/`; los casos de uso están en [`cus/`](cus/README.md).
 
 ## 1. Arquitectura
 
@@ -60,6 +60,9 @@ erDiagram
     VECINO ||--o{ REEMBOLSO : pide
     PROVEEDOR ||--o{ PROPUESTA : envía
     CUENTA_PERSONAL }o--o| ZONA : "portería de"
+    CICLO ||--o| COMPRA : "se registra"
+    PEDIDO ||--o{ FALTANTE : "pierde (compra o dañado)"
+    PEDIDO ||--o{ INCIDENCIA : tiene
     CUENTA_PERSONAL }o--o| PROVEEDOR : "cuenta de"
 ```
 
@@ -67,7 +70,7 @@ erDiagram
 
 | Entidad | Clase | Atributos principales | Reglas que la tocan |
 |---|---|---|---|
-| Vecino | `Customer` | id, nombre, zona, suspendido, ubicación, celular, correo verificado, consentimiento (Ley 29733), quién lo invitó, cuenta de Google | RP-01, ZN-03, S-133 |
+| Vecino | `Customer` | id, nombre, zona, suspendido, ubicación, celular, correo verificado, consentimiento (Ley 29733), quién lo invitó, cuenta de Google, fecha de retiro | RP-01, ZN-03, S-133, S-304 |
 | Zona | `Zone` | id, nombre, distrito, grupo, costo de parada, ubicación, admin, tipo y contacto de recepción, estado | C-07, ZN-01..ZN-07 |
 | Producto | `Product` | id, nombre, categoría (`FRESCOS`/`LIMPIEZA`), unidad, paso, máximo del proveedor, tramos, activo, proveedor | C-11, C-12, CT-01..CT-11 |
 | Tramo de precio | `PriceTier` | desde (cantidad), precio base | CT-03, LQ-04 |
@@ -82,6 +85,9 @@ erDiagram
 | Entrega fallida | `FailedDelivery` | ciclo, zona, pedidos, foto, motivo, registrado por, fecha | EF |
 | Recepción | `Reception` | ciclo, zona, pedidos, confirmado por, fecha | PO |
 | Reclamo | `Claim` | id, pedido, vecino, producto, cantidad, motivo, foto, estado, monto devuelto | RC, RV |
+| Compra real | `Purchase` | ciclo, lo recibido por producto, quién y cuándo | CR, S-295 |
+| Faltante | `Shortage` | ciclo, pedido, producto, cantidad, cuánto repuso el colchón, origen (compra o dañado), foto | CR-05, DA, S-296, S-297 |
+| Incidencia | `Incident` | id, pedido, tipo, descripción, estado, nota de cierre, quién y cuándo | IN, S-300 |
 | Cuenta de personal o socio | `Partner` | usuario, tipo (proveedor, transportista, compras, armado, atención, portería), nombre, zona o proveedor | CX, S-278..S-294 |
 
 **Ciclo.** No es una clase: es la semana ISO (`2026-W38`), que abre el lunes 00:00 y cierra antes del miércoles 20:00 (S-02). Las colecciones que dependen de la semana usan el ciclo como parte de su clave: catálogo, stock reservado, entregas, recepciones y propuestas.
@@ -121,6 +127,5 @@ Cada colección del repositorio (por ejemplo `orders`, `zones` o `movements`) es
 
 - **PIN y contraseñas:** hash PBKDF2 con sal; bloqueo tras 5 fallos; cambiar el PIN cierra las demás sesiones.
 - **Datos que ve cada rol:** el transportista y la portería no ven montos ni celulares; el armador no ve pagos.
-- **Consentimiento (Ley 29733):** se registra la fecha en el alta.
+- **Consentimiento (Ley 29733):** se registra la fecha en el alta. Si el vecino lo retira, se borra lo que lo identifica (nombre, celular, correo, ubicación, Google, PIN) y se conservan sus pedidos y su dinero sin datos personales (iteración 57).
 - **Fotos:** se guardan con su tipo real y solo las ve quien las necesita.
-- **Pendiente (decisión del equipo):** qué se borra cuando un vecino retira su consentimiento.

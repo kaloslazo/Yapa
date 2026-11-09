@@ -35,12 +35,13 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 ```
 
-## Estado al 06/11/2026
+## Estado al 09/11/2026
 
-- Iteraciones 2 a 48 y 50 a 55 **completas y en verde** (638 pruebas del motor, 110 del frontend); la 49 está reservada. El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-294. **El siguiente libre es S-295.**
-- **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. Las más importantes son el margen (optimista vs. pesimista) y si Yapa retiene parte del ahorro. El simulador (`python -m yapa_sdd.simulator 40`) da los números.
-- `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador.
+- Iteraciones 2 a 48 y 50 a 57 **completas y en verde** (660 pruebas del motor, 117 del frontend); la 49 está reservada. El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-304. **El siguiente libre es S-305.**
+- **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. La que más pesa es el margen (optimista vs. pesimista); la parte del ahorro ya se decidió (25 %, iteración 57). El simulador (`python -m yapa_sdd.simulator 40`) da los números.
+- `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas, suma los faltantes de compra y dañados, y retiene el 25 % del ahorro, S-301). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador (0 % por defecto).
+- Desde la iteración 56 una zona no se entrega sin la compra real registrada (S-299); en las pruebas, `buy_all` de `test_settlement.py`.
 - `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
 - Tarea de campo pendiente: precios del mercado de barrio (`docs/desarrollo/kit-validacion-campo.md`).
 

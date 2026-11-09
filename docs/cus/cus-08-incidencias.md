@@ -1,8 +1,8 @@
-# Yapa — CUS-08 Reclamar un artículo
+# Yapa — CUS-08 Reclamos e incidencias
 
-**Fuente de las reglas:** `api/docs/desarrollo/07-armado-entrega-reclamos.md` (RC, RV, S-43..S-45), `16-entrega-fallida-cierre.md` (EF-05), `33-admin-foto-confirmaciones.md` y `55-personal-por-rol.md` (AT). Decisión C-10.
+**Fuente de las reglas:** `api/docs/desarrollo/07-armado-entrega-reclamos.md` (RC, RV, S-43..S-45), `16-entrega-fallida-cierre.md` (EF-05), `33-admin-foto-confirmaciones.md` `55-personal-por-rol.md` (AT) y `56-compra-real-y-armado.md` (IN, S-300). Decisión C-10.
 
-**Estado:** implementados el reclamo por artículo y su revisión por atención. **Quedan pendientes las incidencias que registra atención por su cuenta** (iteración 56).
+**Estado:** completo: reclamo por artículo, revisión por atención e incidencias de atención (iteración 56).
 
 ## 0. Objetivo y frontera
 
@@ -21,6 +21,7 @@ Actores: **vecino** (reclama) y **atención** o **administrador** (revisan).
 | RF-08.5 | No se aprueba lo que ya se descontó como faltante en la liquidación. | RV-04 | → `INVALID_CLAIM_ITEM`. |
 | RF-08.6 | Un pedido de una zona fallida no se reclama: ya recibió todo como saldo. | EF-05 | → `ORDER_NOT_DELIVERED`. |
 | RF-08.7 | Atención ve la foto del reclamo antes de decidir. | iteración 33 | Solo el personal ve la foto. |
+| RF-08.8 | Atención registra incidencias sobre un pedido (entrega, bolsa, trato u otro) y las cierra con una nota. No mueven dinero: si hay que devolver, va por reclamo o devolución. | IN-01..IN-04, S-300 | Tipo `QUEJA` o texto de 501 caracteres → `INVALID_INCIDENT`; cerrar dos veces → `INCIDENT_ALREADY_CLOSED`. |
 
 ## 2. Ficha
 
@@ -61,5 +62,5 @@ Actores: **vecino** (reclama) y **atención** o **administrador** (revisan).
 ## 6. Pantallas y código
 
 - Web: Mis pedidos → Reclamar (`OrdersPage.tsx`, `PhotoForm.tsx`); panel → Reclamos.
-- API: `/api/reclamos`, `/api/admin/reclamos`, `/api/admin/reclamos/{id}/revisar`, `/api/admin/foto`.
-- Motor: `claims.file_claim`, `claims.review_claim`.
+- API: `/api/reclamos`, `/api/admin/reclamos`, `/api/admin/reclamos/{id}/revisar`, `/api/admin/foto`, `/api/admin/incidencias`, `/api/admin/incidencias/{id}/cerrar`.
+- Motor: `claims.file_claim`, `claims.review_claim`, `incidents.py`.

@@ -14,7 +14,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
    - qué costo por pedido se descuenta en las métricas.
 2. **Zonas lejanas.** Una zona con parada de S/ 100 y 8 pedidos pierde S/ 1.86 por pedido (MT-B), porque el envío cobrado tiene tope de S/ 5. **El mínimo de 8 pedidos solo alcanza si la parada cuesta hasta S/ 40.** ¿El mínimo debería depender del costo de la parada?
 3. **Portería que no recibe.** *Implementado con la recomendación por defecto* (`16-entrega-fallida-cierre.md`): sin reintento, al vecino le vuelve todo menos el envío real (como saldo) y los frescos son merma de Yapa. **Falta que el equipo lo confirme** o proponga otra cosa (¿reintento el domingo?, ¿dejar las bolsas con el admin de la zona?).
-5. **Crecer no mejora el margen (simulador, iteración 14).** Como todo el ahorro por volumen vuelve al cliente y la comisión es un % del precio final, **Yapa gana menos por pedido mientras más compra el grupo**: de S/ 3.31 con 8 pedidos a S/ 2.52 con 30 (optimista). ¿Yapa se queda con parte del ahorro, cobra un fee fijo o solo baja costos? Ver `14-simulador-escenarios.md`. **Dato:** reteniendo el 25 % del ahorro por volumen, el peor escenario queda en equilibrio (−S/ 0.06) y el vecino sigue ahorrando S/ 10.39 por pedido (`15-reparto-ahorro.md`).
+5. **Crecer no mejora el margen (simulador, iteración 14).** Como todo el ahorro por volumen vuelve al cliente y la comisión es un % del precio final, **Yapa gana menos por pedido mientras más compra el grupo**: de S/ 3.31 con 8 pedidos a S/ 2.52 con 30 (optimista). ¿Yapa se queda con parte del ahorro, cobra un fee fijo o solo baja costos? Ver `14-simulador-escenarios.md`. **Dato:** reteniendo el 25 % del ahorro por volumen, el peor escenario queda en equilibrio (−S/ 0.06) y el vecino sigue ahorrando S/ 10.39 por pedido (`15-reparto-ahorro.md`). ✅ **Decidido (Kalos, 09/11/2026): Yapa retiene el 25 %** (iteración 57).
 4. **Reclamo por un artículo dañado:** ¿la plata vuelve a saldo (como está hoy) o directo al Yape/Plin?
 
 ## A. Dinero y pagos (los más importantes)
@@ -104,7 +104,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 |---|---|---|---|---|---|
 | 47 | ¿Qué pasa si el servidor se reinicia? | Se guarda todo en una base SQLite después de cada operación; solo hay que volver a entrar (S-90, S-91). | | | |
 | 48 | ¿Qué costos operativos usamos para decidir? | Dos escenarios documentados: optimista (Plin 0 %, proveedor entrega) y pesimista (Yape Empresa 2.95 %, flete de compra) (S-95..S-97). **Hay que elegir cuál se parece a la realidad.** | | | |
-| 49 | ¿Yapa se queda con parte del ahorro por volumen? | Hoy 0 % (todo vuelve al cliente). El simulador muestra que con 25 % se deja de perder (S-100). **Decisión pendiente.** | | | |
+| 49 | ¿Yapa se queda con parte del ahorro por volumen? | ✅ **Decidido por Kalos (09/11/2026): 25 %** en la liquidación operativa (S-301, iteración 57). La portada lo explica (S-302). | | | |
 | 50 | Si la portería no recibe, ¿se reintenta? | No en el piloto (S-102). | | | |
 | 51 | Si la portería no recibe, ¿cuánto se devuelve? | Todo menos el envío real de la zona, como saldo (S-103). | | | |
 | 52 | Lo que se compró para una zona fallida, ¿cuenta para los descuentos por volumen? | Sí, porque ya se compró; los frescos son merma de Yapa (S-104, S-107). | | | |
@@ -127,7 +127,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | 64 | ¿Le decimos al vecino si el mercado le salía más barato? | Sí, en su cuenta, igual que en el catálogo (S-131). Es lo transparente, aunque pueda desanimar. | | | |
 | 65 | ¿Quién da de alta a los vecinos y cómo le llega el PIN? | El admin, con nombre, celular, zona y el consentimiento del vecino. El sistema genera el PIN y el admin lo manda por WhatsApp (S-133..S-136). | | | |
 | 66 | ¿El vecino debe cambiar su PIN la primera vez que entra? | Hoy no está obligado. **Decisión pendiente.** | | | |
-| 67 | Si un vecino retira su consentimiento, ¿qué se borra? | No está implementado. Hay que decidir qué datos se borran y qué se guarda por contabilidad (Ley 29733). | | | |
+| 67 | Si un vecino retira su consentimiento, ¿qué se borra? | ✅ **Decidido por Kalos (09/11/2026): se anonimiza** (S-303, S-304, iteración 57): se borra lo que lo identifica y se conservan sus pedidos y su dinero sin datos personales. Antes debe tener saldo 0, sin pedidos ni reclamos pendientes. | | | |
 
 ## E. Técnicos (no requieren decisión de negocio, solo revisión)
 
