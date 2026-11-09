@@ -18,7 +18,7 @@ Con el simulador (25 % retenido, parada de S/ 40, comisión de frescos 12 %), el
 
 | # | Supuesto | Valor |
 |---|---|---|
-| S-305 | Yapa cobra en una cuenta **Plin negocios**. La confirmación del pedido dice a qué número pagar y a nombre de quién, y que también se puede pagar desde Yape. El número y el titular salen de `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR`; la demo usa un número de prueba. Si no están configurados, no se muestra un número inventado. | decisión del 09/11 |
+| S-305 | Yapa cobra en una cuenta **Plin negocios**. La confirmación del pedido dice a qué número pagar y a nombre de quién, y que también se puede pagar desde Yape. El número y el titular salen de `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR`. **Como Yapa es un proyecto académico sin empresa constituida (Kalos, 09/11/2026), si no están configurados se usa una cuenta simulada, también en el servidor:** "999 000 111 · Yapa (cuenta simulada, proyecto UTEC)". | decisión del 09/11 |
 | S-306 | **Flete de compra.** Compras (o el admin) registra el flete de la semana, después del cierre y una sola vez por ciclo: la empresa (1 a 80 caracteres) y el monto (mayor que 0, hasta S/ 2 000, con céntimos). | decisión del 09/11 |
 | S-307 | **Margen real.** Se calcula con el cobro al 0 %, el armado a S/ 1,60, la atención a S/ 0,73 y el viaje de compra igual al flete registrado ÷ pedidos atendidos del ciclo. Si el flete no está registrado, se usan **S/ 180** (la cotización más baja encontrada el 09/11, entre S/ 180 y S/ 320) y se marca como estimado. Los escenarios optimista y pesimista siguen en el simulador. | S/ 180 estimado |
 | S-308 | **Salida a reparto.** El transportista (o el admin) marca que salió hacia una zona. Requiere la compra registrada y todo armado, se hace una sola vez y antes de entregar o registrar la falla. Cada vecino recibe el aviso "Tu pedido va en camino". Registrar la entrega **no exige** haber marcado la salida; en ese caso el seguimiento la da por hecha al entregar. | — |
@@ -52,7 +52,7 @@ Escenario base: el de la iteración 56. W38, Z-JM-01 (Residencial San Felipe) co
 - **SR-B · Bloqueos.** Sin compra → `PURCHASE_NOT_REGISTERED`. Con un pedido sin bolsa → `ORDERS_NOT_PACKED`. Con la zona ya entregada → `ZONE_ALREADY_CLOSED`. Una zona que no existe → `ZONE_NOT_FOUND`. El armador → `NOT_AUTHORIZED`. → SR-01
 - **SG-A · Seguimiento paso a paso.** Para el pedido 1: al registrarlo y verificarlo están hechos Pedido y Pago verificado. Al registrar la compra se suma Comprado; al armar, Armado; al salir, En camino; al entregar, Entregado; al liquidar, Te devolvemos. → SG-01
 - **SG-B · Entrega sin marcar la salida.** Si se entrega sin marcar la salida, En camino y Entregado quedan hechos los dos. → S-308
-- **PL-A · A dónde pagar.** Con la API configurada con el Plin "999 000 111" a nombre de "Yapa (cuenta de prueba)", el pedido recién registrado trae `pagar_a` con ese número y titular. Sin configurar, no trae `pagar_a`. → PL-01
+- **PL-A · A dónde pagar.** Con la API configurada con el Plin "999 000 111" a nombre de "Yapa (cuenta simulada, proyecto UTEC)", el pedido recién registrado trae `pagar_a` con ese número y titular; si la API no recibe cuenta, no trae `pagar_a`. El servidor sin variables usa la cuenta simulada (también en modo servidor); con las variables, usa esas. → PL-01, S-305
 
 ## Cambios en pruebas anteriores
 
