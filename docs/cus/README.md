@@ -34,6 +34,5 @@ Transversales (no son un CUN, pero sostienen a todos): acceso y cuentas (`desarr
 | Pendiente | Quién decide |
 |---|---|
 | Cotizar y contratar la empresa de flete (el monto real reemplaza los S/ 180 estimados) | Equipo |
-| Abrir la cuenta Plin negocios y configurar `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR` | Equipo |
 | "Ver la app como un vecino" desde atención | Equipo (privacidad) |
 | Precios del mercado de barrio (trabajo de campo) | Equipo (`api/docs/desarrollo/kit-validacion-campo.md`) |

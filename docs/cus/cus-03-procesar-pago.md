@@ -17,7 +17,7 @@ Yapa cobra en una cuenta **Plin negocios**, que no cobra comisión (decisión de
 | RF-03.3 | El saldo es la suma de sus movimientos, nunca negativo y no vence. | BS-01, BS-02, C-05 | Un abono de hace 400 días se puede usar. |
 | RF-03.4 | El vecino pide devolver parte o todo su saldo a su Yape o Plin; se descuenta al instante y queda un reembolso pendiente con plazo de 30 días. | BS-12 | Monto 0 → `INVALID_AMOUNT`; más que el saldo → `INSUFFICIENT_BALANCE`. |
 | RF-03.5 | El administrador o atención marcan el reembolso como pagado con su código de operación, una sola vez. | BS-13, AT-02 | Pagar dos veces → `REFUND_ALREADY_PAID`. |
-| RF-03.7 | La confirmación del pedido dice a qué Plin pagar (número y titular) mientras el pago está por verificar. | PL-01, S-305 | Sin número configurado, no se muestra uno inventado. |
+| RF-03.7 | La confirmación del pedido dice a qué Plin pagar (número y titular) mientras el pago está por verificar. | PL-01, S-305 | Proyecto académico: sin cuenta configurada se muestra una cuenta simulada, marcada como tal. |
 | RF-03.6 | El sistema concilia: recibido = en curso + retenido + deuda con clientes + devoluciones pagadas, con diferencia 0. | AU-01..AU-04 | `/admin/conciliacion` muestra "Cuadra" con diferencia S/ 0,00. |
 
 ## 2. Ficha
