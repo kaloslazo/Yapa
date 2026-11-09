@@ -472,4 +472,5 @@
 - Implementación: módulo `logistics.py` (flete, margen real, salida a reparto y seguimiento). Web: el vecino ve 7 pasos de su pedido y a qué Plin pagar; el transportista marca "Salí hacia esta zona"; compras registra el flete; métricas muestra el margen real.
 - Hallazgo: el margen real llega a 0 con 24 pedidos por semana si el flete cuesta S/ 120, con 35 si cuesta S/ 180 y con 60 si cuesta S/ 320. La demo (9 pedidos) pierde S/ 9,57 por pedido.
 - Resultado: 671 pruebas del motor (11 nuevas) y 119 del frontend (2 nuevas) en verde; typecheck y build sin errores.
+- Ajuste del mismo día: Yapa es un proyecto académico sin empresa constituida, así que el Plin de cobro es una **cuenta simulada** por defecto, también en el servidor (S-305). El flete y los montos que se registran también son de simulación.
 
