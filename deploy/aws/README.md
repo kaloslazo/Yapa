@@ -29,9 +29,9 @@ GitHub (push a main) ─ pruebas motor y web ─ paquete ─ scp/ssh ─► Ligh
 
 1. **Credenciales de la cuenta estudiantil** en un perfil aparte:
    `aws configure --profile utec` (con AWS Academy, pega también el `aws_session_token`).
-2. **Crear el servidor:** `AWS_PROFILE=utec deploy/aws/crear.sh`. Crea la llave `~/.ssh/yapa-aws.pem`, la máquina, la IP fija y abre los puertos 22, 80 y 443. Al final imprime la IP.
+2. **Crear el servidor:** `AWS_PROFILE=utec deploy/aws/crear.sh`. Genera la llave `~/.ssh/yapa-aws` en tu máquina e importa la parte pública, porque la cuenta estudiantil no deja que AWS la cree. Después crea la máquina en Ohio (`us-east-2`, la única región que permite la cuenta), la IP fija y abre los puertos 22, 80 y 443. Al final imprime la IP.
 3. **DNS:** en la zona de Route 53 de `holayapa.app`, crea o cambia los registros `A` de `holayapa.app` y `www.holayapa.app` para que apunten a esa IP. Caddy pide el certificado apenas el dominio apunta al servidor.
-4. **Claves del servidor:** entra con `ssh -i ~/.ssh/yapa-aws.pem ubuntu@<IP>` y escribe `/etc/yapa/yapa.env` con `sudo nano /etc/yapa/yapa.env`:
+4. **Claves del servidor:** entra con `ssh -i ~/.ssh/yapa-aws ubuntu@<IP>` y escribe `/etc/yapa/yapa.env` con `sudo nano /etc/yapa/yapa.env`:
    ```
    YAPA_ADMIN_USUARIO=admin-yapa
    YAPA_ADMIN_CLAVE=<mínimo 10 caracteres>
@@ -43,7 +43,7 @@ GitHub (push a main) ─ pruebas motor y web ─ paquete ─ scp/ssh ─► Ligh
 5. **Conectar GitHub:**
    ```
    gh secret set AWS_HOST --body <IP>
-   gh secret set AWS_SSH_KEY < ~/.ssh/yapa-aws.pem
+   gh secret set AWS_SSH_KEY < ~/.ssh/yapa-aws
    ```
 6. **Primer despliegue:** sube algo a `main` o vuelve a correr el último flujo. El trabajo **desplegar en AWS** sube el paquete y corre `desplegar.sh`.
 
@@ -67,4 +67,4 @@ sudo systemctl restart yapa       # reiniciar
 tail /opt/yapa/despliegues.log    # historial de despliegues
 ```
 
-El servicio y Caddy arrancan solos si la máquina se reinicia, a diferencia del runner de la VPS. Para borrar todo y dejar de gastar: `aws lightsail delete-instance --instance-name yapa` y `aws lightsail release-static-ip --static-ip-name yapa-ip`.
+El servicio y Caddy arrancan solos si la máquina se reinicia, a diferencia del runner de la VPS. Para borrar todo y dejar de gastar: `aws lightsail --region us-east-2 delete-instance --instance-name yapa` y `aws lightsail --region us-east-2 release-static-ip --static-ip-name yapa-ip`.

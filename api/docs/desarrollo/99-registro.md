@@ -474,3 +474,11 @@
 - Resultado: 671 pruebas del motor (11 nuevas) y 119 del frontend (2 nuevas) en verde; typecheck y build sin errores.
 - Ajuste del mismo día: Yapa es un proyecto académico sin empresa constituida, así que el Plin de cobro es una **cuenta simulada** por defecto, también en el servidor (S-305). El flete y los montos que se registran también son de simulación.
 
+## Despliegue en AWS (09/11/2026)
+
+- Yapa pasa de la VPS con runner propio (iteración 52, desconectado) a **AWS Lightsail** en la cuenta estudiantil: un servidor nano en Ohio (`us-east-2`, la única región que permite la cuenta) por unos USD 5 al mes con la IP fija incluida. Los USD 100 de crédito alcanzan para unos 20 meses.
+- Caddy da HTTPS con Let's Encrypt para `holayapa.app` y `www`. Los subdominios `lab*` siguen apuntando a la máquina del laboratorio.
+- GitHub sigue corriendo las pruebas. El despliegue ahora sube el paquete por SSH y `deploy/aws/desplegar.sh` respalda la base, cambia la versión y vuelve atrás si `/salud` no responde. A diferencia del runner de la VPS, el servicio arranca solo si la máquina se reinicia.
+- La cuenta estudiantil no deja que AWS cree llaves SSH ni usar EC2 fuera de Ohio: la llave se genera en la máquina de quien despliega y se importa la parte pública (`deploy/aws/README.md`).
+- Medido en el servidor: el motor usa unos 32 MB de RAM.
+
