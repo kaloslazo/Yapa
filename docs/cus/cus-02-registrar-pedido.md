@@ -1,4 +1,4 @@
-# Yapa — CUS-P01 Registrar pedido semanal
+# Yapa — CUS-02 Registrar pedido semanal (antes CUS-P01)
 
 **Versión:** 2 (reglas oficiales C-01..C-12 y S-01..S-12; código de pago S-150). Reemplaza la versión basada en el Entregable 1 (delivery de S/ 7,90, ventana elegida por el cliente y contraentrega).
 **Fuente de las reglas:** `api/docs/sdd/10-clarificaciones-v2.md`, `02-especificacion-cun-02.md` y `docs/desarrollo/04-cancelar-editar.md` y `26-experiencia-compra.md`.
@@ -106,7 +106,7 @@ Salen de las especificaciones y las pruebas del motor (`api/tests/test_order_reg
 
 ## 8. Documentos relacionados
 
-- [Modelo de análisis](analisis-registrar-pedido.md).
+- [Modelo de análisis](analisis-02-registrar-pedido.md).
 - Especificación SDD: `api/docs/sdd/02-especificacion-cun-02.md`.
 - Cancelar y editar: `api/docs/desarrollo/04-cancelar-editar.md`.
-- [Modelado del negocio de origen](reference/Entregable01_ModeladoNegocio_Yapa.pdf).
+- [Modelado del negocio de origen](../reference/Entregable01_ModeladoNegocio_Yapa.pdf).

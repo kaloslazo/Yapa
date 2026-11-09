@@ -5,8 +5,11 @@
 name: tests
 
 on:
+  # Un cambio que solo toca documentación no corre pruebas ni despliega (ahorra minutos de CI)
   push:
+    paths-ignore: ["**/*.md", "docs/**", "api/docs/**"]
   pull_request:
+    paths-ignore: ["**/*.md", "docs/**", "api/docs/**"]
 
 permissions:
   contents: read

@@ -5,7 +5,7 @@
 
 ## 1. Propósito
 
-Mostrar qué responsabilidades necesita el sistema para ejecutar [CUS-P01](cus-registrar-pedido.md), con la nomenclatura de la unidad 8: interfaz (CI), controladora (CC), persistencia (CP) y entidades. La última columna indica dónde vive cada responsabilidad en el código, para la trazabilidad.
+Mostrar qué responsabilidades necesita el sistema para ejecutar [CUS-P01](cus-02-registrar-pedido.md), con la nomenclatura de la unidad 8: interfaz (CI), controladora (CC), persistencia (CP) y entidades. La última columna indica dónde vive cada responsabilidad en el código, para la trazabilidad.
 
 ## 2. Clases y responsabilidades
 
