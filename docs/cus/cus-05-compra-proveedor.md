@@ -19,6 +19,7 @@ Actores: **compras** (cuenta propia desde la iteración 55), **administrador** y
 | RF-05.3 | Compras guarda productos no perecibles en el colchón, con un tope de S/ 500 a precio del primer tramo. | CP-02, CO-02..CO-04, S-46 | Papa → `PERISHABLE_NOT_ALLOWED`; pasar el tope → `BUFFER_LIMIT_EXCEEDED`. |
 | RF-05.4 | Compras repone el faltante de un pedido desde el colchón, sin pasar de lo pedido. | CP-03, CO-05, S-122 | Más de lo guardado → `BUFFER_INSUFFICIENT`. |
 | RF-05.5 | Solo compras o el administrador tocan el colchón. | CP-04 | El armador → `NOT_AUTHORIZED`. |
+| RF-05.7 | Yapa contrata y paga el flete de la compra, porque el proveedor no entrega. Compras registra la empresa y el monto una vez por semana; el margen real lo reparte entre los pedidos atendidos (sin registrar, S/ 180 estimados). | FL-01..FL-04, MR-01, S-306, S-307 | S/ 120 entre 8 pedidos → S/ 15,00 por pedido. |
 | RF-05.6 | Compras registra, una vez por ciclo y después del cierre, lo que llegó del proveedor. El faltante se cubre primero con el colchón y el resto se descuenta desde el último pedido registrado; vuelve como saldo en la liquidación. El tramo sigue calculado con lo pedido. | CR-01..CR-06, S-295, S-296 | Llegan 36 kg de papa de 40 → el pedido 8 tiene 4 kg de faltante. Registrar dos veces → `PURCHASE_ALREADY_REGISTERED`. |
 
 ## 2. Ficha

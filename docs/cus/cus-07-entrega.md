@@ -21,6 +21,8 @@ Actores: **transportista** (cuenta propia), **portería** (cuenta por zona), **a
 | RF-07.5 | Una zona se entrega o falla una sola vez por ciclo. | EN-02, EF-03 | La segunda vez → `ZONE_ALREADY_CLOSED`. |
 | RF-07.6 | La portería de la zona o su admin confirman la recepción una sola vez, y cada vecino recibe el aviso "Tus bolsas ya están en el edificio". | PO-02..PO-04, S-294 | Portería de otra zona → `FOREIGN_ZONE`; confirmar dos veces → `ALREADY_CONFIRMED`. |
 | RF-07.7 | La portería ve las entregas de su zona con el nombre del vecino y sus bolsas, sin productos, montos ni celulares. | PO-01, S-293 | — |
+| RF-07.9 | El transportista marca "Salí hacia esta zona" y cada vecino recibe el aviso "Tu pedido va en camino". Es opcional para entregar. | SR-01, SR-02, S-308 | Marcarlo dos veces → `ZONE_ALREADY_DISPATCHED`. |
+| RF-07.10 | El vecino sigue su pedido en 7 pasos: Pedido, Pago verificado, Comprado, Armado, En camino, Entregado y Te devolvemos. | SG-01, S-309 | Ver SG-A de la spec 58. |
 | RF-07.8 | Una zona no se entrega ni se marca como fallida hasta que compras registre la compra real del ciclo. | BD-01, S-299 | Sin compra → `PURCHASE_NOT_REGISTERED`. |
 
 ## 2. Ficha
@@ -38,7 +40,8 @@ Actores: **transportista** (cuenta propia), **portería** (cuenta por zona), **a
 
 | Paso | Actor | Sistema |
 |---|---|---|
-| 1 | El transportista abre "Reparto". | Lista las paradas del ciclo con su estado (pendiente, entregada o fallida). |
+| 1 | El transportista abre "Reparto". | Lista las paradas del ciclo con su estado (pendiente, en camino, entregada o fallida). |
+| 1a | Sale hacia la zona y toca "Salí hacia esta zona". | Avisa a cada vecino que su pedido va en camino. |
 | 2 | Llega a la zona, deja las bolsas y toma la foto. | — |
 | 3 | Registra la entrega con el nombre de quien recibe. | Valida que todo esté armado, guarda foto, receptor y hora, y avisa a los vecinos. |
 | 4 | La portería (o el admin de zona) abre su panel y confirma la recepción. | Marca la entrega `recibida` y avisa a cada vecino. |

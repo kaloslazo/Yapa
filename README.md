@@ -48,6 +48,7 @@ Los vecinos entran en `/entrar`; el equipo, el reparto y los proveedores en `/eq
 | `YAPA_DEBUG_CLAVE` | clave del admin global de la demostración (10 caracteres o más) |
 | `YAPA_DEMO_PINS` | PIN de las cuentas de prueba, p. ej. `101=482915,105=739104,116=260318` |
 | `YAPA_PUBLIC_URL` | la URL que da Render (`https://….onrender.com`), para las cookies seguras |
+| `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR` | el Plin negocios donde pagan los vecinos (iteración 58); sin ellos, la confirmación no muestra número |
 
 El plan gratis se duerme sin visitas (tarda unos segundos en despertar) y borra el disco al reiniciar, así que la semana de demostración se vuelve a sembrar en cada arranque. Las cuentas del equipo, reparto y proveedor se crean desde "Cuentas del equipo".
 

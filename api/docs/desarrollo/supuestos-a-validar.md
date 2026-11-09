@@ -103,7 +103,7 @@ Cómo usar esta lista: marca ✅ si estás de acuerdo o escribe tu propuesta en 
 | # | Pregunta | Se decidió por defecto | Kalos | Aaron | Otra idea |
 |---|---|---|---|---|---|
 | 47 | ¿Qué pasa si el servidor se reinicia? | Se guarda todo en una base SQLite después de cada operación; solo hay que volver a entrar (S-90, S-91). | | | |
-| 48 | ¿Qué costos operativos usamos para decidir? | Dos escenarios documentados: optimista (Plin 0 %, proveedor entrega) y pesimista (Yape Empresa 2.95 %, flete de compra) (S-95..S-97). **Hay que elegir cuál se parece a la realidad.** | | | |
+| 48 | ¿Qué costos operativos usamos para decidir? | ✅ **Decidido por Kalos (09/11/2026): ninguno de los dos escenarios, sino el real** (iteración 58): cobro por Plin negocios al 0 % y flete pagado por Yapa, repartido entre los pedidos de la semana (S/ 180 estimado si no se registra). El margen llega a 0 con 24 pedidos por semana si el flete cuesta S/ 120, y con 35 si cuesta S/ 180. | | | |
 | 49 | ¿Yapa se queda con parte del ahorro por volumen? | ✅ **Decidido por Kalos (09/11/2026): 25 %** en la liquidación operativa (S-301, iteración 57). La portada lo explica (S-302). | | | |
 | 50 | Si la portería no recibe, ¿se reintenta? | No en el piloto (S-102). | | | |
 | 51 | Si la portería no recibe, ¿cuánto se devuelve? | Todo menos el envío real de la zona, como saldo (S-103). | | | |

@@ -1,6 +1,6 @@
 # Yapa — Modelo de datos y arquitectura
 
-Describe cómo está construido Yapa hoy (iteración 57). Las clases y atributos salen del código en `api/src/yapa_sdd/`; los casos de uso están en [`cus/`](cus/README.md).
+Describe cómo está construido Yapa hoy (iteración 58). Las clases y atributos salen del código en `api/src/yapa_sdd/`; los casos de uso están en [`cus/`](cus/README.md).
 
 ## 1. Arquitectura
 
@@ -63,6 +63,8 @@ erDiagram
     CICLO ||--o| COMPRA : "se registra"
     PEDIDO ||--o{ FALTANTE : "pierde (compra o dañado)"
     PEDIDO ||--o{ INCIDENCIA : tiene
+    CICLO ||--o| FLETE : "paga Yapa"
+    ZONA ||--o{ SALIDA : "sale el reparto (una por ciclo)"
     CUENTA_PERSONAL }o--o| PROVEEDOR : "cuenta de"
 ```
 
@@ -87,6 +89,8 @@ erDiagram
 | Reclamo | `Claim` | id, pedido, vecino, producto, cantidad, motivo, foto, estado, monto devuelto | RC, RV |
 | Compra real | `Purchase` | ciclo, lo recibido por producto, quién y cuándo | CR, S-295 |
 | Faltante | `Shortage` | ciclo, pedido, producto, cantidad, cuánto repuso el colchón, origen (compra o dañado), foto | CR-05, DA, S-296, S-297 |
+| Flete | `Freight` | ciclo, empresa, monto, quién y cuándo | FL, S-306 |
+| Salida a reparto | `Dispatch` | ciclo, zona, pedidos, quién y cuándo | SR, S-308 |
 | Incidencia | `Incident` | id, pedido, tipo, descripción, estado, nota de cierre, quién y cuándo | IN, S-300 |
 | Cuenta de personal o socio | `Partner` | usuario, tipo (proveedor, transportista, compras, armado, atención, portería), nombre, zona o proveedor | CX, S-278..S-294 |
 

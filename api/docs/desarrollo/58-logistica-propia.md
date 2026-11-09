@@ -57,3 +57,20 @@ Escenario base: el de la iteración 56. W38, Z-JM-01 (Residencial San Felipe) co
 ## Cambios en pruebas anteriores
 
 Ninguno: la salida a reparto es opcional para entregar, y el seguimiento y `pagar_a` son datos nuevos de la respuesta.
+
+## Trazabilidad
+
+| Regla | Código | Pruebas (`tests/test_logistica.py`) |
+|---|---|---|
+| PL-01, S-305 | `pagar_a` en `order_json` (solo con el pago por verificar); `produccion.payee` lee `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR` | `test_pl_a_order_says_where_to_pay`, `test_pl_a_payee_from_environment` |
+| FL-01..FL-04, S-306 | `logistics.register_freight`; `POST /api/compras/flete` | `test_fl_a_*`, `test_fl_b_*`, `test_mr_c_*` |
+| MR-01, S-307 | `logistics.real_costs` (con `metrics.net_margins`) | `test_mr_a_*`, `test_mr_b_*` |
+| MR-02 | `margen_real` en `GET /api/admin/metricas` | `test_mr_c_metrics_show_real_margin` |
+| SR-01, SR-02, S-308 | `logistics.dispatch_zone`; `POST /api/reparto/salidas` y `/api/admin/salidas`; estado `en_camino` en el reparto | `test_sr_a_*`, `test_sr_b_*`, `test_mr_c_*` |
+| SG-01, S-309 | `logistics.tracking`; `seguimiento` en cada pedido | `test_sg_a_*`, `test_sg_b_*`, `test_pl_a_*` |
+| Web | Seguimiento de 7 pasos (`OrdersPage.tsx`), a qué Plin pagar (`CheckoutDialog.tsx`), "Salí hacia esta zona" (`PartnerPanel.tsx`), flete y margen real (`AdminPanel.tsx`) | `src/services/mappers.test.ts` |
+
+En la semana de demostración (9 pedidos atendidos y S/ 120 de flete), el margen real es **−S/ 9,57 por pedido**: con un solo grupo no alcanza para pagar el flete, como predice el punto de equilibrio de 24 pedidos.
+
+Evidencia: `docs/evidencia/desarrollo/58-logistica-rojo.txt`, `58-logistica-web-rojo.txt`, `58-logistica-verde.txt` y `58-logistica-web-verde.txt`.
+

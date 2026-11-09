@@ -465,3 +465,11 @@
 - La portada dice el reparto: 75 % al vecino y 25 % para la operación (Ley 29571).
 - Resultado: 660 pruebas del motor (22 nuevas) y 117 del frontend (7 nuevas) en verde; typecheck y build sin errores (`56-57-motor-verde.txt`, `56-57-web-verde.txt`).
 
+## Iteración 58 · Logística propia (09/11/2026)
+
+- Spec: `58-logistica-propia.md` (S-305..S-309). Kalos decidió, con fuentes (Interbank, Yape, BCRP, Makro, EMMSA y fletes de Lima), cobrar por Plin negocios sin comisión y que Yapa contrate y pague el flete y maneje todo el reparto.
+- Pruebas antes del código (`58-logistica-rojo.txt`, `58-logistica-web-rojo.txt`).
+- Implementación: módulo `logistics.py` (flete, margen real, salida a reparto y seguimiento). Web: el vecino ve 7 pasos de su pedido y a qué Plin pagar; el transportista marca "Salí hacia esta zona"; compras registra el flete; métricas muestra el margen real.
+- Hallazgo: el margen real llega a 0 con 24 pedidos por semana si el flete cuesta S/ 120, con 35 si cuesta S/ 180 y con 60 si cuesta S/ 320. La demo (9 pedidos) pierde S/ 9,57 por pedido.
+- Resultado: 671 pruebas del motor (11 nuevas) y 119 del frontend (2 nuevas) en verde; typecheck y build sin errores.
+

@@ -17,3 +17,7 @@ services:
         sync: false
       - key: YAPA_PUBLIC_URL
         sync: false
+      - key: YAPA_PLIN_NUMERO
+        sync: false
+      - key: YAPA_PLIN_TITULAR
+        sync: false
