@@ -12,6 +12,18 @@ En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aa
 | Motor (Python, solo biblioteca estándar) | `api/` | Todas las reglas del negocio, con sus specs y sus pruebas (`api/docs/desarrollo/99-registro.md` lleva la cuenta). Expone la API JSON en `/api`. |
 | Specs, decisiones y evidencia | `api/docs/` | Una spec por iteración (`api/docs/desarrollo/NN-*.md`), registro, roadmap y preguntas al equipo. |
 
+## Arquitectura en AWS
+
+![Arquitectura de Yapa en AWS: usuarios, Route 53, Lightsail con Caddy, motor y SQLite, y CI/CD con GitHub Actions](docs/img/arquitectura-aws.svg)
+
+- **Route 53** resuelve `holayapa.app` y `www` a la IP fija del servidor.
+- **Lightsail** (plan nano, Ohio) corre todo en una sola máquina:
+  - **Caddy** da HTTPS con Let's Encrypt.
+  - El **motor** en Python sirve la API y la web ya construida.
+  - **SQLite** y las fotos viven en el disco, con un respaldo en cada despliegue.
+- **GitHub Actions** prueba el motor y la web en cada push. Si es a `main`, sube el paquete por SSH y `desplegar.sh` cambia la versión y vuelve a la anterior si `/salud` no responde.
+- Costo: unos **USD 5,50 al mes** con el crédito estudiantil. Detalle y comandos en [`deploy/aws/README.md`](deploy/aws/README.md). El PNG para informes está en [`docs/img/arquitectura-aws.png`](docs/img/arquitectura-aws.png).
+
 ## Levantar todo en local
 
 Hace falta Python 3.11+ y Node 20+.
@@ -38,9 +50,9 @@ Cuentas de la demo:
 
 Los vecinos entran en `/entrar`; el equipo, el reparto y los proveedores en `/equipo`. Para mandarle a cada persona su acceso con el rol ya elegido: `/equipo?rol=compras`, `armador`, `atencion`, `porteria`, `transportista`, `proveedor` o `admin`.
 
-## Demo en línea (Render)
+## Demo en línea (Render, alternativa)
 
-`Dockerfile` y `render.yaml` arman la web y el motor en un solo servicio gratis. En Render: **New > Blueprint**, elige este repo y escribe las claves que pide:
+Producción vive en AWS (arriba). Como alternativa gratis, `Dockerfile` y `render.yaml` arman la web y el motor en un solo servicio gratis. En Render: **New > Blueprint**, elige este repo y escribe las claves que pide:
 
 | Variable | Qué es |
 |---|---|

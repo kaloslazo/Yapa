@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="940" viewBox="0 0 1440 940" font-family="Helvetica, Arial, sans-serif">
+  <title>Yapa · arquitectura en AWS</title>
+  <defs>
+    <marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#232F3E"/>
+    </marker>
+    <marker id="flecha-gh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F6FEB"/>
+    </marker>
+    <marker id="flecha-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1E8E3E"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="940" fill="#FFFFFF"/>
+
+  <!-- Título -->
+  <text x="30" y="46" font-size="26" font-weight="700" fill="#232F3E">Yapa · arquitectura en AWS</text>
+  <text x="30" y="72" font-size="14" fill="#545B64">Cómo llega un pedido desde el celular del vecino hasta la base de datos, y cómo llega el código desde GitHub al servidor.</text>
+
+  <!-- ===================== Usuarios ===================== -->
+  <text x="30" y="128" font-size="13" font-weight="700" fill="#545B64" letter-spacing="1">USUARIOS</text>
+  <rect x="30" y="140" width="220" height="150" rx="12" fill="#F2F3F3" stroke="#AAB7B8"/>
+  <!-- celular -->
+  <rect x="48" y="160" width="30" height="50" rx="5" fill="none" stroke="#232F3E" stroke-width="2.5"/>
+  <circle cx="63" cy="203" r="2.5" fill="#232F3E"/>
+  <text x="92" y="180" font-size="15" font-weight="700" fill="#232F3E">Vecinos</text>
+  <text x="92" y="199" font-size="12.5" fill="#545B64">celular o computadora</text>
+  <text x="48" y="236" font-size="12.5" fill="#232F3E">Compran, pagan por Plin</text>
+  <text x="48" y="254" font-size="12.5" fill="#232F3E">(simulado) y siguen su</text>
+  <text x="48" y="272" font-size="12.5" fill="#232F3E">pedido en 7 pasos.</text>
+
+  <rect x="30" y="306" width="220" height="196" rx="12" fill="#F2F3F3" stroke="#AAB7B8"/>
+  <circle cx="58" cy="334" r="9" fill="none" stroke="#232F3E" stroke-width="2.5"/>
+  <circle cx="74" cy="334" r="9" fill="none" stroke="#232F3E" stroke-width="2.5"/>
+  <text x="92" y="332" font-size="15" font-weight="700" fill="#232F3E">Equipo Yapa</text>
+  <text x="92" y="350" font-size="12.5" fill="#545B64">una cuenta por rol</text>
+  <text x="48" y="380" font-size="12.5" fill="#232F3E">• Administrador</text>
+  <text x="48" y="398" font-size="12.5" fill="#232F3E">• Compras · Armado</text>
+  <text x="48" y="416" font-size="12.5" fill="#232F3E">• Atención · Portería</text>
+  <text x="48" y="434" font-size="12.5" fill="#232F3E">• Transportista</text>
+  <text x="48" y="452" font-size="12.5" fill="#232F3E">• Proveedor aliado</text>
+  <text x="48" y="482" font-size="12" fill="#545B64">Todos entran a la misma web.</text>
+
+  <!-- Let's Encrypt -->
+  <text x="30" y="548" font-size="13" font-weight="700" fill="#545B64" letter-spacing="1">SERVICIOS EXTERNOS</text>
+  <rect x="30" y="560" width="220" height="86" rx="12" fill="#FFFFFF" stroke="#1E8E3E" stroke-width="2"/>
+  <path d="M50 592 h20 v22 h-20 z" fill="none" stroke="#1E8E3E" stroke-width="2.5"/>
+  <path d="M54 592 v-6 a6 6 0 0 1 12 0 v6" fill="none" stroke="#1E8E3E" stroke-width="2.5"/>
+  <text x="82" y="595" font-size="15" font-weight="700" fill="#232F3E">Let's Encrypt</text>
+  <text x="82" y="614" font-size="12.5" fill="#545B64">certificado HTTPS gratis,</text>
+  <text x="82" y="631" font-size="12.5" fill="#545B64">se renueva solo</text>
+
+  <rect x="30" y="662" width="220" height="86" rx="12" fill="#FFFFFF" stroke="#AAB7B8" stroke-dasharray="6 5"/>
+  <text x="48" y="690" font-size="14" font-weight="700" fill="#545B64">Opcionales</text>
+  <text x="48" y="709" font-size="12.5" fill="#545B64">correo (SMTP) y</text>
+  <text x="48" y="726" font-size="12.5" fill="#545B64">"Entrar con Google";</text>
+  <text x="48" y="743" font-size="12.5" fill="#545B64">apagados en la demo</text>
+
+  <!-- ===================== AWS Cloud ===================== -->
+  <rect x="290" y="108" width="770" height="800" rx="4" fill="#FFFFFF" stroke="#232F3E" stroke-width="2"/>
+  <rect x="290" y="108" width="34" height="34" fill="#232F3E"/>
+  <path d="M299 130 q-4 -7 3 -10 q2 -7 10 -4 q6 -2 7 5 q5 1 3 9 z" fill="#FFFFFF"/>
+  <text x="334" y="131" font-size="15" font-weight="700" fill="#232F3E">AWS Cloud</text>
+  <text x="430" y="131" font-size="13" fill="#545B64">cuenta estudiantil UTEC · USD 100 de crédito</text>
+
+  <!-- Route 53 (servicio global) -->
+  <rect x="320" y="160" width="330" height="96" rx="10" fill="#F4F0FF" stroke="#8C4FFF" stroke-width="2"/>
+  <rect x="336" y="176" width="48" height="48" rx="8" fill="#8C4FFF"/>
+  <text x="360" y="208" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle">53</text>
+  <text x="396" y="190" font-size="15" font-weight="700" fill="#232F3E">Amazon Route 53</text>
+  <text x="396" y="209" font-size="12.5" fill="#545B64">zona DNS holayapa.app</text>
+  <text x="396" y="227" font-size="12.5" fill="#545B64">A: holayapa.app y www → 18.225.85.8</text>
+  <text x="396" y="245" font-size="12" fill="#7D8998">servicio global · ≈ USD 0,50/mes</text>
+
+  <!-- Región -->
+  <rect x="320" y="280" width="710" height="600" rx="4" fill="none" stroke="#00A4A6" stroke-width="2" stroke-dasharray="8 6"/>
+  <rect x="320" y="280" width="28" height="28" fill="#00A4A6"/>
+  <path d="M334 286 v14 M327 293 h14" stroke="#FFFFFF" stroke-width="2.5"/>
+  <text x="358" y="300" font-size="14" font-weight="700" fill="#00777A">Región us-east-2 (Ohio)</text>
+  <text x="540" y="300" font-size="12.5" fill="#545B64">la única que permite la cuenta estudiantil</text>
+
+  <!-- IP fija y firewall -->
+  <rect x="340" y="322" width="300" height="34" rx="17" fill="#FFF4E5" stroke="#ED7100"/>
+  <circle cx="360" cy="339" r="7" fill="#ED7100"/>
+  <text x="376" y="344" font-size="13" fill="#232F3E"><tspan font-weight="700">IP fija</tspan> 18.225.85.8 (incluida)</text>
+  <rect x="656" y="322" width="354" height="34" rx="17" fill="#FDECEC" stroke="#DD344C"/>
+  <path d="M674 331 h14 v16 h-14 z M674 339 h14 M681 331 v16" stroke="#DD344C" stroke-width="1.8" fill="none"/>
+  <text x="698" y="344" font-size="13" fill="#232F3E"><tspan font-weight="700">Firewall</tspan> abiertos solo 22 (SSH), 80 y 443</text>
+
+  <!-- Instancia Lightsail -->
+  <rect x="340" y="372" width="670" height="488" rx="10" fill="#FFFAF3" stroke="#ED7100" stroke-width="2.5"/>
+  <rect x="356" y="388" width="48" height="48" rx="8" fill="#ED7100"/>
+  <path d="M366 426 h28 l-4 5 h-20 z M380 394 l0 30 l12 -4 z M378 400 l0 22 l-9 -2 z" fill="#FFFFFF"/>
+  <text x="416" y="408" font-size="16" font-weight="700" fill="#232F3E">Amazon Lightsail · instancia "yapa"</text>
+  <text x="416" y="428" font-size="12.5" fill="#545B64">plan nano · Ubuntu 24.04 · 2 vCPU · 512 MB + 1 GB swap · 20 GB SSD · ≈ USD 5/mes</text>
+
+  <!-- Caddy -->
+  <rect x="362" y="456" width="196" height="150" rx="10" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.5"/>
+  <text x="378" y="482" font-size="15" font-weight="700" fill="#232F3E">Caddy</text>
+  <text x="378" y="500" font-size="12" fill="#545B64">servidor web · puerto 443</text>
+  <text x="378" y="524" font-size="12.5" fill="#232F3E">• HTTPS automático</text>
+  <text x="378" y="542" font-size="12.5" fill="#232F3E">• http → https</text>
+  <text x="378" y="560" font-size="12.5" fill="#232F3E">• compresión gzip/zstd</text>
+  <text x="378" y="578" font-size="12.5" fill="#232F3E">• pasa todo al motor</text>
+
+  <!-- Motor -->
+  <rect x="600" y="456" width="392" height="198" rx="10" fill="#FFFFFF" stroke="#232F3E" stroke-width="1.5"/>
+  <rect x="616" y="472" width="40" height="40" rx="8" fill="#3776AB"/>
+  <text x="636" y="498" font-size="14" font-weight="700" fill="#FFD43B" text-anchor="middle">Py</text>
+  <text x="668" y="488" font-size="15" font-weight="700" fill="#232F3E">Motor Yapa (servicio "yapa")</text>
+  <text x="668" y="506" font-size="12" fill="#545B64">Python 3.12, solo biblioteca estándar · 127.0.0.1:8000</text>
+  <text x="616" y="536" font-size="12.5" fill="#232F3E">• Reglas de negocio de los 8 casos de uso (SDD)</text>
+  <text x="616" y="555" font-size="12.5" fill="#232F3E">• API JSON /api: sesión, CSRF y permisos por rol</text>
+  <text x="616" y="574" font-size="12.5" fill="#232F3E">• Sirve la web React ya construida (dist/)</text>
+  <text x="616" y="593" font-size="12.5" fill="#232F3E">• Un cerrojo: atiende un pedido a la vez</text>
+  <text x="616" y="612" font-size="12.5" fill="#232F3E">• systemd lo reinicia solo si se cae o se reinicia</text>
+  <text x="616" y="638" font-size="12" fill="#7D8998">≈ 32 MB de RAM medidos en producción</text>
+
+  <!-- Almacenamiento -->
+  <text x="362" y="692" font-size="13" font-weight="700" fill="#545B64" letter-spacing="1">DISCO SSD DEL SERVIDOR · /opt/yapa</text>
+  <rect x="362" y="704" width="150" height="132" rx="10" fill="#FFFFFF" stroke="#3B48CC" stroke-width="1.5"/>
+  <ellipse cx="386" cy="728" rx="12" ry="5" fill="none" stroke="#3B48CC" stroke-width="2"/>
+  <path d="M374 728 v18 a12 5 0 0 0 24 0 v-18" fill="none" stroke="#3B48CC" stroke-width="2"/>
+  <text x="406" y="733" font-size="14" font-weight="700" fill="#232F3E">SQLite</text>
+  <text x="376" y="770" font-size="12" fill="#232F3E">data/yapa.db</text>
+  <text x="376" y="788" font-size="12" fill="#545B64">todo el estado, en</text>
+  <text x="376" y="805" font-size="12" fill="#545B64">una transacción por</text>
+  <text x="376" y="822" font-size="12" fill="#545B64">cada cambio</text>
+
+  <rect x="524" y="704" width="150" height="132" rx="10" fill="#FFFFFF" stroke="#3B48CC" stroke-width="1.5"/>
+  <rect x="538" y="718" width="26" height="20" rx="3" fill="none" stroke="#3B48CC" stroke-width="2"/>
+  <circle cx="551" cy="728" r="5" fill="none" stroke="#3B48CC" stroke-width="2"/>
+  <text x="572" y="733" font-size="14" font-weight="700" fill="#232F3E">Fotos</text>
+  <text x="538" y="770" font-size="12" fill="#232F3E">data/fotos/</text>
+  <text x="538" y="788" font-size="12" fill="#545B64">bolsas, entregas,</text>
+  <text x="538" y="805" font-size="12" fill="#545B64">reclamos y dañados</text>
+
+  <rect x="686" y="704" width="150" height="132" rx="10" fill="#FFFFFF" stroke="#3B48CC" stroke-width="1.5"/>
+  <path d="M700 718 h26 v20 h-26 z M700 726 h26" fill="none" stroke="#3B48CC" stroke-width="2"/>
+  <text x="734" y="733" font-size="14" font-weight="700" fill="#232F3E">Respaldos</text>
+  <text x="700" y="770" font-size="12" fill="#232F3E">backups/</text>
+  <text x="700" y="788" font-size="12" fill="#545B64">copia de la base en</text>
+  <text x="700" y="805" font-size="12" fill="#545B64">cada despliegue;</text>
+  <text x="700" y="822" font-size="12" fill="#545B64">quedan las 14 últimas</text>
+
+  <rect x="848" y="704" width="144" height="132" rx="10" fill="#FFFFFF" stroke="#3B48CC" stroke-width="1.5"/>
+  <path d="M862 720 h24 M862 728 h24 M862 736 h24" stroke="#3B48CC" stroke-width="2.5"/>
+  <text x="894" y="733" font-size="14" font-weight="700" fill="#232F3E">Versiones</text>
+  <text x="862" y="770" font-size="12" fill="#232F3E">releases/</text>
+  <text x="862" y="788" font-size="12" fill="#545B64">las 3 últimas;</text>
+  <text x="862" y="805" font-size="12" fill="#545B64">current apunta a</text>
+  <text x="862" y="822" font-size="12" fill="#545B64">la que corre</text>
+
+  <!-- ===================== GitHub ===================== -->
+  <text x="1090" y="128" font-size="13" font-weight="700" fill="#545B64" letter-spacing="1">CI/CD · GITHUB</text>
+  <text x="1090" y="156" font-size="12.5" fill="#545B64">El equipo hace git push a main</text>
+  <path d="M1250 162 v14" stroke="#1F6FEB" stroke-width="2" marker-end="url(#flecha-gh)"/>
+
+  <rect x="1090" y="180" width="320" height="78" rx="10" fill="#F6F8FA" stroke="#24292F" stroke-width="1.5"/>
+  <circle cx="1120" cy="219" r="16" fill="#24292F"/>
+  <path d="M1113 226 q-3 -2 -2 -7 q-1 -4 2 -7 q3 0 5 2 h4 q2 -2 5 -2 q3 3 2 7 q1 5 -2 7 z" fill="#FFFFFF"/>
+  <text x="1146" y="212" font-size="15" font-weight="700" fill="#232F3E">Repositorio kaloslazo/Yapa</text>
+  <text x="1146" y="231" font-size="12.5" fill="#545B64">motor (api/), web (src/), docs y</text>
+  <text x="1146" y="248" font-size="12.5" fill="#545B64">scripts de AWS (deploy/aws/)</text>
+  <path d="M1250 258 v18" stroke="#1F6FEB" stroke-width="2" marker-end="url(#flecha-gh)"/>
+
+  <rect x="1090" y="280" width="320" height="398" rx="10" fill="#F0F6FF" stroke="#1F6FEB" stroke-width="2"/>
+  <circle cx="1118" cy="308" r="13" fill="none" stroke="#1F6FEB" stroke-width="2.5"/>
+  <path d="M1114 302 l9 6 l-9 6 z" fill="#1F6FEB"/>
+  <text x="1142" y="314" font-size="15" font-weight="700" fill="#232F3E">GitHub Actions</text>
+
+  <rect x="1106" y="332" width="140" height="92" rx="8" fill="#FFFFFF" stroke="#1F6FEB"/>
+  <text x="1118" y="354" font-size="13.5" font-weight="700" fill="#232F3E">motor</text>
+  <text x="1118" y="373" font-size="12" fill="#545B64">671 pruebas</text>
+  <text x="1118" y="390" font-size="12" fill="#545B64">del motor</text>
+  <text x="1118" y="407" font-size="12" fill="#545B64">(Python 3.11)</text>
+
+  <rect x="1254" y="332" width="140" height="92" rx="8" fill="#FFFFFF" stroke="#1F6FEB"/>
+  <text x="1266" y="354" font-size="13.5" font-weight="700" fill="#232F3E">web</text>
+  <text x="1266" y="373" font-size="12" fill="#545B64">tipos, 119 pruebas</text>
+  <text x="1266" y="390" font-size="12" fill="#545B64">y build de React</text>
+  <text x="1266" y="407" font-size="12" fill="#545B64">→ paquete</text>
+
+  <path d="M1176 424 v14 h148 v-14" stroke="#1F6FEB" stroke-width="2" fill="none"/>
+  <path d="M1250 438 v24" stroke="#1F6FEB" stroke-width="2" fill="none" marker-end="url(#flecha-gh)"/>
+  <text x="1258" y="456" font-size="11.5" fill="#1F6FEB">si las dos pasan</text>
+
+  <rect x="1106" y="466" width="288" height="196" rx="8" fill="#FFFFFF" stroke="#1F6FEB"/>
+  <text x="1118" y="488" font-size="13.5" font-weight="700" fill="#232F3E">desplegar en AWS</text>
+  <text x="1118" y="506" font-size="12" fill="#545B64">solo en push a main</text>
+  <text x="1118" y="530" font-size="12.5" fill="#232F3E">1. sube el paquete por SSH (scp)</text>
+  <text x="1118" y="549" font-size="12.5" fill="#232F3E">2. desplegar.sh en el servidor:</text>
+  <text x="1132" y="568" font-size="12.5" fill="#232F3E">respalda la base</text>
+  <text x="1132" y="587" font-size="12.5" fill="#232F3E">cambia a la versión nueva</text>
+  <text x="1132" y="606" font-size="12.5" fill="#232F3E">revisa /salud por 40 s</text>
+  <text x="1132" y="625" font-size="12.5" fill="#232F3E">si falla, vuelve a la anterior</text>
+  <text x="1118" y="650" font-size="12" fill="#7D8998">secretos: AWS_HOST y AWS_SSH_KEY</text>
+
+  <!-- Leyenda -->
+  <rect x="1090" y="700" width="320" height="208" rx="10" fill="#F2F3F3" stroke="#AAB7B8"/>
+  <text x="1106" y="726" font-size="14" font-weight="700" fill="#232F3E">Cómo se lee</text>
+  <circle cx="1116" cy="748" r="10" fill="#232F3E"/><text x="1116" y="752" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="1134" y="752" font-size="12.5" fill="#232F3E">El navegador pregunta la IP a Route 53</text>
+  <circle cx="1116" cy="772" r="10" fill="#232F3E"/><text x="1116" y="776" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="1134" y="776" font-size="12.5" fill="#232F3E">y entra por HTTPS a Caddy</text>
+  <circle cx="1116" cy="796" r="10" fill="#232F3E"/><text x="1116" y="800" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <text x="1134" y="800" font-size="12.5" fill="#232F3E">Caddy pasa la petición al motor</text>
+  <circle cx="1116" cy="820" r="10" fill="#232F3E"/><text x="1116" y="824" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+  <text x="1134" y="824" font-size="12.5" fill="#232F3E">el motor guarda en SQLite y fotos</text>
+  <path d="M1106 846 h20" stroke="#1F6FEB" stroke-width="2.5" marker-end="url(#flecha-gh)"/>
+  <text x="1134" y="850" font-size="12.5" fill="#232F3E">camino del código (CI/CD)</text>
+  <line x1="1106" y1="872" x2="1126" y2="872" stroke="#1E8E3E" stroke-width="2.5" stroke-dasharray="5 4"/>
+  <text x="1134" y="876" font-size="12.5" fill="#232F3E">certificado HTTPS</text>
+  <text x="1106" y="898" font-size="12.5" font-weight="700" fill="#232F3E">Costo total ≈ USD 5,50/mes (≈ 18 meses)</text>
+
+  <!-- ===================== Flechas ===================== -->
+  <!-- 1 DNS -->
+  <path d="M250 196 C 280 196, 290 208, 318 208" stroke="#232F3E" stroke-width="2" fill="none" marker-end="url(#flecha)"/>
+  <circle cx="276" cy="178" r="10" fill="#232F3E"/><text x="276" y="182" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <!-- 2 HTTPS (vecinos y equipo) -->
+  <path d="M250 260 C 300 260, 310 500, 360 510" stroke="#232F3E" stroke-width="2" fill="none" marker-end="url(#flecha)"/>
+  <path d="M250 404 C 300 404, 310 520, 360 522" stroke="#232F3E" stroke-width="2" fill="none" marker-end="url(#flecha)"/>
+  <circle cx="300" cy="452" r="10" fill="#232F3E"/><text x="300" y="456" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <!-- 3 Caddy → motor -->
+  <path d="M558 531 H 598" stroke="#232F3E" stroke-width="2" fill="none" marker-end="url(#flecha)"/>
+  <circle cx="578" cy="512" r="10" fill="#232F3E"/><text x="578" y="516" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <!-- 4 motor → disco -->
+  <path d="M796 654 V 700" stroke="#232F3E" stroke-width="2" fill="none" marker-end="url(#flecha)"/>
+  <circle cx="816" cy="676" r="10" fill="#232F3E"/><text x="816" y="680" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+  <!-- Let's Encrypt ↔ Caddy -->
+  <path d="M250 600 C 310 600, 330 590, 360 592" stroke="#1E8E3E" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#flecha-ok)"/>
+  <!-- Deploy -->
+  <path d="M1106 560 C 1060 560, 1040 600, 1012 600" stroke="#1F6FEB" stroke-width="2.5" fill="none" marker-end="url(#flecha-gh)"/>
+  <text x="1034" y="574" font-size="11.5" font-weight="700" fill="#1F6FEB">SSH</text>
+</svg>
