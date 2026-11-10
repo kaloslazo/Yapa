@@ -1,6 +1,6 @@
 // convierte las respuestas de la API (montos como texto, S-154) a los tipos de la tienda
 import { categoryNames, lookFor } from '../data/presentation';
-import type { Account, CycleState, Notice, Order, OrderLine, Product, Quote, ReferencePrice, Settlement, Zone } from '../types';
+import type { Account, BasketSuggestion, CycleState, Notice, Order, OrderLine, Product, Quote, ReferencePrice, Settlement, Zone } from '../types';
 
 const num = (value: unknown) => Number(value ?? 0);
 
@@ -55,7 +55,9 @@ export function toOrder(raw: Raw): Order {
     lines: (raw.lineas ?? []).map(toLine), settlement: toSettlement(raw.liquidacion),
     bags: raw.bolsas?.map((b: Raw) => ({ number: b.numero, photo: b.foto })),
     labels: raw.rotulos,
-    tracking: raw.seguimiento?.map((s: Raw) => ({ step: s.paso, done: Boolean(s.hecho) })),
+    tracking: raw.seguimiento?.map((s: Raw) => ({ step: s.paso, done: Boolean(s.hecho), ...('cuando' in s ? { when: s.cuando } : {}), ...('detalle' in s ? { detail: s.detalle } : {}) })),
+    trackingStatus: raw.estado_seguimiento ? { title: raw.estado_seguimiento.titulo, detail: raw.estado_seguimiento.detalle } : undefined,
+    photos: raw.fotos ? { delivery: Boolean(raw.fotos.entrega), bags: num(raw.fotos.bolsas) } : undefined,
     payTo: raw.pagar_a ? { number: raw.pagar_a.numero, holder: raw.pagar_a.titular } : undefined,
   };
 }
@@ -77,5 +79,12 @@ export function toZone(raw: Raw): Zone {
 }
 
 export function toCycle(raw: Raw): CycleState {
-  return { cycle: raw.ciclo, open: Boolean(raw.abierto), closes: raw.cierre, delivery: raw.entrega, minimumOrder: num(raw.minimo_pedido), minimumGroup: num(raw.minimo_grupo) };
+  return { cycle: raw.ciclo, open: Boolean(raw.abierto), closes: raw.cierre, delivery: raw.entrega, minimumOrder: num(raw.minimo_pedido), minimumGroup: num(raw.minimo_grupo), ai: Boolean(raw.ia) };
+}
+
+export function toSuggestion(raw: Raw): BasketSuggestion {
+  return {
+    lines: (raw.lineas ?? []).map((l: Raw) => ({ id: l.id, name: l.nombre, unit: l.unidad, quantity: num(l.cantidad), maxPrice: num(l.precio_max), total: num(l.total) })),
+    subtotal: num(raw.subtotal), missing: num(raw.falta), comment: raw.comentario ?? '', provider: raw.proveedor ?? '',
+  };
 }

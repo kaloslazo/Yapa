@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from wsgiref.simple_server import make_server
 
-from .. import auth, invitations, partners, persistence
+from .. import auth, ia, invitations, partners, persistence
 from ..cycle import LIMA
 from ..demo import DEMO_NOW, demo_store, parse_demo_pins, seed_demo_base
 from ..domain import BusinessRuleError
@@ -107,7 +107,7 @@ def main() -> None:
     server_mode = bool(args.base and not args.demo)
     api = create_api(store, clock, on_change=on_change, mailer=mailer_from_env(server=bool(args.base)), google=google_from_env(),
                      secure_cookie=produccion.secure_cookie(os.environ), security_clock=lambda: datetime.now(LIMA),
-                     payee=produccion.payee(os.environ, demo=not server_mode))  # S-153: la API JSON en /api del mismo servidor
+                     payee=produccion.payee(os.environ, demo=not server_mode), ai=ia.from_env(os.environ))  # S-314  # S-153: la API JSON en /api del mismo servidor
 
     app = produccion.locked(produccion.compose(api, html, args.estaticos, lambda code: invitations.preview(store, code),
                                                  secure=produccion.secure_cookie(os.environ)))  # S-232, S-233, S-234, S-250

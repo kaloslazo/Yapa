@@ -293,6 +293,38 @@ function ClaimPhoto({ route, who }: { route: string; who: string }) {
   return <a className="claim-photo" href={photoUrl(route)} target="_blank" rel="noopener" aria-label={`Abrir la foto del reclamo de ${who}`}><img src={photoUrl(route)} alt={`Foto del reclamo de ${who}`} width="64" height="64" loading="lazy" onError={() => setFailed(true)} /></a>;
 }
 
+const PRIORITY: Record<string, string> = { ALTA: 'Prioridad alta', MEDIA: 'Prioridad media', BAJA: 'Prioridad baja' };
+
+// iteración 61: la IA sugiere categoría, prioridad y un borrador; quien atiende decide (no cambia nada)
+function AiDraft({ kind, id }: { kind: 'reclamo' | 'incidencia'; id: number }) {
+  const [busy, setBusy] = useState(false);
+  const [draft, setDraft] = useState<Raw | null>(null);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const ask = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      setDraft(await api.post<Raw>('/api/admin/ia/atencion', { tipo: kind, id }));
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : 'La IA no respondió.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(draft?.borrador ?? ''); setCopied(true); } catch { setCopied(false); }
+  };
+  if (!draft) return <><button className="text-button" type="button" disabled={busy} onClick={() => void ask()}>{busy ? 'Pensando…' : 'Sugerir con IA'}</button>{error ? <small className="admin-cell-note">{error}</small> : null}</>;
+  return (
+    <div className="ai-draft" aria-live="polite">
+      <div className="ai-draft-meta"><span className="state-pill">{draft.categoria}</span><span className="state-pill">{PRIORITY[draft.prioridad] ?? draft.prioridad}</span></div>
+      <p>{draft.borrador}</p>
+      <div className="ai-draft-meta"><button className="admin-row-button" type="button" onClick={() => void copy()}>{copied ? '¡Copiado!' : 'Copiar respuesta'}</button><button className="text-button" type="button" onClick={() => setDraft(null)}>Cerrar</button></div>
+    </div>
+  );
+}
+
 function Claims({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/reclamos', notify);
   if (!data) return <AdminSkeleton />;
@@ -302,7 +334,7 @@ function Claims({ run, notify }: SectionProps) {
   return (
     <>
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
-        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
+        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /><AiDraft kind="reclamo" id={c.id} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
       {done.length ? <Card title="Revisados"><div className="admin-table-wrap"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div></Card> : null}
     </>
@@ -505,7 +537,7 @@ function Incidents({ run, notify }: SectionProps) {
         </form>
       </Card>
       <Card title={`Abiertas (${opened.length})`}>
-        {opened.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Pedido</th><th>Tipo</th><th>Qué pasó</th><th>Nota de cierre</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{opened.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td><strong className="admin-order-code">{i.pedido}</strong></td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small></td><td><input className="admin-inline-input" value={notes[i.id] ?? ''} onChange={(event) => setNotes((n) => ({ ...n, [i.id]: event.target.value }))} placeholder="Qué se hizo" aria-label={`Nota para cerrar la incidencia ${i.id}`} /></td><td><button className="admin-row-button" type="button" disabled={!notes[i.id]?.trim()} onClick={() => void close(i.id)}>Cerrar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin incidencias abiertas" text="Aquí quedan las que registres al atender a un vecino." />}
+        {opened.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Pedido</th><th>Tipo</th><th>Qué pasó</th><th>Nota de cierre</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{opened.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td><strong className="admin-order-code">{i.pedido}</strong></td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small><AiDraft kind="incidencia" id={i.id} /></td><td><input className="admin-inline-input" value={notes[i.id] ?? ''} onChange={(event) => setNotes((n) => ({ ...n, [i.id]: event.target.value }))} placeholder="Qué se hizo" aria-label={`Nota para cerrar la incidencia ${i.id}`} /></td><td><button className="admin-row-button" type="button" disabled={!notes[i.id]?.trim()} onClick={() => void close(i.id)}>Cerrar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin incidencias abiertas" text="Aquí quedan las que registres al atender a un vecino." />}
       </Card>
       {closed.length ? <Card title="Cerradas"><div className="admin-table-wrap"><table className="admin-table"><tbody>{closed.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td>{i.pedido}</td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small></td><td><small>{i.nota}</small></td></tr>)}</tbody></table></div></Card> : null}
     </>

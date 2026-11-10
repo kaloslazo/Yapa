@@ -26,3 +26,13 @@ export function formatQuantity(value: number): string {
 export function minimumGap(subtotal: number, minimum: number): number {
   return Math.max(round(minimum - subtotal), 0);
 }
+
+// iteración 60: suma la canasta sugerida a la que ya hay, sin pasar el tope de cada producto del catálogo
+export function mergeSuggestion(cart: Record<string, number>, lines: Array<{ id: string; quantity: number }>, maxPerOrder: Record<string, number>): Record<string, number> {
+  const next = { ...cart };
+  for (const { id, quantity } of lines) {
+    if (!(id in maxPerOrder)) continue;
+    next[id] = Math.min((next[id] ?? 0) + quantity, maxPerOrder[id]);
+  }
+  return next;
+}

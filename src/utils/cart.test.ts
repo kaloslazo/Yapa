@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cartSubtotal, mergeSuggestion, stepDown, stepUp } from './cart';
 import { homeFor, canOpenZonePanel } from './roles';
+import { formatMoment } from './format';
 
 const ajo = { step: 0.25, maxPerOrder: 10, price: 5.38 };
 const papa = { step: 1, maxPerOrder: 10, price: 4.03 };
@@ -44,5 +45,13 @@ describe('Arma mi canasta: sumar la sugerencia', () => {
   });
   it('ignora productos que ya no están en el catálogo', () => {
     expect(mergeSuggestion({}, [{ id: 'CAVIAR', quantity: 1 }], tope)).toEqual({});
+  });
+});
+
+// iteración 59: hora de cada paso en hora de Lima, con día y mes de dos cifras
+describe('formatMoment', () => {
+  it('muestra el día, la fecha y la hora de Lima', () => {
+    expect(formatMoment('2026-09-19T09:05:00-05:00')).toBe('sáb 19/09 · 09:05');
+    expect(formatMoment('2026-09-16T15:00:00Z')).toBe('mié 16/09 · 10:00');
   });
 });

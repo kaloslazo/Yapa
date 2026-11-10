@@ -152,6 +152,7 @@ class Order:
     total: Decimal
     payments: list[Payment]
     status: str = "REGISTRADO"
+    registered_at: datetime | None = None  # S-310: hora del registro, para el seguimiento
 
     @property
     def payment_status(self) -> str:

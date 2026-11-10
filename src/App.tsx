@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import { AdminSkeleton, PartnerSkeleton } from './components/Skeleton';
 import { AuthPage, type LoginKind } from './components/AuthPage';
 import { AccountPage } from './components/AccountPage';
+import { BasketAssistant } from './components/BasketAssistant';
 import { Catalog } from './components/Catalog';
 import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
@@ -18,7 +19,7 @@ import { ZonePage, type MyZone } from './components/ZonePage';
 import { api, ApiError } from './services/api';
 import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } from './services/mappers';
 import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Role, Zone } from './types';
-import { cartSubtotal, stepDown, stepUp } from './utils/cart';
+import { cartSubtotal, mergeSuggestion, stepDown, stepUp } from './utils/cart';
 import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor, isNeighborRole, isPartner, isStaff } from './utils/roles';
@@ -252,6 +253,10 @@ export default function App() {
     setCart((c) => ({ ...c, [product.id]: stepUp(product, c[product.id] || 0) }));
     if (!current) notify(`${product.name} está en tu canasta`, 'success', `${formatMoney(product.price)} / ${product.unit}. Si pedimos más entre todos, baja.`, { label: 'Ver canasta', run: () => openView('cart') });
   };
+  const applySuggestion = (suggested: Array<{ id: string; quantity: number }>) => { // iteración 60
+    setCart((c) => mergeSuggestion(c, suggested, Object.fromEntries(catalog.map((p) => [p.id, p.maxPerOrder]))));
+    notify('Agregamos la canasta sugerida', 'success', 'Revísala y cambia lo que quieras antes de pagar.', { label: 'Ver canasta', run: () => openView('cart') });
+  };
   const decreaseProduct = (product: Product) => setCart((c) => {
     const next = { ...c };
     const quantity = stepDown(product, next[product.id] || 0);
@@ -470,6 +475,7 @@ export default function App() {
                   </section>
                   <HowItWorksSection />
                 </>}
+                {account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
                 <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={scrollToCatalog} /></div>
                 {account ? <HowItWorksSection /> : <FaqSection />}
               </main>}

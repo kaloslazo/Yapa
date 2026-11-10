@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Order, RefundDestination } from '../types';
 import { Icon } from './Icon';
-import { formatMoney } from '../utils/format';
+import { formatMoment, formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { refundPromise } from '../utils/refund';
 import { weekLabel } from '../utils/week';
@@ -63,13 +63,48 @@ function Outcome({ order }: { order: Order }) {
       <div className="order-outcome order-outcome--good">
         <div className="outcome-grid"><div><small>Pagaste</small><strong>{formatMoney(s.paid)}</strong></div><div><small>Costó</small><strong>{formatMoney(s.cost)}</strong></div><div className="outcome-back"><small>Te devolvimos</small><strong>{formatMoney(s.returned)}</strong></div></div>
         {s.benefit > 0 ? <p className="outcome-line"><Icon name="crown" size={16} /> Beneficio de admin de zona: <strong>{formatMoney(s.benefit)}</strong></p> : null}
-        {vs ? <p className="outcome-line"><Icon name="tag" size={16} /> En el supermercado costaba {formatMoney(vs.before)}: {vs.saving >= 0 ? <>ahorraste <strong>{formatMoney(vs.saving)}</strong></> : <>pagaste {formatMoney(-vs.saving)} más</>}</p> : null}
+        {vs ? <p className="outcome-line outcome-line--split"><span><Icon name="tag" size={16} /> En el supermercado costaba {formatMoney(vs.before)}</span>{vs.saving >= 0 ? <strong>Ahorraste {formatMoney(vs.saving)}</strong> : <span>Pagaste {formatMoney(-vs.saving)} más</span>}</p> : null}
       </div>
     );
   }
   if (s.status === 'NO_ATENDIDO') return <p className="order-outcome">Tu grupo no llegó a 8 pedidos. Te devolvemos <strong>{formatMoney(s.returned)}</strong> (el Yape o Plin en hasta 30 días).</p>;
   if (s.status === 'NO_ENTREGADO') return <p className="order-outcome">No se pudo entregar. Te devolvimos <strong>{formatMoney(s.returned)}</strong>; solo se cobró el envío real.</p>;
   return null;
+}
+
+const TONE: Record<string, string> = { CANCELADO_POR_CLIENTE: 'muted', CANCELADO: 'muted', NO_ATENDIDO: 'warn', NO_ENTREGADO: 'warn', LIQUIDADO: 'good' };
+
+// iteración 59: estado en una frase, pasos con hora y detalle, y las fotos del propio pedido (S-311..S-313)
+function Tracking({ order }: { order: Order }) {
+  if (!order.tracking?.length || !order.trackingStatus) return <Timeline order={order} />;
+  const status = order.trackingStatus;
+  const tone = TONE[order.status] ?? (order.payment === 'POR_VERIFICAR' ? 'pending' : 'live');
+  const current = order.tracking.findIndex((s) => !s.done);
+  const finished = ['CANCELADO_POR_CLIENTE', 'CANCELADO', 'NO_ATENDIDO'].includes(order.status);
+  const photos = order.photos;
+  return (
+    <div className="tracking">
+      <div className={`tracking-status tracking-status--${tone}`} role="status">
+        <span className="tracking-status-icon" aria-hidden="true"><Icon name={tone === 'good' ? 'ok' : tone === 'pending' ? 'wallet' : tone === 'warn' || tone === 'muted' ? 'info' : 'truck'} size={20} /></span>
+        <div><strong>{status.title}</strong>{status.detail ? <span>{status.detail}</span> : null}</div>
+      </div>
+      {finished ? null : <ol className="tracking-steps" aria-label={`Seguimiento del pedido ${order.id}`}>{order.tracking.map((step, index) => (
+        <li key={step.step} className={step.done ? 'is-done' : index === current ? 'is-current' : ''}>
+          <span className="tracking-dot" aria-hidden="true">{step.done ? <Icon name="check" size={12} weight="bold" /> : null}</span>
+          <div className="tracking-text">
+            <div className="tracking-head"><strong>{step.step}</strong>{step.done && step.when ? <time dateTime={step.when}>{formatMoment(step.when)}</time> : null}</div>
+            {step.done && step.detail ? <p>{step.detail}</p> : index === current ? <p className="tracking-next">Siguiente paso</p> : null}
+          </div>
+        </li>
+      ))}</ol>}
+      {photos && (photos.delivery || photos.bags > 0) ? (
+        <div className="tracking-photos" aria-label="Fotos de tu pedido">
+          {photos.delivery ? <a href={`/api/pedidos/${order.id}/fotos/entrega`} target="_blank" rel="noopener"><img src={`/api/pedidos/${order.id}/fotos/entrega`} alt={`Foto de la entrega del pedido ${order.id}`} loading="lazy" width="72" height="72" onError={(event) => { (event.currentTarget.parentElement as HTMLElement).hidden = true; }} /><small>Entrega</small></a> : null}
+          {Array.from({ length: photos.bags }, (_, i) => <a key={i} href={`/api/pedidos/${order.id}/fotos/bolsa-${i + 1}`} target="_blank" rel="noopener"><img src={`/api/pedidos/${order.id}/fotos/bolsa-${i + 1}`} alt={`Foto de la bolsa ${i + 1} del pedido ${order.id}`} loading="lazy" width="72" height="72" onError={(event) => { (event.currentTarget.parentElement as HTMLElement).hidden = true; }} /><small>Bolsa {i + 1}</small></a>)}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function Timeline({ order }: { order: Order }) {
@@ -174,8 +209,8 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
           {orders.length ? <div className="orders-page-list">{orders.map((order) => (
             <article className="orders-page-card" key={order.id}>
               <div className="orders-page-card-top"><div><strong>Pedido {order.id}</strong><span>{weekLabel(order.cycle)}</span></div><span className={`order-status order-status--${order.status === 'REGISTRADO' ? order.payment.toLowerCase() : order.status.toLowerCase()}`}>{statusLabel(order)}</span></div>
-              {order.status === 'REGISTRADO' && order.payment === 'POR_VERIFICAR' && order.toPay > 0 ? <div className="pay-reminder"><Icon name="wallet" size={18} /><span>Yapea <strong>{formatMoney(order.toPay)}</strong> por {methodName(order.method)} con el código <code>{order.paymentCode}</code> en el mensaje.</span></div> : null}
-              <Timeline order={order} />
+              {order.status === 'REGISTRADO' && order.payment === 'POR_VERIFICAR' && order.toPay > 0 ? <div className="pay-reminder"><Icon name="wallet" size={18} /><span>Paga <strong>{formatMoney(order.toPay)}</strong>{order.payTo ? <> al Plin <strong>{order.payTo.number}</strong> ({order.payTo.holder})</> : <> por {methodName(order.method)}</>} con el código <code>{order.paymentCode}</code> en el mensaje. También puedes pagar desde Yape.</span></div> : null}
+              <Tracking order={order} />
               <Outcome order={order} />
               <details className="order-lines"><summary>{order.lines.length} productos · {formatMoney(order.total)}</summary><table><tbody>{order.lines.map((line) => <tr key={line.id}><td>{line.name}</td><td>{formatQuantity(line.quantity)}</td><td>{formatMoney(line.total)}</td></tr>)}</tbody></table></details>
               {order.cancellable ? <CancelActions order={order} onCancel={onCancel} /> : null}

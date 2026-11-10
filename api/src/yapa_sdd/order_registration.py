@@ -207,6 +207,7 @@ def register_order(
         delivery_fee=quote.delivery_fee,
         total=quote.total,
         payments=payments,
+        registered_at=now,  # S-310
     )
     order = store.save_new_order(order)
     wallet.debit(store, customer_id, used, "USO_EN_PEDIDO", now, f"pedido {order.order_id}")  # BS-07

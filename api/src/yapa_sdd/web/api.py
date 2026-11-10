@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -114,7 +114,8 @@ def _body(environ) -> tuple[dict, dict]:
 
 
 def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str = "fotos", mailer=None, google=None,
-               background_mail: bool = True, secure_cookie: bool = False, security_clock=None, payee: dict | None = None):
+               background_mail: bool = True, secure_cookie: bool = False, security_clock=None, payee: dict | None = None,
+               ai=None):
     clock = clock or (lambda: datetime.now(cycle.LIMA))
     mailer = mailer or ConsoleMailer()  # S-208: sin credenciales, el código sale en la consola del motor
     sessions: dict[str, dict] = {}
@@ -210,7 +211,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "lineas": [{"id": l.product_id, "nombre": names.get(l.product_id, l.product_id), "cantidad": qty(l.quantity),
                         "precio_max": money(l.max_unit_price), "total": money(l.max_total)} for l in order.lines],
         }
-        data["seguimiento"] = logistics.tracking(store, order)  # SG-01
+        data["seguimiento"] = logistics.tracking(store, order)  # SG-01, SG-03
+        data["estado_seguimiento"] = logistics.order_status(store, order)  # SG-02
+        photos = logistics.order_photos(store, order)
+        data["fotos"] = {"entrega": photos["entrega"] is not None, "bolsas": len(photos["bolsas"])}  # SG-05
         if payee and order.payment_status == "POR_VERIFICAR" and order.paid_external > 0:  # PL-01, S-305: falta pagar
             data["pagar_a"] = dict(payee)
         if settled:
@@ -233,7 +237,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "cierre": "miércoles 20:00", "entrega": "sábado", "ventanas": WINDOWS,
                 "minimo_pedido": money(MIN_SUBTOTAL), "minimo_grupo": MIN_ORDERS_PER_GROUP,
                 "distritos": sorted(PILOT_DISTRICTS),
-                "google_client_id": getattr(google, "client_id", None)}  # GO-01: el id es público
+                "google_client_id": getattr(google, "client_id", None),  # GO-01: el id es público
+                "ia": ai is not None}  # IA-01
 
     def catalogo(environ, data, session):
         now = clock()
@@ -640,6 +645,36 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         for row in result["zonas"]:
             row["margen"] = money(row["margen"]) if row["margen"] is not None else None
         return result | {"radio_m": zones.MEMBER_RADIUS_M, "union_m": zones.MERGE_DISTANCE_M, "ciclos": known_cycles()}
+
+    def canasta_sugerir(environ, data, session):
+        """IA-01..IA-07: la IA sugiere y el motor pone precios, pasos y topes."""
+        sug = ia.suggest_basket(store, ai, session["principal"], data.get("texto"), clock())
+        return {"lineas": [{"id": l["id"], "nombre": l["nombre"], "unidad": l["unidad"], "cantidad": qty(l["cantidad"]),
+                            "precio_max": money(l["precio_max"]), "total": money(l["total"])} for l in sug["lineas"]],
+                "subtotal": money(sug["subtotal"]), "falta": money(sug["falta"]), "comentario": sug["comentario"],
+                "proveedor": sug["proveedor"]}
+
+    def admin_ia_atencion(environ, data, session):
+        """IA-10..IA-13: sugerencia para atención; no cambia nada."""
+        return ia.suggest_support(store, ai, str(data.get("tipo", "")), data.get("id"), by=session["principal"])
+
+    def pedido_foto(environ, data, session, order_id, which):
+        """SG-04, S-313: el vecino ve las fotos de su propio pedido; la ruta sale del registro, no de la petición."""
+        order = store.orders.get(_int(order_id, "Pedido"))
+        if order is None or order.customer_id != session["principal"]:
+            raise ApiError("404 Not Found", "ORDER_NOT_FOUND", "El pedido no existe.")
+        photos = logistics.order_photos(store, order)
+        route = None
+        if which == "entrega":
+            route = photos["entrega"]
+        elif re.fullmatch(r"bolsa-[1-9]\d{0,2}", which) and int(which[6:]) <= len(photos["bolsas"]):
+            route = photos["bolsas"][int(which[6:]) - 1]
+        match = PHOTO_PATH.fullmatch(route or "")
+        file = Path(photo_dir) / route.split("/", 1)[1] if match else None
+        if file is None or not file.is_file():
+            raise ApiError("404 Not Found", "PHOTO_NOT_FOUND", "Esa foto no existe.")
+        return file.read_bytes(), [("Content-Type", PHOTO_MIME[match.group(1)]), ("X-Content-Type-Options", "nosniff"),
+                                   ("Cache-Control", "private, no-store")]
 
     def admin_foto(environ, data, session):
         """FA-01..FA-04, S-179, S-180: entrega una foto guardada solo si la ruta tiene la forma exacta que escribe el motor."""
@@ -1170,6 +1205,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/cotizar", {"POST": (cotizar, "vecino")}),
         (r"/api/pedidos", {"POST": (pedidos, "vecino")}),
         (r"/api/mis-pedidos", {"GET": (mis_pedidos, "vecino")}),
+        (r"/api/pedidos/(\d+)/fotos/([\w-]+)", {"GET": (pedido_foto, "vecino")}),
+        (r"/api/canasta/sugerir", {"POST": (canasta_sugerir, "vecino")}),
+        (r"/api/admin/ia/atencion", {"POST": (admin_ia_atencion, ATTENDING)}),
         (r"/api/pedidos/(\d+)/cancelar", {"POST": (cancelar, "vecino")}),
         (r"/api/saldo/devolucion", {"POST": (devolucion, "vecino")}),
         (r"/api/pin", {"POST": (cambiar_pin, "vecino")}),

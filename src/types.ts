@@ -108,8 +108,26 @@ export interface Order {
   settlement: Settlement | null;
   bags?: Array<{ number: number; photo: string }>;
   labels?: string[]; // S-298: rótulo de cada bolsa
-  tracking?: Array<{ step: string; done: boolean }>; // S-309: los siete pasos del pedido
+  tracking?: TrackingStep[]; // S-309, S-312: los siete pasos con hora y detalle
+  trackingStatus?: { title: string; detail: string }; // S-311: el estado en una frase
+  photos?: { delivery: boolean; bags: number }; // S-313: fotos del propio pedido
   payTo?: { number: string; holder: string }; // S-305: el Plin de Yapa
+}
+
+export interface TrackingStep {
+  step: string;
+  done: boolean;
+  when?: string | null;
+  detail?: string;
+}
+
+// iteración 60: canasta sugerida por la IA; los precios los pone el motor
+export interface BasketSuggestion {
+  lines: Array<{ id: string; name: string; unit: string; quantity: number; maxPrice: number; total: number }>;
+  subtotal: number;
+  missing: number;
+  comment: string;
+  provider: string;
 }
 
 export interface Quote {
@@ -128,6 +146,7 @@ export interface CycleState {
   delivery: string;
   minimumOrder: number;
   minimumGroup: number;
+  ai: boolean; // IA-01: el servidor tiene la IA activada
 }
 
 export type RefundDestination = 'SALDO' | 'MEDIO_DE_PAGO';

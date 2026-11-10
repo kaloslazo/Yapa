@@ -6,7 +6,7 @@ Spec: docs/desarrollo/58-logistica-propia.md.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from . import cycle as cycles
@@ -91,17 +91,132 @@ def dispatch_zone(store: InMemoryStore, cycle: str, zone_id: str, *, by, now: da
     return dispatch
 
 
+METHOD_NAMES = {"YAPE": "Yape", "PLIN": "Plin", "SALDO": "Saldo"}
+
+
+def _iso(moment: datetime | None) -> str | None:
+    return cycles.to_lima(moment).isoformat() if moment else None
+
+
+def _hour(moment: datetime) -> str:
+    return cycles.to_lima(moment).strftime("%H:%M")
+
+
+def _qty(value: Decimal) -> str:
+    return format(value.normalize(), "f")
+
+
+def delivery_day(cycle: str) -> str:
+    """S-311: la entrega es el sábado del ciclo (lunes de apertura + 5 días)."""
+    return (cycles.opens_at(cycle) + timedelta(days=5)).strftime("%d/%m")
+
+
+def _verified_at(store: InMemoryStore, order: Order) -> datetime | None:
+    """S-310: la hora del registro de caja; si pagó todo con saldo, la del registro del pedido."""
+    entries = [e.at for e in store.cash_in if e.order_id == order.order_id and e.at]
+    return min(entries) if entries else (order.registered_at if order.payment_status == "VERIFICADO" else None)
+
+
+def _shortage_notes(store: InMemoryStore, order: Order, sources: tuple[str, ...]) -> list[str]:
+    catalog = store.catalog_for(order.cycle)
+    notes = []
+    for s in store.shortages:
+        if s.order_id != order.order_id or s.source not in sources:
+            continue
+        product = catalog.get(s.product_id)
+        name, unit = (product.name, product.unit) if product else (s.product_id, "")
+        what = "Faltó" if s.source == "COMPRA" else "Llegó dañado"
+        if s.quantity > s.from_buffer:
+            notes.append(f"{what} {_qty(s.quantity - s.from_buffer)} {unit} de {name}: vuelve como saldo")
+        if s.from_buffer > 0:
+            notes.append(f"{_qty(s.from_buffer)} {unit} de {name} repuesto del colchón")
+    return notes
+
+
+def _delivery(store: InMemoryStore, order: Order):
+    delivery = store.deliveries.get((order.cycle, order.zone_id))
+    return delivery if delivery and order.order_id in delivery.order_ids else None
+
+
 def tracking(store: InMemoryStore, order: Order) -> list[dict]:
-    """SG-01, S-309: los siete pasos del pedido y cuáles ya pasaron."""
+    """SG-01, SG-03, S-309, S-312: los siete pasos, cuáles pasaron, a qué hora y con qué detalle."""
     key = (order.cycle, order.zone_id)
-    delivered = key in store.deliveries and order.order_id in store.deliveries[key].order_ids
-    done = (
-        True,
-        order.payment_status == "VERIFICADO",
-        order.cycle in store.purchases,
-        bool(store.bags.get(order.order_id)),
-        key in store.dispatches or delivered,  # S-308: entregar sin marcar la salida también cuenta
-        delivered,
-        order.status == "LIQUIDADO",
+    delivery = _delivery(store, order)
+    dispatch = store.dispatches.get(key)
+    bags = store.bags.get(order.order_id, [])
+    bought = store.purchases.get(order.cycle)
+    zone = store.zones[order.zone_id].name
+    settled = store.settlements.get(order.cycle)
+    settled = settled.orders.get(order.order_id) if settled else None
+    verified = order.payment_status == "VERIFICADO"
+    method = METHOD_NAMES.get(order.payment_method, order.payment_method)
+
+    received = store.receptions.get(key)
+    delivered_detail = ""
+    if delivery:
+        delivered_detail = f"Lo recibió {delivery.received_by}"
+        if received:
+            delivered_detail += f". La portería lo confirmó a las {_hour(received.received_at)}"
+    packed = ""
+    if bags:
+        packed = f"{len(bags)} {'bolsa' if len(bags) == 1 else 'bolsas'}, con foto"
+        damaged = _shortage_notes(store, order, ("DANADO",))
+        packed = ". ".join([packed] + damaged)
+    returned = settled.refund_amount if settled and order.status == "LIQUIDADO" else Decimal("0")
+
+    pasos = (
+        (True, order.registered_at,
+         f"{len(order.lines)} {'producto' if len(order.lines) == 1 else 'productos'} · S/ {order.total:.2f}"),
+        (verified, _verified_at(store, order) if verified else None, f"{method} · S/ {order.total:.2f}" if verified else ""),
+        (bought is not None, bought.at if bought else None,
+         ". ".join(_shortage_notes(store, order, ("COMPRA",))) or "Llegó todo" if bought else ""),
+        (bool(bags), max(b.packed_at for b in bags) if bags else None, packed),
+        (dispatch is not None or delivery is not None,
+         dispatch.at if dispatch else (delivery.delivered_at if delivery else None),
+         f"Salió hacia {zone}" if dispatch or delivery else ""),  # S-308
+        (delivery is not None, delivery.delivered_at if delivery else None, delivered_detail),
+        (order.status == "LIQUIDADO", None, f"S/ {returned:.2f} a tu saldo" if order.status == "LIQUIDADO" else ""),
     )
-    return [{"paso": step, "hecho": value} for step, value in zip(STEPS, done)]
+    return [{"paso": step, "hecho": done, "cuando": _iso(when) if done else None, "detalle": detail}
+            for step, (done, when, detail) in zip(STEPS, pasos)]
+
+
+def order_status(store: InMemoryStore, order: Order) -> dict:
+    """SG-02, S-311: el estado del pedido en una frase."""
+    def status(titulo: str, detalle: str = "") -> dict:
+        return {"titulo": titulo, "detalle": detalle}
+
+    finals = {
+        "CANCELADO_POR_CLIENTE": status("Cancelaste este pedido"),
+        "CANCELADO": status("Anulado: el pago no llegó antes del cierre", "Si usaste saldo, volvió a tu saldo."),
+        "NO_ATENDIDO": status("Tu grupo no llegó a 8 pedidos", "Te devolvemos todo a tu medio de pago."),
+        "NO_ENTREGADO": status("No se pudo entregar", "Te devolvimos todo menos el envío, como saldo."),
+    }
+    if order.status in finals:
+        return finals[order.status]
+    zone = store.zones[order.zone_id].name
+    day = delivery_day(order.cycle)
+    if order.status == "LIQUIDADO":
+        settled = store.settlements[order.cycle].orders[order.order_id]
+        return status(f"Te devolvimos S/ {settled.refund_amount:.2f}", "Ya está en tu saldo para tu próxima compra.")
+    delivery = _delivery(store, order)
+    if delivery:
+        return status(f"Entregado en {zone}", f"Lo recibió {delivery.received_by} a las {_hour(delivery.delivered_at)}.")
+    dispatch = store.dispatches.get((order.cycle, order.zone_id))
+    if dispatch:
+        return status(f"En camino a {zone}", f"Salió a las {_hour(dispatch.at)}.")
+    if store.bags.get(order.order_id):
+        return status("Armado", f"Sale el sábado {day} hacia {zone}.")
+    if order.cycle in store.purchases:
+        return status("Comprado", f"Armamos tu bolsa para el sábado {day}.")
+    if order.payment_status == "VERIFICADO":
+        return status("Pago verificado", f"Compramos el jueves y entregamos el sábado {day}.")
+    return status("Falta tu pago", f"Paga S/ {order.paid_external:.2f} con el código {order.operation_code} "
+                                   "antes del miércoles a las 20:00.")
+
+
+def order_photos(store: InMemoryStore, order: Order) -> dict:
+    """SG-05, S-313: las fotos que el sistema guardó para este pedido."""
+    delivery = _delivery(store, order)
+    return {"entrega": delivery.photo if delivery else None,
+            "bolsas": [bag.photo for bag in store.bags.get(order.order_id, [])]}
