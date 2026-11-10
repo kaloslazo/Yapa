@@ -8,6 +8,7 @@ import {
   CalendarBlank,
   Camera,
   CaretDown,
+  CaretLeft,
   ChartBar,
   Check,
   CheckCircle,
@@ -17,6 +18,7 @@ import {
   Gear,
   Gift,
   Headset,
+  House,
   Info,
   Key,
   Leaf,
@@ -33,6 +35,8 @@ import {
   ShareNetwork,
   ShoppingCart,
   SignOut,
+  SlidersHorizontal,
+  SquaresFour,
   Storefront,
   Tag,
   Truck,
@@ -94,6 +98,10 @@ const icons = {
   headset: Headset,
   building: Buildings,
   cart: ShoppingCart,
+  home: House,
+  grid: SquaresFour,
+  sliders: SlidersHorizontal,
+  back: CaretLeft,
 } satisfies Record<string, ComponentType<PhosphorIconProps>>;
 
 export type IconName = keyof typeof icons;

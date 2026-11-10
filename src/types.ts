@@ -33,6 +33,8 @@ export interface Product {
   art: ProductArtName;
   image: string | null;
   jug: [string, string] | null; // galones sin foto: color del líquido y de la tapa
+  group: 'tuberculos' | 'verduras' | 'limpieza'; // grupo para mostrar en la tienda
+  tint: string; // pastel detrás de la foto
   emoji: string;
 }
 
