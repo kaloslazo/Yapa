@@ -32,6 +32,7 @@ export interface Product {
   detail: string;
   art: ProductArtName;
   image: string | null;
+  jug: [string, string] | null; // galones sin foto: color del líquido y de la tapa
   emoji: string;
 }
 

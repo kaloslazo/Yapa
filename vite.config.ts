@@ -12,8 +12,11 @@ const buildTag: Plugin = {
   </head>`),
 };
 
+// el motor puede correr en otro puerto si el 8000 está ocupado: YAPA_API=http://127.0.0.1:8010 npm run dev
+const api = process.env.YAPA_API ?? 'http://127.0.0.1:8000';
+
 export default defineConfig({
   plugins: [react(), buildTag],
-  server: { proxy: { '/api': 'http://127.0.0.1:8000' } },
-  preview: { proxy: { '/api': 'http://127.0.0.1:8000' } },
+  server: { proxy: { '/api': api } },
+  preview: { proxy: { '/api': api } },
 });

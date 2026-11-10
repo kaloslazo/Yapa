@@ -29,6 +29,7 @@ export function toProduct(raw: Raw): Product {
     detail: look.detail,
     art: look.art,
     image: look.image ?? null,
+    jug: look.jug ?? null,
     emoji: look.emoji,
   };
 }

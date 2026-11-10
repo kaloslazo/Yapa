@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { photoCredits } from '../data/photoCredits';
 
 // Borrador de la iteración 47 (S-252): el equipo de Yapa debe revisar el texto, sobre todo el medio de contacto y los plazos.
 export function PrivacyPage() {
@@ -38,6 +39,12 @@ export function PrivacyPage() {
 
         <h2>Tus derechos</h2>
         <p>Según la Ley de Protección de Datos Personales (Ley 29733), puedes pedir ver, corregir, actualizar o borrar tus datos, y oponerte a que los usemos. Escríbele al equipo de Yapa por el WhatsApp con el que te contactamos, o al administrador de tu zona, que nos hace llegar tu pedido.</p>
+
+        <h2>Fotos de los productos</h2>
+        <p>Algunas fotos del catálogo vienen de Wikimedia Commons:</p>
+        <ul className="photo-credits">
+          {photoCredits.map((c) => <li key={c.product}>{c.product}: <a href={c.source} target="_blank" rel="noreferrer">foto de {c.author}</a>, {c.licenseUrl ? <a href={c.licenseUrl} target="_blank" rel="noreferrer">{c.license}</a> : c.license}.</li>)}
+        </ul>
 
         <a className="secondary-button privacy-back" href="/">Volver a Yapa</a>
       </article>
