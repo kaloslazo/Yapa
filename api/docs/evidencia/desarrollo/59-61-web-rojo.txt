@@ -1,0 +1,68 @@
+
+ RUN  v5.0.5 /Users/kalosroots/personal/utec/yapa/yapa-app
+
+ ❯ src/services/mappers.test.ts (8 tests | 1 failed) 14ms
+   ❯ seguimiento con horas, detalle y fotos (iteración 59) (1)
+     × trae el estado en una frase, la hora y el detalle de cada paso, y cuántas fotos hay 8ms
+ ❯ src/utils/cart.test.ts (5 tests | 2 failed) 8ms
+   ❯ Arma mi canasta: sumar la sugerencia (2)
+     × suma a lo que ya había y respeta el tope 3ms
+     × ignora productos que ya no están en el catálogo 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/mappers.test.ts > seguimiento con horas, detalle y fotos (iteración 59) > trae el estado en una frase, la hora y el detalle de cada paso, y cuántas fotos hay
+AssertionError: expected undefined to deeply equal { …(2) }
+
+- Expected:
+{
+  "detail": "Salió a las 09:00.",
+  "title": "En camino a Residencial San Felipe",
+}
+
++ Received:
+undefined
+
+ ❯ src/services/mappers.test.ts:56:34
+     54|       seguimiento: [{ paso: 'En camino', hecho: true, cuando: '2026-09…
+     55|       fotos: { entrega: false, bolsas: 2 } });
+     56|     expect(order.trackingStatus).toEqual({ title: 'En camino a Residen…
+       |                                  ^
+     57|     expect(order.tracking?.[0]).toEqual({ step: 'En camino', done: tru…
+     58|     expect(order.photos).toEqual({ delivery: false, bags: 2 });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/utils/cart.test.ts > Arma mi canasta: sumar la sugerencia > suma a lo que ya había y respeta el tope
+TypeError: mergeSuggestion is not a function
+ ❯ src/utils/cart.test.ts:42:12
+     40|   const tope = { 'PAPA-AMARILLA': 10, 'CEBOLLA-ROJA': 10 };
+     41|   it('suma a lo que ya había y respeta el tope', () => {
+     42|     expect(mergeSuggestion({ 'PAPA-AMARILLA': 8 }, [{ id: 'PAPA-AMARIL…
+       |            ^
+     43|       .toEqual({ 'PAPA-AMARILLA': 10, 'CEBOLLA-ROJA': 3 });
+     44|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/utils/cart.test.ts > Arma mi canasta: sumar la sugerencia > ignora productos que ya no están en el catálogo
+TypeError: mergeSuggestion is not a function
+ ❯ src/utils/cart.test.ts:46:12
+     44|   });
+     45|   it('ignora productos que ya no están en el catálogo', () => {
+     46|     expect(mergeSuggestion({}, [{ id: 'CAVIAR', quantity: 1 }], tope))…
+       |            ^
+     47|   });
+     48| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed | 16 passed (18)
+      Tests  3 failed | 119 passed (122)
+   Start at  21:11:38
+   Duration  4.24s (import 65%, environment 21%, tests 6%, transform 6%, worker 1%)
+
+    Isolate  18 workers spawned · ~461ms startup each (spawn + environment, per file)
+             at least ~461ms faster with isolate: false — reuses workers across files instead of one per file
+

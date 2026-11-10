@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartSubtotal, stepDown, stepUp } from './cart';
+import { cartSubtotal, mergeSuggestion, stepDown, stepUp } from './cart';
 import { homeFor, canOpenZonePanel } from './roles';
 
 const ajo = { step: 0.25, maxPerOrder: 10, price: 5.38 };
@@ -32,5 +32,17 @@ describe('FE-D · a dónde va cada rol', () => {
     expect(homeFor('vecino')).toBe('tienda');
     expect(canOpenZonePanel('admin_zona')).toBe(true);
     expect(canOpenZonePanel('vecino')).toBe(false);
+  });
+});
+
+// iteración 60: la canasta sugerida por la IA se suma a la canasta, sin pasar el tope de cada producto
+describe('Arma mi canasta: sumar la sugerencia', () => {
+  const tope = { 'PAPA-AMARILLA': 10, 'CEBOLLA-ROJA': 10 };
+  it('suma a lo que ya había y respeta el tope', () => {
+    expect(mergeSuggestion({ 'PAPA-AMARILLA': 8 }, [{ id: 'PAPA-AMARILLA', quantity: 4 }, { id: 'CEBOLLA-ROJA', quantity: 3 }], tope))
+      .toEqual({ 'PAPA-AMARILLA': 10, 'CEBOLLA-ROJA': 3 });
+  });
+  it('ignora productos que ya no están en el catálogo', () => {
+    expect(mergeSuggestion({}, [{ id: 'CAVIAR', quantity: 1 }], tope)).toEqual({});
   });
 });

@@ -1,0 +1,21 @@
+ERROR: test_ia (unittest.loader._FailedTest.test_ia)
+ImportError: Failed to import test module: test_ia
+ImportError: cannot import name 'ia' from 'yapa_sdd' (/Users/kalosroots/personal/utec/yapa/yapa-app/api/src/yapa_sdd/__init__.py)
+ERROR: test_sg_a_pending_payment (test_seguimiento.TrackingSpecTests.test_sg_a_pending_payment)
+AttributeError: module 'yapa_sdd.logistics' has no attribute 'order_status'
+ERROR: test_sg_b_verified (test_seguimiento.TrackingSpecTests.test_sg_b_verified)
+AttributeError: module 'yapa_sdd.logistics' has no attribute 'order_status'
+ERROR: test_sg_c_bought_with_shortage (test_seguimiento.TrackingSpecTests.test_sg_c_bought_with_shortage)
+KeyError: 'detalle'
+ERROR: test_sg_d_packed_and_on_the_way (test_seguimiento.TrackingSpecTests.test_sg_d_packed_and_on_the_way)
+KeyError: 'detalle'
+ERROR: test_sg_e_delivered_and_received (test_seguimiento.TrackingSpecTests.test_sg_e_delivered_and_received)
+AttributeError: module 'yapa_sdd.logistics' has no attribute 'order_status'
+ERROR: test_sg_f_settled (test_seguimiento.TrackingSpecTests.test_sg_f_settled)
+AttributeError: module 'yapa_sdd.logistics' has no attribute 'order_status'
+ERROR: test_sg_g_final_states (test_seguimiento.TrackingSpecTests.test_sg_g_final_states)
+AttributeError: module 'yapa_sdd.logistics' has no attribute 'order_status'
+FAIL: test_sg_h_owner_sees_own_photos (test_seguimiento.PhotoApiTests.test_sg_h_owner_sees_own_photos)
+AssertionError: Tuples differ: (404, b'{"error": {"codigo": "NOT_FOUND", "mensaje": "Esa ruta no existe."}}') != (200, b'entrega')
+Ran 680 tests in 1.647s
+FAILED (failures=1, errors=8, skipped=4)

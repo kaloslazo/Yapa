@@ -46,3 +46,15 @@ describe('seguimiento y a dónde pagar (iteración 58)', () => {
     expect(toOrder({ id: 5, lineas: [] }).payTo).toBeUndefined();
   });
 });
+
+describe('seguimiento con horas, detalle y fotos (iteración 59)', () => {
+  it('trae el estado en una frase, la hora y el detalle de cada paso, y cuántas fotos hay', () => {
+    const order = toOrder({ id: 6, lineas: [],
+      estado_seguimiento: { titulo: 'En camino a Residencial San Felipe', detalle: 'Salió a las 09:00.' },
+      seguimiento: [{ paso: 'En camino', hecho: true, cuando: '2026-09-19T09:00:00-05:00', detalle: 'Salió hacia Residencial San Felipe' }],
+      fotos: { entrega: false, bolsas: 2 } });
+    expect(order.trackingStatus).toEqual({ title: 'En camino a Residencial San Felipe', detail: 'Salió a las 09:00.' });
+    expect(order.tracking?.[0]).toEqual({ step: 'En camino', done: true, when: '2026-09-19T09:00:00-05:00', detail: 'Salió hacia Residencial San Felipe' });
+    expect(order.photos).toEqual({ delivery: false, bags: 2 });
+  });
+});
