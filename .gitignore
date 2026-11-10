@@ -11,3 +11,4 @@ build/
 
 # fotos de reclamos, bolsas y entregas (datos de vecinos)
 fotos/
+.vitest/
