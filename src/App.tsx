@@ -8,7 +8,7 @@ import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartPanel, MobileCartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
-import { FaqSection, HowItWorksSection } from './components/EditorialSections';
+import { FaqSection, HowItWorksSection, PriceBoard, ReturnExample } from './components/EditorialSections';
 import { InviteContext } from './components/InviteCard';
 import { InvitePage } from './components/InvitePage';
 import { PrivacyPage } from './components/PrivacyPage';
@@ -20,6 +20,7 @@ import { api, ApiError } from './services/api';
 import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } from './services/mappers';
 import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Role, Zone } from './types';
 import { cartSubtotal, mergeSuggestion, stepDown, stepUp } from './utils/cart';
+import { closeCountdown } from './utils/landing';
 import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor, isNeighborRole, isPartner, isStaff } from './utils/roles';
@@ -407,6 +408,7 @@ export default function App() {
   const inviteState = { url: invite ? inviteLink(window.location.origin, invite.code) : null, today: invite?.today ?? 0, total: invite?.total ?? 0, renew: async () => { try { await loadInvite(true); notify('Tu enlace nuevo ya está activo', 'success', 'El anterior dejó de funcionar. Compártelo solo con vecinos de tu zona.'); } catch (error) { fail(error, 'No pudimos renovar tu enlace'); } } };
 
   const firstName = account?.name.split(' ')[0];
+  const countdown = closeCountdown(new Date()); // portada: cuánto falta para el cierre del miércoles
   const scrollToCatalog = () => document.querySelector('#catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const tabs: Array<{ id: View; label: string; icon: 'store' | 'receipt' | 'basket' | 'map' }> = [
     { id: 'store', label: 'Comprar', icon: 'store' },
@@ -466,14 +468,16 @@ export default function App() {
                 ) : <>
                   <section className="hero" aria-labelledby="page-title">
                     <div className="hero-copy">
+                      <span className="eyebrow">Compras entre vecinos · Lince y Jesús María</span>
                       <h1 id="page-title">El mercado mayorista, en tu portería.</h1>
-                      <p className="hero-lead">Juntamos los pedidos de tu edificio para comprar al por mayor. Pagas el precio máximo y lo que ahorremos entre todos vuelve a tu saldo.</p>
-                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver el catálogo</button><button className="secondary-button" type="button" onClick={() => openAuth('entrar')}>Ya tengo cuenta</button></div>
-                      <WeekFacts open={Boolean(state?.open)} />
+                      <p className="hero-lead">Juntamos los pedidos de tu edificio, compramos al por mayor y te lo dejamos el sábado. Pagas el precio máximo y lo que ahorramos entre todos vuelve a tu saldo.</p>
+                      <div className="hero-actions"><button className="primary-button" type="button" onClick={scrollToCatalog}>Ver precios de la semana</button><button className="secondary-button" type="button" onClick={() => openAuth('entrar')}>Ya tengo cuenta</button></div>
+                      <p className={`hero-deadline ${countdown.open ? '' : 'is-closed'}`}><span className="deadline-dot" aria-hidden="true" />{countdown.text}<span className="deadline-sep" aria-hidden="true">·</span>{countdown.open ? 'pedidos hasta el miércoles 8 p. m.' : 'esta semana ya se compró'}</p>
                     </div>
-                    <div className="hero-art"><img src="/images/brand/yapa-farmer-banner.webp" alt="Agricultora con una canasta de productos frescos" width="760" height="694" fetchPriority="high" /></div>
+                    <PriceBoard products={catalog} />
                   </section>
                   <HowItWorksSection />
+                  <ReturnExample />
                 </>}
                 {account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
                 <div className="workspace-grid"><Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onQueryChange={setQuery} onAdd={addProduct} onDecrease={decreaseProduct} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} /><CartPanel lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onFocusCatalog={scrollToCatalog} /></div>

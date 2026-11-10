@@ -1,6 +1,5 @@
 import type { CartState, Product } from '../types';
 import { Icon } from './Icon';
-import { StoreMark } from './StoreMark';
 import { formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { shortDate } from '../utils/week';
@@ -21,7 +20,7 @@ interface CatalogProps {
 export function ProductVisual({ product, className = 'product-visual' }: { product: Product; className?: string }) {
   return (
     <div className={`${className} product-visual--${product.art}`}>
-      {product.image ? <img className="product-image" src={product.image} alt={product.name} width="720" height="720" loading="lazy" /> : <span className="product-emoji" role="img" aria-label={product.name}>{product.emoji}</span>}
+      {product.image ? <img className="product-image" src={product.image} alt={product.name} width="720" height="720" loading="lazy" /> : <span className="product-monogram" role="img" aria-label={product.name}>{product.name.split(' ').slice(0, 2).map((w) => w[0]).join('')}</span>}
     </div>
   );
 }
@@ -59,31 +58,33 @@ function ProductCard({ product, quantity, onAdd, onDecrease }: { product: Produc
   const tier = product.nextTier;
   const progress = tier ? Math.min((product.ordered / tier.from) * 100, 100) : 100;
   const reference = product.supermarketSaving && product.supermarket ? product.supermarket : null;
+  const kind = product.category === 'Limpieza' ? 'clean' : 'fresh';
   return (
-    <article className={`product-card ${quantity ? 'has-quantity' : ''}`}>
-      <ProductVisual product={product} />
+    <article className={`product-card product-card--${kind} ${quantity ? 'has-quantity' : ''}`}>
+      <div className="product-top">
+        <span className="product-kind">{product.category}</span>
+        {reference ? <span className="product-saving" title={reference.seen ? `Precio en ${reference.source}, visto el ${shortDate(reference.seen)}` : undefined}>−{Math.round(product.supermarketSaving ?? 0)}% vs. {reference.source}</span> : null}
+      </div>
       <div className="product-info">
         <h3>{product.name}</h3>
         <p>{product.detail}</p>
+      </div>
+      <div className="product-price-row">
         <div className="product-price"><strong>{formatMoney(product.price)}</strong><span>/ {product.unit}</span></div>
-        {reference ? <div className="product-reference" title={reference.seen ? `Precio en ${reference.source}, visto el ${shortDate(reference.seen)}` : undefined}>
-          <StoreMark source={reference.source} />
-          <s><span className="sr-only">En {reference.source} cuesta </span>{formatMoney(reference.price)}</s>
-          <span className="product-saving">−{Math.round(product.supermarketSaving ?? 0)} %</span>
-        </div> : null}
-        <div className="product-tier" role="img" aria-label={tier ? `Llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}; al llegar, baja a ${formatMoney(tier.price)}` : 'Ya tiene el mejor precio de la semana'} title={tier ? `Llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}` : undefined}>
-          <span className="tier-bar"><span style={{ width: `${progress}%` }} /></span>
-          <small>{tier ? <>Baja a <strong>{formatMoney(tier.price)}</strong></> : 'Mejor precio'}</small>
-        </div>
-        <div className="product-buy-row">
-          {quantity ? (
-            <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}>
-              <button type="button" onClick={() => onDecrease(product)} aria-label={`Quitar de ${product.name}`}><Icon name="minus" size={14} /></button>
-              <span>{formatQuantity(quantity)}</span>
-              <button type="button" onClick={() => onAdd(product)} disabled={atLimit} aria-label={`Agregar más ${product.name}`}><Icon name="plus" size={14} /></button>
-            </div>
-          ) : <button className="add-button" type="button" onClick={() => onAdd(product)} aria-label={`Agregar ${product.name}`}>Agregar</button>}
-        </div>
+        {reference ? <s className="product-reference-price"><span className="sr-only">En {reference.source} cuesta </span>{formatMoney(reference.price)}</s> : null}
+      </div>
+      <div className="product-tier" role="img" aria-label={tier ? `Llevamos ${formatQuantity(product.ordered)} de ${tier.from} ${product.unit}; al llegar, baja a ${formatMoney(tier.price)}` : 'Ya tiene el mejor precio de la semana'}>
+        <span className="tier-bar"><span style={{ width: `${progress}%` }} /></span>
+        <small>{tier ? <>Baja a <strong>{formatMoney(tier.price)}</strong> al llegar a {tier.from} {product.unit} · van {formatQuantity(product.ordered)}</> : <strong>Mejor precio de la semana</strong>}</small>
+      </div>
+      <div className="product-buy-row">
+        {quantity ? (
+          <div className="quantity-control" aria-label={`Cantidad de ${product.name}`}>
+            <button type="button" onClick={() => onDecrease(product)} aria-label={`Quitar de ${product.name}`}><Icon name="minus" size={14} /></button>
+            <span>{formatQuantity(quantity)} {product.unit}</span>
+            <button type="button" onClick={() => onAdd(product)} disabled={atLimit} aria-label={`Agregar más ${product.name}`}><Icon name="plus" size={14} /></button>
+          </div>
+        ) : <button className="add-button" type="button" onClick={() => onAdd(product)} aria-label={`Agregar ${product.name}`}><Icon name="plus" size={16} />Agregar</button>}
       </div>
     </article>
   );
