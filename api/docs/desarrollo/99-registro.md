@@ -494,3 +494,22 @@
   - la fecha salía "23/9" (ahora "23/09"; la prueba de `formatMoment` se agregó con la corrección);
   - la línea "En el supermercado costaba… ahorraste" se partía mal.
 - Resultado: 692 pruebas del motor (21 nuevas) y 123 del frontend (4 nuevas) en verde; typecheck y build sin errores (`59-61-motor-verde.txt`, `59-61-web-verde.txt`).
+
+## Rediseño de la portada y del catálogo (10/11/2026)
+
+- Solo cambia la web; el motor no se tocó y no hay reglas ni supuestos nuevos. Origen: Kalos dijo que la web "se ve muy básica y muy IA".
+- Lo que la hacía ver así:
+  - una tarjeta blanca centrada con una ilustración genérica;
+  - "Así funciona" en tres cajas iguales numeradas;
+  - productos con emojis sobre fondos pastel;
+  - un botón rojo gigante en cada tarjeta;
+  - todo con el mismo redondeo y el mismo crema.
+- Lo nuevo, con la idea de un mercado de barrio:
+  - la **pizarra de esta semana**, con los 5 productos que más ahorran frente al supermercado, tomados del catálogo real;
+  - una **cuenta regresiva** al cierre del miércoles a las 8 p. m. (`utils/landing.ts`, con pruebas);
+  - **"Tu semana con Yapa"** como calendario (lun–mié, jueves, viernes, sábado, después);
+  - una **boleta** de ejemplo para explicar "te devolvemos";
+  - **carteles de precio** en el catálogo: categoría, "−50 % vs. Plaza Vea", precio grande, cuánto falta para el siguiente tramo y un botón discreto;
+  - títulos en **Bricolage Grotesque**, que ya estaba instalada.
+- Revisado en el navegador en escritorio y en celular (las capturas sin interfaz van a 520 px porque Chrome no dibuja por debajo de ~500 px).
+
