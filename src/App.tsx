@@ -9,7 +9,7 @@ import { ProductPage } from './components/ProductPage';
 import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
-import { CheckoutDialog } from './components/CheckoutDialog';
+import { PayPage } from './components/PayPage';
 import { HowItWorks } from './components/EditorialSections';
 import { Sheet } from './components/Sheet';
 import { InviteContext } from './components/InviteCard';
@@ -40,7 +40,7 @@ const PartnerPanel = lazy(() => import('./components/PartnerPanel').then((module
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
-type View = 'store' | 'explore' | 'product' | 'orders' | 'cart' | 'zone' | 'account';
+type View = 'store' | 'explore' | 'product' | 'orders' | 'cart' | 'pay' | 'zone' | 'account';
 
 // saludo al entrar según el rol; el vecino recibe el de su saldo
 const WELCOME: Partial<Record<Role, string>> = {
@@ -54,13 +54,13 @@ const WELCOME: Partial<Record<Role, string>> = {
 };
 
 // #explorar/tuberculos y #producto/PAPA-AMARILLA llevan un dato después de la barra
-const HASH_VIEW: Record<string, View> = { orders: 'orders', cart: 'cart', zone: 'zone', cuenta: 'account', explorar: 'explore', producto: 'product' };
+const HASH_VIEW: Record<string, View> = { orders: 'orders', cart: 'cart', pagar: 'pay', zone: 'zone', cuenta: 'account', explorar: 'explore', producto: 'product' };
 const routeFromHash = () => {
   const [head, param] = window.location.hash.slice(1).split('/');
   return { view: HASH_VIEW[head] ?? 'store', param: param ? decodeURIComponent(param) : null };
 };
 const viewFromHash = (): View => routeFromHash().view;
-const VIEW_HASH: Record<View, string> = { store: 'catalog', explore: 'explorar', product: 'producto', orders: 'orders', cart: 'cart', zone: 'zone', account: 'cuenta' };
+const VIEW_HASH: Record<View, string> = { store: 'catalog', explore: 'explorar', product: 'producto', orders: 'orders', cart: 'cart', pay: 'pagar', zone: 'zone', account: 'cuenta' };
 const RETURN_TO_VIEW: Record<ReturnView, View> = { cart: 'cart', orders: 'orders', zone: 'zone', cuenta: 'account' };
 const authRouteNow = () => authRouteFromLocation(window.location.pathname, window.location.search);
 
@@ -80,7 +80,7 @@ export default function App() {
   const [exploreChip, setExploreChip] = useState<Chip>('todo');
   const [adminOpen, setAdminOpen] = useState(() => window.location.hash === '#admin');
   const [authRoute, setAuthRoute] = useState(authRouteNow); // /entrar y /equipo: el acceso tiene su propia página
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [quoting, setQuoting] = useState(false); // la canasta pide la cotización antes de pasar al pago
   const [quote, setQuote] = useState<Quote | null>(null);
   const [confirmation, setConfirmation] = useState<Order | null>(null);
   const [myOrders, setMyOrders] = useState<MyOrders | null>(null);
@@ -288,12 +288,20 @@ export default function App() {
   const openCheckout = async () => {
     if (!account) { needAccount('Entra a tu cuenta para registrar el pedido.', 'cart'); return; }
     if (!isNeighborRole(account.role)) { notify('Esta cuenta no es de vecino', 'warning', 'Para comprar, entra con una cuenta de vecino.'); return; }
+    setQuoting(true);
     try {
       setQuote(toQuote(await api.post<Raw>('/api/cotizar', { lineas: cartBody() })));
       setConfirmation(null);
-      setCheckoutOpen(true);
-    } catch (error) { fail(error, 'No pudimos preparar tu pedido'); }
+      openView('pay');
+    } catch (error) { fail(error, 'No pudimos preparar tu pedido'); } finally { setQuoting(false); }
   };
+  const clearCart = () => {
+    const previous = cart;
+    setCart({});
+    notify('Vaciaste tu canasta', 'neutral', undefined, { label: 'Deshacer', run: () => setCart(previous) });
+  };
+  // al salir del pago se olvida la cotización y la confirmación: la próxima vez se cotiza de nuevo
+  useEffect(() => { if (view !== 'pay') { setConfirmation(null); setQuote(null); } }, [view]);
   const registerOrder = async (method: 'YAPE' | 'PLIN', useBalance: boolean) => {
     const order = toOrder(await api.post<Raw>('/api/pedidos', { lineas: cartBody(), metodo: method, usar_saldo: useBalance }));
     setConfirmation(order);
@@ -438,7 +446,7 @@ export default function App() {
   ];
   const navItems: Array<{ id: View; label: string }> = [{ id: 'store', label: 'Inicio' }, { id: 'explore', label: 'Explorar' }, { id: 'orders', label: 'Mis pedidos' }, ...(account ? [{ id: 'zone' as View, label: 'Mi zona' }] : [])];
   const openTab = (id: View) => (id === 'store' ? goStore('catalog') : id === 'explore' ? openExplore() : openView(id));
-  const shopView = view === 'store' || view === 'explore' || view === 'product';
+  const shopView = view === 'store' || view === 'explore' || view === 'product' || view === 'cart' || view === 'pay';
 
   return (
     <InviteContext.Provider value={inviteState}>
@@ -482,7 +490,8 @@ export default function App() {
               onSendEmail={async (email) => { await api.post('/api/cuenta/correo', { correo: email }); await loadAccount(); }} onVerifyEmail={async (code) => { await api.post('/api/cuenta/correo/verificar', { codigo: code }); await loadAccount(); }}
               onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }}
               onWithdraw={async (confirmation) => { await api.post('/api/cuenta/retirar-consentimiento', { confirmar: confirmation }); api.setCsrf(''); setAccount(null); leaveAuth('store'); notify('Cerramos tu cuenta', 'success', 'Borramos tus datos personales. Gracias por haber comprado con Yapa.'); }} />
-            : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
+            : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} busy={quoting} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onCheckout={() => void openCheckout()} onClear={clearCart} onBack={() => goStore('catalog')} />
+            : view === 'pay' ? <PayPage quote={quote} zone={accountZone} delivery={delivery} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onSubmit={registerOrder} onBack={() => openView('cart')} onOpenOrders={() => openView('orders')} onKeepShopping={() => goStore('catalog')} />
               : view === 'explore' ? <ExplorePage key={`${routeParam ?? 'todo'}-${exploreChip}`} products={catalog} group={routeParam} initialChip={exploreChip} cart={cart} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} />
               : view === 'product' ? (catalog.length ? <ProductPage product={catalog.find((p) => p.id === routeParam)} quantity={cart[routeParam ?? ''] || 0} delivery={delivery} onAdd={addProduct} onDecrease={decreaseProduct} onBack={goBack} onCart={() => openView('cart')} onShare={(product) => void shareProduct(product)} /> : <main className="page-content product-page" aria-busy="true" />)
               : <HomePage products={catalog} results={visible} query={query} cart={cart} cycleOpen={cycleOpen} countdown={countdown.text} delivery={delivery} signedIn={Boolean(account)} balance={isNeighbor ? account?.balance ?? 0 : 0}
@@ -505,9 +514,6 @@ export default function App() {
       </>}
       {toastRegion}
       {!showAdmin && sheet === 'como-funciona' ? <Sheet label="Cómo funciona" onClose={() => setSheet(null)}><HowItWorks /></Sheet> : null}
-      {!showAdmin ? <>
-        <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />
-      </> : null}
     </div>
     </InviteContext.Provider>
   );

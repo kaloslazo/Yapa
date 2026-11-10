@@ -6,6 +6,9 @@ import { ProductGrid } from './Catalog';
 import { HomePage } from './HomePage';
 import { ProductPage } from './ProductPage';
 import { PrivacyPage } from './PrivacyPage';
+import { CartPage } from './CartPage';
+import { PayPage } from './PayPage';
+import type { Order, Quote } from '../types';
 import { toProduct } from '../services/mappers';
 import { photoCredits } from '../data/photoCredits';
 
@@ -78,5 +81,49 @@ describe('créditos de las fotos (licencias CC)', () => {
     const host = await render(createElement(PrivacyPage));
     expect(host.textContent).toContain('Fotos de los productos');
     for (const credit of photoCredits) expect(host.textContent, credit.product).toContain(`foto de ${credit.author}`);
+  });
+});
+
+// fase 2: la canasta dice cuánto falta para el mínimo y el pago es una pantalla con Yape, Plin y saldo
+describe('canasta', () => {
+  const base = { savings: 0, onAdd: vi.fn(), onDecrease: vi.fn(), onOpen: vi.fn(), onClear: vi.fn(), onBack: vi.fn() };
+  it('debajo del mínimo dice cuánto falta y no deja pagar', async () => {
+    const host = await render(createElement(CartPage, { ...base, lines: [{ product: cebolla, quantity: 2 }], subtotal: 4.7, onCheckout: vi.fn() }));
+    expect(host.textContent).toContain('Te faltan S/ 45.30 para el mínimo de S/ 50.00');
+    expect((host.querySelector('.sticky-cta button') as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('con el mínimo deja ir a pagar con el total máximo', async () => {
+    const onCheckout = vi.fn();
+    const host = await render(createElement(CartPage, { ...base, lines: [{ product: papa, quantity: 13 }], subtotal: 52.39, onCheckout }));
+    const button = host.querySelector('.sticky-cta button') as HTMLButtonElement;
+    expect(button.textContent).toBe('Ir a pagar · S/ 57.39');
+    await act(async () => { button.click(); });
+    expect(onCheckout).toHaveBeenCalled();
+  });
+  it('vacía avisa qué hacer', async () => {
+    const host = await render(createElement(CartPage, { ...base, lines: [], subtotal: 0, onCheckout: vi.fn() }));
+    expect(host.textContent).toContain('Tu canasta está vacía');
+  });
+});
+
+describe('pago', () => {
+  const quote: Quote = { lines: [{ id: 'PAPA-AMARILLA', name: 'Papa amarilla', quantity: 13, maxPrice: 4.03, total: 52.39 }], subtotal: 52.39, delivery: 5, total: 57.39, supermarketSaving: 51.48, balance: 2 };
+  const base = { zone: undefined, delivery: 'sáb 14 nov', cycleOpen: true, onBack: vi.fn(), onOpenOrders: vi.fn(), onKeepShopping: vi.fn() };
+  it('Yape por defecto, usa el saldo y se puede cambiar a Plin sin saldo', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const host = await render(createElement(PayPage, { ...base, quote, confirmation: null, onSubmit }));
+    expect(host.textContent).toContain('Confirmar pedido · S/ 55.39');
+    await act(async () => { (host.querySelector('input[value="PLIN"]') as HTMLInputElement).click(); });
+    await act(async () => { (host.querySelector('input[type="checkbox"]') as HTMLInputElement).click(); });
+    expect(host.textContent).toContain('Confirmar pedido · S/ 57.39');
+    await act(async () => { (host.querySelector('form') as HTMLFormElement).requestSubmit(); });
+    expect(onSubmit).toHaveBeenCalledWith('PLIN', false);
+  });
+  it('confirmado muestra cuánto yapear y el código', async () => {
+    const order = { id: 1043, method: 'YAPE', paymentCode: 'YP-1043', toPay: 55.39 } as Order;
+    const host = await render(createElement(PayPage, { ...base, quote: null, confirmation: order, onSubmit: vi.fn() }));
+    expect(host.textContent).toContain('Pedido 1043 registrado');
+    expect(host.textContent).toContain('S/ 55.39');
+    expect(host.querySelector('.pay-code')?.textContent).toContain('YP-1043');
   });
 });
