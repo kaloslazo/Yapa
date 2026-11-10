@@ -39,7 +39,7 @@ GitHub (push a main) ─ pruebas motor y web ─ paquete ─ scp/ssh ─► Ligh
    YAPA_DEMO_PINS=101=482915,105=739104,116=260318
    YAPA_PUBLIC_URL=https://holayapa.app
    ```
-   Opcionales: SMTP para los correos, Google para entrar con Google, y `YAPA_PLIN_NUMERO` / `YAPA_PLIN_TITULAR` (sin ellos, cuenta simulada).
+   Opcionales: SMTP para los correos, Google para entrar con Google, `YAPA_PLIN_NUMERO` / `YAPA_PLIN_TITULAR` (sin ellos, cuenta simulada) y la IA: `YAPA_GROQ_CLAVE` (gratis en console.groq.com) y, de respaldo, `YAPA_GITHUB_MODELS_CLAVE` (un token de GitHub con permiso de lectura de Models). Después de cambiar el archivo: `sudo systemctl restart yapa`.
 5. **Conectar GitHub:**
    ```
    gh secret set AWS_HOST --body <IP>

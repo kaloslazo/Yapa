@@ -37,11 +37,12 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 
 ## Estado al 09/11/2026
 
-- Iteraciones 2 a 48 y 50 a 58 **completas y en verde** (671 pruebas del motor, 119 del frontend); la 49 está reservada. El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-309. **El siguiente libre es S-310.**
+- Iteraciones 2 a 48 y 50 a 61 **completas y en verde** (692 pruebas del motor, 123 del frontend); la 49 está reservada. El frontend React vive en `../src` (repo `kaloslazo/Yapa`) y usa la API de `src/yapa_sdd/web/api.py`. Ver `docs/desarrollo/00-roadmap.md` y `99-registro.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-319. **El siguiente libre es S-320.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. El margen ya se lee con los costos reales (iteración 58: Plin al 0 % y flete propio); la parte del ahorro es 25 % (iteración 57). El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas, suma los faltantes de compra y dañados, y retiene el 25 % del ahorro, S-301). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador (0 % por defecto).
 - Desde la iteración 56 una zona no se entrega sin la compra real registrada (S-299); en las pruebas, `buy_all` de `test_settlement.py`.
+- IA (iteraciones 60 y 61, `ia.py`): Groq y, de respaldo, GitHub Models; se activa con `YAPA_GROQ_CLAVE` y/o `YAPA_GITHUB_MODELS_CLAVE`. Las pruebas usan un proveedor falso (`tests/test_ia.py`): nunca salen a internet.
 - `audit.money_balance` debe dar diferencia 0. Toda iteración que mueva dinero debe mantenerlo (ver `test_e2e_week`).
 - Tarea de campo pendiente: precios del mercado de barrio (`docs/desarrollo/kit-validacion-campo.md`).
 

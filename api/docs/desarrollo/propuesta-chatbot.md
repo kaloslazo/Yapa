@@ -80,3 +80,7 @@ El equipo decide el umbral para pasar de A a B (por ejemplo, "si más de un terc
 ## Lo que haría yo ahora
 
 Nada de código para el chatbot. Sí dejar la hoja de medición lista para el piloto y, cuando haya datos, volver a este documento con las respuestas reales.
+
+## Qué se hizo (09/11/2026)
+
+Se siguió la recomendación: no hay un chatbot general. La IA se usa solo donde hay texto libre: "Arma mi canasta" para el vecino (iteración 60) y la sugerencia de respuesta para atención (iteración 61). En los dos casos la IA sugiere y la decisión es del motor o de la persona.

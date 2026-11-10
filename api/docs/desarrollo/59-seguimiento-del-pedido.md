@@ -42,3 +42,14 @@ Escenario base: W38, Z-JM-01 (Residencial San Felipe), 8 pedidos registrados el 
 - **SG-F · Liquidado.** Después de liquidar, el estado es "Te devolvimos S/ X", con X = lo devuelto a su saldo. → SG-02
 - **SG-G · Estados finales.** Cancelado por el vecino, anulado, sin mínimo y no entregado dan sus títulos de SG-02. → SG-02
 - **SG-H · Fotos.** El dueño obtiene la foto de la entrega y la de la bolsa 1 (200). Otro vecino recibe 404 `ORDER_NOT_FOUND`. `bolsa-9` o `cualquiera` dan 404 `PHOTO_NOT_FOUND`. → SG-04, S-313
+
+## Trazabilidad
+
+| Regla | Código | Pruebas (`tests/test_seguimiento.py`) |
+|---|---|---|
+| S-310 | `Order.registered_at` (lo pone `register_order`); `logistics._verified_at` lee el registro de caja | `test_sg_a_*`, `test_sg_b_*` |
+| SG-02, S-311 | `logistics.order_status`, `logistics.delivery_day` | `test_sg_a_*` … `test_sg_g_*` |
+| SG-03, S-312 | `logistics.tracking` (hora y detalle por paso; faltantes con `_shortage_notes`) | `test_sg_b_*`, `test_sg_c_*`, `test_sg_d_*`, `test_sg_e_*` |
+| SG-04, S-313 | `web/api.py` `pedido_foto` (dueño, ruta del registro, forma de `PHOTO_PATH`) | `test_sg_h_owner_sees_own_photos` |
+| SG-05 | `logistics.order_photos`; `fotos` en cada pedido de la API | `test_sg_e_*`, `test_sg_h_*` |
+| Web | `Tracking` en `OrdersPage.tsx` (estado, pasos verticales, fotos), `formatMoment` en `utils/format.ts`, tarjeta de pago con el Plin | `src/services/mappers.test.ts`, `src/utils/cart.test.ts` (formatMoment) |

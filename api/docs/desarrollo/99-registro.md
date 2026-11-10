@@ -482,3 +482,15 @@
 - La cuenta estudiantil no deja que AWS cree llaves SSH ni usar EC2 fuera de Ohio: la llave se genera en la máquina de quien despliega y se importa la parte pública (`deploy/aws/README.md`).
 - Medido en el servidor: el motor usa unos 32 MB de RAM.
 
+## Iteraciones 59 a 61 · Seguimiento del pedido e IA (09/11/2026)
+
+- Specs: `59-seguimiento-del-pedido.md`, `60-arma-mi-canasta-ia.md` y `61-atencion-con-ia.md` (S-310..S-319). Origen: la revisión de la pantalla del vecino en el celular y el pedido de Kalos de sumar IA gratis.
+- **59:** el seguimiento pasa a ser vertical. Tiene el estado en una frase, la hora y el detalle de cada paso (incluye lo que le faltó a ese pedido) y las fotos de sus bolsas y de la entrega, que solo ve el dueño. La tarjeta de pago dice a qué Plin pagar.
+- **60:** "Arma mi canasta". La IA propone productos del catálogo y el motor pone precios, pasos y topes. Groq es el principal y GitHub Models el respaldo, los dos con nivel gratis. El límite es de 10 sugerencias por vecino al día y no se manda ningún dato personal.
+- **61:** atención pide a la IA una categoría, una prioridad y un borrador de respuesta. No cambia ningún estado.
+- Las pruebas usan un proveedor falso: el CI nunca sale a internet. Sin claves, la IA está apagada y los botones no aparecen.
+- Al revisar en el navegador salieron tres detalles:
+  - las fotos de ejemplo de la demo se veían rotas (ahora se ocultan si no cargan);
+  - la fecha salía "23/9" (ahora "23/09"; la prueba de `formatMoment` se agregó con la corrección);
+  - la línea "En el supermercado costaba… ahorraste" se partía mal.
+- Resultado: 692 pruebas del motor (21 nuevas) y 123 del frontend (4 nuevas) en verde; typecheck y build sin errores (`59-61-motor-verde.txt`, `59-61-web-verde.txt`).

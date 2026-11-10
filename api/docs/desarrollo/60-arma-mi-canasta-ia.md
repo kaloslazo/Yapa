@@ -48,3 +48,15 @@ En las pruebas se usa un modelo falso: ninguna prueba sale a internet. Catálogo
 - **IA-F · Apagada.** Sin claves, `/api/estado` trae `ia: false` y `POST /api/canasta/sugerir` responde `IA_DISABLED`. → IA-01
 - **IA-G · Sin datos personales.** El mensaje que recibe el modelo no contiene el nombre, el celular ni el correo del vecino. → IA-07
 - **IA-H · Configuración.** Con `YAPA_GROQ_CLAVE` y `YAPA_GITHUB_MODELS_CLAVE` hay dos proveedores, en ese orden. Solo con la de GitHub hay uno. Sin ninguna, no hay IA. → S-314
+
+## Trazabilidad
+
+| Regla | Código | Pruebas (`tests/test_ia.py`) |
+|---|---|---|
+| S-314 | `ia.from_env`, `ia.AIClient.ask_json` (principal y respaldo), `ia.http_post` | `test_ia_h_configuration`, `test_ia_c_fallback` |
+| IA-01 | `ia._require`; `ia` en `/api/estado` | `test_ia_f_disabled_without_keys` |
+| IA-02, IA-03, S-315 | `ia.suggest_basket`, `ia._count_use` (`store.ia_usage`) | `test_ia_e_text_and_daily_limit` |
+| IA-04 | `ia.AIClient.ask_json` | `test_ia_c_fallback` |
+| IA-05, IA-06, S-317 | `ia.suggest_basket` (limpieza, paso, tope, precio del motor) | `test_ia_a_*`, `test_ia_b_*`, `test_ia_d_*`, `test_ia_api_basket_and_support` |
+| IA-07, S-316 | el mensaje solo lleva el catálogo y el texto | `test_ia_g_no_personal_data` |
+| Web | `BasketAssistant.tsx` (aparece si `/api/estado` dice `ia: true`), `mergeSuggestion` en `utils/cart.ts` | `src/utils/cart.test.ts` |

@@ -61,6 +61,7 @@ Producción vive en AWS (arriba). Como alternativa gratis, `Dockerfile` y `rende
 | `YAPA_DEBUG_CLAVE` | clave del admin global de la demostración (10 caracteres o más) |
 | `YAPA_DEMO_PINS` | PIN de las cuentas de prueba, p. ej. `101=482915,105=739104,116=260318` |
 | `YAPA_PUBLIC_URL` | la URL que da Render (`https://….onrender.com`), para las cookies seguras |
+| `YAPA_GROQ_CLAVE` y `YAPA_GITHUB_MODELS_CLAVE` | IA de "Arma mi canasta" y de atención (iteraciones 60 y 61): Groq principal, GitHub Models de respaldo; los dos tienen nivel gratis. Sin claves, la IA no aparece |
 | `YAPA_PLIN_NUMERO` y `YAPA_PLIN_TITULAR` | el Plin negocios donde pagan los vecinos (iteración 58). Opcionales: sin ellos se usa una cuenta simulada (proyecto académico) |
 
 El plan gratis se duerme sin visitas (tarda unos segundos en despertar) y borra el disco al reiniciar, así que la semana de demostración se vuelve a sembrar en cada arranque. Las cuentas del equipo, reparto y proveedor se crean desde "Cuentas del equipo".
