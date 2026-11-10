@@ -3,17 +3,19 @@ import { AdminSkeleton, PartnerSkeleton } from './components/Skeleton';
 import { AuthPage, type LoginKind } from './components/AuthPage';
 import { AccountPage } from './components/AccountPage';
 import { BasketAssistant } from './components/BasketAssistant';
-import { Catalog } from './components/Catalog';
+import { ExplorePage } from './components/ExplorePage';
+import { HomePage } from './components/HomePage';
+import { ProductPage } from './components/ProductPage';
 import { toastDuration, type Toast, type ToastTone } from './utils/toast';
 import { CartBar, type CartLine } from './components/CartPanel';
 import { CartPage } from './components/CartPage';
 import { CheckoutDialog } from './components/CheckoutDialog';
 import { HowItWorks } from './components/EditorialSections';
-import { ProductSheet, Sheet } from './components/Sheet';
+import { Sheet } from './components/Sheet';
 import { InviteContext } from './components/InviteCard';
 import { InvitePage } from './components/InvitePage';
 import { PrivacyPage } from './components/PrivacyPage';
-import { Icon } from './components/Icon';
+import { Icon, type IconName } from './components/Icon';
 import { NoticeBell } from './components/NoticeBell';
 import { OrdersPage, type Claimable, type ClaimRecord, type MyOrders } from './components/OrdersPage';
 import { ZonePage, type MyZone } from './components/ZonePage';
@@ -22,6 +24,7 @@ import { toAccount, toCycle, toNotice, toOrder, toProduct, toQuote, toZone } fro
 import type { Account, CartState, CycleState, Notice, Order, Product, Quote, RefundDestination, Role, Zone } from './types';
 import { cartSubtotal, mergeSuggestion, stepDown, stepUp } from './utils/cart';
 import { closeCountdown } from './utils/landing';
+import { deliveryDay, type Chip } from './utils/shop';
 import { inviteCodeFromPath, inviteLink } from './utils/invite';
 import { noticeTarget } from './utils/notices';
 import { canOpenZonePanel, homeFor, isNeighborRole, isPartner, isStaff } from './utils/roles';
@@ -37,7 +40,7 @@ const PartnerPanel = lazy(() => import('./components/PartnerPanel').then((module
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
-type View = 'store' | 'orders' | 'cart' | 'zone' | 'account';
+type View = 'store' | 'explore' | 'product' | 'orders' | 'cart' | 'zone' | 'account';
 
 // saludo al entrar según el rol; el vecino recibe el de su saldo
 const WELCOME: Partial<Record<Role, string>> = {
@@ -50,8 +53,14 @@ const WELCOME: Partial<Record<Role, string>> = {
   proveedor: 'Aquí ves lo que te compramos y mandas tu lista.',
 };
 
-const viewFromHash = (): View => ({ '#orders': 'orders', '#cart': 'cart', '#zone': 'zone', '#cuenta': 'account' } as Record<string, View>)[window.location.hash] ?? 'store';
-const VIEW_HASH: Record<View, string> = { store: 'catalog', orders: 'orders', cart: 'cart', zone: 'zone', account: 'cuenta' };
+// #explorar/tuberculos y #producto/PAPA-AMARILLA llevan un dato después de la barra
+const HASH_VIEW: Record<string, View> = { orders: 'orders', cart: 'cart', zone: 'zone', cuenta: 'account', explorar: 'explore', producto: 'product' };
+const routeFromHash = () => {
+  const [head, param] = window.location.hash.slice(1).split('/');
+  return { view: HASH_VIEW[head] ?? 'store', param: param ? decodeURIComponent(param) : null };
+};
+const viewFromHash = (): View => routeFromHash().view;
+const VIEW_HASH: Record<View, string> = { store: 'catalog', explore: 'explorar', product: 'producto', orders: 'orders', cart: 'cart', zone: 'zone', account: 'cuenta' };
 const RETURN_TO_VIEW: Record<ReturnView, View> = { cart: 'cart', orders: 'orders', zone: 'zone', cuenta: 'account' };
 const authRouteNow = () => authRouteFromLocation(window.location.pathname, window.location.search);
 
@@ -67,6 +76,8 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [sheet, setSheet] = useState<string | null>(null); // producto abierto en su ficha, o 'como-funciona'
   const [view, setView] = useState<View>(viewFromHash);
+  const [routeParam, setRouteParam] = useState<string | null>(() => routeFromHash().param); // grupo de Explorar o producto abierto
+  const [exploreChip, setExploreChip] = useState<Chip>('todo');
   const [adminOpen, setAdminOpen] = useState(() => window.location.hash === '#admin');
   const [authRoute, setAuthRoute] = useState(authRouteNow); // /entrar y /equipo: el acceso tiene su propia página
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -189,7 +200,7 @@ export default function App() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
   useEffect(() => {
-    const sync = () => { setAdminOpen(window.location.hash === '#admin'); setView(viewFromHash()); setAuthRoute(authRouteNow()); };
+    const sync = () => { setAdminOpen(window.location.hash === '#admin'); setView(viewFromHash()); setRouteParam(routeFromHash().param); setAuthRoute(authRouteNow()); };
     window.addEventListener('hashchange', sync);
     window.addEventListener('popstate', sync);
     return () => { window.removeEventListener('hashchange', sync); window.removeEventListener('popstate', sync); };
@@ -223,6 +234,18 @@ export default function App() {
   const openView = (next: View) => {
     if ((next === 'orders' || next === 'zone' || next === 'account') && !account) { needAccount('Entra a tu cuenta para continuar.', next === 'account' ? 'cuenta' : next); return; }
     setAdminOpen(false); setView(next); go(VIEW_HASH[next]);
+  };
+  const openExplore = (group: string | null = null, chip: Chip = 'todo') => { setAdminOpen(false); setExploreChip(chip); setRouteParam(group); setView('explore'); go(group ? `explorar/${group}` : 'explorar'); };
+  const openProduct = (product: Product) => { setAdminOpen(false); setRouteParam(product.id); setView('product'); go(`producto/${encodeURIComponent(product.id)}`); };
+  // volver dentro de Yapa; si la ficha se abrió desde un enlace, volver es ir al inicio
+  const goBack = () => (window.history.length > 1 ? window.history.back() : goStore('catalog'));
+  const shareProduct = async (product: Product) => {
+    const url = `${window.location.origin}/#producto/${encodeURIComponent(product.id)}`;
+    try {
+      if (typeof navigator.share === 'function') { await navigator.share({ title: `${product.name} en Yapa`, text: `${product.name} a ${formatMoney(product.price)} esta semana en Yapa`, url }); return; }
+      await navigator.clipboard.writeText(url);
+      notify('Copiamos el enlace', 'success', 'Pégalo en WhatsApp para pasárselo a un vecino.');
+    } catch { /* el vecino canceló o el navegador no deja copiar */ }
   };
   const openAdmin = () => {
     if (account?.role !== 'admin') { openAuth('equipo', { rol: 'admin' }); return; }
@@ -402,29 +425,36 @@ export default function App() {
   const inviteState = { url: invite ? inviteLink(window.location.origin, invite.code) : null, today: invite?.today ?? 0, total: invite?.total ?? 0, renew: async () => { try { await loadInvite(true); notify('Tu enlace nuevo ya está activo', 'success', 'El anterior dejó de funcionar. Compártelo solo con vecinos de tu zona.'); } catch (error) { fail(error, 'No pudimos renovar tu enlace'); } } };
 
   const firstName = account?.name.split(' ')[0];
-  const cycleOpen = state ? state.open : closeCountdown(new Date(Date.now() + clockOffset)).open; // la franja de arriba: abierto hasta el miércoles 20:00
-  const sheetProduct = sheet ? catalog.find((p) => p.id === sheet) : undefined;
+  const now = new Date(Date.now() + clockOffset);
+  const countdown = closeCountdown(now); // tarjeta de la semana: cuánto falta para el cierre del miércoles
+  const cycleOpen = state ? state.open : countdown.open;
+  const delivery = deliveryDay(now);
   const searchFor = (value: string) => { setQuery(value); if (view !== 'store') goStore('catalog'); };
-  const tabs: Array<{ id: View; label: string; icon: 'store' | 'receipt' | 'basket' | 'map' }> = [
-    { id: 'store', label: 'Comprar', icon: 'store' },
-    { id: 'orders', label: 'Pedidos', icon: 'receipt' },
+  const tabs: Array<{ id: View; label: string; icon: IconName }> = [
+    { id: 'store', label: 'Inicio', icon: 'home' },
+    { id: 'explore', label: 'Explorar', icon: 'grid' },
     { id: 'cart', label: 'Canasta', icon: 'basket' },
-    { id: 'zone', label: 'Mi zona', icon: 'map' },
+    { id: 'orders', label: 'Pedidos', icon: 'receipt' },
   ];
-  const openTab = (id: View) => (id === 'store' ? goStore('catalog') : openView(id));
+  const navItems: Array<{ id: View; label: string }> = [{ id: 'store', label: 'Inicio' }, { id: 'explore', label: 'Explorar' }, { id: 'orders', label: 'Mis pedidos' }, ...(account ? [{ id: 'zone' as View, label: 'Mi zona' }] : [])];
+  const openTab = (id: View) => (id === 'store' ? goStore('catalog') : id === 'explore' ? openExplore() : openView(id));
+  const shopView = view === 'store' || view === 'explore' || view === 'product';
 
   return (
     <InviteContext.Provider value={inviteState}>
-    <div className={`app-shell ${showAdmin ? '' : 'has-tab-bar'} ${!showAdmin && view === 'store' ? 'is-store' : ''}`}>
+    <div className={`app-shell ${showAdmin ? '' : `has-tab-bar view-${view}`} ${!showAdmin && shopView ? 'is-store' : ''}`}>
       {account?.viewingAs ? <div className="view-as-bar" role="status"><span>Estás viendo Yapa como <strong>{account.name}</strong> ({account.role === 'admin_zona' ? 'admin de zona' : 'vecino'}).</span><button type="button" onClick={() => void backFromView()}>Volver a mi cuenta</button></div> : null}
       {showAdmin ? <Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account?.name ?? ''} role="admin" notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /></Suspense> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>
         <header className="topbar">
           <a className="brand" href="#catalog" aria-label="Yapa, inicio" onClick={(event) => { event.preventDefault(); goStore('catalog'); }}><img className="brand-logo-mark" src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" fetchPriority="high" /><span>yapa</span></a>
-          <button className="where-button" type="button" onClick={() => (account ? openView('zone') : notify('Dónde entregamos', 'neutral', 'Lince y Jesús María ya reciben pedidos. La Victoria abre muy pronto.'))}><small>Entrega el sábado en</small><strong>{accountZone?.name ?? 'Lince y Jesús María'}</strong></button>
-          <label className="top-search"><Icon name="search" size={18} /><span className="sr-only">Buscar productos</span><input name="product-search" type="search" value={query} onChange={(event) => searchFor(event.target.value)} placeholder="Buscar papa, limón, lejía" autoComplete="off" /></label>
+          <button className="where-button" type="button" onClick={() => (account ? openView('zone') : notify('Dónde entregamos', 'neutral', 'Lince y Jesús María ya reciben pedidos. La Victoria abre muy pronto.'))}><span className="where-pin"><Icon name="pin" size={18} weight="fill" /></span><span className="where-copy"><small>Entrega el sábado en</small><strong>{accountZone?.name ?? 'Lince y Jesús María'}<Icon name="chevron" size={14} /></strong></span></button>
+          <div className="top-search-row">
+            <label className="top-search"><Icon name="search" size={18} /><span className="sr-only">Buscar productos</span><input name="product-search" type="search" value={query} onChange={(event) => searchFor(event.target.value)} placeholder="Buscar papa, limón, lejía" autoComplete="off" /></label>
+            <button className="filter-button" type="button" onClick={() => openExplore()} aria-label="Ver categorías y filtros"><Icon name="sliders" size={20} /></button>
+          </div>
           <nav className="main-nav" aria-label="Navegación principal">
-            {tabs.filter((tab) => tab.id !== 'cart').map((tab) => <button key={tab.id} className={`nav-link ${view === tab.id ? 'is-active' : ''}`} type="button" aria-current={view === tab.id ? 'page' : undefined} onClick={() => openTab(tab.id)}>{tab.id === 'zone' && account && canOpenZonePanel(account.role) ? <Icon name="crown" size={15} /> : null}{tab.id === 'orders' ? 'Mis pedidos' : tab.label}</button>)}
+            {navItems.map((item) => <button key={item.id} className={`nav-link ${view === item.id ? 'is-active' : ''}`} type="button" aria-current={view === item.id ? 'page' : undefined} onClick={() => openTab(item.id)}>{item.id === 'zone' && account && canOpenZonePanel(account.role) ? <Icon name="crown" size={15} /> : null}{item.label}</button>)}
           </nav>
           <div className="topbar-actions">
             {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={openAccount} /> : null}
@@ -432,7 +462,6 @@ export default function App() {
             <button className={`cart-button ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')} aria-label={`Canasta, ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'}`}><Icon name="basket" size={20} /><span className="cart-button-label">Canasta</span>{lines.length ? <span className="cart-button-count">{lines.length}</span> : null}</button>
           </div>
         </header>
-        {view === 'store' ? <p className={`week-band ${cycleOpen ? '' : 'is-closed'}`}>{cycleOpen ? <>Pide hasta el <strong>miércoles 8&nbsp;p.&nbsp;m.</strong> · llega el sábado<span className="week-band-more"> a tu portería</span></> : <>Esta semana ya se compró · <strong>volvemos a abrir el lunes</strong></>}</p> : null}
 
         {offline ? <div className="offline-banner" role="alert"><Icon name="warning" size={18} /><span><strong>Sin conexión con Yapa.</strong> Tu canasta sigue guardada en este equipo.{import.meta.env.DEV ? <> Levanta el motor con <code>npm run api</code>.</> : null}</span><button className="text-button" type="button" onClick={retry}>Reintentar</button></div> : null}
 
@@ -454,25 +483,14 @@ export default function App() {
               onCreatePin={async (pin) => { await api.post('/api/pin/crear', { pin }); await loadAccount(); }}
               onWithdraw={async (confirmation) => { await api.post('/api/cuenta/retirar-consentimiento', { confirmar: confirmation }); api.setCsrf(''); setAccount(null); leaveAuth('store'); notify('Cerramos tu cuenta', 'success', 'Borramos tus datos personales. Gracias por haber comprado con Yapa.'); }} />
             : view === 'cart' ? <CartPage lines={lines} subtotal={subtotal} savings={savings} onAdd={addProduct} onDecrease={decreaseProduct} onCheckout={() => void openCheckout()} onBack={() => goStore('catalog')} />
-              : <main id="catalog" className="page-content shop-page">
-                {account ? <>
-                  <h1 id="page-title" className="sr-only">Comprar en Yapa</h1>
-                  {isNeighbor && (account.balance ?? 0) > 0 ? <button className="balance-strip" type="button" onClick={() => openView('orders')}><Icon name="wallet" size={18} /><span>Tienes <strong>{formatMoney(account.balance ?? 0)}</strong> de saldo para tu próxima compra</span><Icon name="arrow" size={16} /></button> : null}
-                </> : (
-                  <section className="shop-banner" aria-labelledby="page-title">
-                    <div>
-                      <h1 id="page-title">Precios de mayorista, sin salir de tu edificio.</h1>
-                      <p>Juntamos los pedidos de los vecinos y compramos al por mayor. Si entre todos el precio baja, te devolvemos la diferencia.</p>
-                      <div className="shop-banner-actions"><button type="button" onClick={() => setSheet('como-funciona')}>Cómo funciona</button><button type="button" onClick={() => openAuth('entrar')}>Ya tengo cuenta</button></div>
-                    </div>
-                    <img src="/images/products/papa-amarilla.webp" alt="" width="480" height="480" />
-                  </section>
-                )}
-                {account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
-                <Catalog products={visible} categories={categories} cart={cart} category={category} query={query} onCategoryChange={setCategory} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={(product) => setSheet(product.id)} onClearFilters={() => { setCategory('Todos'); setQuery(''); }} />
-              </main>}
+              : view === 'explore' ? <ExplorePage key={`${routeParam ?? 'todo'}-${exploreChip}`} products={catalog} group={routeParam} initialChip={exploreChip} cart={cart} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} />
+              : view === 'product' ? (catalog.length ? <ProductPage product={catalog.find((p) => p.id === routeParam)} quantity={cart[routeParam ?? ''] || 0} delivery={delivery} onAdd={addProduct} onDecrease={decreaseProduct} onBack={goBack} onCart={() => openView('cart')} onShare={(product) => void shareProduct(product)} /> : <main className="page-content product-page" aria-busy="true" />)
+              : <HomePage products={catalog} results={visible} query={query} cart={cart} cycleOpen={cycleOpen} countdown={countdown.text} delivery={delivery} signedIn={Boolean(account)} balance={isNeighbor ? account?.balance ?? 0 : 0}
+                assistant={account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
+                onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} onExplore={(chip) => openExplore(null, chip)}
+                onHow={() => setSheet('como-funciona')} onLogin={() => openAuth('entrar')} onBalance={() => openView('orders')} onClearSearch={() => setQuery('')} />}
         </div>
-        {!offline && view === 'store' && lines.length && !sheet ? <CartBar count={lines.length} subtotal={subtotal} onOpenCart={() => openView('cart')} /> : null}
+        {!offline && (view === 'store' || view === 'explore') && lines.length && !sheet ? <CartBar count={lines.length} subtotal={subtotal} onOpenCart={() => openView('cart')} /> : null}
 
         <footer className={`site-footer ${view === 'store' ? '' : 'site-footer--secondary'}`}>
           <div className="footer-brand"><span className="brand"><img className="brand-logo-mark" src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" loading="lazy" /><span>yapa</span></span><p>Compras que rinden, entre vecinos.</p></div>
@@ -486,7 +504,6 @@ export default function App() {
         </nav>
       </>}
       {toastRegion}
-      {!showAdmin && sheetProduct ? <ProductSheet product={sheetProduct} quantity={cart[sheetProduct.id] || 0} onAdd={addProduct} onDecrease={decreaseProduct} onClose={() => setSheet(null)} /> : null}
       {!showAdmin && sheet === 'como-funciona' ? <Sheet label="Cómo funciona" onClose={() => setSheet(null)}><HowItWorks /></Sheet> : null}
       {!showAdmin ? <>
         <CheckoutDialog open={checkoutOpen} quote={quote} zone={accountZone} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onClose={() => { setCheckoutOpen(false); setConfirmation(null); }} onSubmit={registerOrder} onOpenOrders={() => { setCheckoutOpen(false); setConfirmation(null); openView('orders'); }} />

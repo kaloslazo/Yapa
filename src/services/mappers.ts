@@ -30,6 +30,8 @@ export function toProduct(raw: Raw): Product {
     art: look.art,
     image: look.image ?? null,
     jug: look.jug ?? null,
+    group: look.group,
+    tint: look.tint,
     emoji: look.emoji,
   };
 }
