@@ -22,7 +22,8 @@ En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aa
   - El **motor** en Python sirve la API y la web ya construida.
   - **SQLite** y las fotos viven en el disco, con un respaldo en cada despliegue.
 - **GitHub Actions** prueba el motor y la web en cada push. Si es a `main`, sube el paquete por SSH y `desplegar.sh` cambia la versión y vuelve a la anterior si `/salud` no responde.
-- Costo: unos **USD 5,50 al mes** con el crédito estudiantil. Detalle y comandos en [`deploy/aws/README.md`](deploy/aws/README.md). El PNG para informes está en [`docs/img/arquitectura-aws.png`](docs/img/arquitectura-aws.png).
+- Costo: unos **USD 5,50 al mes** con el crédito estudiantil. Detalle y comandos en [`deploy/aws/README.md`](deploy/aws/README.md).
+- El diagrama usa los íconos oficiales de [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) (versión del 31/07/2026). El PNG para informes está en [`docs/img/arquitectura-aws.png`](docs/img/arquitectura-aws.png); para regenerarlo: `python3 docs/img/arquitectura/generar.py`.
 
 ## Levantar todo en local
 
