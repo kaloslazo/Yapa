@@ -446,11 +446,10 @@ export default function App() {
   ];
   const navItems: Array<{ id: View; label: string }> = [{ id: 'store', label: 'Inicio' }, { id: 'explore', label: 'Explorar' }, { id: 'orders', label: 'Mis pedidos' }, ...(account ? [{ id: 'zone' as View, label: 'Mi zona' }] : [])];
   const openTab = (id: View) => (id === 'store' ? goStore('catalog') : id === 'explore' ? openExplore() : openView(id));
-  const shopView = view === 'store' || view === 'explore' || view === 'product' || view === 'cart' || view === 'pay';
 
   return (
     <InviteContext.Provider value={inviteState}>
-    <div className={`app-shell ${showAdmin ? '' : `has-tab-bar view-${view}`} ${!showAdmin && shopView ? 'is-store' : ''}`}>
+    <div className={`app-shell ${showAdmin ? '' : `has-tab-bar view-${view} is-store`}`}>
       {account?.viewingAs ? <div className="view-as-bar" role="status"><span>Estás viendo Yapa como <strong>{account.name}</strong> ({account.role === 'admin_zona' ? 'admin de zona' : 'vecino'}).</span><button type="button" onClick={() => void backFromView()}>Volver a mi cuenta</button></div> : null}
       {showAdmin ? <Suspense fallback={<div className="admin-view admin-view--loading"><AdminSkeleton /></div>}><AdminPanel adminName={account?.name ?? ''} role="admin" notify={notify} onClose={() => { setAdminOpen(false); goStore('catalog'); }} onLogout={() => void logout()} onViewAs={account?.canViewAs ? viewAs : undefined} /></Suspense> : <>
         <a className="skip-link" href="#contenido" onClick={(event) => { event.preventDefault(); const main = document.querySelector('main'); if (main) { main.setAttribute('tabindex', '-1'); main.focus(); main.scrollIntoView(); } }}>Saltar al contenido principal</a>

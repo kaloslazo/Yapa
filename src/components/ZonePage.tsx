@@ -245,7 +245,7 @@ export function ZonePage(props: ZonePageProps) {
   return (
     <main className="customer-page" id="zone-page">
       {!data ? <p className="admin-muted">Cargando tu zona…</p> : data.admin ? <AdminPanel panel={data.admin} data={data} userId={props.userId} onActivate={props.onActivate} onRequestMerge={props.onRequestMerge} onAnswerMerge={props.onAnswerMerge} onWithdrawMerge={props.onWithdrawMerge} onLeaveGroup={props.onLeaveGroup} onTransfer={props.onTransfer} /> : <NeighborView data={data} zones={props.zones} districts={props.districts} onJoin={props.onJoin} onLocate={props.onLocate} onCreate={props.onCreate} />}
-      <button className="text-button zone-back" type="button" onClick={props.onBack}><Icon name="arrow" size={16} /> Volver a la tienda</button>
+      <button className="text-button zone-back" type="button" onClick={props.onBack}><Icon name="back" size={16} /> Volver a la tienda</button>
     </main>
   );
 }

@@ -2012,3 +2012,68 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
   .pay-view .sticky-cta { bottom: 0; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .cart-view, .pay-view { padding-bottom: 100px; }
 }
+
+/* ============ Estructura nueva, fase 3 (11/2026): mis pedidos, seguimiento, cuenta y zona ============
+   Mismas piezas que la tienda: fondo blanco, tarjetas con borde fino, estado en una frase y pasos con íconos cuadrados. */
+.customer-page { padding-top: 24px; }
+.customer-page-header { margin-bottom: 22px; }
+.customer-page-header h1 { font-size: clamp(1.6rem, 3vw, 2.15rem); font-weight: 600; letter-spacing: -0.02em; }
+.customer-page-header p { margin-top: 6px; color: var(--muted); font-size: 1rem; }
+.savings-hero h1 em { color: var(--accent); }
+.customer-page-note { gap: 12px; padding: 12px 16px 12px 12px; border-radius: 16px; background: var(--accent-soft); }
+.hero-stats .customer-page-note + .customer-page-note { background: var(--yellow-soft); }
+.customer-page-note-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--canvas); color: var(--accent); }
+.customer-main-card, .customer-side-card, .account-card, .zone-grid > .customer-main-card { border: 1px solid var(--line); border-radius: 20px; background: var(--canvas); }
+.customer-side-card { padding: 18px; }
+.account-card { padding: 20px; }
+.customer-section-heading { padding: 18px 20px 10px; }
+.customer-section-heading h2, .customer-side-card h2, .account-card h2 { font-size: 1.15rem; font-weight: 600; }
+.customer-count { background: var(--paper); }
+.orders-page-card { gap: 14px; padding: 18px 20px; }
+.orders-page-card-top strong { font-size: 1.05rem; }
+.order-status { padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-dark); font-size: .78rem; font-weight: 600; }
+.order-status--registrado, .order-status--por_verificar { background: var(--yellow-soft); color: #5a4300; }
+.order-status--cancelado, .order-status--anulado, .order-status--cancelado_por_cliente { background: var(--paper); color: var(--muted); }
+.order-status--no_atendido, .order-status--no_entregado { background: var(--peach); color: var(--peach-ink); }
+.pay-reminder { border-radius: 14px; background: var(--yellow-soft); }
+.tracking { display: grid; gap: 16px; }
+.tracking-status { gap: 12px; padding: 16px; border-radius: 18px; background: var(--accent-soft); }
+.tracking-status strong { font-size: 1.1rem; font-weight: 600; }
+.tracking-status span { color: var(--copy); }
+.tracking-status--pending { background: var(--yellow-soft); }
+.tracking-status--warn { background: var(--peach); }
+.tracking-status--muted { background: var(--paper); }
+.tracking-status-icon { display: grid; flex: 0 0 auto; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--canvas); color: var(--accent); }
+.tracking-steps { padding: 0; }
+.tracking-steps li { grid-template-columns: 30px 1fr; gap: 12px; padding-bottom: 18px; }
+.tracking-steps li::before { top: 30px; left: 14px; background: var(--line); }
+.tracking-steps li.is-done::before { background: var(--accent); }
+.tracking-dot { width: 30px; height: 30px; border: 0; border-radius: 9px; background: var(--paper); color: var(--muted); }
+.is-done > .tracking-dot { background: var(--accent); color: #fff; }
+.is-current > .tracking-dot { border: 0; background: var(--vivid); box-shadow: none; }
+.tracking-head strong { font-weight: 600; }
+.tracking-head time, .tracking-text p { color: var(--muted); font-size: .8125rem; }
+.tracking-next { color: var(--accent) !important; font-weight: 600; }
+.tracking-photos img { border-radius: 14px; }
+.order-outcome { border-radius: 16px; }
+.outcome-grid div { border-radius: 12px; }
+.order-lines { padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; }
+.order-lines summary { display: flex; align-items: center; justify-content: space-between; font-weight: 600; list-style: none; cursor: pointer; }
+.order-lines summary::-webkit-details-marker { display: none; }
+.order-lines summary::after { content: ""; width: 8px; height: 8px; margin-right: 4px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .2s ease; }
+.order-lines[open] summary::after { transform: rotate(-135deg); }
+.order-confirm { border-radius: 16px; }
+.mini-table caption { color: var(--muted); font-weight: 600; text-align: left; }
+.claim-form .segmented { border-radius: 999px; }
+.photo-field { border-radius: 14px; }
+.customer-empty-state { padding: 32px 20px; }
+.customer-empty-icon { border-radius: 18px; background: var(--accent-soft); color: var(--accent); }
+.account-page .role-badge { color: var(--accent-dark); font-weight: 600; }
+.account-card input:not([type="checkbox"]):not([type="radio"]), .customer-side-card input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), .zone-grid input:not([type="checkbox"]):not([type="radio"]) { min-height: 46px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--canvas); }
+.zone-back { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 860px) {
+  .customer-page { padding-top: 8px; }
+  .customer-main-card { border: 0; border-radius: 0; }
+  .customer-section-heading { padding: 4px 0 8px; }
+  .orders-page-card { padding: 16px 0; }
+}
