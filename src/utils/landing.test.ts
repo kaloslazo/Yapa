@@ -4,14 +4,14 @@ import { bestDeals, closeCountdown } from './landing';
 // rediseño de la portada: cuánto falta para el cierre del miércoles 20:00 (hora de Lima, S-02)
 describe('cuenta regresiva al cierre', () => {
   it('días y horas mientras falta más de un día', () => {
-    expect(closeCountdown(new Date('2026-11-09T15:00:00-05:00'))).toEqual({ open: true, text: 'Cierra en 2 d 5 h' });
+    expect(closeCountdown(new Date('2026-11-09T15:00:00-05:00'))).toEqual({ open: true, text: 'Cierra en 2 d 5 h', parts: [{ value: 2, unit: 'días' }, { value: 5, unit: 'h' }, { value: 0, unit: 'min' }] });
   });
   it('horas y minutos el último día', () => {
-    expect(closeCountdown(new Date('2026-11-11T17:35:00-05:00'))).toEqual({ open: true, text: 'Cierra en 2 h 25 min' });
+    expect(closeCountdown(new Date('2026-11-11T17:35:00-05:00'))).toEqual({ open: true, text: 'Cierra en 2 h 25 min', parts: [{ value: 2, unit: 'h' }, { value: 25, unit: 'min' }] });
   });
   it('después del cierre dice cuándo vuelve a abrir', () => {
-    expect(closeCountdown(new Date('2026-11-11T20:00:00-05:00'))).toEqual({ open: false, text: 'Abre el lunes' });
-    expect(closeCountdown(new Date('2026-11-14T10:00:00-05:00'))).toEqual({ open: false, text: 'Abre el lunes' });
+    expect(closeCountdown(new Date('2026-11-11T20:00:00-05:00'))).toEqual({ open: false, text: 'Abre el lunes', parts: [] });
+    expect(closeCountdown(new Date('2026-11-14T10:00:00-05:00'))).toEqual({ open: false, text: 'Abre el lunes', parts: [] });
   });
 });
 

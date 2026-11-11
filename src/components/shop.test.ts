@@ -58,6 +58,22 @@ describe('inicio por secciones', () => {
     for (const part of ['Cierra en 1 d 11 h', 'Sáb 14 nov', 'Categorías', 'Tubérculos', 'Mejores precios', 'Están por bajar', 'Todo lo de esta semana']) expect(text, part).toContain(part);
     expect(text).toContain('Faltan 48 kg para que baje a S/ 2.02');
   });
+  it('la cuenta regresiva en fichas y la oferta más fuerte al lado con su botón', async () => {
+    const onAdd = vi.fn();
+    const host = await render(createElement(HomePage, { ...props, onAdd, countdownParts: [{ value: 1, unit: 'día' }, { value: 11, unit: 'h' }, { value: 5, unit: 'min' }] }));
+    expect([...host.querySelectorAll('.countdown-cell small')].map((cell) => cell.textContent)).toEqual(['día', 'h', 'min']);
+    expect(host.querySelector('.countdown-cell .sr-only')?.textContent).toBe('01');
+    const spotlight = host.querySelector('.spotlight');
+    expect(spotlight?.textContent).toContain('Papa amarilla'); // la que más ahorra frente al súper
+    expect(spotlight?.textContent).toContain('−50% frente al súper');
+    await act(async () => { (spotlight?.querySelector('.spotlight-add') as HTMLButtonElement).click(); });
+    expect(onAdd).toHaveBeenCalledWith(papa);
+  });
+  it('cada sección tiene su ícono y las categorías dicen cuántos productos hay', async () => {
+    const host = await render(createElement(HomePage, props));
+    expect(host.querySelectorAll('.sec-head .sec-icon')).toHaveLength(4);
+    expect(host.querySelector('.cat-tile')?.textContent).toBe('Tubérculos1 producto');
+  });
   it('con una búsqueda solo muestra los resultados', async () => {
     const host = await render(createElement(HomePage, { ...props, query: 'cebo', results: [cebolla] }));
     expect(host.textContent).toContain('Resultados para «cebo»');
