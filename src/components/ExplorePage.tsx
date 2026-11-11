@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ShoppingGuides } from './ShoppingGuides';
 import type { CartState, Product } from '../types';
 import { Icon } from './Icon';
 import { ProductGrid, ProductVisual, savingPercent } from './Catalog';
@@ -65,6 +66,7 @@ export function ExplorePage({ products, group, initialChip = 'todo', cart, onAdd
       <div className="sec-head"><h2>Todos los productos</h2></div>
       {chips}
       <ProductGrid products={list} cart={cart} {...actions} />
+      <ShoppingGuides />
     </main>
   );
 }
