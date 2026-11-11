@@ -40,11 +40,11 @@ interface ProductActions {
   onOpen: (product: Product) => void;
 }
 
-export function ProductCard({ product, quantity, onAdd, onDecrease, onOpen }: ProductActions & { product: Product; quantity: number }) {
+export function ProductCard({ product, quantity, index = 0, onAdd, onDecrease, onOpen }: ProductActions & { product: Product; quantity: number; index?: number }) {
   const off = savingPercent(product);
   const unit = unitLabel(product.unit);
   return (
-    <article className={`pcard ${quantity ? 'has-quantity' : ''}`}>
+    <article className={`pcard ${quantity ? 'has-quantity' : ''}`} style={{ '--i': index } as CSSProperties}>
       <div className="pcard-media">
         <button className="pcard-photo" type="button" onClick={() => onOpen(product)} aria-label={`Ver ${product.name}`}><ProductVisual product={product} /></button>
         {off ? <span className="save-tag">−{off}%</span> : null}
@@ -66,12 +66,12 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onOpen }: Pr
 }
 
 // fila de «Están por bajar»: cuánto falta entre todos para el siguiente precio
-export function ProductRow({ product, onAdd, onOpen }: Omit<ProductActions, 'onDecrease'> & { product: Product }) {
+export function ProductRow({ product, index = 0, onAdd, onOpen }: Omit<ProductActions, 'onDecrease'> & { product: Product; index?: number }) {
   const next = product.nextTier;
   const fill = dropFill(product) ?? 1;
   const unit = unitLabel(product.unit);
   return (
-    <div className="prow">
+    <div className="prow" style={{ '--i': index } as CSSProperties}>
       <button className="prow-main" type="button" onClick={() => onOpen(product)}>
         <ProductVisual product={product} className="prow-photo" />
         <span className="prow-copy">
@@ -86,5 +86,5 @@ export function ProductRow({ product, onAdd, onOpen }: Omit<ProductActions, 'onD
 }
 
 export function ProductGrid({ products, cart, onAdd, onDecrease, onOpen, className = '' }: ProductActions & { products: Product[]; cart: CartState; className?: string }) {
-  return <div className={`pgrid ${className}`}>{products.map((product) => <ProductCard key={product.id} product={product} quantity={cart[product.id] || 0} onAdd={onAdd} onDecrease={onDecrease} onOpen={onOpen} />)}</div>;
+  return <div className={`pgrid ${className}`}>{products.map((product, i) => <ProductCard key={product.id} index={i} product={product} quantity={cart[product.id] || 0} onAdd={onAdd} onDecrease={onDecrease} onOpen={onOpen} />)}</div>;
 }

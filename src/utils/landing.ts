@@ -4,15 +4,19 @@ const LIMA_OFFSET_MS = 5 * 3_600_000; // Perú no cambia de hora: UTC−5 todo e
 const DAY_MS = 86_400_000;
 
 // S-02: se recibe desde el lunes 00:00 hasta antes del miércoles 20:00, hora de Lima
-export function closeCountdown(now: Date): { open: boolean; text: string } {
+export interface CountdownPart { value: number; unit: string }
+
+export function closeCountdown(now: Date): { open: boolean; text: string; parts: CountdownPart[] } {
   const lima = new Date(now.getTime() - LIMA_OFFSET_MS); // sus campos UTC son la hora de Lima
   const sinceMonday = ((lima.getUTCDay() + 6) % 7) * DAY_MS + (lima.getTime() % DAY_MS);
   const left = 2 * DAY_MS + 20 * 3_600_000 - sinceMonday;
-  if (left <= 0) return { open: false, text: 'Abre el lunes' };
+  if (left <= 0) return { open: false, text: 'Abre el lunes', parts: [] };
   const days = Math.floor(left / DAY_MS);
   const hours = Math.floor((left % DAY_MS) / 3_600_000);
   const minutes = Math.floor((left % 3_600_000) / 60_000);
-  return { open: true, text: days ? `Cierra en ${days} d ${hours} h` : `Cierra en ${hours} h ${minutes} min` };
+  // las fichas de la tarjeta de la semana: días y horas, o horas y minutos el último día
+  const parts = days ? [{ value: days, unit: days === 1 ? 'día' : 'días' }, { value: hours, unit: 'h' }, { value: minutes, unit: 'min' }] : [{ value: hours, unit: 'h' }, { value: minutes, unit: 'min' }];
+  return { open: true, text: days ? `Cierra en ${days} d ${hours} h` : `Cierra en ${hours} h ${minutes} min`, parts };
 }
 
 // los productos que más ahorran frente al supermercado (solo los que tienen precio de referencia)

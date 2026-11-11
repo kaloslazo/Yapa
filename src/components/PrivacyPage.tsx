@@ -45,6 +45,7 @@ export function PrivacyPage() {
         <ul className="photo-credits">
           {photoCredits.map((c) => <li key={c.product}>{c.product}: <a href={c.source} target="_blank" rel="noreferrer">foto de {c.author}</a>, {c.licenseUrl ? <a href={c.licenseUrl} target="_blank" rel="noreferrer">{c.license}</a> : c.license}.</li>)}
         </ul>
+        <p>Las recortamos para quitarles el fondo y las pasamos a WebP; las que tienen licencia CC BY-SA se comparten con la misma licencia.</p>
 
         <a className="secondary-button privacy-back" href="/">Volver a Yapa</a>
       </article>

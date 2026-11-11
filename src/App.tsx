@@ -468,7 +468,7 @@ export default function App() {
           <div className="topbar-actions">
             {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={openAccount} /> : null}
             <button className="account-button" type="button" onClick={openAccount} aria-label={account ? `Tu cuenta, ${firstName}` : 'Entrar a Yapa'}>{account ? <span className="account-avatar" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : null}<span className="account-label">{account ? firstName : 'Entrar'}</span></button>
-            <button className={`cart-button ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')} aria-label={`Canasta, ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'}`}><Icon name="basket" size={20} /><span className="cart-button-label">Canasta</span>{lines.length ? <span className="cart-button-count">{lines.length}</span> : null}</button>
+            <button className={`cart-button ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')} aria-label={`Canasta, ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'}`}><Icon name="basket" size={20} /><span className="cart-button-label">Canasta</span>{lines.length ? <span className="cart-button-count" key={lines.length}>{lines.length}</span> : null}</button>
           </div>
         </header>
 
@@ -495,7 +495,7 @@ export default function App() {
             : view === 'pay' ? <PayPage quote={quote} zone={accountZone} delivery={delivery} cycleOpen={Boolean(state?.open)} confirmation={confirmation} onSubmit={registerOrder} onBack={() => openView('cart')} onOpenOrders={() => openView('orders')} onKeepShopping={() => goStore('catalog')} />
               : view === 'explore' ? <ExplorePage key={`${routeParam ?? 'todo'}-${exploreChip}`} products={catalog} group={routeParam} initialChip={exploreChip} cart={cart} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} />
               : view === 'product' ? (catalog.length ? <ProductPage product={catalog.find((p) => p.id === routeParam)} quantity={cart[routeParam ?? ''] || 0} delivery={delivery} onAdd={addProduct} onDecrease={decreaseProduct} onBack={goBack} onCart={() => openView('cart')} onShare={(product) => void shareProduct(product)} /> : <main className="page-content product-page" aria-busy="true" />)
-              : <HomePage products={catalog} results={visible} query={query} cart={cart} cycleOpen={cycleOpen} countdown={countdown.text} delivery={delivery} signedIn={Boolean(account)} balance={isNeighbor ? account?.balance ?? 0 : 0}
+              : <HomePage products={catalog} results={visible} query={query} cart={cart} cycleOpen={cycleOpen} countdown={countdown.text} countdownParts={countdown.parts} delivery={delivery} signedIn={Boolean(account)} balance={isNeighbor ? account?.balance ?? 0 : 0}
                 group={isNeighbor ? myZone?.progress : null}
                 assistant={account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
                 onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} onExplore={(chip) => openExplore(null, chip)}
