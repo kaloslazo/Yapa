@@ -63,6 +63,25 @@ describe('inicio por secciones', () => {
     expect(host.textContent).toContain('Resultados para «cebo»');
     expect(host.textContent).not.toContain('Mejores precios');
   });
+  // iteración 62: el avance del grupo en la tarjeta de la semana (AG-G, S-321)
+  const meterWidth = (host: HTMLElement) => host.querySelector<HTMLElement>('.week-card .meter span')?.style.width;
+  it('con sesión y zona dice cuántos pedidos lleva el edificio y llena la barra', async () => {
+    const host = await render(createElement(HomePage, { ...props, signedIn: true, group: { verified: 5, minimum: 8 } }));
+    expect(host.querySelector('.week-card')?.textContent).toContain('Tu edificio lleva 5 de 8 pedidos para comprar juntos');
+    expect(meterWidth(host)).toBe('62.5%');
+  });
+  it('con 8 o más dice que el edificio ya llegó y la barra queda llena', async () => {
+    const host = await render(createElement(HomePage, { ...props, signedIn: true, group: { verified: 9, minimum: 8 } }));
+    expect(host.querySelector('.week-card')?.textContent).toContain('Tu edificio ya llegó a los 8 pedidos para comprar juntos');
+    expect(meterWidth(host)).toBe('100%');
+  });
+  it('sin avance o con el ciclo cerrado la tarjeta queda como está', async () => {
+    for (const extra of [{ group: null }, { signedIn: true, group: { verified: 5, minimum: 8 }, cycleOpen: false }]) {
+      const host = await render(createElement(HomePage, { ...props, ...extra }));
+      expect(host.querySelector('.week-card')?.textContent).not.toContain('Tu edificio');
+      expect(meterWidth(host)).toBeUndefined();
+    }
+  });
 });
 
 describe('ficha del producto', () => {

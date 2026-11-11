@@ -1,0 +1,12 @@
+ERROR: test_ag_a_neighbor_sees_group_progress (test_avance_grupo.GroupProgressSpecTests.test_ag_a_neighbor_sees_group_progress)
+KeyError: 'avance'
+ERROR: test_ag_b_only_verified_orders_of_the_group_this_week (test_avance_grupo.GroupProgressSpecTests.test_ag_b_only_verified_orders_of_the_group_this_week)
+KeyError: 'avance'
+ERROR: test_ag_c_only_the_count (test_avance_grupo.GroupProgressSpecTests.test_ag_c_only_the_count)
+KeyError: 'avance'
+ERROR: test_ag_e_same_number_as_zone_admin (test_avance_grupo.GroupProgressSpecTests.test_ag_e_same_number_as_zone_admin)
+KeyError: 'avance'
+FAIL: test_ag_d_no_zone_no_progress (test_avance_grupo.GroupProgressSpecTests.test_ag_d_no_zone_no_progress)
+AssertionError: 'avance' not found in {'zona': None, 'administra': None, 'codigo_referido': 'VECINO140', 'radio_m': 300, 'union_m': 500}
+Ran 698 tests in 2.241s
+FAILED (failures=1, errors=4, skipped=4)
