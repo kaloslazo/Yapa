@@ -37,3 +37,15 @@ Semana 2026-W38, miércoles 16/09 a las 10:00. Z-LINCE-01 y Z-LINCE-02 están en
 - **AG-E · El mismo número que el admin.** Si Ana administra Z-LINCE-01, su `avance` es igual a `administra.avance` (3 de 8). → AG-02
 - **AG-F · Sin sesión.** `GET /api/mi-zona` sin entrar → 401 `LOGIN_REQUIRED`. → AG-04
 - **AG-G · Tienda.** Con el ciclo abierto y 5 de 8, la tarjeta de la semana dice «Tu edificio lleva 5 de 8 pedidos para comprar juntos» y la barra llega al 62,5 %. Con 9 dice «Tu edificio ya llegó a los 8 pedidos para comprar juntos» y la barra queda llena. Sin avance (sin sesión o sin zona) o con el ciclo cerrado, no aparece. → S-321
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| AG-01 | `web/api.py` `mi_zona` (`avance`, `null` sin zona) | `tests/test_avance_grupo.py`: `test_ag_a_*`, `test_ag_d_*` |
+| AG-02 | `web/api.py` `group_progress`, la usan `mi_zona` y `zone_admin_panel` (AZ-08) | `test_ag_a_*`, `test_ag_b_*`, `test_ag_e_*`; sigue en verde `test_az_h_zone_admin_panel` |
+| AG-03, S-165, S-320 | `group_progress` devuelve solo `verificados`, `minimo` y `ciclo` | `test_ag_c_only_the_count` |
+| AG-04 | ruta `/api/mi-zona` con rol `vecino` (sin cambios) | `test_ag_f_requires_session` |
+| S-321 | `src/App.tsx` (`loadZone` también al entrar al Inicio, `progress` en `MyZone`); `GroupLine` en `WeekCard` de `src/components/HomePage.tsx`; estilos `.week-card-group` | `src/components/shop.test.ts` («inicio por secciones», 3 pruebas) |
+
+Revisado en el navegador con la demo (`npm run api` + `npm run dev`, semana 2026-W40 abierta): Ana (101, admin de Los Álamos) y Carmen (105, vecina sin panel) ven «Tu edificio lleva 4 de 8 pedidos para comprar juntos» con la barra a la mitad, en celular y en escritorio. Sin sesión la tarjeta queda como estaba. Evidencia: `62-avance-grupo-motor-rojo.txt`, `62-avance-grupo-web-rojo.txt`, `62-avance-grupo-motor-verde.txt` y `62-avance-grupo-web-verde.txt`.

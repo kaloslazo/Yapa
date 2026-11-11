@@ -513,3 +513,12 @@
   - títulos en **Bricolage Grotesque**, que ya estaba instalada.
 - Revisado en el navegador en escritorio y en celular (las capturas sin interfaz van a 520 px porque Chrome no dibuja por debajo de ~500 px).
 
+## Iteración 62 · Avance del grupo para el vecino (10/11/2026)
+
+- Spec: `62-avance-del-grupo-para-el-vecino.md` (S-320 y S-321). Origen: el diseño aprobado de la estructura nueva pone en la tarjeta de la semana «Tu edificio lleva 5 de 8 pedidos para comprar juntos», y ese dato solo lo tenía el admin de zona (AZ-08).
+- Motor: `GET /api/mi-zona` trae `avance` (`verificados`, `minimo`, `ciclo`) para cualquier vecino con zona, y `null` sin zona. Va ahí y no en `/api/estado` porque depende de la zona del vecino y pide sesión. El cálculo pasó a `group_progress`, que usan también el panel del admin, así que los dos ven el mismo número. Solo el conteo, sin nombres ni montos (S-165).
+- Tienda: el Inicio carga `mi-zona` al entrar como vecino (antes solo al abrir Mi zona) y la tarjeta de la semana muestra la línea con una barra mientras el ciclo está abierto. Con 8 o más dice que el edificio ya llegó. Sin sesión o sin zona, la tarjeta queda igual.
+- Pruebas antes del código (`62-avance-grupo-motor-rojo.txt`, `62-avance-grupo-web-rojo.txt`).
+- Revisado en el navegador con la demo: Ana (101) y Carmen (105) ven «4 de 8» con la barra a la mitad, en celular y en escritorio.
+- Resultado: 698 pruebas del motor (6 nuevas) y 152 del frontend (3 nuevas) en verde; typecheck y build sin errores (`62-avance-grupo-motor-verde.txt`, `62-avance-grupo-web-verde.txt`).
+
