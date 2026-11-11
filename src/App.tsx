@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { AdminSkeleton, PartnerSkeleton } from './components/Skeleton';
 import { AuthPage, type LoginKind } from './components/AuthPage';
 import { AccountPage } from './components/AccountPage';
@@ -415,10 +415,11 @@ export default function App() {
   const staffOnly = account && account.role !== 'admin' && isStaff(account.role); // compras, armado y atención no compran
 
   const toastRegion = (
-    <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div className={`toast toast--${toast.tone} is-visible`} role={toast.tone === 'warning' ? 'alert' : 'status'}>
+    <div className="toast-region" aria-live={toast?.tone === 'warning' ? 'assertive' : 'polite'} aria-atomic="true">{toast ? <div key={`${toast.title}|${toast.detail ?? ''}`} className={`toast toast--${toast.tone} is-visible`} role={toast.tone === 'warning' ? 'alert' : 'status'} style={{ '--toast-ms': `${toastDuration(toast.tone, toast.detail)}ms` } as CSSProperties}>
       <span className="toast-icon"><Icon name={toast.tone === 'success' ? 'check' : toast.tone === 'warning' ? 'warning' : 'info'} size={18} weight="bold" /></span>
       <div className="toast-copy"><strong>{toast.title}</strong>{toast.detail ? <span>{toast.detail}</span> : null}{toast.action ? <button className="toast-action" type="button" onClick={() => { toast.action?.run(); setToast(null); }}>{toast.action.label}</button> : null}</div>
       <button className="toast-close" type="button" onClick={() => setToast(null)} aria-label="Cerrar aviso"><Icon name="close" size={16} /></button>
+      <span className="toast-timer" aria-hidden="true" />
     </div> : null}</div>
   );
 
@@ -468,7 +469,7 @@ export default function App() {
           <div className="topbar-actions">
             {isNeighbor ? <NoticeBell notices={notices} unread={unreadNotices} emailNotices={emailNotices} emailVerified={Boolean(account?.emailVerified)} now={new Date(Date.now() + clockOffset)} onOpenNotice={(notice) => void openNotice(notice)} onReadAll={() => void readAllNotices()} onToggleEmail={(enabled) => void toggleEmailNotices(enabled)} onVerifyEmail={openAccount} /> : null}
             <button className="account-button" type="button" onClick={openAccount} aria-label={account ? `Tu cuenta, ${firstName}` : 'Entrar a Yapa'}>{account ? <span className="account-avatar" aria-hidden="true">{firstName?.charAt(0).toUpperCase()}</span> : null}<span className="account-label">{account ? firstName : 'Entrar'}</span></button>
-            <button className={`cart-button ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')} aria-label={`Canasta, ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'}`}><Icon name="basket" size={20} /><span className="cart-button-label">Canasta</span>{lines.length ? <span className="cart-button-count" key={lines.length}>{lines.length}</span> : null}</button>
+            <button className={`cart-button ${view === 'cart' ? 'is-active' : ''}`} type="button" onClick={() => openView('cart')} aria-label={`Canasta, ${lines.length} ${lines.length === 1 ? 'producto' : 'productos'}`}><Icon name="basket" size={20} /><span className="cart-button-label">{lines.length ? formatMoney(subtotal) : 'Canasta'}</span>{lines.length ? <span className="cart-button-count" key={lines.length}>{lines.length}</span> : null}</button>
           </div>
         </header>
 

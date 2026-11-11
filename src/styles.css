@@ -2200,3 +2200,81 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
   .week-photo, .spotlight-photo .product-image, .meter span, .home-sec.is-in :is(.pcard, .prow, .cat-tile), .explore .pgrid > .pcard, .pcard-qty, .cart-button-count { animation: none !important; }
   .rolling-strip, .cat-tile .product-image { transition: none; }
 }
+
+/* ============ Blanco y negro (11/2026) ============
+   Las acciones van en negro; el verde queda solo para el ahorro (−%, barras de «por bajar», «ahorras»). */
+:root { --action: #121614; --action-hover: #2f3532; --on-action: #fff; --save: #12b76a; }
+.pcard-qty button:hover:not(:disabled) { background: rgba(255, 255, 255, .14); }
+.cart-button-count { background: #fff; color: var(--ink); }
+.meter span, .week-card-group .meter span { background: var(--save); }
+.save-chip { background: var(--accent-soft); color: var(--accent-dark); }
+.pay-option.is-on { border-color: var(--ink); background: var(--canvas); }
+.pay-option.is-on .pay-radio { border-color: var(--ink); }
+.pay-option.is-on .pay-switch { background: var(--ink); }
+.sec-icon, .sec-icon.is-tag, .sec-icon.is-users, .sec-icon.is-basket { background: var(--paper); color: var(--ink); }
+.sec-head button { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 4px; }
+.sec-head button:hover { text-decoration-color: var(--ink); }
+.prow-add { background: var(--canvas); color: var(--ink); }
+.prow-add:hover { background: var(--action); color: #fff; }
+.empty-art, .delivery-fact-icon, .cart-bag, .cart-empty-art, .empty-icon, .customer-page-note-icon, .customer-empty-icon, .pay-box-icon { background: var(--paper); color: var(--ink); }
+
+/* tarjeta de la semana en negro: fotos de colores encima */
+.week-card { background: var(--action); color: #fff; }
+.week-card-label { background: rgba(255, 255, 255, .1); color: #9be7c0; }
+.week-card-count h2, .week-card-arrive, .week-card-foot p, .week-card-group p { color: #c9cfcc; }
+.week-card-arrive .icon { color: #9be7c0; }
+.week-card-arrive b, .week-card-group b { color: #fff; }
+.countdown-cell { background: rgba(255, 255, 255, .08); }
+.countdown-cell small { color: #aab3ae; }
+.week-card-foot { border-top-color: rgba(255, 255, 255, .12); }
+.week-card-links button { color: #fff; text-decoration-color: rgba(255, 255, 255, .4); }
+.week-card-balance { color: #fff; }
+.week-card-balance b { color: #9be7c0; }
+.week-card-group .meter { background: rgba(255, 255, 255, .14); }
+
+/* navbar: buscador con el filtro adentro, enlaces con raya, canasta en negro con el total */
+.where-pin { background: var(--paper); color: var(--ink); }
+.top-search-row { position: relative; gap: 0; }
+.top-search input { padding-right: 52px; }
+.top-search input:focus-visible { outline: 2px solid var(--ink); }
+.filter-button { position: absolute; top: 5px; right: 5px; width: 36px; height: 36px; border-radius: 10px; background: var(--canvas); color: var(--ink); }
+.filter-button:hover { background: var(--ink); color: #fff; }
+.main-nav { gap: 4px; }
+.nav-link { position: relative; color: var(--muted); }
+.nav-link:hover { background: none; color: var(--ink); }
+.nav-link.is-active { background: none; color: var(--ink); font-weight: 600; }
+.nav-link::after { content: ''; position: absolute; right: 12px; bottom: 3px; left: 12px; height: 2px; border-radius: 2px; background: var(--ink); transform: scaleX(0); transition: transform .35s var(--ease); }
+.nav-link.is-active::after { transform: scaleX(1); }
+.cart-button { border-radius: 999px; padding: 0 8px 0 16px; font-variant-numeric: tabular-nums; }
+.cart-button:not(:has(.cart-button-count)) { padding-right: 18px; }
+.cart-button-count { min-width: 26px; height: 26px; border-radius: 13px; font-size: .8125rem; }
+.account-button:hover { background: var(--paper); }
+
+/* avisos: arriba al centro, en negro, con su tiempo que se acaba */
+.toast-region, .app-shell .toast-region, .app-shell:has(.mobile-cart-bar) .toast-region { top: auto; right: auto; bottom: 24px; left: 50%; width: min(440px, calc(100% - 24px)); transform: translateX(-50%); }
+.app-shell:has(.cart-bar) .toast-region { top: auto; right: auto; bottom: 102px; left: 50%; width: min(560px, calc(100% - 24px)); transform: translateX(-50%); }
+.toast { position: relative; overflow: hidden; align-items: center; gap: 12px; padding: 12px 8px 14px 12px; border-radius: 18px; background: var(--action); color: #fff; animation: toast-drop .45s var(--ease); }
+@keyframes toast-drop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+@keyframes toast-drop-down { from { opacity: 0; transform: translateY(-14px) scale(.96); } }
+.toast-icon { width: 32px; height: 32px; margin-top: 0; border-radius: 10px; background: rgba(255, 255, 255, .12); color: #fff; }
+.toast--success .toast-icon { background: var(--save); color: var(--deep); }
+.toast--warning .toast-icon { background: #f4c45a; color: #2b1d00; }
+.toast-copy strong { font-size: .9375rem; font-weight: 600; }
+.toast-copy span { color: #c9cfcc; }
+.toast-action { margin-top: 8px; padding: 6px 12px; border-radius: 10px; background: #fff; color: var(--ink); font-weight: 600; text-decoration: none; }
+.toast-close { color: #aab3ae; }
+.toast-close:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.toast-timer { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; background: rgba(255, 255, 255, .3); transform-origin: left; animation: toast-time var(--toast-ms, 6000ms) linear forwards; }
+@keyframes toast-time { to { transform: scaleX(0); } }
+
+@media (max-width: 860px) {
+  .toast-region, .app-shell .toast-region, .app-shell:has(.cart-bar) .toast-region, .app-shell:has(.mobile-cart-bar) .toast-region { top: calc(10px + env(safe-area-inset-top)); bottom: auto; width: calc(100% - 20px); }
+  .toast { animation-name: toast-drop-down; }
+  .tab-bar button.is-active { color: var(--ink); }
+  .tab-count { background: var(--ink); color: #fff; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast-timer { animation: none !important; }
+  .nav-link::after { transition: none; }
+}
+
