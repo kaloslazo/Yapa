@@ -529,12 +529,18 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     # --- zona (API-05) ---
 
+    def group_progress(zone) -> dict:
+        """AZ-08 y AG-02: pedidos verificados del grupo en el ciclo actual, sin cancelados (S-320: solo el conteo)."""
+        current = cycle.cycle_id(clock())
+        group = {z.zone_id for z in store.zones.values() if z.group_id == zone.group_id}
+        verified = sum(1 for o in store.orders_in_cycle(current)
+                       if o.status != "CANCELADO_POR_CLIENTE" and o.zone_id in group and o.payment_status == "VERIFICADO")
+        return {"verificados": verified, "minimo": MIN_ORDERS_PER_GROUP, "ciclo": current}
+
     def zone_admin_panel(zone) -> dict:
         """AZ-08: lo que ve el admin de su zona (S-165: nombres y si pidió, sin montos ni ubicaciones)."""
         current = cycle.cycle_id(clock())
         in_cycle = [o for o in store.orders_in_cycle(current) if o.status != "CANCELADO_POR_CLIENTE"]
-        group = {z.zone_id for z in store.zones.values() if z.group_id == zone.group_id}
-        verified = sum(1 for o in in_cycle if o.zone_id in group and o.payment_status == "VERIFICADO")
         ordered = {o.customer_id for o in in_cycle}
         nearby = []
         if zone.lat is not None and zone.lon is not None:
@@ -554,7 +560,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 for mid, (zid, target) in store.merge_requests.items() if zid == zone.zone_id]  # AN-13
         admin = store.customers[zone.admin_id]
         return zone_json(zone) | {
-            "avance": {"verificados": verified, "minimo": MIN_ORDERS_PER_GROUP, "ciclo": current},
+            "avance": group_progress(zone),
             "vecinos": [{"id": c.customer_id, "nombre": c.name, "pidio": c.customer_id in ordered}
                         for c in sorted(store.customers.values(), key=lambda c: c.customer_id)
                         if c.zone_id == zone.zone_id],
@@ -570,6 +576,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         zone = store.zones.get(customer.zone_id)
         administered = next((z for z in store.zones.values() if z.admin_id == session["principal"]), None)
         return {"zona": zone_json(zone) if zone else None,
+                "avance": group_progress(zone) if zone else None,  # AG-01: cualquier vecino con zona
                 "administra": zone_admin_panel(administered) if administered else None,
                 "codigo_referido": customers.referral_code(customer),
                 "radio_m": zones.MEMBER_RADIUS_M, "union_m": zones.MERGE_DISTANCE_M}

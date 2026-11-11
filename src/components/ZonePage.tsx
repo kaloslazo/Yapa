@@ -24,6 +24,7 @@ export interface ZonePanel extends Zone {
 
 export interface MyZone {
   zone: Zone | null;
+  progress: { verified: number; minimum: number; cycle: string } | null; // iteración 62: cualquier vecino con zona
   admin: ZonePanel | null;
   referralCode: string;
   radius: number;

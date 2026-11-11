@@ -17,6 +17,7 @@ interface HomePageProps {
   delivery: string;
   signedIn: boolean;
   balance: number;
+  group?: { verified: number; minimum: number } | null; // iteración 62: avance del grupo del vecino
   assistant?: ReactNode;
   onAdd: (product: Product) => void;
   onDecrease: (product: Product) => void;
@@ -81,13 +82,14 @@ export function HomePage(props: HomePageProps) {
 }
 
 // la semana en una tarjeta: cuándo cierra y cuándo llega; abajo el saldo o cómo funciona
-function WeekCard({ cycleOpen, countdown, delivery, signedIn, balance, onHow, onLogin, onBalance }: HomePageProps) {
+function WeekCard({ cycleOpen, countdown, delivery, signedIn, balance, group, onHow, onLogin, onBalance }: HomePageProps) {
   return (
     <section className="week-card" aria-label="Esta semana">
       <div className="week-card-top">
         <div><small>{cycleOpen ? 'Pedidos hasta el miércoles 8 p. m.' : 'Esta semana ya se compró'}</small><strong>{cycleOpen ? countdown : 'Abrimos el lunes'}</strong></div>
         <div className="week-card-arrive"><small>Llega a tu portería</small><strong>{capital(delivery)}</strong></div>
       </div>
+      {cycleOpen && group ? <GroupLine {...group} /> : null}
       <div className="week-card-foot">
         {signedIn && balance > 0 ? <button className="week-card-balance" type="button" onClick={onBalance}><span>Tienes <b>{formatMoney(balance)}</b> de saldo para tu próxima compra</span><Icon name="arrow" size={16} /></button> : <>
           <p>Pagas el precio máximo. Si entre todos baja, te devolvemos la diferencia.</p>
@@ -95,5 +97,16 @@ function WeekCard({ cycleOpen, countdown, delivery, signedIn, balance, onHow, on
         </>}
       </div>
     </section>
+  );
+}
+
+// cuántos pedidos verificados lleva el grupo frente al mínimo; solo con el ciclo abierto (S-321)
+function GroupLine({ verified, minimum }: { verified: number; minimum: number }) {
+  const reached = verified >= minimum;
+  return (
+    <div className="week-card-group">
+      <p>{reached ? <>Tu edificio ya llegó a los <b>{minimum} pedidos</b> para comprar juntos</> : <>Tu edificio lleva <b>{verified} de {minimum}</b> pedidos para comprar juntos</>}</p>
+      <span className="meter" aria-hidden="true"><span style={{ width: `${Math.min(verified / minimum, 1) * 100}%` }} /></span>
+    </div>
   );
 }
