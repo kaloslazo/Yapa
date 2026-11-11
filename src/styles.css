@@ -1719,6 +1719,11 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.015em; }
 .week-card-links button, .week-card-balance { padding: 0; border: 0; background: none; color: #8ff0bd; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .week-card-balance { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 10px; color: #fff; text-align: left; text-decoration: none; }
 .week-card-balance b { color: #8ff0bd; }
+.week-card-group { display: grid; gap: 8px; font-size: .875rem; }
+.week-card-group p { color: #dcebe3; }
+.week-card-group b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+.week-card-group .meter { background: rgba(255, 255, 255, .16); }
+.week-card-group .meter span { background: #8ff0bd; }
 .home .assistant-card { width: auto; margin: 0; }
 .cat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 132px)); gap: 16px; }
 @media (max-width: 600px) { .cat-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

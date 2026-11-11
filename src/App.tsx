@@ -146,6 +146,7 @@ export default function App() {
     const a = raw.administra;
     setMyZone({
       zone: raw.zona ? toZone(raw.zona) : null,
+      progress: raw.avance ? { verified: raw.avance.verificados, minimum: raw.avance.minimo, cycle: raw.avance.ciclo } : null,
       referralCode: raw.codigo_referido,
       radius: raw.radio_m,
       mergeDistance: raw.union_m,
@@ -179,6 +180,7 @@ export default function App() {
     if (!account || !isNeighborRole(account.role)) { setMyOrders(null); setMyZone(null); return; }
     if (view === 'orders') loadOrders().catch(fail);
     if (view === 'zone') loadZone().catch(fail);
+    if (view === 'store') loadZone().catch(() => undefined); // iteración 62: el avance del grupo en el Inicio; si falla, la tarjeta queda como está
   }, [account, view, loadOrders, loadZone, fail]);
 
   const isNeighbor = account !== null && isNeighborRole(account.role);
@@ -494,6 +496,7 @@ export default function App() {
               : view === 'explore' ? <ExplorePage key={`${routeParam ?? 'todo'}-${exploreChip}`} products={catalog} group={routeParam} initialChip={exploreChip} cart={cart} onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} />
               : view === 'product' ? (catalog.length ? <ProductPage product={catalog.find((p) => p.id === routeParam)} quantity={cart[routeParam ?? ''] || 0} delivery={delivery} onAdd={addProduct} onDecrease={decreaseProduct} onBack={goBack} onCart={() => openView('cart')} onShare={(product) => void shareProduct(product)} /> : <main className="page-content product-page" aria-busy="true" />)
               : <HomePage products={catalog} results={visible} query={query} cart={cart} cycleOpen={cycleOpen} countdown={countdown.text} delivery={delivery} signedIn={Boolean(account)} balance={isNeighbor ? account?.balance ?? 0 : 0}
+                group={isNeighbor ? myZone?.progress : null}
                 assistant={account && state?.ai && state.open ? <BasketAssistant onApply={applySuggestion} /> : null}
                 onAdd={addProduct} onDecrease={decreaseProduct} onOpen={openProduct} onGroup={(group) => openExplore(group)} onExplore={(chip) => openExplore(null, chip)}
                 onHow={() => setSheet('como-funciona')} onLogin={() => openAuth('entrar')} onBalance={() => openView('orders')} onClearSearch={() => setQuery('')} />}
