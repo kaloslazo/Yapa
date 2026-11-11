@@ -2122,6 +2122,9 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
 .cart-button-count { background: var(--on-action); color: #fff; animation: bump .45s var(--ease); }
 .meter span { background: var(--action); }
 @keyframes bump { 40% { transform: scale(1.35); } }
+/* la foto entra entera en su cuadro, aunque sea alta (galones) */
+.pcard-photo .product-visual, .cat-tile-img .product-visual, .prow-photo, .spotlight-photo .product-visual, .pp-visual, .cart-page-art, .promo-photo, .cat-card-photo { grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
+.product-visual .product-image, .pp-visual .product-image, .prow-photo .product-image, .promo-photo .product-image, .cat-card-photo .product-image, .cart-page-art .product-image { min-height: 0; max-height: 100%; }
 
 /* títulos de sección con su ícono */
 .sec-head h2 { display: flex; align-items: center; gap: 10px; }

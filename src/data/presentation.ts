@@ -30,10 +30,10 @@ const looks: Record<string, Look> = {
   LIMON: { detail: 'Jugoso, para el ceviche', art: 'banana', image: '/images/products/limon.webp', group: 'verduras', tint: '#e3f6ec', emoji: '🍋' },
   ZANAHORIA: { detail: 'Fresca, de mercado mayorista', art: 'oil', image: '/images/products/zanahoria.webp', group: 'verduras', tint: '#ffe5d0', emoji: '🥕' },
   'PLATANO-SEDA': { detail: 'Dulce y listo para la semana', art: 'banana', image: '/images/products/platano-seda.webp', group: 'verduras', tint: '#fff4c7', emoji: '🍌' },
-  'LIMPIATODO-GALON': { detail: 'Galón de 3.8 L, rinde el mes', art: 'milk', jug: ['#c3b3ee', '#6b4fc8'], group: 'limpieza', tint: '#efe7fb', emoji: '🧴' },
-  'LAVAVAJILLAS-GALON': { detail: 'Galón para la cocina', art: 'milk', jug: ['#a8e3ae', '#2f9a48'], group: 'limpieza', tint: '#e3f6ec', emoji: '🧽' },
-  'DETERGENTE-LIQUIDO-GALON': { detail: 'Galón para la ropa', art: 'milk', jug: ['#a6cdf3', '#2369b8'], group: 'limpieza', tint: '#e2f0fb', emoji: '🫧' },
-  'LEJIA-GALON': { detail: 'Galón para desinfectar', art: 'milk', jug: ['#f4f4ee', '#2b72c9'], group: 'limpieza', tint: '#eef2f5', emoji: '🧪' },
+  'LIMPIATODO-GALON': { detail: 'Sapolio, aroma lavanda', art: 'milk', image: '/images/products/limpiatodo.webp', group: 'limpieza', tint: '#efe7fb', emoji: '🧴' },
+  'LAVAVAJILLAS-GALON': { detail: 'Ayudín, limón y sábila', art: 'milk', image: '/images/products/lavavajillas.webp', group: 'limpieza', tint: '#e3f6ec', emoji: '🧽' },
+  'DETERGENTE-LIQUIDO-GALON': { detail: 'Bolívar Cuidado Total, para la ropa', art: 'milk', image: '/images/products/detergente-liquido.webp', group: 'limpieza', tint: '#e2f0fb', emoji: '🫧' },
+  'LEJIA-GALON': { detail: 'Sapolio, para desinfectar', art: 'milk', image: '/images/products/lejia.webp', group: 'limpieza', tint: '#eef2f5', emoji: '🧪' },
 };
 
 export const categoryNames: Record<string, string> = { FRESCOS: 'Frescos', LIMPIEZA: 'Limpieza' };
