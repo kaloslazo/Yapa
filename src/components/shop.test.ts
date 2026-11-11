@@ -34,11 +34,13 @@ async function render(element: ReturnType<typeof createElement>) {
 }
 
 describe('tarjeta de producto', () => {
-  it('foto o galón, precio, nombre, ahorro y un botón para agregar', async () => {
+  it('foto, precio, nombre, ahorro y un botón para agregar; la limpieza también con foto de su marca', async () => {
     const onAdd = vi.fn();
     const host = await render(createElement(ProductGrid, { products: [cebolla, lejia], cart: {}, ...actions, onAdd }));
     expect(host.querySelector('img[alt="Cebolla roja"]')?.getAttribute('src')).toBe('/images/products/cebolla-roja.webp');
-    expect(host.querySelector('.product-jug')).not.toBeNull();
+    expect(host.querySelector('img[alt="Lejía galón"]')?.getAttribute('src')).toBe('/images/products/lejia.webp');
+    expect(host.querySelector('.product-jug')).toBeNull();
+    expect(host.textContent).toContain('Sapolio, para desinfectar');
     expect(host.textContent).toContain('S/ 2.35');
     expect(host.textContent).toContain('−40%');
     await act(async () => { (host.querySelector('[aria-label="Agregar Cebolla roja"]') as HTMLButtonElement).click(); });
