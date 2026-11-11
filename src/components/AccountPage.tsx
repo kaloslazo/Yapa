@@ -79,8 +79,8 @@ export function AccountPage({ account, googleClientId, onGoogleLink, onGoogleUnl
       <header className="customer-page-header">
         <div>
           <span className={`role-badge role-badge--${account.role}`}>{account.role === 'admin_zona' ? <Icon name="crown" size={14} /> : null}{ROLE_LABELS[account.role]}</span>
-          <h1>Hola, {account.name.split(' ')[0]}</h1>
-          <p>{neighbor ? `Cliente n.º ${account.user}. Aquí ves tu saldo y cómo entras a Yapa.` : 'Tienes acceso al centro de operaciones de Yapa.'}</p>
+          <h1>Mi cuenta</h1>
+          <p>{neighbor ? `${account.name} · cliente ${account.user}` : `${account.name} · centro de operaciones de Yapa`}</p>
         </div>
         {neighbor ? <div className="hero-stats"><div className="customer-page-note"><span className="customer-page-note-icon"><Icon name="wallet" size={20} /></span><span><small>Tu saldo a favor</small><strong>{formatMoney(account.balance ?? 0)}</strong></span></div></div> : null}
       </header>
