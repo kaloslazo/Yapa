@@ -44,7 +44,11 @@ describe('guías al final de Explorar', () => {
     expect(guides).toHaveLength(3);
     expect([...guides].every((g) => g.querySelector('img')?.getAttribute('src')?.startsWith('/images/products/'))).toBe(true);
     expect([...host.querySelectorAll('.shopping-guide details')].every((d) => !d.hasAttribute('open'))).toBe(true);
-    expect([...host.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['Antes de pedir', 'Preguntas frecuentes']);
+    expect([...host.querySelectorAll('h2')].map((h) => h.textContent)).toEqual(['Compra con más idea', 'Preguntas frecuentes']);
+    expect(host.querySelector('details.guide-disclosure')?.hasAttribute('open')).toBe(false);
+    expect(host.querySelectorAll('.faq-list details')).toHaveLength(5);
+    const button = [...host.querySelectorAll('button')].find(b => b.textContent?.includes('Ver todas'))!;
+    await act(async () => { button.click(); });
     expect(host.querySelectorAll('.faq-list details')).toHaveLength(faqs.length);
   });
 });

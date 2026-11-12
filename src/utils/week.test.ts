@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { shortDate, weekLabel } from './week';
+import { shortDate, weekLabel, weekRangeLabel } from './week';
+
+describe('PA-01 · fechas para Armado', () => {
+  it('muestra lunes, domingo y año incluso al cruzar de año', () => {
+    expect(weekRangeLabel('2026-W40')).toBe('28 sep – 4 oct 2026');
+    expect(weekRangeLabel('2026-W01')).toBe('29 dic 2025 – 4 ene 2026');
+    expect(weekRangeLabel('sin semana')).toBe('sin semana');
+  });
+});
 
 describe('UX-02 · la semana en palabras para el vecino', () => {
   it('dice el lunes de la semana', () => {

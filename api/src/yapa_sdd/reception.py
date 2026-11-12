@@ -51,10 +51,29 @@ def for_zone(store: InMemoryStore, cycle: str, zone_id: str) -> dict:
         order_ids = tuple(o.order_id for o in store.orders_in_cycle(cycle) if o.zone_id == zone_id and is_attended(store, o))
     state = ("recibida" if received else "entregada" if delivery else "fallida" if failure else "pendiente")
     zone = store.zones[zone_id]
+    # Iteración 63: hitos derivados de hechos existentes, sin nuevos estados de negocio.
+    bags = [store.bags.get(order_id, []) for order_id in order_ids]
+    ready = bool(bags) and all(bags)
+    dispatch = store.dispatches.get((cycle, zone_id))
+    milestones = []
+    if ready:
+        milestones.append({"estado": "listo", "hora": max(min(b.packed_at for b in group) for group in bags).isoformat()})
+    if dispatch or delivery:
+        milestones.append({"estado": "en_camino", "hora": (dispatch.at if dispatch else delivery.delivered_at).isoformat()})
+    if delivery:
+        milestones.append({"estado": "entregada", "hora": delivery.delivered_at.isoformat()})
+    if failure:
+        milestones.append({"estado": "fallida", "hora": failure.registered_at.isoformat()})
+    if received:
+        milestones.append({"estado": "recibida", "hora": received.received_at.isoformat()})
+    progress = ("recibida" if received else "entregada" if delivery else "fallida" if failure
+                else "en_camino" if dispatch else "listo" if ready else "preparando" if order_ids else "sin_pedidos")
     return {
         "ciclo": cycle,
         "zona": {"id": zone.zone_id, "nombre": zone.name, "distrito": zone.district},
         "estado": state,
+        "seguimiento": progress,
+        "hitos": sorted(milestones, key=lambda item: datetime.fromisoformat(item["hora"])),
         "entrego": ({"recibe": delivery.received_by, "hora": delivery.delivered_at.isoformat()} if delivery else None),
         "confirmo": ({"por": received.received_by, "hora": received.received_at.isoformat()} if received else None),
         "pedidos": [{"id": order_id, "vecino": store.customers[store.orders[order_id].customer_id].name,

@@ -1,5 +1,15 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
+
+- Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.
+- Armado muestra fechas completas y filtra entregas y bolsas por zona; Atención muestra Completados con contador y estado vacío.
+- Portería conserva su única zona autorizada; muestra hitos derivados de bolsas, despacho, entrega y recepción, filtro por estado y avisos al actualizar cada 15 segundos. La cola conserva varios cambios entre consultas y se limpia al salir.
+- El proveedor edita fichas de producto con cantidad, unidad, paso y precios por volumen, añade productos y envía la lista al flujo existente de aprobación. No se publica automáticamente.
+- En Explorar las guías van en un desplegable con frase y foto; FAQ muestra cinco preguntas al inicio, con acceso a las diez. Cómo funciona conserva todas.
+- Pruebas en rojo antes del código; resultado: 718 pruebas del motor, 169 del frontend, TypeScript y build aprobados. Node 22.23.4 y Python 3.12; evidencia `63-*-rojo.txt` y `63-*-verde.txt`.
+- Verificado en escritorio y móvil. Compras y Reparto se compararon contra main y sus funciones no cambiaron. Sin publicaciones ni cambios en main.
+
 ## Iteración 3 · Billetera de saldo (24/09/2026)
 
 - Spec: `03-billetera-saldo.md`. Se agregan los supuestos S-13..S-17, que el equipo debe validar.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import type { Account } from '../types';
 import { formatMoney } from '../utils/format';
@@ -7,6 +7,8 @@ import { Icon } from './Icon';
 import { PhotoForm } from './PhotoForm';
 import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
+import { SupplierListEditor } from './SupplierListEditor';
+import { RECEPTION_LABELS, unseenReceptionEvents, type ReceptionSnapshot } from '../utils/receptionUpdates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -122,12 +124,49 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
 // iteración 55, PO-01..PO-04: la portería ve las bolsas de su edificio y confirma que llegaron
 function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
   const [cycle, setCycle] = useState('');
-  const { data, reload } = useData(`/api/porteria${cycle ? `?ciclo=${cycle}` : ''}`, notify);
+  const [data, setData] = useState<Raw | null>(null);
+  const [status, setStatus] = useState('todos');
+  const [offline, setOffline] = useState(false);
+  const notificationQueue = useRef<string[]>([]);
+  const previous = useRef<ReceptionSnapshot | null>(null);
+  const currentReload = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
+    let active = true, loading = false;
+    previous.current = null;
+    notificationQueue.current = [];
+    setData(null);
+    setStatus('todos');
+    const refresh = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const next = await api.get<Raw>(`/api/porteria${cycle ? `?ciclo=${cycle}` : ''}`);
+        if (!active) return;
+        const updates = unseenReceptionEvents(previous.current, next as ReceptionSnapshot);
+        notificationQueue.current.push(...updates.map(event => `${next.zona.nombre}: ${RECEPTION_LABELS[event.estado] ?? event.estado}`));
+        if (notificationQueue.current.length) notify(notificationQueue.current.shift()!, 'success');
+        previous.current = next as ReceptionSnapshot;
+        setData(next);
+        setOffline(false);
+      } catch { if (active) setOffline(true); }
+      finally { loading = false; }
+    };
+    currentReload.current = refresh;
+    void refresh();
+    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 15_000);
+    const notificationTimer = window.setInterval(() => {
+      if (!document.hidden && notificationQueue.current.length) notify(notificationQueue.current.shift()!, 'success');
+    }, 6_000);
+    const visible = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener('visibilitychange', visible);
+    return () => { active = false; window.clearInterval(timer); window.clearInterval(notificationTimer); notificationQueue.current = []; document.removeEventListener('visibilitychange', visible); };
+  }, [cycle, notify]);
+  const reload = () => currentReload.current();
+  if (!data && offline) return <div className="partner-card" role="alert"><p>No pudimos conectar con tu portería.</p><button className="secondary-button" onClick={() => void reload()}>Reintentar</button></div>;
   if (!data) return <PartnerSkeleton />;
   const confirm = async () => {
     try {
       await api.post('/api/porteria/recepciones', { ciclo: data.ciclo });
-      notify('Recepción confirmada', 'success', 'Cada vecino recibió el aviso para bajar a recoger sus bolsas.');
       await reload();
     } catch (error) {
       notify('No se pudo confirmar', 'warning', error instanceof Error ? error.message : undefined);
@@ -139,7 +178,13 @@ function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
         <h1>Hola, {name.split(' ')[0]}</h1>
         <WeekSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} />
       </section>
-      <ReceptionCard data={data} onConfirm={confirm} />
+      <div className="concierge-filters">
+        <label className="checkout-field"><span>Tu zona asignada</span><input value={`${data.zona.id} · ${data.zona.nombre}`} readOnly /></label>
+        <label className="checkout-field"><span>Filtrar por estado</span><select value={status} onChange={e => setStatus(e.target.value)}><option value="todos">Todos los estados</option>{Object.entries(RECEPTION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <button className="secondary-button" type="button" onClick={() => void reload()}>Actualizar</button>
+      </div>
+      <p className="partner-muted" role="status">{offline ? 'Sin conexión. Mostramos el último estado recibido; reintentaremos automáticamente.' : 'Actualización automática cada 15 segundos. Los cambios aparecen como avisos en esta página.'}</p>
+      {status === 'todos' || status === data.seguimiento ? <ReceptionCard data={data} onConfirm={confirm} /> : <div className="partner-card"><p>No hay entregas de tu zona con ese estado en esta semana.</p><button className="text-button" type="button" onClick={() => setStatus('todos')}>Ver todos los estados</button></div>}
       <p className="partner-note"><Icon name="info" size={18} />Solo ves el nombre de cada vecino y cuántas bolsas lleva. Lo que compró y lo que pagó es privado.</p>
     </>
   );
@@ -148,21 +193,21 @@ function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
 function SupplierHome({ notify }: { notify: Notify }) {
   const [cycle, setCycle] = useState('');
   const { data, reload } = useData(`/api/proveedor${cycle ? `?ciclo=${cycle}` : ''}`, notify);
-  const [list, setList] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   if (!data) return <PartnerSkeleton />;
   const order = data.pedido;
   const next: Raw | undefined = data.propuestas.find((o: Raw) => o.ciclo === data.proximo);
-  const text = list ?? next?.lista ?? data.lista_actual;
-  const submit = async () => {
+  const text = next?.lista ?? data.lista_actual;
+  const submit = async (text: string) => {
     setBusy(true);
     try {
       await api.post('/api/proveedor/propuestas', { ciclo: data.proximo, lista: text });
       notify('Lista enviada', 'success', 'El equipo de Yapa la revisa antes de publicarla. Te avisamos aquí mismo.');
-      setList(null);
       await reload();
+      return true;
     } catch (error) {
       notify('No pudimos recibir tu lista', 'warning', error instanceof Error ? error.message : undefined);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -189,9 +234,7 @@ function SupplierHome({ notify }: { notify: Notify }) {
       <section className="partner-card" aria-labelledby="lista-title">
         <h2 id="lista-title">Tu lista para la {weekLabel(data.proximo)}</h2>
         {next ? <p className={`offer-state offer-state--${next.estado.toLowerCase()}`}>{OFFER_STATES[next.estado]}{next.motivo ? `: ${next.motivo}` : ''}</p> : null}
-        <p className="partner-muted">Una línea por producto: código, nombre, categoría, unidad, paso, máximo que puedes entregar, proveedor (vacío) y los tramos (desde cuánto y a qué precio). Usa punto decimal.</p>
-        <label className="checkout-field"><span className="sr-only">Lista de precios</span><textarea className="supplier-list" value={text} onChange={(event) => setList(event.target.value)} rows={8} spellCheck={false} /></label>
-        <button className="primary-button" type="button" disabled={busy || !text.trim()} onClick={() => void submit()}>{busy ? 'Enviando…' : next ? 'Enviar de nuevo' : 'Enviar para revisión'}</button>
+        <SupplierListEditor key={data.proximo} initialText={text} busy={busy} resubmit={Boolean(next)} onSubmit={submit} />
       </section>
     </>
   );
