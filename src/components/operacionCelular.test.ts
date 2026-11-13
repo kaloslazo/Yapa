@@ -13,7 +13,7 @@ vi.mock('./LazyZonesMap', () => ({ LazyZonesMap: () => null }));
 let root: Root;
 let host: HTMLDivElement;
 const notify = vi.fn();
-beforeEach(() => { vi.spyOn(window, 'scrollTo').mockImplementation(() => {}); });
+beforeEach(() => { vi.spyOn(window, 'scrollTo').mockImplementation(() => {}); Element.prototype.scrollIntoView = vi.fn(); }); // jsdom no trae scrollIntoView
 afterEach(async () => { if (root) await act(async () => root.unmount()); host?.remove(); vi.clearAllMocks(); vi.restoreAllMocks(); });
 async function mount(element: React.ReactNode) {
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);

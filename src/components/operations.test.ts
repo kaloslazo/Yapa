@@ -34,8 +34,8 @@ describe('PA-02 y AT-01 · operación por zona y completados', () => {
     await choose(filter, 'Z-LINCE-01');
     expect(host.textContent).toContain('Entregas por zona (1)');
     expect(host.querySelectorAll('.stop-card')).toHaveLength(1);
-    expect(host.querySelectorAll('tbody tr')).toHaveLength(1);
-    expect(host.querySelector('tbody')?.textContent).toContain('Persona 1');
+    expect(host.querySelectorAll('.pack-card')).toHaveLength(1); // iteración 64: el armado son tarjetas (S-331)
+    expect(host.querySelector('.pack-list')?.textContent).toContain('Persona 1');
     await choose(host.querySelector('select')!, '2026-W40');
     expect(api.get).toHaveBeenCalledWith('/api/admin/armado?ciclo=2026-W40');
     expect(filter.value).toBe('');
