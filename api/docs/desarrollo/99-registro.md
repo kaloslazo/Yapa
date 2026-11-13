@@ -1,5 +1,15 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 64 · La operación en el celular (12/11/2026)
+
+- Pedido de Carlos después de la demo, con la recomendación del profesor: las pantallas de operación se usan desde el celular. Spec: `64-operacion-en-el-celular.md`, supuestos S-327..S-332 a validar por el equipo.
+- En el celular, cada fila de las tablas del panel se ve como una tarjeta con el nombre de cada dato.
+- Nombres y fotos en vez de claves: edificios, semanas en fechas, proveedores, productos con su foto y motivos en palabras.
+- Elegir en vez de escribir: el colchón se llena eligiendo un producto de limpieza, el faltante se repone desde su fila y la incidencia se registra eligiendo el pedido de una lista con búsqueda (`GET /api/admin/pedidos`, sin montos).
+- Armado: una tarjeta por pedido con sus productos y fotos, casillas para marcar, avance "N de M pedidos con bolsa" y un botón de cámara que registra la bolsa al elegir la foto.
+- Atención, compras, portería, reparto y proveedor con tarjetas, botones de 44 px o más y sin claves internas.
+- Pruebas en rojo antes del código; resultado: 731 pruebas del motor, 176 de la web, TypeScript y build. Sin cambios de reglas de negocio ni de dinero.
+
 ## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
 
 - Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.

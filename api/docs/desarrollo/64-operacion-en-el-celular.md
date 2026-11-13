@@ -50,3 +50,29 @@ Escenario base: la semana de demo (2026-W40) cerrada, con la compra registrada.
 - **OC-F · Sin escribir códigos.** El colchón se llena eligiendo el producto de una lista con su nombre; la incidencia se registra eligiendo el pedido de una lista. Ninguno de los dos formularios tiene un campo de texto para un código. → S-329
 - **OC-G · Armado.** El armador ve una tarjeta por pedido con sus productos, la barra "N de M pedidos con bolsa" y un botón de cámara por pedido; al elegir la foto, se registra la bolsa sin otro toque. → S-331
 - **OC-H · Sin claves a la vista.** En Armado, Atención, Compras, Portería y Resumen no aparecen `Z-LINCE-01`, `SUP-FRESCOS` ni `SOLICITUD_CLIENTE`. → S-328, S-332
+
+## Cambios en pruebas anteriores
+
+- `test_compra_real.test_api_a_purchase_damaged_labels_and_incidents` compara el faltante campo por campo: ahora espera también `nombre` "Papa amarilla" (OC-03). La comparación sigue siendo exacta.
+- `operations.test.ts` (PA-02, iteración 63): el filtro por zona se comprueba sobre las tarjetas de armado (`.pack-card`) en lugar de las filas de la tabla, porque el armado ya no es una tabla (S-331).
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| OC-01, OC-02, S-330 | `web/api.py` `admin_pedidos` (ruta con `ATTENDING`) | `test_operacion_celular_64.test_oc_a_*` |
+| OC-03 | `claim_json`, `shortage_json` y `admin_colchon` con `nombre` | `test_oc_b_*`, `test_compra_real.test_api_a_*` |
+| OC-04, S-329 | `compras` con `guardables` (categorías de `buffer.NON_PERISHABLE`) | `test_oc_c_*` |
+| OC-05 | `order_json` con `zona_nombre`; `PACKER_ORDER` lo incluye | `test_oc_d_*` |
+| S-327 | `labelTables` en `AdminPanel.tsx` (pone `data-label` a cada celda) y la regla `@media (max-width: 720px)` de `styles.css` | `operacionCelular.test.ts` OC-E |
+| S-328 | `CycleSelect` con fechas, `REASONS` y `AI_CATEGORIES` en palabras, `ProductThumb.tsx`, zona y proveedor por nombre | OC-H |
+| S-329 | `Purchases` (colchón con `guardables`, reponer desde el faltante) e `Incidents` (pedido elegido de `/api/admin/pedidos`, con búsqueda) | OC-F |
+| S-331 | `Packing` y `PackCard` en `AdminPanel.tsx` (marcas en pantalla, cámara que sube al elegir la foto) | OC-G |
+| S-332 | `PartnerPanel.tsx` (edificio por nombre, foto de producto, `PhotoForm` grande para el reparto) y `SupplierListEditor.tsx` (clave solo para un producto nuevo) | OC-H |
+
+## Evidencia
+
+- `64-motor-rojo.txt` y `64-web-rojo.txt`: las pruebas nuevas fallan antes del código (6 del motor y 6 de la web).
+- `64-motor-verde.txt`: 731 pruebas del motor en verde.
+- `64-web-verde.txt`: TypeScript, 176 pruebas de la web y build en verde.
+- Revisión en un celular de 390 px con la demo local (12/11/2026): Armado, Compras, Reclamos, Incidencias, Devoluciones y Portería sin tablas cortadas ni claves internas; el selector de semana ya no deja un hueco de 200 px en la caja de arriba.
