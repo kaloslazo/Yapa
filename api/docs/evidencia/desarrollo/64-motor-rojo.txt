@@ -1,0 +1,63 @@
+test_oc_a_admin_too_but_not_the_packer (test_operacion_celular_64.OperationOnPhoneTests.test_oc_a_admin_too_but_not_the_packer) ... FAIL
+test_oc_a_support_lists_the_week_orders_without_money (test_operacion_celular_64.OperationOnPhoneTests.test_oc_a_support_lists_the_week_orders_without_money) ... FAIL
+test_oc_b_claims_shortages_and_buffer_carry_the_product_name (test_operacion_celular_64.OperationOnPhoneTests.test_oc_b_claims_shortages_and_buffer_carry_the_product_name) ... ERROR
+test_oc_b_shortage_and_buffer_names (test_operacion_celular_64.OperationOnPhoneTests.test_oc_b_shortage_and_buffer_names) ... ERROR
+test_oc_c_buffer_choices_are_the_cleaning_products (test_operacion_celular_64.OperationOnPhoneTests.test_oc_c_buffer_choices_are_the_cleaning_products) ... ERROR
+test_oc_d_orders_carry_the_building_name (test_operacion_celular_64.OperationOnPhoneTests.test_oc_d_orders_carry_the_building_name) ... ERROR
+
+======================================================================
+ERROR: test_oc_b_claims_shortages_and_buffer_carry_the_product_name (test_operacion_celular_64.OperationOnPhoneTests.test_oc_b_claims_shortages_and_buffer_carry_the_product_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 60, in test_oc_b_claims_shortages_and_buffer_carry_the_product_name
+    self.assertEqual(data["reclamos"][0]["nombre"], "Cebolla roja")
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'nombre'
+
+======================================================================
+ERROR: test_oc_b_shortage_and_buffer_names (test_operacion_celular_64.OperationOnPhoneTests.test_oc_b_shortage_and_buffer_names)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 67, in test_oc_b_shortage_and_buffer_names
+    self.assertEqual({f["nombre"] for f in data["compra_real"]["faltantes"]}, {"Papa amarilla"})
+                      ~^^^^^^^^^^
+KeyError: 'nombre'
+
+======================================================================
+ERROR: test_oc_c_buffer_choices_are_the_cleaning_products (test_operacion_celular_64.OperationOnPhoneTests.test_oc_c_buffer_choices_are_the_cleaning_products)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 74, in test_oc_c_buffer_choices_are_the_cleaning_products
+    ids = {p["id"] for p in data["guardables"]}
+                            ~~~~^^^^^^^^^^^^^^
+KeyError: 'guardables'
+
+======================================================================
+ERROR: test_oc_d_orders_carry_the_building_name (test_operacion_celular_64.OperationOnPhoneTests.test_oc_d_orders_carry_the_building_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 84, in test_oc_d_orders_carry_the_building_name
+    self.assertEqual(data["pedidos"][0]["zona_nombre"], "Residencial San Felipe")
+                     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+KeyError: 'zona_nombre'
+
+======================================================================
+FAIL: test_oc_a_admin_too_but_not_the_packer (test_operacion_celular_64.OperationOnPhoneTests.test_oc_a_admin_too_but_not_the_packer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 47, in test_oc_a_admin_too_but_not_the_packer
+    self.assertEqual(self.admin.get(f"/api/admin/pedidos?ciclo={CYCLE}")[0], 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_oc_a_support_lists_the_week_orders_without_money (test_operacion_celular_64.OperationOnPhoneTests.test_oc_a_support_lists_the_week_orders_without_money)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_operacion_celular_64.py", line 37, in test_oc_a_support_lists_the_week_orders_without_money
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.012s
+
+FAILED (failures=2, errors=4)

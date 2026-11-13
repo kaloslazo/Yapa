@@ -1,0 +1,167 @@
+
+ RUN  v5.0.5 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/components/operacionCelular.test.ts (6 tests | 6 failed) 112ms
+   ❯ OC-E · las tablas se leen como tarjetas en el celular (1)
+     × cada celda lleva el nombre de su columna 40ms
+   ❯ OC-F · elegir en vez de escribir (2)
+     × el colchón se llena eligiendo un producto de limpieza por su nombre 17ms
+     × la incidencia se registra eligiendo el pedido de una lista 20ms
+   ❯ OC-G · armado con la cámara (1)
+     × una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto 14ms
+   ❯ OC-H · sin claves internas a la vista (2)
+     × armado, compras y devoluciones muestran nombres 13ms
+     × la portería ve su edificio sin la clave de la zona 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-E · las tablas se leen como tarjetas en el celular > cada celda lleva el nombre de su columna
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/components/operacionCelular.test.ts:48:64
+     46|     const cells = [...host.querySelectorAll('.admin-table tbody td')];
+     47|     expect(cells.length).toBeGreaterThan(0);
+     48|     expect(cells.every((td) => td.getAttribute('data-label'))).toBe(tr…
+       |                                                                ^
+     49|     expect(cells[0].getAttribute('data-label')).toBe('Pedido');
+     50|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-F · elegir en vez de escribir > el colchón se llena eligiendo un producto de limpieza por su nombre
+AssertionError: expected <input …(4)></input> to be null
+
+- Expected:
+null
+
++ Received:
+<input
+  placeholder="LIMPIATODO-GALON"
+  required=""
+  spellcheck="false"
+  value=""
+/>
+
+ ❯ src/components/operacionCelular.test.ts:59:73
+     57|     await mount(panel('compras'));
+     58|     const form = [...host.querySelectorAll('form')].find((f) => f.text…
+     59|     expect(form.querySelector('input[placeholder="LIMPIATODO-GALON"]')…
+       |                                                                         ^
+     60|     const select = form.querySelector('select')!;
+     61|     expect([...select.options].map((o) => o.textContent)).toEqual(['Li…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-F · elegir en vez de escribir > la incidencia se registra eligiendo el pedido de una lista
+AssertionError: expected <input inputmode="numeric" …(3)></input> to be null
+
+- Expected:
+null
+
++ Received:
+<input
+  inputmode="numeric"
+  placeholder="12"
+  required=""
+  value=""
+/>
+
+ ❯ src/components/operacionCelular.test.ts:73:62
+     71|     await act(async () => tab.click());
+     72|     const form = [...host.querySelectorAll('form')].find((f) => f.text…
+     73|     expect(form.querySelector('input[inputmode="numeric"]')).toBeNull(…
+       |                                                              ^
+     74|     const choice = [...form.querySelectorAll('select option')].map((o)…
+     75|     expect(choice).toContain('Pedido 13 · Lucía Ramos · Edificio Los Á…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-G · armado con la cámara > una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto
+AssertionError: expected  to have a length of 3 but got +0
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/components/operacionCelular.test.ts:84:49
+     82|     vi.mocked(api.post).mockResolvedValue({} as never);
+     83|     await mount(panel('armador'));
+     84|     expect(host.querySelectorAll('.pack-card')).toHaveLength(3);
+       |                                                 ^
+     85|     expect(visible()).toContain('1 de 3 pedidos con bolsa');
+     86|     expect(host.querySelector('.pack-card')?.textContent).toContain('P…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-H · sin claves internas a la vista > armado, compras y devoluciones muestran nombres
+AssertionError: expected 'yapaoperacionesSemanaArmado y entrega…' not to contain 'Z-LINCE-01'
+
+Expected: "Z-LINCE-01"
+Received: "yapaoperacionesSemanaArmado y entregaEEquipoArmadoSalirSemanaArmado y entregaFoto de cada bolsa y de cada entrega.Foto de cada bolsaSolo aparecen los pedidos de grupos que llegaron al mínimo. Registra cada bolsa con su foto: sin bolsas, el reparto no puede entregar la zona.Semana28 sep – 4 oct 2026Filtrar por zonaTodas las zonasZ-LINCE-01 · Edificio Los ÁlamosEntregas por zona (1)Edificio Los ÁlamosLincePor entregarBolsas por pedido (3)PedidoVecinoProductosBolsasFoto de bolsa12Vecino 12Z-LINCE-01Papa amarilla 5 · Cebolla roja 101Pedido 12 · Edificio Los Álamos · Bolsa 1 de 1FotoAgregar bolsaAlgo llegó dañadoProductoPapa amarillaCebolla rojaCantidadFotoRegistrar dañado13Vecino 13Z-LINCE-01Papa amarilla 5 · Cebolla roja 100Pedido 13 · Edificio Los Álamos · Bolsa 1 de 1FotoAgregar bolsaAlgo llegó dañadoProductoPapa amarillaCebolla rojaCantidadFotoRegistrar dañado14Vecino 14Z-LINCE-01Papa amarilla 5 · Cebolla roja 100Pedido 14 · Edificio Los Álamos · Bolsa 1 de 1FotoAgregar bolsaAlgo llegó dañadoProductoPapa amarillaCebolla rojaCantidadFotoRegistrar dañado        28 sep – 4 oct 2026 Todas las zonas Papa amarilla Papa amarilla Papa amarilla"
+
+ ❯ src/components/operacionCelular.test.ts:102:27
+    100|     vi.mocked(api.get).mockImplementation(async () => packing as never…
+    101|     await mount(panel('armador'));
+    102|     expect(visible()).not.toContain('Z-LINCE-01');
+       |                           ^
+    103|     expect(visible()).toContain('Edificio Los Álamos');
+    104|     await act(async () => root.unmount());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-H · sin claves internas a la vista > la portería ve su edificio sin la clave de la zona
+AssertionError: expected 'yapaporteríaSalirHola, PorteríaSemana…' not to contain 'Z-LINCE-01'
+
+Expected: "Z-LINCE-01"
+Received: "yapaporteríaSalirHola, PorteríaSemanasemana del 28 sepTu zona asignadaFiltrar por estadoTodos los estadosSin pedidosEn preparaciónListo para despachoEn caminoLlegó al edificioRecepción confirmadaNo se pudo entregarActualizarActualización automática cada 15 segundos. Los cambios aparecen como avisos en esta página.Edificio Los ÁlamosLinceEn preparaciónLos pedidos están en preparación. Aquí verás cuándo las bolsas estén listas para despacho.En preparación, después 2Listo para despacho, después 3En camino, después 4Llegó al edificio, después 5Recepción confirmadaLlegan0 bolsas · 0 pedidosEntregó el reparto—Esta semana no hay pedidos para este edificio.Solo ves el nombre de cada vecino y cuántas bolsas lleva. Lo que compró y lo que pagó es privado.Z-LINCE-01 · Edificio Los Álamossemana del 28 sep Todos los estados"
+
+ ❯ src/components/operacionCelular.test.ts:123:27
+    121|     await mount(createElement(PartnerPanel, { account: { user: 'p', na…
+    122|     expect(visible()).toContain('Edificio Los Álamos');
+    123|     expect(visible()).not.toContain('Z-LINCE-01');
+       |                           ^
+    124|   });
+    125| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: event.currentTarget.scrollIntoView is not a function
+ ❯ onClick src/components/AdminPanel.tsx:121:413
+
+ ❯ executeDispatch node_modules/react-dom/cjs/react-dom-client.development.js:20804:9
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ processDispatchQueue node_modules/react-dom/cjs/react-dom-client.development.js:20854:19
+ ❯ node_modules/react-dom/cjs/react-dom-client.development.js:21423:9
+ ❯ batchedUpdates$1 node_modules/react-dom/cjs/react-dom-client.development.js:3437:40
+ ❯ dispatchEventForPluginEventSystem node_modules/react-dom/cjs/react-dom-client.development.js:21008:7
+ ❯ dispatchEvent node_modules/react-dom/cjs/react-dom-client.development.js:26142:11
+ ❯ dispatchDiscreteEvent node_modules/react-dom/cjs/react-dom-client.development.js:26110:11
+ ❯ HTMLDivElement.callTheUserObjectsOperation node_modules/jsdom/lib/generated/idl/EventListener.js:26:30
+
+This error originated in "src/components/operacionCelular.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The last test to run before this error was "la incidencia se registra eligiendo el pedido de una lista". This means either:
+- the error was thrown while Vitest was running this test, or
+- the error was thrown after the test completed, and this was the most recent test at that point.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+     Errors  1 error
+   Start at  20:20:21
+   Duration  2.98s (import 61%, environment 32%, tests 4%, transform 3%)
+
