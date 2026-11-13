@@ -37,3 +37,19 @@ Escenario base: Residencial San Felipe, 8 pedidos entregados el sábado 19/09 a 
 - **RV-C · El carrito del pedido.** En Mis pedidos, cada línea del pedido muestra la foto del producto, su nombre y su cantidad. → S-333
 - **RV-D · Reclamar tocando.** El formulario no tiene un desplegable: hay una tarjeta por producto reclamable; al tocar la segunda y enviar, el reclamo va con su pedido y su producto. → S-335
 - **RV-E · Tus reclamos.** Un reclamo aprobado de 1 kg de cebolla roja se ve con "Cebolla roja", "Llegó dañado", "Aprobado" y lo que volvió al saldo. → S-335
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| RV-01, RV-02, S-334 | `web/api.py` `reclamos` (ventana `claims.CLAIM_WINDOW`, campo `hasta`) | `test_reclamos_carrito_65.test_rv_a_*`, `test_rv_b_*` |
+| RV-03 | `claim_json` con `nombre` (OC-03) | `test_rv_b_*` |
+| S-333 | `OrdersPage.tsx`: lista `order-cart` con `ProductThumb` | `reclamosCarrito.test.ts` RV-C |
+| S-335 | `ClaimForm` (tarjetas `claim-pick` con radio) y `ClaimHistory` en `OrdersPage.tsx`; `App.tsx` pasa `hasta` y `nombre` | RV-D, RV-E |
+
+## Evidencia
+
+- `65-motor-rojo.txt` y `65-web-rojo.txt`: 2 pruebas del motor y 3 de la web fallan antes del código.
+- `65-motor-verde.txt`: 733 pruebas del motor en verde.
+- `65-web-verde.txt`: TypeScript, 179 pruebas de la web y build en verde.
+- Revisión en un celular de 390 px (demo local, sábado 03/10 18:00): Carmen ve solo los 5 productos del pedido 12, cada uno con foto y hora límite; el pedido 2 de la semana anterior ya no aparece para reclamar; su reclamo de limón se ve con foto y estado.

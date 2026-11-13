@@ -1,5 +1,13 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 65 · Los pedidos y los reclamos del vecino, como un carrito (12/11/2026)
+
+- Pedido de Carlos después de la demo: el reclamo se veía como un historial de texto. Spec: `65-reclamos-como-un-carrito.md`, supuestos S-333..S-335 a validar por el equipo.
+- En Mis pedidos, cada producto del pedido se ve con su foto, su cantidad y su precio máximo.
+- Para reclamar se toca la tarjeta del producto; solo aparecen los de entregas de las últimas 24 horas, con su hora límite (antes salían pedidos viejos que daban error al enviar).
+- "Tus reclamos" muestra la foto del producto, el motivo, el estado y lo que volvió al saldo.
+- Pruebas en rojo antes del código; resultado: 733 pruebas del motor, 179 de la web, TypeScript y build. La regla de las 24 horas (RC-03) no cambia.
+
 ## Iteración 64 · La operación en el celular (12/11/2026)
 
 - Pedido de Carlos después de la demo, con la recomendación del profesor: las pantallas de operación se usan desde el celular. Spec: `64-operacion-en-el-celular.md`, supuestos S-327..S-332 a validar por el equipo.
