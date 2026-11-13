@@ -506,14 +506,17 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ok": True}
 
     def reclamos(environ, data, session):
-        delivered = {oid for d in store.deliveries.values() for oid in d.order_ids}
+        # RV-01, RV-02, S-334: solo lo que todavía se puede reclamar (RC-03), con su hora límite
+        until = {oid: d.delivered_at + claims.CLAIM_WINDOW for d in store.deliveries.values() for oid in d.order_ids}
+        now = clock()
         options = []
         for order in store.orders.values():
-            if order.customer_id == session["principal"] and order.order_id in delivered:
+            if order.customer_id == session["principal"] and order.order_id in until and now < until[order.order_id]:
                 names = names_for(order.cycle)
                 for line in order.lines:
                     options.append({"pedido": order.order_id, "producto": line.product_id,
-                                    "nombre": names.get(line.product_id, line.product_id), "cantidad": qty(line.quantity)})
+                                    "nombre": names.get(line.product_id, line.product_id), "cantidad": qty(line.quantity),
+                                    "hasta": until[order.order_id].isoformat()})
         mine = [c for c in store.claims.values() if c.customer_id == session["principal"]]
         return {"reclamables": options, "reclamos": [claim_json(c) for c in mine]}
 

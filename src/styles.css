@@ -2460,3 +2460,27 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
   .purchase-stat { padding: 12px; }
   .purchase-stat strong { font-size: 1.1rem; }
 }
+
+/* iteración 65 · el pedido y los reclamos como un carrito (S-333..S-335) */
+.order-cart { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.order-cart li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 14px; background: var(--paper); }
+.order-cart li > div { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.order-cart small { color: var(--muted); font-size: .84rem; }
+.order-cart-total { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.claim-picks { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.claim-picks legend { margin-bottom: 8px; padding: 0; font-weight: 700; }
+.claim-pick { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px 8px 8px; border: 2px solid var(--line); border-radius: 16px; background: var(--canvas); cursor: pointer; }
+.claim-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.claim-pick span:last-child { display: grid; gap: 2px; min-width: 0; }
+.claim-pick small { color: var(--muted); font-size: .82rem; }
+.claim-pick.is-selected { border-color: var(--green); background: var(--green-soft); }
+.claim-pick:has(input:focus-visible) { outline: 3px solid var(--accent-dark); outline-offset: 2px; }
+.claim-photo-field { min-height: 52px; }
+.claim-form .primary-button { width: 100%; justify-content: center; }
+.claim-history-wrap { display: grid; gap: 8px; margin-top: 18px; }
+.claim-history-wrap h3 { font-size: 1rem; }
+.claim-history { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.claim-history li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 14px; background: var(--paper); }
+.claim-history li > div:nth-child(2) { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.claim-history small { color: var(--muted); font-size: .82rem; }
+.claim-history-state { display: grid; justify-items: end; gap: 2px; text-align: right; }

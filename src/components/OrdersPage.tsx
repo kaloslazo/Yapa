@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Order, RefundDestination } from '../types';
 import { Icon } from './Icon';
+import { ProductThumb } from './ProductThumb';
 import { formatMoment, formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { refundPromise } from '../utils/refund';
@@ -20,12 +21,14 @@ export interface Claimable {
   product: string;
   name: string;
   quantity: number;
+  until?: string; // RV-02: hasta cuándo se puede reclamar
 }
 
 export interface ClaimRecord {
   id: number;
   order: number;
   product: string;
+  name?: string; // RV-03
   quantity: number;
   reason: string;
   status: string;
@@ -140,13 +143,15 @@ function CancelActions({ order, onCancel }: { order: Order; onCancel: OrdersPage
   );
 }
 
+// S-335: se reclama tocando la tarjeta del producto; solo aparecen los de entregas de las últimas 24 horas (S-334)
 function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: OrdersPageProps['onClaim'] }) {
   const [item, setItem] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState('FALTANTE');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState('');
-  const chosen = claimables[item];
+  const [photo, setPhoto] = useState('');
+  const chosen = claimables[item] ?? claimables[0];
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const element = event.currentTarget; // después del await React ya no conserva currentTarget
@@ -155,27 +160,54 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
     form.set('producto', chosen.product);
     form.set('cantidad', String(quantity));
     form.set('motivo', reason);
+    form.delete('reclamable');
     setBusy(true);
     try {
       await onClaim(form);
-      setDone('Recibimos tu reclamo. Lo revisamos y, si corresponde, te devolvemos el monto como saldo.');
+      setDone(`Recibimos tu reclamo por ${chosen.name}. Lo revisamos y, si corresponde, te devolvemos el monto como saldo.`);
       element.reset();
+      setPhoto('');
     } finally {
       setBusy(false);
     }
   };
-  if (!chosen) return <p className="admin-muted">Cuando recibas un pedido podrás reclamar por artículo aquí.</p>;
+  if (!chosen) return <p className="admin-muted">Cuando recibas un pedido, aquí aparecen sus productos para reclamar durante 24 horas.</p>;
   return (
     <form className="claim-form" onSubmit={submit}>
-      <label className="checkout-field"><span>Artículo</span><select value={item} onChange={(event) => { setItem(Number(event.target.value)); setQuantity(1); }}>{claimables.map((c, index) => <option key={`${c.order}-${c.product}`} value={index}>Pedido {c.order} · {c.name} ({formatQuantity(c.quantity)})</option>)}</select></label>
+      <fieldset className="claim-picks"><legend>¿Qué producto?</legend>
+        {claimables.map((c, index) => (
+          <label key={`${c.order}-${c.product}`} className={`claim-pick${index === item ? ' is-selected' : ''}`}>
+            <input type="radio" name="reclamable" value={index} checked={index === item} onChange={() => { setItem(index); setQuantity(1); }} />
+            <ProductThumb id={c.product} size={48} />
+            <span><strong>{c.name}</strong><small>Pedido {c.order} · {formatQuantity(c.quantity)}{c.until ? ` · hasta ${formatMoment(c.until)}` : ''}</small></span>
+          </label>
+        ))}
+      </fieldset>
       <div className="claim-row">
         <div className="quantity-control" aria-label="Cantidad a reclamar"><button type="button" onClick={() => setQuantity((q) => Math.max(q - 1, 1))} aria-label="Menos"><Icon name="minus" size={14} /></button><span>{quantity}</span><button type="button" onClick={() => setQuantity((q) => Math.min(q + 1, Math.ceil(chosen.quantity)))} aria-label="Más"><Icon name="plus" size={14} /></button></div>
         <div className="segmented" role="radiogroup" aria-label="Motivo">{Object.entries(REASONS).map(([value, label]) => <button key={value} type="button" role="radio" aria-checked={reason === value} className={reason === value ? 'is-active' : ''} onClick={() => setReason(value)}>{label}</button>)}</div>
       </div>
-      <label className="photo-field"><Icon name="camera" size={20} /><span>Foto del producto</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required /></label>
-      <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Enviar reclamo'}</button>
+      <label className={`photo-field claim-photo-field${photo ? ' has-photo' : ''}`}><Icon name="camera" size={20} /><span>{photo ? 'Foto lista' : 'Tomar foto del producto'}</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required onChange={(event) => setPhoto(event.currentTarget.files?.[0]?.name ?? '')} /></label>
+      <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Enviando…' : `Reclamar ${chosen.name}`}</button>
       {done ? <p className="auth-feedback auth-feedback--notice" role="status">{done}</p> : null}
     </form>
+  );
+}
+
+const CLAIM_TONE: Record<string, string> = { APROBADO: 'state-pill--ok', RECHAZADO: 'state-pill--bad', PENDIENTE: '' };
+
+function ClaimHistory({ claims }: { claims: ClaimRecord[] }) {
+  if (!claims.length) return null;
+  return (
+    <div className="claim-history-wrap"><h3>Tus reclamos</h3>
+      <ul className="claim-history">{claims.map((c) => (
+        <li key={c.id}>
+          <ProductThumb id={c.product} size={44} />
+          <div><strong>{c.name ?? c.product} × {formatQuantity(c.quantity)}</strong><small>Pedido {c.order} · {REASONS[c.reason] ?? c.reason}</small></div>
+          <div className="claim-history-state"><span className={`state-pill ${CLAIM_TONE[c.status] ?? ''}`}>{STATUS[c.status] ?? c.status}</span>{c.returned ? <small>{formatMoney(c.returned)} a tu saldo</small> : null}</div>
+        </li>
+      ))}</ul>
+    </div>
   );
 }
 
@@ -212,7 +244,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
               {order.status === 'REGISTRADO' && order.payment === 'POR_VERIFICAR' && order.toPay > 0 ? <div className="pay-reminder"><Icon name="wallet" size={18} /><span>Paga <strong>{formatMoney(order.toPay)}</strong>{order.payTo ? <> al Plin <strong>{order.payTo.number}</strong> ({order.payTo.holder})</> : <> por {methodName(order.method)}</>} con el código <code>{order.paymentCode}</code> en el mensaje. También puedes pagar desde Yape.</span></div> : null}
               <Tracking order={order} />
               <Outcome order={order} />
-              <details className="order-lines"><summary>{order.lines.length} productos · {formatMoney(order.total)}</summary><table><tbody>{order.lines.map((line) => <tr key={line.id}><td>{line.name}</td><td>{formatQuantity(line.quantity)}</td><td>{formatMoney(line.total)}</td></tr>)}</tbody></table></details>
+              <details className="order-lines"><summary>{order.lines.length} productos · {formatMoney(order.total)}</summary><ul className="order-cart">{order.lines.map((line) => <li key={line.id}><ProductThumb id={line.id} size={48} /><div><strong>{line.name}</strong><small>{formatQuantity(line.quantity)} · hasta {formatMoney(line.maxPrice)} c/u</small></div><strong className="order-cart-total">{formatMoney(line.total)}</strong></li>)}</ul></details>
               {order.cancellable ? <CancelActions order={order} onCancel={onCancel} /> : null}
             </article>
           ))}</div> : <div className="customer-empty-state"><span className="customer-empty-icon"><Icon name="basket" size={27} /></span><h3>Tu primera canasta empieza aquí</h3><p>Elige productos para la semana y paga con Yape o Plin antes del miércoles a las 20:00.</p><button className="primary-button" type="button" onClick={onBack}>Ver catálogo <Icon name="arrow" size={17} /></button></div>}
@@ -229,7 +261,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
           <section className="customer-side-card">
             <span className="customer-eyebrow">¿Algo faltó o llegó mal?</span><h2>Reclamos</h2>
             <ClaimForm claimables={claimables} onClaim={onClaim} />
-            {claims.length ? <table className="mini-table"><caption>Tus reclamos</caption><tbody>{claims.map((c) => <tr key={c.id}><td>Pedido {c.order} · {REASONS[c.reason] ?? c.reason}</td><td>{STATUS[c.status] ?? c.status}</td><td>{c.returned ? formatMoney(c.returned) : ''}</td></tr>)}</tbody></table> : null}
+            <ClaimHistory claims={claims} />
           </section>
         </aside>
       </div>
