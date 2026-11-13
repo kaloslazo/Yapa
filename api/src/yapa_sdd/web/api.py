@@ -35,7 +35,7 @@ PACKING = ("admin", partners.PACKER)  # CX-09: rutas que el admin comparte con c
 BUYING = ("admin", partners.BUYER)
 ATTENDING = ("admin", partners.SUPPORT)
 PHOTO_VIEWERS = ("admin", partners.PACKER, partners.SUPPORT)
-PACKER_ORDER = ("id", "ciclo", "zona", "estado", "entregado", "vecino", "bolsas")  # AM-01, S-290: sin montos ni pagos
+PACKER_ORDER = ("id", "ciclo", "zona", "zona_nombre", "estado", "entregado", "vecino", "bolsas")  # AM-01, S-290: sin montos ni pagos
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
 PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas",
@@ -203,6 +203,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         delivered = any(order.order_id in d.order_ids for d in store.deliveries.values())
         data = {
             "id": order.order_id, "ciclo": order.cycle, "zona": order.zone_id, "cliente": order.customer_id,
+            "zona_nombre": store.zones[order.zone_id].name if order.zone_id in store.zones else order.zone_id,  # OC-05
             "estado": order.status, "pago": order.payment_status, "metodo": order.payment_method,
             "codigo_pago": order.operation_code, "total": money(order.total), "subtotal": money(order.subtotal),
             "envio": money(order.delivery_fee), "con_saldo": money(order.paid_with_balance),
@@ -519,7 +520,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def claim_json(c) -> dict:
         return {"id": c.claim_id, "pedido": c.order_id, "cliente": c.customer_id, "producto": c.product_id,
                 "cantidad": qty(c.quantity), "motivo": c.reason, "foto": c.photo, "estado": c.status,
-                "devuelto": money(c.refund_amount)}
+                "devuelto": money(c.refund_amount),
+                "nombre": names_for(store.orders[c.order_id].cycle).get(c.product_id, c.product_id)}  # OC-03
 
     def reclamar(environ, data, session):
         claim = claims.file_claim(store, _int(data.get("pedido"), "Número de pedido"), customer_id=session["principal"],
@@ -795,6 +797,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         tell(notices.claim_reviewed, claim)
         return claim_json(claim)
 
+    def admin_pedidos(environ, data, session):
+        """OC-01, OC-02, S-330: los pedidos de la semana para elegir uno, sin montos ni productos."""
+        cycle_id = query_cycle(environ)
+        return {"ciclo": cycle_id, "ciclos": known_cycles(),
+                "pedidos": [{"id": o.order_id, "vecino": store.customers[o.customer_id].name,
+                             "zona": store.zones[o.zone_id].name if o.zone_id in store.zones else o.zone_id, "estado": o.status}
+                            for o in sorted(store.orders_in_cycle(cycle_id), key=lambda o: o.order_id)]}
+
     def admin_devoluciones(environ, data, session):
         return {"devoluciones": [{"id": r.refund_id, "cliente": r.customer_id,
                                   "vecino": store.customers[r.customer_id].name, "monto": money(r.amount),
@@ -984,8 +994,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def admin_colchon(environ, data, session):
         return {"valor": money(buffer.buffer_value(store)), "tope": money(buffer.BUFFER_LIMIT),
-                "stock": [{"producto": s.product_id, "cantidad": qty(s.quantity), "valor": money(s.value)}
-                          for s in store.buffer.values()]}
+                "stock": [{"producto": s.product_id, "nombre": names_for(cycle.cycle_id(clock())).get(s.product_id, s.product_id),
+                           "cantidad": qty(s.quantity), "valor": money(s.value)} for s in store.buffer.values()]}  # OC-03
 
     def partner_json(partner) -> dict:
         return {"usuario": partner.user, "tipo": partner.kind, "nombre": partner.name, "proveedor": partner.supplier_id,
@@ -1114,16 +1124,19 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         real = None if bought is None else {  # CR-05: lo que faltó y a qué pedido fue
             "recibido": {p: qty(q) for p, q in bought.received.items()},
             "faltantes": [shortage_json(s) for s in store.shortages if s.cycle == cycle_id]}
+        keepable = [{"id": p.product_id, "nombre": p.name, "unidad": p.unit} for p in store.catalog_for(cycle_id).values()
+                    if p.category in buffer.NON_PERISHABLE and p.active]  # OC-04, S-329
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
                 "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session),
-                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id))}
+                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id)), "guardables": keepable}
 
     def freight_json(f) -> dict | None:
         return {"empresa": f.company, "monto": money(f.amount)} if f else None
 
     def shortage_json(s) -> dict:
         return {"pedido": s.order_id, "producto": s.product_id, "cantidad": qty(s.quantity),
-                "colchon": qty(s.from_buffer), "origen": s.source}
+                "colchon": qty(s.from_buffer), "origen": s.source,
+                "nombre": names_for(s.cycle).get(s.product_id, s.product_id)}  # OC-03
 
     def compras_recibido(environ, data, session):
         """CR-01..CR-05: lo que llegó del proveedor; lo que falta se reparte solo."""
@@ -1246,6 +1259,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/entregas-fallidas", {"POST": (admin_entrega_fallida, "admin")}),
         (r"/api/admin/reclamos", {"GET": (admin_reclamos, ATTENDING)}),
         (r"/api/admin/reclamos/(\d+)/revisar", {"POST": (admin_revisar, ATTENDING)}),
+        (r"/api/admin/pedidos", {"GET": (admin_pedidos, ATTENDING)}),  # OC-01
         (r"/api/admin/devoluciones", {"GET": (admin_devoluciones, ATTENDING)}),
         (r"/api/admin/devoluciones/(\d+)/pagar", {"POST": (admin_devolucion_pagar, ATTENDING)}),
         (r"/api/admin/conciliacion", {"GET": (admin_conciliacion, "admin")}),

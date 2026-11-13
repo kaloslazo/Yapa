@@ -51,7 +51,7 @@ function toSettlement(raw: Raw | undefined): Settlement | null {
 
 export function toOrder(raw: Raw): Order {
   return {
-    id: raw.id, cycle: raw.ciclo, zoneId: raw.zona, customer: raw.cliente, customerName: raw.vecino,
+    id: raw.id, cycle: raw.ciclo, zoneId: raw.zona, zoneName: raw.zona_nombre, customer: raw.cliente, customerName: raw.vecino,
     status: raw.estado, payment: raw.pago, method: raw.metodo, paymentCode: raw.codigo_pago,
     total: num(raw.total), subtotal: num(raw.subtotal), delivery: num(raw.envio), withBalance: num(raw.con_saldo),
     toPay: num(raw.a_yapear), delivered: Boolean(raw.entregado), cancellable: Boolean(raw.cancelable),

@@ -94,6 +94,7 @@ export interface Order {
   id: number;
   cycle: string;
   zoneId: string;
+  zoneName?: string; // OC-05: nombre del edificio para el panel
   customer: number;
   customerName?: string;
   status: string;

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import type { Account } from '../types';
-import { formatMoney } from '../utils/format';
+import { formatMoney, quantityWithUnit } from '../utils/format';
 import { weekLabel } from '../utils/week';
 import { Icon } from './Icon';
 import { PhotoForm } from './PhotoForm';
+import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
 import { SupplierListEditor } from './SupplierListEditor';
@@ -105,7 +106,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
             {stop.estado === 'pendiente' || stop.estado === 'en_camino' ? (unpacked ? <p className="partner-note partner-note--warn"><Icon name="warning" size={18} />Faltan armar {unpacked} {unpacked === 1 ? 'pedido' : 'pedidos'}. Avisa al equipo antes de salir.</p> : (
               <div className="route-actions">
                 {stop.estado === 'pendiente' ? <button className="secondary-button" type="button" onClick={() => void send('/api/reparto/salidas', new FormData(), { ciclo: data.ciclo, zona: zone.id }, `Saliste hacia ${zone.nombre}`, 'Cada vecino recibe el aviso de que su pedido va en camino.')}><Icon name="truck" size={17} />Salí hacia esta zona</button> : null}
-                <PhotoForm label="Entregué" onSend={(form) => send('/api/reparto/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.nombre} registrada`, 'Los vecinos reciben el aviso con tu foto.')}>
+                <PhotoForm big label="Entregué" onSend={(form) => send('/api/reparto/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.nombre} registrada`, 'Los vecinos reciben el aviso con tu foto.')}>
                   <label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contacto} autoComplete="off" required /></label>
                 </PhotoForm>
                 <details className="route-failed"><summary>No pude entregar</summary>
@@ -176,10 +177,10 @@ function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
     <>
       <section className="partner-head">
         <h1>Hola, {name.split(' ')[0]}</h1>
+        <p className="partner-building"><Icon name="building" size={18} />{data.zona.nombre}</p>
         <WeekSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} />
       </section>
       <div className="concierge-filters">
-        <label className="checkout-field"><span>Tu zona asignada</span><input value={`${data.zona.id} · ${data.zona.nombre}`} readOnly /></label>
         <label className="checkout-field"><span>Filtrar por estado</span><select value={status} onChange={e => setStatus(e.target.value)}><option value="todos">Todos los estados</option>{Object.entries(RECEPTION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <button className="secondary-button" type="button" onClick={() => void reload()}>Actualizar</button>
       </div>
@@ -224,8 +225,9 @@ function SupplierHome({ notify }: { notify: Notify }) {
         {order.lineas.length ? <>
           <ul className="supplier-lines">{order.lineas.map((line: Raw) => (
             <li key={line.producto}>
-              <div><strong>{line.nombre}</strong><span>{formatMoney(Number(line.precio))} / {line.unidad}{line.desde !== '0' ? ` · tramo desde ${line.desde} ${line.unidad}` : ''}</span></div>
-              <div className="supplier-line-amount"><strong>{line.cantidad} {line.unidad}</strong><span>{formatMoney(Number(line.monto))}</span></div>
+              <ProductThumb id={line.producto} size={44} />
+              <div><strong>{line.nombre}</strong><span>{formatMoney(Number(line.precio))} por {line.unidad}{line.desde !== '0' ? ` · precio desde ${line.desde} ${line.unidad}` : ''}</span></div>
+              <div className="supplier-line-amount"><strong>{quantityWithUnit(line.cantidad, line.unidad)}</strong><span>{formatMoney(Number(line.monto))}</span></div>
             </li>
           ))}</ul>
           <p className="supplier-total"><span>Total a tu precio</span><strong>{formatMoney(Number(order.total))}</strong></p>

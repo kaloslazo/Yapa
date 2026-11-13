@@ -18,3 +18,8 @@ export function formatMoment(iso: string): string {
   const pad = (options: Intl.DateTimeFormatOptions) => part(options).padStart(2, '0');
   return `${day} ${pad({ day: 'numeric' })}/${pad({ month: 'numeric' })} · ${pad({ hour: 'numeric', hourCycle: 'h23' })}:${pad({ minute: 'numeric' })}`;
 }
+
+// "2 unidades", "1 unidad", "3 kg": la unidad del motor viene en singular
+export function quantityWithUnit(quantity: string | number, unit: string): string {
+  return `${quantity} ${unit === 'unidad' && Number(quantity) !== 1 ? 'unidades' : unit}`;
+}
