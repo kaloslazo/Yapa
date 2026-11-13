@@ -1,0 +1,82 @@
+
+> yapa@0.1.0 test
+> vitest run src/utils/supplierDraft.test.ts src/utils/receptionUpdates.test.ts src/utils/week.test.ts src/components/guides.test.ts
+
+
+ RUN  v5.0.5 C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-publicacion
+
+ ❯ src/utils/receptionUpdates.test.ts (0 test)
+ ❯ src/utils/supplierDraft.test.ts (0 test)
+ ❯ src/utils/week.test.ts (5 tests | 1 failed) 7ms
+   ❯ PA-01 · fechas para Armado (1)
+     × muestra lunes, domingo y año incluso al cruzar de año 4ms
+ ❯ src/components/guides.test.ts (4 tests | 1 failed) 76ms
+   ❯ guías al final de Explorar (1)
+     × tres guías con foto, consejos detrás de un toque y las mismas preguntas de «Cómo funciona» 73ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/receptionUpdates.test.ts [ src/utils/receptionUpdates.test.ts ]
+Error: Cannot find module './receptionUpdates' imported from C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-publicacion/src/utils/receptionUpdates.test.ts
+ ❯ src/utils/receptionUpdates.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { unseenReceptionEvents } from './receptionUpdates';
+       | ^
+      3|
+      4| describe('PO-02 · avisos de portería', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/utils/supplierDraft.test.ts [ src/utils/supplierDraft.test.ts ]
+Error: Cannot find module './supplierDraft' imported from C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-publicacion/src/utils/supplierDraft.test.ts
+ ❯ src/utils/supplierDraft.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { parseSupplierList, serializeSupplierList, validateSupplierRow…
+       | ^
+      3|
+      4| const list = 'codigo,nombre,categoria,unidad,paso,maximo,proveedor,des…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/guides.test.ts > guías al final de Explorar > tres guías con foto, consejos detrás de un toque y las mismas preguntas de «Cómo funciona»
+AssertionError: expected [ 'Antes de pedir', …(1) ] to deeply equal [ 'Compra con más idea', …(1) ]
+
+- Expected
++ Received
+
+  [
+-   "Compra con más idea",
++   "Antes de pedir",
+    "Preguntas frecuentes",
+  ]
+
+ ❯ src/components/guides.test.ts:47:72
+     45|     expect([...guides].every((g) => g.querySelector('img')?.getAttribu…
+     46|     expect([...host.querySelectorAll('.shopping-guide details')].every…
+     47|     expect([...host.querySelectorAll('h2')].map((h) => h.textContent))…
+       |                                                                        ^
+     48|     expect(host.querySelector('details.guide-disclosure')?.hasAttribut…
+     49|     expect(host.querySelectorAll('.faq-list details')).toHaveLength(5);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/utils/week.test.ts > PA-01 · fechas para Armado > muestra lunes, domingo y año incluso al cruzar de año
+TypeError: weekRangeLabel is not a function
+ ❯ src/utils/week.test.ts:6:12
+      4| describe('PA-01 · fechas para Armado', () => {
+      5|   it('muestra lunes, domingo y año incluso al cruzar de año', () => {
+      6|     expect(weekRangeLabel('2026-W40')).toBe('28 sep – 4 oct 2026');
+       |            ^
+      7|     expect(weekRangeLabel('2026-W01')).toBe('29 dic 2025 – 4 ene 2026'…
+      8|     expect(weekRangeLabel('sin semana')).toBe('sin semana');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  2 failed | 7 passed (9)
+   Start at  00:52:12
+   Duration  7.07s (import 77%, environment 20%, transform 1%, tests 1%)

@@ -16,6 +16,7 @@ import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
 import { groupsOf, sectionsFor, type Section } from '../utils/adminSections';
 import { ROLE_LABELS } from '../utils/roles';
+import { weekRangeLabel } from '../utils/week';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -65,8 +66,8 @@ function Card({ eyebrow, title, children, aside, id }: { eyebrow?: string; title
   return <section className="admin-card" id={id}><div className="admin-card-heading"><div>{eyebrow ? <span className="admin-eyebrow">{eyebrow}</span> : null}<h2>{title}</h2></div>{aside}</div>{children}</section>;
 }
 
-function CycleSelect({ cycles, value, onChange }: { cycles: string[]; value: string; onChange: (cycle: string) => void }) {
-  return <label className="admin-filter"><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>Semana {c}</option>)}</select></label>;
+function CycleSelect({ cycles, value, onChange, dates = false }: { cycles: string[]; value: string; onChange: (cycle: string) => void; dates?: boolean }) {
+  return <label className={`admin-filter${dates ? ' admin-filter--dates' : ''}`}><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>{dates ? weekRangeLabel(c) : `Semana ${c}`}</option>)}</select></label>;
 }
 
 function Empty({ icon, title, text }: { icon: IconName; title: string; text: string }) {
@@ -259,17 +260,21 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
   const packer = role === 'armador'; // S-290: el armador solo arma; la entrega la registra el reparto
   const { data, reload } = useLoad<Raw>(`/api/admin/armado${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
+  const [zoneFilter, setZoneFilter] = useState('');
+  useEffect(() => { setZoneFilter(''); }, [cycle]);
   if (!data) return <AdminSkeleton />;
-  const orders: Order[] = data.pedidos.map(toOrder);
+  const stops: Raw[] = data.paradas.filter((p: Raw) => !zoneFilter || p.zona.id === zoneFilter);
+  const orders: Order[] = data.pedidos.map(toOrder).filter((o: Order) => !zoneFilter || o.zoneId === zoneFilter);
   const send = (path: string, form: FormData, extra: Record<string, string>, success: string) => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
     return run(() => api.post(path, form), success).then(async (ok) => { await reload(); return ok; });
   };
   return (
     <>
-      <section className="admin-intro"><div><h2>{packer ? 'Foto de cada bolsa' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Registra cada bolsa con su foto: sin bolsas, el reparto no puede entregar la zona.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
-      <Card title={`Entregas por zona (${data.paradas.length})`}>
-        {data.paradas.length ? <div className="stop-list">{data.paradas.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
+      <section className="admin-intro"><div><h2>{packer ? 'Foto de cada bolsa' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Registra cada bolsa con su foto: sin bolsas, el reparto no puede entregar la zona.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} dates /></section>
+      <label className="checkout-field packing-zone-filter"><span>Filtrar por zona</span><select value={zoneFilter} onChange={event => setZoneFilter(event.target.value)}><option value="">Todas las zonas</option>{data.paradas.map((p: Raw) => <option key={p.zona.id} value={p.zona.id}>{p.zona.id} · {p.zona.nombre}</option>)}</select></label>
+      <Card title={`Entregas por zona (${stops.length})`}>
+        {stops.length ? <div className="stop-list">{stops.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
           <div className="stop-card" key={zone.id}>
             <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
             {!packer && !p.entrega && !p.fallida ? <div className="stop-actions">
@@ -336,7 +341,7 @@ function Claims({ run, notify }: SectionProps) {
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
         {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /><AiDraft kind="reclamo" id={c.id} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
-      {done.length ? <Card title="Revisados"><div className="admin-table-wrap"><table className="admin-table"><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div></Card> : null}
+      <Card title={`Completados (${done.length})`}>{done.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Resultado</th><th>Devuelto</th></tr></thead><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todavía no hay reclamos completados" text="Aquí aparecerán los reclamos aprobados y rechazados, con su resultado." />}</Card>
     </>
   );
 }

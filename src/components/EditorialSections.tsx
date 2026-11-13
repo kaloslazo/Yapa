@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+import { useState } from 'react';
 
 // la semana de Yapa en cuatro pasos (S-02, C-12, S-10, C-05); vive en la hoja «Cómo funciona», no en la portada
 const steps = [
@@ -36,10 +37,15 @@ export function HowItWorks() {
 }
 
 // una sola lista de preguntas para Explorar y Cómo funciona
-export function FrequentlyAskedQuestions() {
+export function FrequentlyAskedQuestions({ compact = false }: { compact?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = compact && !expanded ? faqs.slice(0, 5) : faqs;
   return (
-    <div className="faq-list">
-      {faqs.map((item) => <details key={item.q}><summary>{item.q}<Icon name="plus" size={18} /></summary><p>{item.a}</p></details>)}
-    </div>
+    <>
+      <div className={`faq-list${compact ? ' faq-list--compact' : ''}`}>
+        {shown.map((item) => <details key={item.q}><summary>{item.q}<Icon name="plus" size={18} /></summary><p>{item.a}</p></details>)}
+      </div>
+      {compact ? <button className="text-button faq-more" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos preguntas' : `Ver todas las preguntas (${faqs.length})`}</button> : null}
+    </>
   );
 }

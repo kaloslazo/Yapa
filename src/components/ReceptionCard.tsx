@@ -1,5 +1,6 @@
 import { ConfirmAction } from './ConfirmAction';
 import { Icon } from './Icon';
+import { RECEPTION_LABELS } from '../utils/receptionUpdates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -12,7 +13,7 @@ const STATES: Record<string, { label: string; note: string }> = {
   fallida: { label: 'No se entregó', note: 'El reparto no pudo dejar las bolsas esta semana. Yapa devuelve el dinero a cada vecino.' },
 };
 
-const time = (iso: string) => new Date(iso).toLocaleString('es-PE', { weekday: 'long', hour: 'numeric', minute: '2-digit' });
+const time = (iso: string) => new Date(iso).toLocaleString('es-PE', { timeZone: 'America/Lima', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 export function ReceptionCard({ data, onConfirm }: { data: Raw; onConfirm: () => Promise<unknown> }) {
   const state = STATES[data.estado] ?? STATES.pendiente;
@@ -23,9 +24,16 @@ export function ReceptionCard({ data, onConfirm }: { data: Raw; onConfirm: () =>
       <div className="route-stop-head">
         <span className="route-stop-number" aria-hidden="true"><Icon name={data.estado === 'recibida' ? 'check' : 'building'} size={17} /></span>
         <div><h2>{data.zona.nombre}</h2><p>{data.zona.distrito}</p></div>
-        <span className={`route-state reception-state--${data.estado}`}>{state.label}</span>
+        <span className={`route-state reception-state--${data.estado}`}>{RECEPTION_LABELS[data.seguimiento] ?? state.label}</span>
       </div>
-      <p className="partner-muted">{state.note}</p>
+      <p className="partner-muted">{data.seguimiento === 'sin_pedidos' ? 'Todavía no hay pedidos para recibir en esta semana.' : data.seguimiento === 'preparando' ? 'Los pedidos están en preparación. Aquí verás cuándo las bolsas estén listas para despacho.' : data.seguimiento === 'en_camino' ? 'El reparto salió hacia tu edificio. Te avisamos aquí cuando registre la llegada.' : data.seguimiento === 'listo' ? 'Las bolsas están listas para despacho. El reparto todavía no ha registrado su salida.' : state.note}</p>
+      {data.seguimiento && data.seguimiento !== 'sin_pedidos' ? <div className="reception-progress" aria-label="Seguimiento de la entrega">
+        <ol>{['preparando', 'listo', 'en_camino', 'entregada', 'recibida'].map((step, i, all) => {
+          const reached = (step === 'preparando' && orders.length > 0) || (data.hitos ?? []).some((h: Raw) => h.estado === step) || step === data.seguimiento;
+          return <li key={step} className={reached ? 'is-done' : ''} aria-current={data.seguimiento === step ? 'step' : undefined}><span>{reached ? <Icon name="check" size={13} /> : i + 1}</span>{RECEPTION_LABELS[step]}{i < all.length - 1 ? <span className="sr-only">, después </span> : null}</li>;
+        })}</ol>
+        {data.hitos?.length ? <details><summary>Ver cambios de estado</summary><ul>{data.hitos.map((h: Raw) => <li key={`${h.estado}:${h.hora}`}><strong>{RECEPTION_LABELS[h.estado]}</strong><time dateTime={h.hora}>{time(h.hora)}</time></li>)}</ul></details> : null}
+      </div> : null}
       <dl className="route-facts">
         <div><dt>Llegan</dt><dd>{bags} {bags === 1 ? 'bolsa' : 'bolsas'} · {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}</dd></div>
         <div><dt>{data.confirmo ? 'Confirmado' : 'Entregó el reparto'}</dt><dd>{data.confirmo ? time(data.confirmo.hora) : data.entrego ? time(data.entrego.hora) : '—'}</dd></div>

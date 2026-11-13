@@ -1,0 +1,40 @@
+
+> yapa@0.1.0 test
+> vitest run src/utils/receptionUpdates.test.ts
+
+
+ RUN  v5.0.5 C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-publicacion
+
+ ❯ src/utils/receptionUpdates.test.ts (3 tests | 1 failed) 11ms
+   ❯ PO-02 · avisos de portería (3)
+     × avisa cuando aparecen pedidos para preparar aunque todavía no tengan bolsas ni hitos 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/receptionUpdates.test.ts > PO-02 · avisos de portería > avisa cuando aparecen pedidos para preparar aunque todavía no tengan bolsas ni hitos
+AssertionError: expected [] to deeply equal [ 'preparando' ]
+
+- Expected
++ Received
+
+- [
+-   "preparando",
+- ]
++ []
+
+ ❯ src/utils/receptionUpdates.test.ts:18:69
+     16|     const before = { ...initial, seguimiento: 'sin_pedidos', hitos: []…
+
+     17|     const after = { ...before, seguimiento: 'preparando' };
+     18|     expect(unseenReceptionEvents(before, after).map(e => e.estado)).to…
+       |                                                                     ^
+     19|   });
+     20| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  01:07:08
+   Duration  231ms (transform 52%, import 23%, tests 17%, worker 8%)
+

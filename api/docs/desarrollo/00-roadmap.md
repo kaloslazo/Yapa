@@ -81,4 +81,6 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 
 ## Registro
 
+Iteración 63: **Paneles y Explorar más claros**, completa localmente (11/11/2026), pendiente de revisión del equipo. Ver `63-paneles-y-explorar.md`: fechas y zonas en Armado, Completados en Atención, seguimiento de Portería, editor de Proveedor y contenido plegable en Explorar. Compras y Reparto conservados.
+
 Ver `docs/desarrollo/99-registro.md`.

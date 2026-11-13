@@ -1,0 +1,23 @@
+EE
+======================================================================
+ERROR: test_po_01_falla_y_zona_sin_pedidos (test_paneles_63.ReceptionProgress.test_po_01_falla_y_zona_sin_pedidos)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-publicacion\api\tests\test_paneles_63.py", line 34, in test_po_01_falla_y_zona_sin_pedidos
+    self.assertEqual(reception.for_zone(self.store, CYCLE, 'Z-JM-01')['seguimiento'], 'fallida')
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+KeyError: 'seguimiento'
+
+======================================================================
+ERROR: test_po_01_hitos_desde_armado_hasta_recepcion (test_paneles_63.ReceptionProgress.test_po_01_hitos_desde_armado_hasta_recepcion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-publicacion\api\tests\test_paneles_63.py", line 13, in test_po_01_hitos_desde_armado_hasta_recepcion
+    self.assertEqual(data['seguimiento'], 'preparando')
+                     ~~~~^^^^^^^^^^^^^^^
+KeyError: 'seguimiento'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (errors=2)
