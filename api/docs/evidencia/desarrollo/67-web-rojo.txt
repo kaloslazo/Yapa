@@ -1,0 +1,43 @@
+
+ RUN  v5.0.5 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/components/cantidadesUnidad.test.ts (2 tests | 2 failed) 83ms
+   ❯ UN-D · las cantidades llevan su unidad (2)
+     × en la tarjeta de armado 64ms
+     × en el carrito del pedido y al reclamar 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/cantidadesUnidad.test.ts > UN-D · las cantidades llevan su unidad > en la tarjeta de armado
+AssertionError: expected 'Papa amarilla5Limpiatodo galón 3.8 L2' to contain '5 kg'
+
+Expected: "5 kg"
+Received: "Papa amarilla5Limpiatodo galón 3.8 L2"
+
+ ❯ src/components/cantidadesUnidad.test.ts:28:18
+     26|     await mount(createElement(AdminPanel, { adminName: 'Armado', role:…
+     27|     const text = host.querySelector('.pack-lines')?.textContent ?? '';
+     28|     expect(text).toContain('5 kg');
+       |                  ^
+     29|     expect(text).toContain('2 unidades');
+     30|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/cantidadesUnidad.test.ts > UN-D · las cantidades llevan su unidad > en el carrito del pedido y al reclamar
+AssertionError: expected 'Papa amarilla5 · hasta S/ 4.03 c/uS/ …' to contain '5 kg'
+
+Expected: "5 kg"
+Received: "Papa amarilla5 · hasta S/ 4.03 c/uS/ 20.15Limpiatodo galón 3.8 L2 · hasta S/ 7.90 c/uS/ 15.80"
+
+ ❯ src/components/cantidadesUnidad.test.ts:34:60
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  23:03:04
+   Duration  5.39s (import 79%, environment 18%, tests 2%, transform 2%)
+
