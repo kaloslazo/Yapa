@@ -1,5 +1,11 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 64 · Bolsas con selector y foto individual (13/11/2026)
+
+- Spec: `64-bolsas-con-selector.md`, S-327 y S-328 (a validar por el equipo).
+- Armado permite elegir bolsas nuevas con −/+, cargar una foto por bolsa y confirmar con un botón pequeño. Conserva las pendientes cuando falla una y excluye del reintento las confirmadas.
+- TypeScript, 175 pruebas frontend y build aprobados; selector revisado en localhost. Sin cambios de API. Evidencia en `64-bolsas-rojo.txt` y `64-bolsas-verde.txt`.
+
 ## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
 
 - Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.

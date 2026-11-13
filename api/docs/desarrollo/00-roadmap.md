@@ -1,5 +1,7 @@
 # Desarrollo de Yapa después del Lab 4
 
+Iteración 64 validada localmente (13/11/2026), pendiente de revisión: `64-bolsas-con-selector.md`. Selector de bolsas nuevas con una foto por bolsa, confirmación y reintento parcial; 175 pruebas frontend, TypeScript y build aprobados.
+
 Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `main` de `Raith726/yapa-desarrollo`.
 
 ## Método (el mismo del Lab 4)

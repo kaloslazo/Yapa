@@ -21,3 +21,11 @@ En Armado, mostrar «Agregar bolsa · − 1 +» y un botón pequeño de confirma
 ## Validación prevista
 
 Pruebas del formulario con éxito, fallo parcial y bloqueo; regresión frontend, TypeScript y build. La API no cambia.
+
+## Resultado y trazabilidad
+
+- Criterios 1–4: `BagForm.tsx` y las cinco pruebas de `BagForm.test.ts`. La API recibe una foto por solicitud como antes. Las respuestas exitosas confirmadas se excluyen del reintento; un corte de red después de guardar en el servidor pero antes de recibir respuesta sigue requiriendo comprobar el contador (el endpoint existente no tiene clave de idempotencia).
+- Criterio 5: `Packing` usa una clave de semana y pedido; el formulario compartido `PhotoForm` no cambia. El signo menos ajusta las pendientes, sin eliminar bolsas guardadas.
+- Evidencia: `64-bolsas-rojo.txt` (componente todavía ausente) y `64-bolsas-verde.txt`. TypeScript, 175 pruebas frontend y build aprobados.
+- Navegador: comprobado en localhost como `armado-demo`, semana 28 sep–4 oct; «+» cambia de 1 a 2 y muestra dos campos de foto, con confirmación bloqueada hasta tener las fotos. Se conserva la bolsa existente del pedido 12. No se enviaron fotos ni se modificaron pedidos durante esta revisión.
+- No hay cambios de backend, dinero, permisos o reloj. El aviso previo del build por chunk de más de 500 kB permanece.
