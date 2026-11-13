@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { Order, RefundDestination } from '../types';
 import { Icon } from './Icon';
 import { ProductThumb } from './ProductThumb';
+import { PhotoPreview, usePhotoPreview } from './PhotoForm';
 import { formatMoment, formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { refundPromise } from '../utils/refund';
@@ -150,7 +151,7 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
   const [reason, setReason] = useState('FALTANTE');
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState('');
-  const [photo, setPhoto] = useState('');
+  const { preview, choose, clear } = usePhotoPreview(); // S-336
   const chosen = claimables[item] ?? claimables[0];
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -166,7 +167,7 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
       await onClaim(form);
       setDone(`Recibimos tu reclamo por ${chosen.name}. Lo revisamos y, si corresponde, te devolvemos el monto como saldo.`);
       element.reset();
-      setPhoto('');
+      clear();
     } finally {
       setBusy(false);
     }
@@ -187,7 +188,8 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
         <div className="quantity-control" aria-label="Cantidad a reclamar"><button type="button" onClick={() => setQuantity((q) => Math.max(q - 1, 1))} aria-label="Menos"><Icon name="minus" size={14} /></button><span>{quantity}</span><button type="button" onClick={() => setQuantity((q) => Math.min(q + 1, Math.ceil(chosen.quantity)))} aria-label="Más"><Icon name="plus" size={14} /></button></div>
         <div className="segmented" role="radiogroup" aria-label="Motivo">{Object.entries(REASONS).map(([value, label]) => <button key={value} type="button" role="radio" aria-checked={reason === value} className={reason === value ? 'is-active' : ''} onClick={() => setReason(value)}>{label}</button>)}</div>
       </div>
-      <label className={`photo-field claim-photo-field${photo ? ' has-photo' : ''}`}><Icon name="camera" size={20} /><span>{photo ? 'Foto lista' : 'Tomar foto del producto'}</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required onChange={(event) => setPhoto(event.currentTarget.files?.[0]?.name ?? '')} /></label>
+      <PhotoPreview src={preview} />
+      <label className={`photo-field claim-photo-field${preview ? ' has-photo' : ''}`}><Icon name="camera" size={20} /><span>{preview ? 'Cambiar foto' : 'Tomar foto del producto'}</span><input type="file" name="foto_archivo" accept="image/*" capture="environment" required onChange={(event) => choose(event.currentTarget.files?.[0])} /></label>
       <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Enviando…' : `Reclamar ${chosen.name}`}</button>
       {done ? <p className="auth-feedback auth-feedback--notice" role="status">{done}</p> : null}
     </form>
