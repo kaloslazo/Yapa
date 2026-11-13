@@ -1,5 +1,11 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 67 · Cantidades con su unidad (12/11/2026)
+
+- Hallado en la revisión: el armado, el carrito del pedido y el reclamo decían "Papa amarilla 8" sin decir si eran kilos o unidades. Spec: `67-cantidades-con-unidad.md`, supuesto S-338 a validar por el equipo.
+- Las líneas de los pedidos (también para el armador) y las opciones para reclamar traen la `unidad` del catálogo de su semana; la pantalla dice "5 kg" o "2 unidades".
+- Pruebas en rojo antes del código; resultado: 736 pruebas del motor, 185 de la web, TypeScript y build.
+
 ## Iteración 66 · Ver la foto que se toma (12/11/2026)
 
 - Spec: `66-ver-la-foto.md`, supuestos S-336 y S-337 a validar por el equipo.

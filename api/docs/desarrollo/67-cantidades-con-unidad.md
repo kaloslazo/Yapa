@@ -33,3 +33,18 @@ Escenario base: 8 pedidos de Residencial San Felipe, cada uno con 5 kg de papa a
 - **UN-B · Armado.** El armador recibe las líneas con `id`, `nombre`, `cantidad` y `unidad`. → UN-01
 - **UN-C · Reclamar.** Las opciones para reclamar traen `unidad` "kg". → UN-02
 - **UN-D · Pantallas.** La tarjeta de armado dice "5 kg" y "2 unidades"; el carrito del pedido y la tarjeta para reclamar dicen "5 kg". → S-338
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| UN-01 | `web/api.py` `units_for` y `order_json` (línea con `unidad`); `admin_armado` deja pasar `unidad` al armador | `test_cantidades_unidad_67.test_un_a_*`, `test_un_b_*` |
+| UN-02 | `reclamos` con `unidad` | `test_un_c_*` |
+| S-338 | `amountWithUnit` en `utils/format.ts`; `PackCard` (AdminPanel), carrito y reclamo de `OrdersPage.tsx`; `toLine` y `App.tsx` leen `unidad` | `cantidadesUnidad.test.ts` UN-D |
+
+## Evidencia
+
+- `67-motor-rojo.txt` y `67-web-rojo.txt`: 3 pruebas del motor y 2 de la web fallan antes del código.
+- `67-motor-verde.txt`: 736 pruebas del motor en verde.
+- `67-web-verde.txt`: TypeScript, 185 pruebas de la web y build en verde.
+- En la demo local, la tarjeta de armado dice "10 kg" y "2 unidades"; el recorrido en Chrome sigue con 25 de 25 comprobaciones en verde.
