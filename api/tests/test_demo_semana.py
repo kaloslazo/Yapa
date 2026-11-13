@@ -1,6 +1,7 @@
 """Herramienta de la demo de la semana completa (api/tools/demo_semana.py): reloj movible y lejía a punto de bajar."""
 
 import importlib.util
+import tempfile
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -8,6 +9,7 @@ from pathlib import Path
 
 from yapa_sdd import cycle
 from yapa_sdd.cycle import LIMA
+from yapa_sdd.web.api import PHOTO_PATH
 
 _spec = importlib.util.spec_from_file_location("demo_semana", Path(__file__).resolve().parents[1] / "tools" / "demo_semana.py")
 demo_semana = importlib.util.module_from_spec(_spec)
@@ -50,6 +52,19 @@ class RelojDeLaDemo(unittest.TestCase):
     def test_lo_demas_pasa_a_la_tienda(self):
         _, cuerpo = self.get("/api/estado")
         self.assertEqual(cuerpo, "tienda")
+
+
+class FotosDeLaSemilla(unittest.TestCase):
+    def test_la_semana_pasada_queda_con_fotos_que_el_motor_sirve(self):
+        store = demo_semana.armar(NOW, credenciales=False)
+        with tempfile.TemporaryDirectory() as carpeta:
+            demo_semana.fotos_de_la_semilla(store, carpeta)
+            rutas = [bag.photo for bags in store.bags.values() for bag in bags]
+            rutas += [delivery.photo for delivery in store.deliveries.values()]
+            self.assertTrue(rutas)
+            for ruta in rutas:
+                self.assertRegex(ruta, PHOTO_PATH)
+                self.assertTrue((Path(carpeta) / ruta.split("/", 1)[1]).is_file())
 
 
 class SemanaArmada(unittest.TestCase):
