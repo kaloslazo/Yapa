@@ -1,0 +1,92 @@
+
+ RUN  v5.0.5 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+ ❯ src/components/reclamosCarrito.test.ts (3 tests | 3 failed) 51ms
+   ❯ RV-C · el pedido como un carrito (1)
+     × cada línea muestra la foto, el nombre y la cantidad 33ms
+   ❯ RV-D · reclamar tocando el producto (1)
+     × no hay desplegable; la tarjeta elegida va en el reclamo 9ms
+   ❯ RV-E · tus reclamos (1)
+     × se ven con el producto, el motivo, el estado y lo devuelto 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/reclamosCarrito.test.ts > RV-C · el pedido como un carrito > cada línea muestra la foto, el nombre y la cantidad
+AssertionError: expected  to have a length of 2 but got +0
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/components/reclamosCarrito.test.ts:30:19
+     28|     await mount(page());
+     29|     const lines = host.querySelectorAll('.order-cart li');
+     30|     expect(lines).toHaveLength(2);
+       |                   ^
+     31|     expect(lines[0].querySelector('.product-thumb')).not.toBeNull();
+     32|     expect(lines[0].textContent).toContain('Papa amarilla');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/components/reclamosCarrito.test.ts > RV-D · reclamar tocando el producto > no hay desplegable; la tarjeta elegida va en el reclamo
+AssertionError: expected <select>…(2)</select> to be null
+
+- Expected:
+null
+
++ Received:
+<select>
+  <option
+    value="0"
+  >
+    Pedido 
+    12
+     · 
+    Papa amarilla
+     (
+    8
+    )
+  </option>
+  <option
+    value="1"
+  >
+    Pedido 
+    12
+     · 
+    Cebolla roja
+     (
+    5
+    )
+  </option>
+</select>
+
+ ❯ src/components/reclamosCarrito.test.ts:42:42
+     40|     await mount(page(onClaim));
+     41|     const form = host.querySelector('.claim-form')!;
+     42|     expect(form.querySelector('select')).toBeNull();
+       |                                          ^
+     43|     const cards = form.querySelectorAll<HTMLInputElement>('.claim-pick…
+     44|     expect(cards).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/components/reclamosCarrito.test.ts > RV-E · tus reclamos > se ven con el producto, el motivo, el estado y lo devuelto
+TypeError: Cannot read properties of null (reading 'querySelector')
+ ❯ src/components/reclamosCarrito.test.ts:60:17
+     58|     await mount(page(undefined, [{ id: 1, order: 12, product: 'CEBOLLA…
+     59|     const item = host.querySelector('.claim-history li')!;
+     60|     expect(item.querySelector('.product-thumb')).not.toBeNull();
+       |                 ^
+     61|     expect(item.textContent).toContain('Cebolla roja');
+     62|     expect(item.textContent).toContain('Llegó dañado');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  20:31:50
+   Duration  2.80s (import 63%, environment 33%, transform 2%, tests 2%)
+
