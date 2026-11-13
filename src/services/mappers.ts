@@ -37,7 +37,7 @@ export function toProduct(raw: Raw): Product {
 }
 
 export function toLine(raw: Raw): OrderLine {
-  return { id: raw.id, name: raw.nombre, quantity: num(raw.cantidad), maxPrice: num(raw.precio_max), total: num(raw.total) };
+  return { id: raw.id, name: raw.nombre, quantity: num(raw.cantidad), unit: raw.unidad || undefined, maxPrice: num(raw.precio_max), total: num(raw.total) };
 }
 
 function toSettlement(raw: Raw | undefined): Settlement | null {

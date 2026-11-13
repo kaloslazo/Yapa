@@ -184,6 +184,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def names_for(cycle_id: str) -> dict[str, str]:
         return {p.product_id: p.name for p in store.catalog_for(cycle_id).values()}
 
+    def units_for(cycle_id: str) -> dict[str, str]:
+        """UN-01, S-338: kg o unidad, según el catálogo de la semana."""
+        return {p.product_id: p.unit for p in store.catalog_for(cycle_id).values()}
+
     def zone_json(zone) -> dict:
         members = [c for c in store.customers.values() if c.zone_id == zone.zone_id]
         return {"id": zone.zone_id, "nombre": zone.name, "distrito": zone.district, "grupo": zone.group_id,
@@ -201,6 +205,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         settled = store.settlements.get(order.cycle)
         settled = settled.orders.get(order.order_id) if settled else None
         delivered = any(order.order_id in d.order_ids for d in store.deliveries.values())
+        units = units_for(order.cycle)  # UN-01
         data = {
             "id": order.order_id, "ciclo": order.cycle, "zona": order.zone_id, "cliente": order.customer_id,
             "zona_nombre": store.zones[order.zone_id].name if order.zone_id in store.zones else order.zone_id,  # OC-05
@@ -210,6 +215,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "a_yapear": money(order.paid_external), "entregado": delivered,
             "cancelable": order.status == "REGISTRADO" and cycle.is_open(now) and cycle.cycle_id(now) == order.cycle,
             "lineas": [{"id": l.product_id, "nombre": names.get(l.product_id, l.product_id), "cantidad": qty(l.quantity),
+                        "unidad": units.get(l.product_id, ""),
                         "precio_max": money(l.max_unit_price), "total": money(l.max_total)} for l in order.lines],
         }
         data["seguimiento"] = logistics.tracking(store, order)  # SG-01, SG-03
@@ -512,10 +518,11 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         options = []
         for order in store.orders.values():
             if order.customer_id == session["principal"] and order.order_id in until and now < until[order.order_id]:
-                names = names_for(order.cycle)
+                names, units = names_for(order.cycle), units_for(order.cycle)
                 for line in order.lines:
                     options.append({"pedido": order.order_id, "producto": line.product_id,
                                     "nombre": names.get(line.product_id, line.product_id), "cantidad": qty(line.quantity),
+                                    "unidad": units.get(line.product_id, ""),  # UN-02
                                     "hasta": until[order.order_id].isoformat()})
         mine = [c for c in store.claims.values() if c.customer_id == session["principal"]]
         return {"reclamables": options, "reclamos": [claim_json(c) for c in mine]}
@@ -765,7 +772,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "rotulos": fulfillment.bag_labels(store, o.order_id)} for o in attended]  # RT-01
         if session["kind"] == partners.PACKER:  # AM-01, S-290
             orders = [{key: o[key] for key in PACKER_ORDER + ("rotulos",)} | {
-                "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad")} for line in o["lineas"]]} for o in orders]
+                "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad", "unidad")} for line in o["lineas"]]} for o in orders]
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
     def admin_bolsa(environ, data, session):

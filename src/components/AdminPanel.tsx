@@ -5,7 +5,7 @@ import { toOrder, toZone } from '../services/mappers';
 import type { Order, Role, Zone } from '../types';
 import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
-import { formatMoney, quantityWithUnit } from '../utils/format';
+import { amountWithUnit, formatMoney, quantityWithUnit } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
@@ -339,7 +339,7 @@ function PackCard({ order, send }: { order: Order; send: (path: string, form: Fo
       </header>
       <ul className="pack-lines" aria-label={`Productos del pedido ${order.id}`}>{order.lines.map((l) => {
         const done = checked.includes(l.id);
-        return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setChecked((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{formatQuantity(l.quantity)}</strong></label></li>;
+        return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setChecked((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{amountWithUnit(l.quantity, l.unit, formatQuantity)}</strong></label></li>;
       })}</ul>
       {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${b.number} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {b.number}</small></a></li>)}</ul> : null}
       <p className="pack-labels"><Icon name="tag" size={15} />{order.labels?.length ? order.labels.join(' · ') : `Rotula la bolsa: Pedido ${order.id}${order.zoneName ? ` · ${order.zoneName}` : ''}`}</p>

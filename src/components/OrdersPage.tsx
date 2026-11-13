@@ -4,7 +4,7 @@ import type { Order, RefundDestination } from '../types';
 import { Icon } from './Icon';
 import { ProductThumb } from './ProductThumb';
 import { PhotoPreview, usePhotoPreview } from './PhotoForm';
-import { formatMoment, formatMoney } from '../utils/format';
+import { amountWithUnit, formatMoment, formatMoney } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { refundPromise } from '../utils/refund';
 import { weekLabel } from '../utils/week';
@@ -22,6 +22,7 @@ export interface Claimable {
   product: string;
   name: string;
   quantity: number;
+  unit?: string; // UN-02
   until?: string; // RV-02: hasta cuándo se puede reclamar
 }
 
@@ -180,7 +181,7 @@ function ClaimForm({ claimables, onClaim }: { claimables: Claimable[]; onClaim: 
           <label key={`${c.order}-${c.product}`} className={`claim-pick${index === item ? ' is-selected' : ''}`}>
             <input type="radio" name="reclamable" value={index} checked={index === item} onChange={() => { setItem(index); setQuantity(1); }} />
             <ProductThumb id={c.product} size={48} />
-            <span><strong>{c.name}</strong><small>Pedido {c.order} · {formatQuantity(c.quantity)}{c.until ? ` · hasta ${formatMoment(c.until)}` : ''}</small></span>
+            <span><strong>{c.name}</strong><small>Pedido {c.order} · {amountWithUnit(c.quantity, c.unit, formatQuantity)}{c.until ? ` · hasta ${formatMoment(c.until)}` : ''}</small></span>
           </label>
         ))}
       </fieldset>
@@ -246,7 +247,7 @@ export function OrdersPage({ data, claimables, claims, onBack, onCancel, onWithd
               {order.status === 'REGISTRADO' && order.payment === 'POR_VERIFICAR' && order.toPay > 0 ? <div className="pay-reminder"><Icon name="wallet" size={18} /><span>Paga <strong>{formatMoney(order.toPay)}</strong>{order.payTo ? <> al Plin <strong>{order.payTo.number}</strong> ({order.payTo.holder})</> : <> por {methodName(order.method)}</>} con el código <code>{order.paymentCode}</code> en el mensaje. También puedes pagar desde Yape.</span></div> : null}
               <Tracking order={order} />
               <Outcome order={order} />
-              <details className="order-lines"><summary>{order.lines.length} productos · {formatMoney(order.total)}</summary><ul className="order-cart">{order.lines.map((line) => <li key={line.id}><ProductThumb id={line.id} size={48} /><div><strong>{line.name}</strong><small>{formatQuantity(line.quantity)} · hasta {formatMoney(line.maxPrice)} c/u</small></div><strong className="order-cart-total">{formatMoney(line.total)}</strong></li>)}</ul></details>
+              <details className="order-lines"><summary>{order.lines.length} productos · {formatMoney(order.total)}</summary><ul className="order-cart">{order.lines.map((line) => <li key={line.id}><ProductThumb id={line.id} size={48} /><div><strong>{line.name}</strong><small>{amountWithUnit(line.quantity, line.unit, formatQuantity)} · hasta {formatMoney(line.maxPrice)} c/u</small></div><strong className="order-cart-total">{formatMoney(line.total)}</strong></li>)}</ul></details>
               {order.cancellable ? <CancelActions order={order} onCancel={onCancel} /> : null}
             </article>
           ))}</div> : <div className="customer-empty-state"><span className="customer-empty-icon"><Icon name="basket" size={27} /></span><h3>Tu primera canasta empieza aquí</h3><p>Elige productos para la semana y paga con Yape o Plin antes del miércoles a las 20:00.</p><button className="primary-button" type="button" onClick={onBack}>Ver catálogo <Icon name="arrow" size={17} /></button></div>}

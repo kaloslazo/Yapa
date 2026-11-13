@@ -76,6 +76,7 @@ export interface OrderLine {
   id: string;
   name: string;
   quantity: number;
+  unit?: string; // UN-01: kg o unidad
   maxPrice: number;
   total: number;
 }
