@@ -1,5 +1,12 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 66 · Ver la foto que se toma (12/11/2026)
+
+- Spec: `66-ver-la-foto.md`, supuestos S-336 y S-337 a validar por el equipo.
+- Al elegir una foto (entrega, entrega fallida, dañado o reclamo) se ve su miniatura antes de enviarla, con "Cambiar foto".
+- En el armado, cada pedido muestra las miniaturas de sus bolsas registradas; al tocar una se abre la foto.
+- Pruebas en rojo antes del código; resultado: 182 pruebas de la web, TypeScript y build; el motor no cambia.
+
 ## Iteración 65 · Los pedidos y los reclamos del vecino, como un carrito (12/11/2026)
 
 - Pedido de Carlos después de la demo: el reclamo se veía como un historial de texto. Spec: `65-reclamos-como-un-carrito.md`, supuestos S-333..S-335 a validar por el equipo.
