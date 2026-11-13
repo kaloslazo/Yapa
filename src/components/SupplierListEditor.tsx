@@ -29,7 +29,7 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
   return (
     <form className="supplier-editor" onSubmit={event => void submit(event)} noValidate>
       <p className="partner-muted">Revisa tu disponibilidad y tus precios por volumen. Los cambios se publican cuando el equipo los aprueba.</p>
-      <div className="supplier-editor-toolbar"><strong>{rows.length} {rows.length === 1 ? 'producto' : 'productos'}</strong><span role="status">{dirty ? 'Borrador con cambios sin enviar' : 'Lista lista para revisar'}</span></div>
+      <div className="supplier-editor-toolbar"><strong>{rows.length} {rows.length === 1 ? 'producto' : 'productos'}</strong><span role="status">{dirty ? 'Borrador con cambios sin enviar' : 'Sin cambios por enviar'}</span></div>
       {errors.length ? <div className="supplier-errors" role="alert"><strong>Revisa estos datos antes de enviar</strong><ul>{errors.map((error, i) => <li key={i}>{error}</li>)}</ul></div> : null}
       <fieldset disabled={busy} className="supplier-editor-fields"><legend className="sr-only">Productos de tu propuesta</legend>
         {rows.map(({ id, row }, index) => {

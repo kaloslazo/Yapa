@@ -76,3 +76,4 @@ Escenario base: la semana de demo (2026-W40) cerrada, con la compra registrada.
 - `64-motor-verde.txt`: 731 pruebas del motor en verde.
 - `64-web-verde.txt`: TypeScript, 176 pruebas de la web y build en verde.
 - Revisión en un celular de 390 px con la demo local (12/11/2026): Armado, Compras, Reclamos, Incidencias, Devoluciones y Portería sin tablas cortadas ni claves internas; el selector de semana ya no deja un hueco de 200 px en la caja de arriba.
+- Segunda revisión (12/11/2026, noche): en el celular los textos largos de una tarjeta se cortan en varias líneas (los tramos del catálogo se montaban sobre su etiqueta); la foto del producto en el editor del proveedor ya no se estira; "Lista lista para revisar" pasa a "Sin cambios por enviar"; en Métricas la semana sin liquidar se nombra por sus fechas. Recorrido real en Chrome de compras, armado, reclamo del vecino, atención, portería, reparto y admin: 23 de 23 comprobaciones en verde.

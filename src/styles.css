@@ -2423,7 +2423,8 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
 .buy-line-input input { width: 84px; min-height: 44px; text-align: right; }
 .supplier-lines li { align-items: center; }
 .supplier-lines li > div:not(.supplier-line-amount) { flex: 1; }
-.supplier-product summary { gap: 10px; }
+.supplier-product > summary > span.product-thumb:first-child { flex: none; }
+.supplier-product > summary { gap: 12px; }
 .partner-building { display: flex; align-items: center; gap: 6px; color: var(--copy); font-weight: 600; }
 
 .photo-field { position: relative; justify-content: center; min-height: 44px; }
@@ -2441,7 +2442,7 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
   .admin-table tbody tr { margin-bottom: 10px; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--radius-note); background: var(--canvas); }
   .admin-table :is(th, td) { border: 0; }
   .admin-table td { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr); align-items: baseline; justify-items: end; column-gap: 12px; row-gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--line) !important; text-align: right; }
-  .admin-table td > * { grid-column: 2; }
+  .admin-table td > * { grid-column: 2; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
   .admin-table td > .admin-cell-note { margin: 0; }
   .admin-table td:last-child { border-bottom: 0 !important; }
   .admin-table td[data-label]::before { content: attr(data-label); grid-column: 1; grid-row: 1 / span 4; justify-self: start; color: var(--muted); font-size: .8rem; font-weight: 600; text-align: left; }
