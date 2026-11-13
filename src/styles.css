@@ -807,6 +807,20 @@ button.admin-nav-link { width: 100%; border: 0; background: none; text-align: le
 .stop-actions { display: grid; gap: 10px; }
 .stop-actions details summary { cursor: pointer; color: var(--accent-dark); font-size: .88rem; font-weight: 600; }
 .photo-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.bag-form { display: grid; gap: 8px; min-width: 240px; }
+.bag-form .photo-field { min-width: 0; }
+.bag-form-actions { display: flex; align-items: center; gap: 8px; font-size: .8125rem; font-weight: 600; }
+.bag-stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); overflow: hidden; margin-left: auto; }
+.bag-stepper button, .bag-confirm { display: inline-flex; align-items: center; justify-content: center; width: 36px; min-height: 36px; padding: 0; border: 0; cursor: pointer; }
+.bag-stepper button { background: var(--paper); color: var(--ink); }
+.bag-stepper output { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+.bag-confirm { flex-shrink: 0; border-radius: 50%; background: var(--accent-dark); color: white; }
+.bag-form button:disabled { opacity: .45; cursor: not-allowed; }
+.bag-form button:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+.bag-form-note { color: var(--ink-soft); }
+@media (max-width: 700px) {
+  .bag-stepper button, .bag-confirm { width: 44px; min-height: 44px; }
+}
 .photo-form .photo-field { padding: 6px 10px; }
 .photo-form .checkout-field { min-width: 180px; }
 .admin-inline-input { width: 130px; min-height: 34px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: var(--radius-field); }
