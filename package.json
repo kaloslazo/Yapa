@@ -10,7 +10,9 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "api": "python api/tools/servir_demo.py"
+    "api": "python api/tools/servir_demo.py",
+    "demo": "bash scripts/demo.sh",
+    "semana": "bash scripts/semana.sh"
   },
   "dependencies": {
     "@fontsource-variable/urbanist": "^5.3.0",
