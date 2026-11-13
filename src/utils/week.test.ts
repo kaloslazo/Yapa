@@ -32,3 +32,12 @@ describe('UX-03 · fecha corta del precio de referencia', () => {
     expect(shortDate('no-es-fecha')).toBe('');
   });
 });
+
+describe('S-328 · semanas en palabras dentro de un texto', () => {
+  it('cambia cada código de semana por su fecha y deja lo demás igual', async () => {
+    const { humanizeWeeks } = await import('./week');
+    expect(humanizeWeeks('2 vecinos recibieron su pedido la semana 2026-W39 y aún no piden.')).toBe('2 vecinos recibieron su pedido la semana del 21 sep y aún no piden.');
+    expect(humanizeWeeks('El ciclo 2026-W42 todavía no se liquidó.')).toBe('El ciclo de la semana del 12 oct todavía no se liquidó.');
+    expect(humanizeWeeks('Sin códigos')).toBe('Sin códigos');
+  });
+});
