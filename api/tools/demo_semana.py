@@ -7,9 +7,12 @@ domingo (reclamos y liquidación) y la semana siguiente (usar el saldo). Solo pa
 """
 
 import argparse
+import hashlib
 import html
 import os
+import shutil
 import sys
+from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qs
@@ -24,7 +27,7 @@ from yapa_sdd.google_identity import google_from_env  # noqa: E402
 from yapa_sdd.mailer import mailer_from_env  # noqa: E402
 from yapa_sdd.web import produccion  # noqa: E402
 from yapa_sdd.web.__main__ import _demo_credentials  # noqa: E402
-from yapa_sdd.web.api import create_api  # noqa: E402
+from yapa_sdd.web.api import PHOTO_PATH, create_api  # noqa: E402
 from yapa_sdd.web.app import create_app  # noqa: E402
 
 # momento -> (cuánto después del miércoles 10:00 de la demo, qué se muestra)
@@ -85,11 +88,31 @@ def armar(now: datetime, credenciales: bool = True):
     return store
 
 
+def fotos_de_la_semilla(store, carpeta: str = "fotos") -> None:
+    """La semilla guarda nombres como fotos/w39-pedido-1.jpg, que el motor no sirve (S-180): les pone una foto real."""
+    productos = Path(__file__).resolve().parents[2] / "public" / "images" / "products"
+    destino = Path(carpeta)
+    destino.mkdir(exist_ok=True)
+
+    def real(ruta: str, origen: str) -> str:
+        if not ruta or PHOTO_PATH.fullmatch(ruta):
+            return ruta
+        nombre = hashlib.sha256(ruta.encode()).hexdigest()[:16] + ".webp"
+        shutil.copyfile(productos / origen, destino / nombre)
+        return f"fotos/{nombre}"
+
+    for order_id, bags in store.bags.items():
+        store.bags[order_id] = [replace(bag, photo=real(bag.photo, "papa-amarilla.webp")) for bag in bags]
+    for key, delivery in store.deliveries.items():
+        store.deliveries[key] = replace(delivery, photo=real(delivery.photo, "cebolla-roja.webp"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Yapa · demo de la semana completa con reloj movible")
     parser.add_argument("--puerto", type=int, default=8010)
     args = parser.parse_args()
     store = armar(datetime.now(LIMA))
+    fotos_de_la_semilla(store)
     base = store.demo_now
     reloj = {"ahora": base}
     clock = lambda: reloj["ahora"]  # noqa: E731
