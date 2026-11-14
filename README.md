@@ -12,6 +12,10 @@ En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aa
 | Motor (Python, solo biblioteca estándar) | `api/` | Todas las reglas del negocio, con sus specs y sus pruebas (`api/docs/desarrollo/99-registro.md` lleva la cuenta). Expone la API JSON en `/api`. |
 | Specs, decisiones y evidencia | `api/docs/` | Una spec por iteración (`api/docs/desarrollo/NN-*.md`), registro, roadmap y preguntas al equipo. |
 
+## Propuesta de orden de reparto
+
+Esta rama añade un minimapa esquemático y un orden sugerido por distancia geográfica, sin servicios adicionales. [Algoritmo, límites, capturas y demo](docs/ruta-local/README.md).
+
 ## Arquitectura en AWS
 
 ![Arquitectura de Yapa en AWS: usuarios, Route 53, Lightsail con Caddy, motor y SQLite, y CI/CD con GitHub Actions](docs/img/arquitectura-aws.svg)
