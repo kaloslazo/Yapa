@@ -4,6 +4,10 @@ Compras grupales semanales entre vecinos de Lince, Jesús María y La Victoria: 
 
 En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aaron Gonzales y Kalos Lazo. Se desarrolla con **Specification-Driven Development (SDD)**: cada regla del negocio tiene su spec, su prueba y su código.
 
+## Ayuda con preguntas frecuentes
+
+Esta rama añade «¿Te ayudamos?»: temas, buscador y respuestas preparadas, sin LLM ni configuración adicional en AWS. [Funcionamiento, capturas y pruebas](docs/chatbot-faq/README.md).
+
 ## Cómo está armado
 
 | Parte | Dónde | Qué hace |
