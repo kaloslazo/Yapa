@@ -1,0 +1,60 @@
+{
+  "dataset": "upwork3/vegetable-4-fhius/1",
+  "classes": [
+    "papa",
+    "cebolla",
+    "ajo",
+    "zanahoria"
+  ],
+  "possible_source_groups_across_splits": 197,
+  "selected_before_cleaning": {
+    "train": 2007,
+    "val": 239,
+    "test": 88
+  },
+  "images": {
+    "test": 81,
+    "val": 179,
+    "train": 1254
+  },
+  "images_per_class": {
+    "test": {
+      "cebolla": 21,
+      "ajo": 18,
+      "papa": 24,
+      "zanahoria": 21
+    },
+    "val": {
+      "ajo": 50,
+      "zanahoria": 52,
+      "cebolla": 45,
+      "papa": 35
+    },
+    "train": {
+      "ajo": 366,
+      "zanahoria": 294,
+      "cebolla": 336,
+      "papa": 312
+    }
+  },
+  "boxes_per_class": {
+    "test": {
+      "cebolla": 58,
+      "ajo": 50,
+      "papa": 45,
+      "zanahoria": 73
+    },
+    "val": {
+      "ajo": 181,
+      "zanahoria": 153,
+      "cebolla": 107,
+      "papa": 109
+    },
+    "train": {
+      "ajo": 1317,
+      "zanahoria": 1188,
+      "cebolla": 1251,
+      "papa": 792
+    }
+  }
+}

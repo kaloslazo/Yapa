@@ -16,6 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
+from .. import vision
 from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
@@ -775,6 +776,9 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad", "unidad")} for line in o["lineas"]]} for o in orders]
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
+    def vision_analizar(environ, data, session):
+        return vision.analyze_photo(data.get('_vision_upload'))
+
     def admin_bolsa(environ, data, session):
         bag = fulfillment.pack_bag(store, _int(data.get("pedido"), "Número de pedido"), by=session["principal"],
                                    photo=data.get("foto", ""), now=clock())
@@ -1260,6 +1264,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/pedidos/(\d+)/verificar", {"POST": (admin_verificar, "admin")}),
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
         (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
+        (r"/api/vision/analizar", {"POST": (vision_analizar, ("admin", partners.PACKER, partners.SUPPLIER))}),
         (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
         (r"/api/admin/danados", {"POST": (admin_danado, PACKING)}),
         (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),
@@ -1347,6 +1352,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
+        if handler is vision_analizar:
+            data['_vision_upload'] = files.get('foto_archivo')
         saved = ""
         if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
