@@ -9,6 +9,7 @@ import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
 import { SupplierListEditor } from './SupplierListEditor';
+import { PhotoProductReview } from './PhotoProductReview';
 import { RECEPTION_LABELS, unseenReceptionEvents, type ReceptionSnapshot } from '../utils/receptionUpdates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -233,6 +234,7 @@ function SupplierHome({ notify }: { notify: Notify }) {
           <p className="supplier-total"><span>Total a tu precio</span><strong>{formatMoney(Number(order.total))}</strong></p>
         </> : <p className="partner-muted">Todavía no hay pedidos de tus productos en esta semana.</p>}
       </section>
+      <PhotoProductReview key={data.proximo} />
       <section className="partner-card" aria-labelledby="lista-title">
         <h2 id="lista-title">Tu lista para la {weekLabel(data.proximo)}</h2>
         {next ? <p className={`offer-state offer-state--${next.estado.toLowerCase()}`}>{OFFER_STATES[next.estado]}{next.motivo ? `: ${next.motivo}` : ''}</p> : null}

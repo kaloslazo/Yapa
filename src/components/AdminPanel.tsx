@@ -11,6 +11,7 @@ import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
 import { BagForm } from './BagForm';
+import { PhotoProductReview } from './PhotoProductReview';
 import { ProductThumb } from './ProductThumb';
 import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
@@ -350,6 +351,7 @@ function PackCard({ order, send }: { order: Order; send: (path: string, form: Fo
         <span>{busy ? 'Subiendo la foto…' : bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'}</span>
         <input type="file" accept="image/*" capture="environment" disabled={busy} onChange={(event) => void upload(event.currentTarget)} aria-label={`Foto de la bolsa del pedido ${order.id}`} />
       </label>
+      <details className="pack-photo-review"><summary>Revisar una bolsa con el detector</summary><PhotoProductReview label="Confirmar revisión y guardar bolsa" onConfirm={(file) => { const form = new FormData(); form.set('foto_archivo', file); return send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada con tu revisión.`); }} /></details>
       <details className="pack-multiple-bags"><summary>Preparar varias bolsas con fotos</summary><BagForm key={order.id} onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada.`)} /></details>
       <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>
       {damaged ? <PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(order.id) }, `Dañado del pedido ${order.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{order.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm> : null}
