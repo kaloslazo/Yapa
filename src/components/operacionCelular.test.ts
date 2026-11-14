@@ -84,7 +84,8 @@ describe('OC-G · armado con la cámara', () => {
     expect(host.querySelectorAll('.pack-card')).toHaveLength(3);
     expect(visible()).toContain('1 de 3 pedidos con bolsa');
     expect(host.querySelector('.pack-card')?.textContent).toContain('Papa amarilla');
-    const camera = host.querySelectorAll<HTMLInputElement>('.pack-card input[type=file][capture]')[1];
+    // La tarjeta también ofrece fotos pendientes con confirmación; aquí probamos la cámara directa.
+    const camera = host.querySelectorAll<HTMLInputElement>('.pack-camera input[type=file]')[1];
     const file = new File(['x'], 'bolsa.png', { type: 'image/png' });
     Object.defineProperty(camera, 'files', { value: [file] });
     await act(async () => { camera.dispatchEvent(new Event('change', { bubbles: true })); });
