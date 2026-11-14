@@ -9,6 +9,8 @@ import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
 import { SupplierListEditor } from './SupplierListEditor';
+import { RoutePlanner } from './RoutePlanner';
+import { orderDelivery } from '../utils/deliveryRoute';
 import { RECEPTION_LABELS, unseenReceptionEvents, type ReceptionSnapshot } from '../utils/receptionUpdates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -61,10 +63,12 @@ export function PartnerPanel({ account, notify, onLogout }: PartnerPanelProps) {
 
 function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
   const [cycle, setCycle] = useState('');
+  const [routeIds, setRouteIds] = useState<string[] | null>(null);
+  useEffect(() => setRouteIds(null), [cycle]);
   const { data, reload } = useData(`/api/reparto${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [failure, setFailure] = useState('PORTERIA_CERRADA');
   if (!data) return <PartnerSkeleton />;
-  const stops: Raw[] = data.paradas;
+  const stops: Raw[] = orderDelivery(data.paradas, routeIds);
   const done = stops.filter((s) => s.estado === 'entregada' || s.estado === 'fallida').length;
   const send = async (path: string, form: FormData, extra: Record<string, string>, title: string, detail: string) => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
@@ -86,6 +90,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
         {stops.length ? <p className="partner-progress"><strong>{done} de {stops.length}</strong> paradas listas</p> : null}
       </section>
       {!data.cerrado && stops.length ? <p className="partner-note"><Icon name="calendar" size={18} />Los pedidos cierran el miércoles a las 8 p. m. Las paradas pueden cambiar hasta entonces.</p> : null}
+      {stops.length ? <RoutePlanner key={data.ciclo} stops={data.paradas} active={Boolean(routeIds)} onOrder={setRouteIds} /> : null}
       {stops.length ? <ol className="stop-route">{stops.map((stop, index) => {
         const zone = stop.zona;
         const unpacked = stop.pedidos.filter((o: Raw) => o.bolsas === 0).length;
