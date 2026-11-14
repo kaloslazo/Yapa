@@ -28,6 +28,9 @@ describe('PA-02 y AT-01 · operación por zona y completados', () => {
   it('filtra entregas y bolsas juntas y conserva la semana ISO al consultar', async () => {
     vi.mocked(api.get).mockImplementation(async () => ({ ciclo: '2026-W39', ciclos: ['2026-W39', '2026-W40'], paradas: ['Z-LINCE-01', 'Z-JM-01'].map(id => ({ zona: zone(id) })), pedidos: ['Z-LINCE-01', 'Z-JM-01'].map((id, i) => ({ id: i + 1, zona: id, vecino: `Persona ${i + 1}`, lineas: [], bolsas: [] })) }) as never);
     await mount(createElement(AdminPanel, { adminName: 'Armado', role: 'armador', notify, onLogout: vi.fn() }));
+    expect(host.textContent).toContain('Antes de esa hora, la semana todavía recibe compras.');
+    expect(host.textContent).toContain('miércoles a las 8 p. m. (hora de Lima)');
+    expect(host.querySelectorAll('.pack-multiple-bags')).toHaveLength(2);
     expect(host.textContent).toContain('Entregas por zona (2)');
     expect(host.querySelector('option')?.textContent).toBe('21 sep – 27 sep 2026');
     const filter = [...host.querySelectorAll('select')].find(s => [...s.options].some(o => o.textContent === 'Todas las zonas'))!;

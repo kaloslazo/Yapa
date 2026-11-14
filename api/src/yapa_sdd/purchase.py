@@ -115,7 +115,7 @@ def register_damaged(store: InMemoryStore, order_id: int, product_id: str, quant
     if order is None:  # DA-02
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
     if cycles.to_lima(now) < cycles.closes_at(order.cycle):
-        raise BusinessRuleError("CYCLE_STILL_OPEN", "El ciclo sigue abierto; todavía no se arma.")
+        raise BusinessRuleError("CYCLE_STILL_OPEN", "Todavía no puedes registrar productos dañados: esta semana sigue recibiendo compras. El armado se habilita el miércoles a las 8 p. m. (hora de Lima).")
     if not is_attended(store, order):
         raise BusinessRuleError("ORDER_NOT_ATTENDED", "Este pedido no se atiende en este ciclo.")
     closed = (order.cycle, order.zone_id)

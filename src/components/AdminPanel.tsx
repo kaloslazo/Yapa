@@ -10,6 +10,7 @@ import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
+import { BagForm } from './BagForm';
 import { ProductThumb } from './ProductThumb';
 import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
@@ -272,7 +273,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
           {result ? <div className="admin-settle-result"><strong>Semana liquidada</strong><p>Volvió a saldo {formatMoney(num(result.a_saldo))} · a reembolsar por Yape o Plin {formatMoney(num(result.reembolsado))}.</p><ul>{result.productos.map((p: Raw) => <li key={p.id}>{productName(p.id)}: {p.total} entre todos · tramo desde {p.tramo} · {formatMoney(num(p.precio_final))}</li>)}</ul></div>
             : data.liquidado ? <p>Esta semana ya está liquidada.</p>
               : confirming ? <div className="admin-settle-actions"><button className="primary-button" type="button" onClick={() => void settle()}>Sí, liquidar la semana</button><button className="secondary-button" type="button" onClick={() => setConfirming(false)}>Cancelar</button></div>
-                : <><p>Liquidar calcula el precio final por tramo, el envío real por zona, los beneficios del admin de zona y devuelve el ahorro como saldo. Exige que todas las zonas estén entregadas o marcadas como fallidas.</p><button className="primary-button" type="button" disabled={!orders.length} onClick={() => setConfirming(true)}>Liquidar la semana <Icon name="arrow" size={17} /></button></>}
+                : <><p>Liquidar calcula el precio final por tramo, el envío real por zona, los beneficios del admin de zona y devuelve el ahorro como saldo. Antes de liquidar, Reparto o el equipo debe registrar la entrega de cada zona o indicar por qué no se pudo entregar.</p><button className="primary-button" type="button" disabled={!orders.length} onClick={() => setConfirming(true)}>Liquidar la semana <Icon name="arrow" size={17} /></button></>}
         </div>
       </Card>
     </>
@@ -296,6 +297,7 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
   return (
     <>
       <section className="admin-intro"><div><h2>{packer ? 'Arma cada bolsa y tómale foto' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Marca cada producto al meterlo y toma la foto de la bolsa: sin bolsas, el reparto no puede salir.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <p className="admin-muted">El armado se habilita después del cierre de compras: miércoles a las 8 p. m. (hora de Lima). Antes de esa hora, la semana todavía recibe compras.</p>
       {data.paradas.length > 1 ? <label className="checkout-field packing-zone-filter"><span>Edificio</span><select value={zoneFilter} onChange={event => setZoneFilter(event.target.value)}><option value="">Todas las zonas</option>{data.paradas.map((p: Raw) => <option key={p.zona.id} value={p.zona.id}>{p.zona.nombre}</option>)}</select></label> : null}
       {orders.length ? <div className="pack-progress" role="status"><div><strong>{packed} de {orders.length} pedidos con bolsa</strong><span>{packed === orders.length ? 'Todo armado: el reparto ya puede salir.' : `Faltan ${orders.length - packed}.`}</span></div><div className="progress-track"><span style={{ width: `${(packed / orders.length) * 100}%` }} /></div></div> : null}
       {orders.length ? <div className="pack-list">{orders.map((o) => <PackCard key={o.id} order={o} send={send} />)}</div> : <Card title="Nada que armar"><Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." /></Card>}
@@ -348,6 +350,7 @@ function PackCard({ order, send }: { order: Order; send: (path: string, form: Fo
         <span>{busy ? 'Subiendo la foto…' : bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'}</span>
         <input type="file" accept="image/*" capture="environment" disabled={busy} onChange={(event) => void upload(event.currentTarget)} aria-label={`Foto de la bolsa del pedido ${order.id}`} />
       </label>
+      <details className="pack-multiple-bags"><summary>Preparar varias bolsas con fotos</summary><BagForm key={order.id} onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada.`)} /></details>
       <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>
       {damaged ? <PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(order.id) }, `Dañado del pedido ${order.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{order.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm> : null}
     </article>

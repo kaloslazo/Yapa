@@ -1,5 +1,11 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 64 · Bolsas con selector y foto individual (13/11/2026)
+
+- Spec: `64-bolsas-con-selector.md`, S-327 y S-328 (a validar por el equipo).
+- Armado permite elegir bolsas nuevas con −/+, cargar una foto por bolsa y confirmar con un botón pequeño. Conserva las pendientes cuando falla una y excluye del reintento las confirmadas.
+- TypeScript, 175 pruebas frontend y build aprobados; selector revisado en localhost. Sin cambios de API. Evidencia en `64-bolsas-rojo.txt` y `64-bolsas-verde.txt`.
+
 ## Iteración 67 · Cantidades con su unidad (12/11/2026)
 
 - Hallado en la revisión: el armado, el carrito del pedido y el reclamo decían "Papa amarilla 8" sin decir si eran kilos o unidades. Spec: `67-cantidades-con-unidad.md`, supuesto S-338 a validar por el equipo.

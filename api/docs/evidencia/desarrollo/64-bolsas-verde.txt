@@ -1,0 +1,15 @@
+Validación local · 13/11/2026
+
+npm.cmd run typecheck
+tsc -b: código 0.
+
+npm.cmd test
+Test Files 26 passed (26)
+Tests 175 passed (175)
+Incluye cinco pruebas nuevas de BagForm: cantidad, fotos obligatorias, envío ordenado, reintento parcial y bloqueo durante envío.
+
+npm.cmd run build
+vite v7.3.7: 4630 modules transformed, build completado, código 0.
+Aviso ya existente: chunk principal superior a 500 kB.
+
+Navegador: localhost:5173, rol Armado, W40. Selector 1→2 y campos Foto 1/Foto 2 visibles. Confirmar desactivado sin fotos. La bolsa guardada del pedido 12 se conserva.
