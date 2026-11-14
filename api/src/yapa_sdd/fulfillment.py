@@ -91,7 +91,7 @@ def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: d
     if order is None:  # AR-02
         raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
     if cycles.to_lima(now) < cycles.closes_at(order.cycle):  # AR-03
-        raise BusinessRuleError("CYCLE_STILL_OPEN", "El ciclo sigue abierto; todavía no se arma.")
+        raise BusinessRuleError("CYCLE_STILL_OPEN", "Todavía no puedes armar: esta semana sigue recibiendo compras. El armado se habilita el miércoles a las 8 p. m. (hora de Lima).")
     if not is_attended(store, order):  # AR-04
         raise BusinessRuleError("ORDER_NOT_ATTENDED", "Este pedido no se atiende en este ciclo.")
     closed = (order.cycle, order.zone_id)
@@ -177,7 +177,7 @@ def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleS
     zones = {o.zone_id for o in store.orders_in_cycle(cycle) if is_attended(store, o)}
     pending = sorted(z for z in zones if (cycle, z) not in store.deliveries and (cycle, z) not in store.failed_deliveries)
     if pending:
-        raise BusinessRuleError("ZONES_PENDING", "Falta entregar o registrar la falla de: " + ", ".join(pending) + ".")
+        raise BusinessRuleError("ZONES_PENDING", "Entrega pendiente de registrar en: " + ", ".join(pending) + ".")
     from .purchase import missing_for_settlement  # CR-06 (purchase importa este módulo)
     missing = list(missing) + missing_for_settlement(store, cycle)
     return settle_cycle(store, cycle, missing, at=at, savings_share=OPERATING_SAVINGS_SHARE)  # S-301
