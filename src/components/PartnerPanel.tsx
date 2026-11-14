@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import type { Account } from '../types';
+import { PhotoProductReview } from './PhotoProductReview';
 import { formatMoney, quantityWithUnit } from '../utils/format';
 import { weekLabel } from '../utils/week';
 import { Icon } from './Icon';
@@ -9,7 +10,6 @@ import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
 import { PartnerSkeleton } from './Skeleton';
 import { SupplierListEditor } from './SupplierListEditor';
-import { PhotoProductReview } from './PhotoProductReview';
 import { RECEPTION_LABELS, unseenReceptionEvents, type ReceptionSnapshot } from '../utils/receptionUpdates';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

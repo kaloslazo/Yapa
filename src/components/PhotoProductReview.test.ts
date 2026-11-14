@@ -29,6 +29,9 @@ it('corrige el conteo y confirma con la misma foto, sin guardar automáticamente
   const file=await upload(); expect(confirm).not.toHaveBeenCalled(); await quantity('2');
   await act(async () => host.querySelector<HTMLButtonElement>('.primary-button')!.click());
   expect(confirm).toHaveBeenCalledWith(file,[{producto:'zanahoria',cantidad:2,confianza:undefined}]); expect(host.textContent).toContain('Confirmado por ti');
+  expect(host.querySelector<HTMLInputElement>('input[type=number]')!.disabled).toBe(true);
+  await act(async () => host.querySelector<HTMLButtonElement>('.primary-button')!.click());
+  expect(confirm).toHaveBeenCalledTimes(1);
 });
 it('permite revisión manual si el análisis falla y rechaza cantidades inválidas', async () => {
   vi.mocked(api.post).mockRejectedValue(new Error('Análisis no instalado')); await upload();

@@ -2,6 +2,7 @@
 from __future__ import annotations
 import hashlib
 import io
+import os
 import threading
 from pathlib import Path
 from collections import defaultdict
@@ -27,6 +28,7 @@ def _load_model():
     global _model
     if _model is None:
         try:
+            os.environ['YOLO_AUTOINSTALL'] = 'False'
             import torch
             from ultralytics import YOLO
         except ImportError as error:
@@ -46,6 +48,9 @@ def analyze_photo(upload):
     content = upload[1]
     if len(content) > 8 * 1024 * 1024:
         raise BusinessRuleError('PHOTO_TOO_LARGE', 'La foto pesa más de 8 MB.')
+    if not (content.startswith(b'\xff\xd8\xff') or content.startswith(b'\x89PNG\r\n\x1a\n')
+            or (content.startswith(b'RIFF') and content[8:12] == b'WEBP')):
+        raise BusinessRuleError('INVALID_PHOTO', 'Usa una foto JPG, PNG o WebP válida para analizar.')
     try:
         from PIL import Image, ImageOps, UnidentifiedImageError
     except ImportError as error:
@@ -55,7 +60,7 @@ def analyze_photo(upload):
             if source.width * source.height > 20_000_000:
                 raise BusinessRuleError('PHOTO_TOO_LARGE', 'La imagen supera los 20 megapíxeles. Usa una foto más pequeña.')
             image = ImageOps.exif_transpose(source).convert('RGB')
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as error:
+    except (UnidentifiedImageError, OSError, ValueError, ImportError, Image.DecompressionBombError) as error:
         raise BusinessRuleError('INVALID_PHOTO', 'Usa una foto JPG, PNG o WebP válida para analizar.') from error
     if not _lock.acquire(blocking=False):
         raise BusinessRuleError('VISION_BUSY', 'Hay una foto en análisis. Intenta de nuevo en unos segundos.')

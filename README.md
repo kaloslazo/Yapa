@@ -94,6 +94,14 @@ El plan gratis se duerme sin visitas (tarda unos segundos en despertar) y borra 
 - **Transportista:** paradas de la semana con las bolsas de cada pedido y cómo llegar; registra la entrega con foto y nombre de quien recibe, o por qué no se pudo. No ve datos de los vecinos.
 - **Proveedor aliado:** cuánto le compra Yapa de cada producto a su precio por tramo, y su lista de la semana siguiente para que el equipo la apruebe.
 
+## Revisión de productos con YOLOv8 Small
+
+Esta rama añade detección opcional y conteo editable por foto en Armado y Proveedor. Reconoce papa, cebolla, ajo y zanahoria; la persona confirma y corrige. [Instalación, límites, pruebas y explicación de métricas](docs/modelo-yolo/README.md).
+
+![Métricas del entrenamiento de YOLOv8 Small](docs/modelo-yolo/results.png)
+
+![Confusiones del modelo en test](docs/modelo-yolo/confusion_matrix_normalized.png)
+
 ## Verificación
 
 ```bash

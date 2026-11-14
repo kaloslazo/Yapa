@@ -28,6 +28,7 @@ export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de ref
   const update = (i: number, changes: Partial<ProductCount>) => { setProducts(rows => rows.map((p, index) => i === index ? { ...p, ...changes, confianza: undefined } : p)); setState('idle'); };
   const valid = file && products.length > 0 && products.every(p => PRODUCTS.includes(p.producto) && Number.isInteger(p.cantidad) && p.cantidad >= 1 && p.cantidad <= 300);
   const locked = state === 'analyzing' || state === 'saving';
+  const reviewLocked = locked || state === 'confirmed';
   const confirm = async () => {
     if (!file || !valid || locked) return;
     setState('saving'); setError('');
@@ -43,12 +44,12 @@ export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de ref
     {error ? <p role="alert">{error}</p> : null}
     {file && !locked && !products.length ? <p>No hay productos sugeridos. Puedes añadirlos manualmente; esto no significa que la foto esté vacía.</p> : null}
     {products.map((p, i) => <div className="photo-product-row" key={i}>
-      <label>Producto {i + 1}<select value={p.producto} disabled={locked} onChange={e => update(i, { producto: e.target.value })}>{PRODUCTS.map(name => <option key={name} value={name}>{name}</option>)}</select></label>
-      <label>Unidades visibles {i + 1}<input type="number" min="1" max="300" step="1" value={Number.isFinite(p.cantidad) ? p.cantidad : ''} disabled={locked} onChange={e => update(i, { cantidad: e.target.value === '' ? NaN : Number(e.target.value) })} /></label>
-      <button type="button" disabled={locked} onClick={() => { setProducts(rows => rows.filter((_, j) => i !== j)); setState('idle'); }} aria-label={`Quitar producto ${i + 1}`}>Quitar</button>
+      <label>Producto {i + 1}<select value={p.producto} disabled={reviewLocked} onChange={e => update(i, { producto: e.target.value })}>{PRODUCTS.map(name => <option key={name} value={name}>{name}</option>)}</select></label>
+      <label>Unidades visibles {i + 1}<input type="number" min="1" max="300" step="1" value={Number.isFinite(p.cantidad) ? p.cantidad : ''} disabled={reviewLocked} onChange={e => update(i, { cantidad: e.target.value === '' ? NaN : Number(e.target.value) })} /></label>
+      <button type="button" disabled={reviewLocked} onClick={() => { setProducts(rows => rows.filter((_, j) => i !== j)); setState('idle'); }} aria-label={`Quitar producto ${i + 1}`}>Quitar</button>
       {p.confianza != null ? <small>Puntuación mínima del detector: {Math.round(p.confianza * 100)} %. No garantiza el conteo.</small> : null}
     </div>)}
-    {file ? <div className="photo-product-actions"><button type="button" disabled={locked} onClick={() => { setProducts(rows => [...rows, { producto: 'papa', cantidad: 1 }]); setState('idle'); }}>Añadir producto manualmente</button><button type="button" className="primary-button" disabled={!valid || locked || state === 'confirmed'} onClick={() => void confirm()}>{state === 'saving' ? 'Confirmando…' : label}</button></div> : null}
+    {file ? <div className="photo-product-actions"><button type="button" disabled={reviewLocked} onClick={() => { setProducts(rows => [...rows, { producto: 'papa', cantidad: 1 }]); setState('idle'); }}>Añadir producto manualmente</button><button type="button" className="primary-button" disabled={!valid || locked || state === 'confirmed'} onClick={() => void confirm()}>{state === 'saving' ? 'Confirmando…' : label}</button></div> : null}
     {state === 'confirmed' ? <p role="status">Confirmado por ti: {products.map(p => `${p.producto}: ${p.cantidad}`).join(' · ')}. El conteo es una referencia en esta pantalla; no modifica cantidades ni precios del pedido o catálogo.</p> : null}
   </section>;
 }

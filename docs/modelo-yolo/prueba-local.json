@@ -1,0 +1,95 @@
+{
+  "nota": "Prueba funcional de cuatro fotos, no una nueva estimacion estadistica de precision. CPU local.",
+  "muestras": [
+    {
+      "muestra": "papa",
+      "rol": "armador",
+      "foto_dataset": "test/images/-------------------16_jpg.rf.e7c06fc371139906b34ab677b32fe56d.jpg",
+      "etiquetas": {
+        "papa": 1
+      },
+      "respuesta": {
+        "modelo": "Yapa YOLOv8 Small",
+        "umbral": 0.35,
+        "productos": [
+          {
+            "producto": "papa",
+            "cantidad": 1,
+            "confianza": 0.911
+          }
+        ],
+        "aviso": "Sugerencia de objetos visibles. Revisa producto y cantidad: el modelo puede fallar. No estima peso."
+      },
+      "segundos": 6.689
+    },
+    {
+      "muestra": "cebolla",
+      "rol": "proveedor",
+      "foto_dataset": "test/images/----------------------14_jpg.rf.e09cbf420949e1022436e48a5af8d290.jpg",
+      "etiquetas": {
+        "cebolla": 1
+      },
+      "respuesta": {
+        "modelo": "Yapa YOLOv8 Small",
+        "umbral": 0.35,
+        "productos": [
+          {
+            "producto": "cebolla",
+            "cantidad": 1,
+            "confianza": 0.858
+          }
+        ],
+        "aviso": "Sugerencia de objetos visibles. Revisa producto y cantidad: el modelo puede fallar. No estima peso."
+      },
+      "segundos": 0.141
+    },
+    {
+      "muestra": "ajo",
+      "rol": "armador",
+      "foto_dataset": "test/images/----------------------64_jpg.rf.0b097a85ee4b11fedb601b6768a34c54.jpg",
+      "etiquetas": {
+        "ajo": 3
+      },
+      "respuesta": {
+        "modelo": "Yapa YOLOv8 Small",
+        "umbral": 0.35,
+        "productos": [
+          {
+            "producto": "ajo",
+            "cantidad": 2,
+            "confianza": 0.821
+          }
+        ],
+        "aviso": "Sugerencia de objetos visibles. Revisa producto y cantidad: el modelo puede fallar. No estima peso."
+      },
+      "segundos": 0.124
+    },
+    {
+      "muestra": "zanahoria",
+      "rol": "proveedor",
+      "foto_dataset": "test/images/------------------10_jpg.rf.718ad05a3df7c8a545a19227951dc0c8.jpg",
+      "etiquetas": {
+        "zanahoria": 3
+      },
+      "respuesta": {
+        "modelo": "Yapa YOLOv8 Small",
+        "umbral": 0.35,
+        "productos": [
+          {
+            "producto": "zanahoria",
+            "cantidad": 3,
+            "confianza": 0.447
+          }
+        ],
+        "aviso": "Sugerencia de objetos visibles. Revisa producto y cantidad: el modelo puede fallar. No estima peso."
+      },
+      "segundos": 0.143
+    }
+  ],
+  "foto_invalida": {
+    "error": {
+      "codigo": "INVALID_PHOTO",
+      "mensaje": "Usa una foto JPG, PNG o WebP válida para analizar."
+    }
+  }
+}
