@@ -1,0 +1,2 @@
+# Opcional. Instalar primero torch/torchvision CPU según README.
+ultralytics==8.4.211

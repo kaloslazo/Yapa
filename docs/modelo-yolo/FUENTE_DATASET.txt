@@ -1,0 +1,3 @@
+Vegetable 4, Upwork3, version 1. CC BY 4.0.
+https://universe.roboflow.com/upwork3/vegetable-4-fhius/dataset/1
+Se seleccionaron y renumeraron papa, cebolla, ajo y zanahoria; se depuraron los conjuntos.
