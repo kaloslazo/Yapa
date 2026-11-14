@@ -1,0 +1,37 @@
+
+ RUN  v5.0.5 C:/Dev/UTEC/Ciclo_8/DS/Proyecto/kalos-Yapa
+
+
+ Test Files  27 passed (27)
+      Tests  179 passed (179)
+   Start at  20:34:01
+   Duration  7.46s (import 65%, environment 29%, tests 4%, transform 2%, worker 1%)
+
+    Isolate  27 workers spawned · ~842ms startup each (spawn + environment, per file)
+             at least ~674ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+> yapa@0.1.0 build
+> vite build
+
+[36mvite v7.3.7 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 4630 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                                            [39m[1m[2m  1.93 kB[22m[1m[22m[2m │ gzip:   0.75 kB[22m
+[2mdist/[22m[32massets/urbanist-latin-ext-wght-normal-Bdxck5Au.woff2  [39m[1m[2m 16.60 kB[22m[1m[22m
+[2mdist/[22m[32massets/urbanist-latin-wght-normal-D69JTELx.woff2      [39m[1m[2m 27.75 kB[22m[1m[22m
+[2mdist/[22m[35massets/ZonesMap-CIGW-MKW.css                          [39m[1m[2m 15.61 kB[22m[1m[22m[2m │ gzip:   6.46 kB[22m
+[2mdist/[22m[35massets/index-Ch8T6g4V.css                             [39m[1m[2m178.50 kB[22m[1m[22m[2m │ gzip:  31.51 kB[22m
+[2mdist/[22m[36massets/PhotoForm-B7vpfzBz.js                          [39m[1m[2m  0.83 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+[2mdist/[22m[36massets/PartnerPanel-DL85-tmv.js                       [39m[1m[2m 19.00 kB[22m[1m[22m[2m │ gzip:   6.62 kB[22m
+[2mdist/[22m[36massets/AdminPanel-DVw9_sJm.js                         [39m[1m[2m 72.52 kB[22m[1m[22m[2m │ gzip:  18.58 kB[22m
+[2mdist/[22m[36massets/ZonesMap-Di4SH-K1.js                           [39m[1m[2m151.91 kB[22m[1m[22m[2m │ gzip:  44.40 kB[22m
+[2mdist/[22m[36massets/index-D77P_H8z.js                              [39m[1m[33m517.07 kB[39m[22m[2m │ gzip: 146.80 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 3.56s[39m

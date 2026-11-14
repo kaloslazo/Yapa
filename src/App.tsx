@@ -130,8 +130,8 @@ export default function App() {
   const loadOrders = useCallback(async () => {
     const [mine, rec] = await Promise.all([api.get<Raw>('/api/mis-pedidos'), api.get<Raw>('/api/reclamos')]);
     setMyOrders({ orders: mine.pedidos.map(toOrder), balance: Number(mine.saldo), returned: Number(mine.devuelto_total), supermarketSaving: Number(mine.ahorro_supermercado), refunds: mine.devoluciones.map((r: Raw) => ({ id: r.id, amount: Number(r.monto), reason: r.motivo, status: r.estado })) });
-    setClaimables(rec.reclamables.map((c: Raw) => ({ order: c.pedido, product: c.producto, name: c.nombre, quantity: Number(c.cantidad) })));
-    setClaims(rec.reclamos.map((c: Raw) => ({ id: c.id, order: c.pedido, product: c.producto, quantity: Number(c.cantidad), reason: c.motivo, status: c.estado, returned: Number(c.devuelto) })));
+    setClaimables(rec.reclamables.map((c: Raw) => ({ order: c.pedido, product: c.producto, name: c.nombre, quantity: Number(c.cantidad), unit: c.unidad || undefined, until: c.hasta })));
+    setClaims(rec.reclamos.map((c: Raw) => ({ id: c.id, order: c.pedido, product: c.producto, name: c.nombre, quantity: Number(c.cantidad), reason: c.motivo, status: c.estado, returned: Number(c.devuelto) })));
   }, []);
 
   const loadNotices = useCallback(async () => {

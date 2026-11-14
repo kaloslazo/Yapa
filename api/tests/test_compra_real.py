@@ -234,7 +234,8 @@ class ApiTests(Base):
         self.assertEqual(status, 200)
         status, data, _ = buyer.get(f"/api/compras?ciclo={CYCLE}")
         self.assertEqual(data["compra_real"]["faltantes"],
-                         [{"pedido": 8, "producto": "PAPA-AMARILLA", "cantidad": "4", "colchon": "0", "origen": "COMPRA"}])
+                         [{"pedido": 8, "producto": "PAPA-AMARILLA", "cantidad": "4", "colchon": "0", "origen": "COMPRA",
+                           "nombre": "Papa amarilla"}])  # OC-03 (iteración 64)
 
         self.assertEqual(buyer.post("/api/admin/danados", {"pedido": 3, "producto": "CEBOLLA-ROJA", "cantidad": "1",
                                                             "foto": "fotos/d.jpg"})[0], 403)

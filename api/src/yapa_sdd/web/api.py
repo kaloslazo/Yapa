@@ -35,7 +35,7 @@ PACKING = ("admin", partners.PACKER)  # CX-09: rutas que el admin comparte con c
 BUYING = ("admin", partners.BUYER)
 ATTENDING = ("admin", partners.SUPPORT)
 PHOTO_VIEWERS = ("admin", partners.PACKER, partners.SUPPORT)
-PACKER_ORDER = ("id", "ciclo", "zona", "estado", "entregado", "vecino", "bolsas")  # AM-01, S-290: sin montos ni pagos
+PACKER_ORDER = ("id", "ciclo", "zona", "zona_nombre", "estado", "entregado", "vecino", "bolsas")  # AM-01, S-290: sin montos ni pagos
 PHOTO_PATH = re.compile(r"fotos/[0-9a-f]{16}.(jpg|jpeg|png|webp|heic)")  # S-180: lo que escribe _save_photo
 PHOTO_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "heic": "image/heic"}
 PHOTO_ROUTES = {"/api/reclamos", "/api/admin/bolsas", "/api/admin/entregas", "/api/admin/entregas-fallidas",
@@ -184,6 +184,10 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
     def names_for(cycle_id: str) -> dict[str, str]:
         return {p.product_id: p.name for p in store.catalog_for(cycle_id).values()}
 
+    def units_for(cycle_id: str) -> dict[str, str]:
+        """UN-01, S-338: kg o unidad, según el catálogo de la semana."""
+        return {p.product_id: p.unit for p in store.catalog_for(cycle_id).values()}
+
     def zone_json(zone) -> dict:
         members = [c for c in store.customers.values() if c.zone_id == zone.zone_id]
         return {"id": zone.zone_id, "nombre": zone.name, "distrito": zone.district, "grupo": zone.group_id,
@@ -201,14 +205,17 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         settled = store.settlements.get(order.cycle)
         settled = settled.orders.get(order.order_id) if settled else None
         delivered = any(order.order_id in d.order_ids for d in store.deliveries.values())
+        units = units_for(order.cycle)  # UN-01
         data = {
             "id": order.order_id, "ciclo": order.cycle, "zona": order.zone_id, "cliente": order.customer_id,
+            "zona_nombre": store.zones[order.zone_id].name if order.zone_id in store.zones else order.zone_id,  # OC-05
             "estado": order.status, "pago": order.payment_status, "metodo": order.payment_method,
             "codigo_pago": order.operation_code, "total": money(order.total), "subtotal": money(order.subtotal),
             "envio": money(order.delivery_fee), "con_saldo": money(order.paid_with_balance),
             "a_yapear": money(order.paid_external), "entregado": delivered,
             "cancelable": order.status == "REGISTRADO" and cycle.is_open(now) and cycle.cycle_id(now) == order.cycle,
             "lineas": [{"id": l.product_id, "nombre": names.get(l.product_id, l.product_id), "cantidad": qty(l.quantity),
+                        "unidad": units.get(l.product_id, ""),
                         "precio_max": money(l.max_unit_price), "total": money(l.max_total)} for l in order.lines],
         }
         data["seguimiento"] = logistics.tracking(store, order)  # SG-01, SG-03
@@ -505,21 +512,26 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ok": True}
 
     def reclamos(environ, data, session):
-        delivered = {oid for d in store.deliveries.values() for oid in d.order_ids}
+        # RV-01, RV-02, S-334: solo lo que todavía se puede reclamar (RC-03), con su hora límite
+        until = {oid: d.delivered_at + claims.CLAIM_WINDOW for d in store.deliveries.values() for oid in d.order_ids}
+        now = clock()
         options = []
         for order in store.orders.values():
-            if order.customer_id == session["principal"] and order.order_id in delivered:
-                names = names_for(order.cycle)
+            if order.customer_id == session["principal"] and order.order_id in until and now < until[order.order_id]:
+                names, units = names_for(order.cycle), units_for(order.cycle)
                 for line in order.lines:
                     options.append({"pedido": order.order_id, "producto": line.product_id,
-                                    "nombre": names.get(line.product_id, line.product_id), "cantidad": qty(line.quantity)})
+                                    "nombre": names.get(line.product_id, line.product_id), "cantidad": qty(line.quantity),
+                                    "unidad": units.get(line.product_id, ""),  # UN-02
+                                    "hasta": until[order.order_id].isoformat()})
         mine = [c for c in store.claims.values() if c.customer_id == session["principal"]]
         return {"reclamables": options, "reclamos": [claim_json(c) for c in mine]}
 
     def claim_json(c) -> dict:
         return {"id": c.claim_id, "pedido": c.order_id, "cliente": c.customer_id, "producto": c.product_id,
                 "cantidad": qty(c.quantity), "motivo": c.reason, "foto": c.photo, "estado": c.status,
-                "devuelto": money(c.refund_amount)}
+                "devuelto": money(c.refund_amount),
+                "nombre": names_for(store.orders[c.order_id].cycle).get(c.product_id, c.product_id)}  # OC-03
 
     def reclamar(environ, data, session):
         claim = claims.file_claim(store, _int(data.get("pedido"), "Número de pedido"), customer_id=session["principal"],
@@ -760,7 +772,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             "rotulos": fulfillment.bag_labels(store, o.order_id)} for o in attended]  # RT-01
         if session["kind"] == partners.PACKER:  # AM-01, S-290
             orders = [{key: o[key] for key in PACKER_ORDER + ("rotulos",)} | {
-                "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad")} for line in o["lineas"]]} for o in orders]
+                "lineas": [{k: line[k] for k in ("id", "nombre", "cantidad", "unidad")} for line in o["lineas"]]} for o in orders]
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
     def admin_bolsa(environ, data, session):
@@ -794,6 +806,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                     approve=decision == "aprobar", now=clock())
         tell(notices.claim_reviewed, claim)
         return claim_json(claim)
+
+    def admin_pedidos(environ, data, session):
+        """OC-01, OC-02, S-330: los pedidos de la semana para elegir uno, sin montos ni productos."""
+        cycle_id = query_cycle(environ)
+        return {"ciclo": cycle_id, "ciclos": known_cycles(),
+                "pedidos": [{"id": o.order_id, "vecino": store.customers[o.customer_id].name,
+                             "zona": store.zones[o.zone_id].name if o.zone_id in store.zones else o.zone_id, "estado": o.status}
+                            for o in sorted(store.orders_in_cycle(cycle_id), key=lambda o: o.order_id)]}
 
     def admin_devoluciones(environ, data, session):
         return {"devoluciones": [{"id": r.refund_id, "cliente": r.customer_id,
@@ -984,8 +1004,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
 
     def admin_colchon(environ, data, session):
         return {"valor": money(buffer.buffer_value(store)), "tope": money(buffer.BUFFER_LIMIT),
-                "stock": [{"producto": s.product_id, "cantidad": qty(s.quantity), "valor": money(s.value)}
-                          for s in store.buffer.values()]}
+                "stock": [{"producto": s.product_id, "nombre": names_for(cycle.cycle_id(clock())).get(s.product_id, s.product_id),
+                           "cantidad": qty(s.quantity), "valor": money(s.value)} for s in store.buffer.values()]}  # OC-03
 
     def partner_json(partner) -> dict:
         return {"usuario": partner.user, "tipo": partner.kind, "nombre": partner.name, "proveedor": partner.supplier_id,
@@ -1114,16 +1134,19 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         real = None if bought is None else {  # CR-05: lo que faltó y a qué pedido fue
             "recibido": {p: qty(q) for p, q in bought.received.items()},
             "faltantes": [shortage_json(s) for s in store.shortages if s.cycle == cycle_id]}
+        keepable = [{"id": p.product_id, "nombre": p.name, "unidad": p.unit} for p in store.catalog_for(cycle_id).values()
+                    if p.category in buffer.NON_PERISHABLE and p.active]  # OC-04, S-329
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
                 "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session),
-                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id))}
+                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id)), "guardables": keepable}
 
     def freight_json(f) -> dict | None:
         return {"empresa": f.company, "monto": money(f.amount)} if f else None
 
     def shortage_json(s) -> dict:
         return {"pedido": s.order_id, "producto": s.product_id, "cantidad": qty(s.quantity),
-                "colchon": qty(s.from_buffer), "origen": s.source}
+                "colchon": qty(s.from_buffer), "origen": s.source,
+                "nombre": names_for(s.cycle).get(s.product_id, s.product_id)}  # OC-03
 
     def compras_recibido(environ, data, session):
         """CR-01..CR-05: lo que llegó del proveedor; lo que falta se reparte solo."""
@@ -1246,6 +1269,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/entregas-fallidas", {"POST": (admin_entrega_fallida, "admin")}),
         (r"/api/admin/reclamos", {"GET": (admin_reclamos, ATTENDING)}),
         (r"/api/admin/reclamos/(\d+)/revisar", {"POST": (admin_revisar, ATTENDING)}),
+        (r"/api/admin/pedidos", {"GET": (admin_pedidos, ATTENDING)}),  # OC-01
         (r"/api/admin/devoluciones", {"GET": (admin_devoluciones, ATTENDING)}),
         (r"/api/admin/devoluciones/(\d+)/pagar", {"POST": (admin_devolucion_pagar, ATTENDING)}),
         (r"/api/admin/conciliacion", {"GET": (admin_conciliacion, "admin")}),

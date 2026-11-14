@@ -51,6 +51,26 @@ Cuentas de la demo:
 
 Los vecinos entran en `/entrar`; el equipo, el reparto y los proveedores en `/equipo`. Para mandarle a cada persona su acceso con el rol ya elegido: `/equipo?rol=compras`, `armador`, `atencion`, `porteria`, `transportista`, `proveedor` o `admin`.
 
+## Demo de la semana completa (para presentar)
+
+En producción el reloj de la demostración se queda en el miércoles a las 10:00, así que la semana nunca cierra. Para mostrar todo el flujo, del pedido al "te devolvemos", se usa la demo local con un reloj que se mueve sin reiniciar:
+
+```bash
+scripts/demo.sh                 # motor en 8010 y tienda en http://localhost:5173 (MOTOR=8020 WEB=5180 si están ocupados)
+scripts/semana.sh miercoles     # en otra terminal, un día a la vez
+```
+
+| Paso | Qué hace el script | Qué mostrar en la web |
+|---|---|---|
+| `miercoles` | Ana (101) pide con lejía y el admin verifica todos los pagos | Ana: Inicio (el grupo llega a 8) y Mis pedidos; admin: Resumen |
+| `jueves` | Compras registra que llegó todo y el flete | Compras: Compra de la semana; proveedor: lo que Yapa le compra |
+| `viernes` | Armado registra cada bolsa con foto y rótulo | Armado: Armado y entrega; Ana: la foto de su bolsa |
+| `sabado` | Reparto sale y entrega con foto; la portería confirma | Reparto, Portería; Ana: En camino, Entregado y la campana |
+| `domingo` | Ana reclama con foto, el admin liquida y atención aprueba | Ana: Te devolvemos y su saldo; Atención: Reclamos; admin: Conciliación y Métricas |
+| `siguiente` | Semana nueva: Ana pide usando su saldo | Ana: Mis pedidos |
+
+`scripts/semana.sh todo` corre la semana entera de una vez. Cada paso se puede hacer también a mano en la web: basta con mover el reloj en `http://localhost:5173/api/demo/reloj`. Dos vecinos ya pidieron 10 de los 12 galones de lejía, así que con la de Ana la lejía baja de tramo y en la liquidación se ve la devolución. Todo vive en memoria: para empezar de cero, Ctrl+C y `scripts/demo.sh` otra vez.
+
 ## Demo en línea (Render, alternativa)
 
 Producción vive en AWS (arriba). Como alternativa gratis, `Dockerfile` y `render.yaml` arman la web y el motor en un solo servicio gratis. En Render: **New > Blueprint**, elige este repo y escribe las claves que pide:

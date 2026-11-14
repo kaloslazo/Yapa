@@ -2381,3 +2381,131 @@ p.minimum-card { display: flex; align-items: center; gap: 8px; width: 100%; }
   .supplier-tier > button, .supplier-tier > .supplier-field-hint { grid-column: 1 / -1; }
   .reception-progress ol { display: grid; grid-template-columns: 1fr; }
 }
+
+/* iteración 64 · la operación en el celular (S-327..S-332) */
+.product-thumb { display: inline-grid; flex: none; place-items: center; overflow: hidden; border-radius: 12px; background: var(--tint, var(--paper)); font-size: 1.3rem; }
+.product-thumb img { width: 88%; height: 88%; object-fit: contain; }
+.cell-with-thumb { display: inline-flex; align-items: center; gap: 10px; }
+
+.pack-progress { display: grid; gap: 8px; padding: 16px 18px; border-radius: var(--radius-card); background: var(--canvas); }
+.pack-progress > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.pack-progress span { color: var(--muted); font-size: .9rem; }
+.pack-progress .progress-track { height: 10px; margin: 0; }
+.pack-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.pack-card { display: grid; align-content: start; gap: 12px; padding: 16px; border: 2px solid transparent; border-radius: var(--radius-card); background: var(--canvas); }
+.pack-card.is-packed { border-color: var(--green-soft); }
+.pack-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.pack-card-head div { display: grid; gap: 2px; }
+.pack-card-head strong { font-size: 1.15rem; }
+.pack-card-head span { color: var(--muted); font-size: .9rem; }
+.pack-lines { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pack-lines label { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 10px; border-radius: 12px; background: var(--paper); cursor: pointer; }
+.pack-lines label.is-checked { background: var(--green-soft); }
+.pack-lines label.is-checked .pack-line-name { text-decoration: line-through; color: var(--muted); }
+.pack-lines input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+.pack-line-name { flex: 1; font-weight: 600; }
+.pack-lines strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.pack-labels { display: flex; gap: 6px; align-items: flex-start; color: var(--copy); font-size: .85rem; }
+.pack-camera { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; border-radius: 14px; background: var(--ink); color: var(--on-ink); font-weight: 700; cursor: pointer; }
+.pack-camera.is-ready { background: var(--green); }
+.pack-camera.is-busy { opacity: .7; }
+.pack-camera input, .photo-field input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.pack-camera:has(input:focus-visible), .photo-field:has(input:focus-visible) { outline: 3px solid var(--accent-dark); outline-offset: 2px; }
+.pack-damaged-toggle { justify-self: start; }
+
+.work-list { display: grid; gap: 12px; }
+.work-card { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--canvas); }
+.work-card--done { background: var(--paper); }
+.work-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.claim-item { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.claim-item div { display: grid; gap: 2px; min-width: 0; }
+.claim-item span { color: var(--muted); font-size: .88rem; }
+.work-icon { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--paper); color: var(--copy); }
+.work-amount { font-size: 1.2rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.work-text { color: var(--copy); }
+.work-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.work-card .claim-photo { width: 100%; max-width: 280px; height: 200px; }
+.work-card .primary-button { width: 100%; justify-content: center; }
+
+.buy-lines { display: grid; margin: 0; padding: 0; list-style: none; }
+.buy-lines li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.buy-lines li:last-child { border-bottom: 0; }
+.buy-lines li > div:not(.buy-line-amount) { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.buy-lines li span { color: var(--muted); font-size: .85rem; }
+.buy-line-amount { display: grid; justify-items: end; gap: 2px; text-align: right; white-space: nowrap; }
+.buy-line-input { display: flex; align-items: center; gap: 6px; }
+.buy-line-input input { width: 84px; min-height: 44px; text-align: right; }
+.supplier-lines li { align-items: center; }
+.supplier-lines li > div:not(.supplier-line-amount) { flex: 1; }
+.supplier-product > summary > span.product-thumb:first-child { flex: none; }
+.supplier-product > summary { gap: 12px; }
+.partner-building { display: flex; align-items: center; gap: 6px; color: var(--copy); font-weight: 600; }
+
+.photo-field { position: relative; justify-content: center; min-height: 44px; }
+.photo-field.has-photo { border-style: solid; border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.photo-form--big { display: grid; gap: 10px; }
+.photo-form--big .photo-field { min-height: 56px; font-size: 1rem; }
+.photo-form--big .primary-button { width: 100%; justify-content: center; min-height: 52px; }
+
+@media (max-width: 720px) {
+  /* S-327: cada fila de una tabla del panel es una tarjeta con el nombre de cada dato */
+  .admin-table-wrap { overflow: visible; border: 0; border-radius: 0; }
+  .admin-table { min-width: 0; }
+  .admin-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display: block; width: 100%; }
+  .admin-table tbody tr { margin-bottom: 10px; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--radius-note); background: var(--canvas); }
+  .admin-table :is(th, td) { border: 0; }
+  .admin-table td { display: grid; grid-template-columns: minmax(0, 42%) minmax(0, 1fr); align-items: baseline; justify-items: end; column-gap: 12px; row-gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--line) !important; text-align: right; }
+  .admin-table td > * { grid-column: 2; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .admin-table td > .admin-cell-note { margin: 0; }
+  .admin-table td:last-child { border-bottom: 0 !important; }
+  .admin-table td[data-label]::before { content: attr(data-label); grid-column: 1; grid-row: 1 / span 4; justify-self: start; color: var(--muted); font-size: .8rem; font-weight: 600; text-align: left; }
+  .admin-table td[data-label="Acciones"]::before { display: none; }
+  .admin-table td[data-label="Acciones"] { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+  .admin-table tbody tr:hover { background: var(--canvas); }
+  .admin-table.balance-table td { display: flex; }
+  .admin-row-button, .segmented button, .segmented label, .text-button { min-height: 44px; }
+  .buffer-forms { grid-template-columns: 1fr; }
+  .buffer-form button { justify-self: stretch; }
+  .pack-list { grid-template-columns: 1fr; }
+  .work-card .claim-photo { max-width: none; height: 220px; }
+  .work-actions > * { flex: 1; }
+  /* la caja se apila en columna: el selector de semana no debe heredar su ancho de 200 px como alto */
+  .admin-intro .admin-filter { flex: none; }
+  .admin-intro { gap: 14px; padding: 18px; }
+  .purchase-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .purchase-stat { padding: 12px; }
+  .purchase-stat strong { font-size: 1.1rem; }
+}
+
+/* iteración 65 · el pedido y los reclamos como un carrito (S-333..S-335) */
+.order-cart { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.order-cart li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 14px; background: var(--paper); }
+.order-cart li > div { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.order-cart small { color: var(--muted); font-size: .84rem; }
+.order-cart-total { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.claim-picks { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.claim-picks legend { margin-bottom: 8px; padding: 0; font-weight: 700; }
+.claim-pick { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px 8px 8px; border: 2px solid var(--line); border-radius: 16px; background: var(--canvas); cursor: pointer; }
+.claim-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.claim-pick span:last-child { display: grid; gap: 2px; min-width: 0; }
+.claim-pick small { color: var(--muted); font-size: .82rem; }
+.claim-pick.is-selected { border-color: var(--green); background: var(--green-soft); }
+.claim-pick:has(input:focus-visible) { outline: 3px solid var(--accent-dark); outline-offset: 2px; }
+.claim-photo-field { min-height: 52px; }
+.claim-form .primary-button { width: 100%; justify-content: center; }
+.claim-history-wrap { display: grid; gap: 8px; margin-top: 18px; }
+.claim-history-wrap h3 { font-size: 1rem; }
+.claim-history { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.claim-history li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 14px; background: var(--paper); }
+.claim-history li > div:nth-child(2) { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.claim-history small { color: var(--muted); font-size: .82rem; }
+.claim-history-state { display: grid; justify-items: end; gap: 2px; text-align: right; }
+
+/* iteración 66 · ver la foto que se toma (S-336, S-337) */
+.photo-preview { width: 100%; max-width: 220px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 14px; background: var(--paper); }
+.photo-preview img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-form .photo-preview { flex-basis: 100%; }
+.pack-bags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pack-bags a { display: grid; justify-items: center; gap: 2px; color: var(--copy); font-size: .78rem; }
+.pack-bags img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: var(--paper); }

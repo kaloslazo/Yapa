@@ -1,0 +1,45 @@
+test_rv_a_within_24_hours_every_product_with_its_deadline (test_reclamos_carrito_65.ClaimOptionsTests.test_rv_a_within_24_hours_every_product_with_its_deadline) ... ERROR
+test_rv_b_after_24_hours_no_options_but_claims_keep_their_name (test_reclamos_carrito_65.ClaimOptionsTests.test_rv_b_after_24_hours_no_options_but_claims_keep_their_name) ... FAIL
+
+======================================================================
+ERROR: test_rv_a_within_24_hours_every_product_with_its_deadline (test_reclamos_carrito_65.ClaimOptionsTests.test_rv_a_within_24_hours_every_product_with_its_deadline)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_reclamos_carrito_65.py", line 29, in test_rv_a_within_24_hours_every_product_with_its_deadline
+    self.assertTrue(all(o["hasta"] == "2026-09-20T10:00:00-05:00" for o in mine))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_reclamos_carrito_65.py", line 29, in <genexpr>
+    self.assertTrue(all(o["hasta"] == "2026-09-20T10:00:00-05:00" for o in mine))
+                        ~^^^^^^^^^
+KeyError: 'hasta'
+
+======================================================================
+FAIL: test_rv_b_after_24_hours_no_options_but_claims_keep_their_name (test_reclamos_carrito_65.ClaimOptionsTests.test_rv_b_after_24_hours_no_options_but_claims_keep_their_name)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_reclamos_carrito_65.py", line 38, in test_rv_b_after_24_hours_no_options_but_claims_keep_their_name
+    self.assertEqual(data["reclamables"], [])
+AssertionError: Lists differ: [{'pedido': 1, 'producto': 'PAPA-AMARILLA'[213 chars]10'}] != []
+
+First list contains 3 additional elements.
+First extra element 0:
+{'pedido': 1, 'producto': 'PAPA-AMARILLA', 'nombre': 'Papa amarilla', 'cantidad': '5'}
+
++ []
+- [{'cantidad': '5',
+-   'nombre': 'Papa amarilla',
+-   'pedido': 1,
+-   'producto': 'PAPA-AMARILLA'},
+-  {'cantidad': '10',
+-   'nombre': 'Papa blanca',
+-   'pedido': 1,
+-   'producto': 'PAPA-BLANCA'},
+-  {'cantidad': '10',
+-   'nombre': 'Cebolla roja',
+-   'pedido': 1,
+-   'producto': 'CEBOLLA-ROJA'}]
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.011s
+
+FAILED (failures=1, errors=1)

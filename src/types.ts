@@ -76,6 +76,7 @@ export interface OrderLine {
   id: string;
   name: string;
   quantity: number;
+  unit?: string; // UN-01: kg o unidad
   maxPrice: number;
   total: number;
 }
@@ -94,6 +95,7 @@ export interface Order {
   id: number;
   cycle: string;
   zoneId: string;
+  zoneName?: string; // OC-05: nombre del edificio para el panel
   customer: number;
   customerName?: string;
   status: string;

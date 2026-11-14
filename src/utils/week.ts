@@ -27,3 +27,10 @@ export function weekRangeLabel(cycle: string): string {
   const start = `${dayMonth(monday)}${monday.getUTCFullYear() !== sunday.getUTCFullYear() ? ` ${monday.getUTCFullYear()}` : ''}`;
   return `${start} – ${dayMonth(sunday)} ${sunday.getUTCFullYear()}`;
 }
+
+// S-328: los textos del motor nombran semanas con su código ISO; para la pantalla van en palabras
+export function humanizeWeeks(text: string): string {
+  return text
+    .replace(/semana (\d{4}-W\d{2})/g, (_, code: string) => weekLabel(code))
+    .replace(/\d{4}-W\d{2}/g, (code) => `de la ${weekLabel(code)}`);
+}

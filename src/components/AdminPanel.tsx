@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { api } from '../services/api';
 import { toOrder, toZone } from '../services/mappers';
 import type { Order, Role, Zone } from '../types';
 import { Icon, type IconName } from './Icon';
 import { statusLabel } from './OrdersPage';
-import { formatMoney } from '../utils/format';
+import { amountWithUnit, formatMoney, quantityWithUnit } from '../utils/format';
 import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
 import { BagForm } from './BagForm';
+import { ProductThumb } from './ProductThumb';
 import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
 import { LazyZonesMap } from './LazyZonesMap';
 import { drawableZones, groupColors, marginLabel, unionLabel } from '../utils/zoneMap';
 import { groupsOf, sectionsFor, type Section } from '../utils/adminSections';
 import { ROLE_LABELS } from '../utils/roles';
-import { weekRangeLabel } from '../utils/week';
+import { humanizeWeeks, shortDate, weekRangeLabel } from '../utils/week';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Raw = Record<string, any>;
@@ -45,7 +46,8 @@ const PENDING: Partial<Record<Section, (cycle: string) => Promise<number>>> = {
 };
 const num = (value: unknown) => Number(value ?? 0);
 const CLAIM_STATUS: Record<string, string> = { APROBADO: 'Aprobado', RECHAZADO: 'Rechazado', PENDIENTE: 'Pendiente' };
-const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Zona sin mínimo', CANCELACION: 'Cancelación', RETIRO_SALDO: 'Pidió su saldo' };
+const REASONS: Record<string, string> = { FALTANTE: 'Faltó', DANADO: 'Llegó dañado', ZONA_NO_ATENDIDA: 'Su grupo no llegó al mínimo', CANCELACION: 'Cancelación', CANCELACION_CLIENTE: 'Canceló su pedido', RETIRO_SALDO: 'Pidió su saldo', SOLICITUD_CLIENTE: 'Pidió su saldo', NO_ENTREGADO: 'No se pudo entregar' };
+const AI_CATEGORIES: Record<string, string> = { FALTANTE: 'Faltante', DANADO: 'Dañado', ENTREGA: 'Entrega', PAGO: 'Pago', TRATO: 'Trato', OTRO: 'Otro' };
 const INCIDENT_KINDS = [{ value: 'ENTREGA', label: 'Entrega' }, { value: 'BOLSA', label: 'Bolsa' }, { value: 'TRATO', label: 'Trato' }, { value: 'OTRO', label: 'Otro' }]; // S-300
 const FAILURES = [{ value: 'PORTERIA_CERRADA', label: 'Portería cerrada' }, { value: 'NADIE_RECIBE', label: 'No había quién reciba' }, { value: 'PORTERIA_RECHAZA', label: 'La portería no aceptó' }];
 
@@ -67,8 +69,18 @@ function Card({ eyebrow, title, children, aside, id }: { eyebrow?: string; title
   return <section className="admin-card" id={id}><div className="admin-card-heading"><div>{eyebrow ? <span className="admin-eyebrow">{eyebrow}</span> : null}<h2>{title}</h2></div>{aside}</div>{children}</section>;
 }
 
-function CycleSelect({ cycles, value, onChange, dates = false }: { cycles: string[]; value: string; onChange: (cycle: string) => void; dates?: boolean }) {
-  return <label className={`admin-filter${dates ? ' admin-filter--dates' : ''}`}><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>{dates ? weekRangeLabel(c) : `Semana ${c}`}</option>)}</select></label>;
+// S-328: la semana se ve por sus fechas; el código ISO solo viaja a la API
+function CycleSelect({ cycles, value, onChange }: { cycles: string[]; value: string; onChange: (cycle: string) => void; dates?: boolean }) {
+  return <label className="admin-filter admin-filter--dates"><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>{weekRangeLabel(c)}</option>)}</select></label>;
+}
+
+// S-327: en el celular cada fila es una tarjeta; cada celda lleva el nombre de su columna
+function labelTables(root: HTMLElement) {
+  for (const table of root.querySelectorAll<HTMLTableElement>('table.admin-table')) {
+    const heads = [...table.querySelectorAll('thead th')].map((th) => th.textContent?.trim() || 'Acciones');
+    if (!heads.length) continue;
+    for (const row of table.querySelectorAll('tbody tr')) [...row.children].forEach((cell, i) => { if (cell.getAttribute('data-label') !== heads[i]) cell.setAttribute('data-label', heads[i] ?? ''); });
+  }
 }
 
 function Empty({ icon, title, text }: { icon: IconName; title: string; text: string }) {
@@ -106,6 +118,16 @@ export function AdminPanel({ adminName, role, onClose, onLogout, onViewAs, notif
     }
   }, [notify, refreshPending]);
 
+  const content = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = content.current;
+    if (!root) return;
+    labelTables(root);
+    const observer = new MutationObserver(() => labelTables(root));
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   const current = sections.find((s) => s.id === section) ?? sections[0];
   const props = { cycle, setCycle, run, notify, onViewAs, role };
   const roleLabel = role === 'admin' ? 'Equipo de operaciones' : ROLE_LABELS[role];
@@ -135,7 +157,7 @@ export function AdminPanel({ adminName, role, onClose, onLogout, onViewAs, notif
             <span className="admin-topbar-icon" aria-hidden="true"><Icon name={current.icon} size={22} /></span>
             <div><span className="admin-topbar-group">{current.group}</span><h1>{current.label}</h1><p>{current.hint}</p></div>
           </header>
-          <div className="admin-page-content">
+          <div className="admin-page-content" ref={content}>
             {section === 'resumen' ? <Summary {...props} /> : null}
             {section === 'zonas' ? <Zones {...props} /> : null}
             {section === 'compras' ? <Purchases {...props} /> : null}
@@ -194,7 +216,7 @@ function Zones({ cycle, setCycle, notify }: SectionProps) {
       </Card>
 
       <Card title={`Propuestas del sistema (${data.propuestas.length})`}>
-        {data.propuestas.length ? <div className="proposal-list">{data.propuestas.map((p: Raw) => { const kind = PROPOSAL_KIND[p.tipo] ?? { label: p.tipo, icon: 'info' as IconName }; return <article className="proposal" key={`${p.tipo}-${p.zonas.join('-')}`}><span className="proposal-icon"><Icon name={kind.icon} size={20} /></span><div><span className="proposal-kind">{kind.label}</span><h3>{p.titulo}</h3><p>{p.detalle}</p></div></article>; })}</div> : <Empty icon="ok" title="Nada que proponer" text="Cuando una zona pueda llegar al mínimo o pierda dinero, aparecerá aquí." />}
+        {data.propuestas.length ? <div className="proposal-list">{data.propuestas.map((p: Raw) => { const kind = PROPOSAL_KIND[p.tipo] ?? { label: p.tipo, icon: 'info' as IconName }; return <article className="proposal" key={`${p.tipo}-${p.zonas.join('-')}`}><span className="proposal-icon"><Icon name={kind.icon} size={20} /></span><div><span className="proposal-kind">{kind.label}</span><h3>{humanizeWeeks(p.titulo)}</h3><p>{humanizeWeeks(p.detalle)}</p></div></article>; })}</div> : <Empty icon="ok" title="Nada que proponer" text="Cuando una zona pueda llegar al mínimo o pierda dinero, aparecerá aquí." />}
         <p className="admin-muted">Son sugerencias hechas con los pedidos de la semana: el sistema no ejecuta nada solo.</p>
       </Card>
 
@@ -215,11 +237,12 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
   const pending: Order[] = data.por_verificar.map(toOrder);
   const orders: Order[] = data.pedidos.map(toOrder);
   const k = data.indicadores;
+  const productName = (id: string) => orders.flatMap((o) => o.lines).find((l) => l.id === id)?.name ?? id;
   const verify = (order: Order) => run(() => api.post(`/api/admin/pedidos/${order.id}/verificar`), `Pago del pedido ${order.id} verificado.`).then(() => reload());
   const settle = async () => {
     try {
       setResult(await api.post<Raw>(`/api/admin/ciclos/${data.ciclo}/liquidar`));
-      notify(`Semana ${data.ciclo} liquidada.`, 'success');
+      notify(`Semana del ${weekRangeLabel(data.ciclo)} liquidada.`, 'success');
       setConfirming(false);
       void reload();
     } catch (error) {
@@ -228,7 +251,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
   };
   return (
     <>
-      <section className="admin-intro"><div><span className="admin-eyebrow">Semana {data.ciclo}</span><h2>{data.abierto ? 'El ciclo recibe pedidos hasta el miércoles 20:00' : 'El ciclo ya no recibe pedidos'}</h2><p>Verifica los pagos con el código YP que cada vecino pone en su Yape o Plin. Después de la entrega, liquida para devolver el ahorro.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      <section className="admin-intro"><div><span className="admin-eyebrow">{weekRangeLabel(data.ciclo)}</span><h2>{data.abierto ? 'El ciclo recibe pedidos hasta el miércoles 20:00' : 'El ciclo ya no recibe pedidos'}</h2><p>Verifica los pagos con el código YP que cada vecino pone en su Yape o Plin. Después de la entrega, liquida para devolver el ahorro.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
       <section className="admin-kpis" aria-label="Indicadores de la semana">
         <div className="admin-kpi"><span className="admin-kpi-label">Pedidos de la semana</span><strong>{k.pedidos}</strong><small>sin cancelados</small></div>
         <div className={`admin-kpi ${k.por_verificar ? 'admin-kpi--attention' : ''}`}><span className="admin-kpi-label">Pagos por verificar</span><strong>{k.por_verificar}</strong><small>{k.por_verificar ? 'busca el código YP en tu Yape' : 'todo verificado'}</small></div>
@@ -237,7 +260,7 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
       </section>
 
       <Card eyebrow="Mínimo de 8 por grupo" title="¿Qué grupos llegan?">
-        <div className="admin-groups">{data.grupos.map((g: Raw) => <div className="admin-group" key={g.grupo}><div><strong>{g.zonas.join(' + ')}</strong><small>{g.grupo}</small></div><div className="admin-group-count"><span className={g.verificados >= g.minimo ? 'is-ready' : ''}>{g.verificados} / {g.minimo}</span><div className="progress-track"><span style={{ width: `${Math.min(g.verificados / g.minimo, 1) * 100}%` }} /></div></div></div>)}</div>
+        <div className="admin-groups">{data.grupos.map((g: Raw) => <div className="admin-group" key={g.grupo}><div><strong>{g.zonas.join(' + ')}</strong></div><div className="admin-group-count"><span className={g.verificados >= g.minimo ? 'is-ready' : ''}>{g.verificados} / {g.minimo}</span><div className="progress-track"><span style={{ width: `${Math.min(g.verificados / g.minimo, 1) * 100}%` }} /></div></div></div>)}</div>
       </Card>
 
       <Card title={`Pagos por verificar (${pending.length})`}>
@@ -245,12 +268,12 @@ function Summary({ cycle, setCycle, run, notify }: SectionProps) {
       </Card>
 
       <Card title={`Pedidos (${orders.length})`}>
-        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Zona</th><th>Pagó</th><th>Estado</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td>{o.zoneId}</td><td>{formatMoney(o.total)}{o.withBalance ? <small className="admin-cell-note">{formatMoney(o.withBalance)} con saldo</small> : null}</td><td><span className={`admin-order-status admin-order-status--${o.status === 'REGISTRADO' ? o.payment.toLowerCase() : o.status.toLowerCase()}`}>{o.status === 'REGISTRADO' && o.payment === 'POR_VERIFICAR' ? 'Por verificar' : statusLabel(o)}</span>{o.settlement ? <small className="admin-cell-note">costó {formatMoney(o.settlement.cost)} · devuelto {formatMoney(o.settlement.returned)}</small> : null}</td></tr>)}</tbody></table></div> : <Empty icon="truck" title="Esta semana todavía no tiene pedidos" text="Aparecerán apenas los vecinos confirmen." />}
+        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Zona</th><th>Pagó</th><th>Estado</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}</td><td>{o.zoneName ?? o.zoneId}</td><td>{formatMoney(o.total)}{o.withBalance ? <small className="admin-cell-note">{formatMoney(o.withBalance)} con saldo</small> : null}</td><td><span className={`admin-order-status admin-order-status--${o.status === 'REGISTRADO' ? o.payment.toLowerCase() : o.status.toLowerCase()}`}>{o.status === 'REGISTRADO' && o.payment === 'POR_VERIFICAR' ? 'Por verificar' : statusLabel(o)}</span>{o.settlement ? <small className="admin-cell-note">costó {formatMoney(o.settlement.cost)} · devuelto {formatMoney(o.settlement.returned)}</small> : null}</td></tr>)}</tbody></table></div> : <Empty icon="truck" title="Esta semana todavía no tiene pedidos" text="Aparecerán apenas los vecinos confirmen." />}
         <div className="admin-settle">
-          {result ? <div className="admin-settle-result"><strong>Semana {result.ciclo} liquidada</strong><p>Volvió a saldo {formatMoney(num(result.a_saldo))} · a reembolsar por Yape o Plin {formatMoney(num(result.reembolsado))}.</p><ul>{result.productos.map((p: Raw) => <li key={p.id}>{p.id}: {p.total} entre todos · tramo desde {p.tramo} · {formatMoney(num(p.precio_final))}</li>)}</ul></div>
+          {result ? <div className="admin-settle-result"><strong>Semana liquidada</strong><p>Volvió a saldo {formatMoney(num(result.a_saldo))} · a reembolsar por Yape o Plin {formatMoney(num(result.reembolsado))}.</p><ul>{result.productos.map((p: Raw) => <li key={p.id}>{productName(p.id)}: {p.total} entre todos · tramo desde {p.tramo} · {formatMoney(num(p.precio_final))}</li>)}</ul></div>
             : data.liquidado ? <p>Esta semana ya está liquidada.</p>
-              : confirming ? <div className="admin-settle-actions"><button className="primary-button" type="button" onClick={() => void settle()}>Sí, liquidar la semana {data.ciclo}</button><button className="secondary-button" type="button" onClick={() => setConfirming(false)}>Cancelar</button></div>
-                : <><p>Liquidar calcula el precio final por tramo, el envío real por zona, los beneficios del admin de zona y devuelve el ahorro como saldo. Exige que todas las zonas estén entregadas o marcadas como fallidas.</p><button className="primary-button" type="button" disabled={!orders.length} onClick={() => setConfirming(true)}>Liquidar semana {data.ciclo} <Icon name="arrow" size={17} /></button></>}
+              : confirming ? <div className="admin-settle-actions"><button className="primary-button" type="button" onClick={() => void settle()}>Sí, liquidar la semana</button><button className="secondary-button" type="button" onClick={() => setConfirming(false)}>Cancelar</button></div>
+                : <><p>Liquidar calcula el precio final por tramo, el envío real por zona, los beneficios del admin de zona y devuelve el ahorro como saldo. Exige que todas las zonas estén entregadas o marcadas como fallidas.</p><button className="primary-button" type="button" disabled={!orders.length} onClick={() => setConfirming(true)}>Liquidar la semana <Icon name="arrow" size={17} /></button></>}
         </div>
       </Card>
     </>
@@ -266,29 +289,70 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
   if (!data) return <AdminSkeleton />;
   const stops: Raw[] = data.paradas.filter((p: Raw) => !zoneFilter || p.zona.id === zoneFilter);
   const orders: Order[] = data.pedidos.map(toOrder).filter((o: Order) => !zoneFilter || o.zoneId === zoneFilter);
+  const packed = orders.filter((o) => o.bags?.length).length;
   const send = (path: string, form: FormData, extra: Record<string, string>, success: string) => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
     return run(() => api.post(path, form), success).then(async (ok) => { await reload(); return ok; });
   };
   return (
     <>
-      <section className="admin-intro"><div><h2>{packer ? 'Foto de cada bolsa' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Registra cada bolsa con su foto: sin bolsas, el reparto no puede entregar la zona.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} dates /></section>
-      <label className="checkout-field packing-zone-filter"><span>Filtrar por zona</span><select value={zoneFilter} onChange={event => setZoneFilter(event.target.value)}><option value="">Todas las zonas</option>{data.paradas.map((p: Raw) => <option key={p.zona.id} value={p.zona.id}>{p.zona.id} · {p.zona.nombre}</option>)}</select></label>
+      <section className="admin-intro"><div><h2>{packer ? 'Arma cada bolsa y tómale foto' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Marca cada producto al meterlo y toma la foto de la bolsa: sin bolsas, el reparto no puede salir.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
+      {data.paradas.length > 1 ? <label className="checkout-field packing-zone-filter"><span>Edificio</span><select value={zoneFilter} onChange={event => setZoneFilter(event.target.value)}><option value="">Todas las zonas</option>{data.paradas.map((p: Raw) => <option key={p.zona.id} value={p.zona.id}>{p.zona.nombre}</option>)}</select></label> : null}
+      {orders.length ? <div className="pack-progress" role="status"><div><strong>{packed} de {orders.length} pedidos con bolsa</strong><span>{packed === orders.length ? 'Todo armado: el reparto ya puede salir.' : `Faltan ${orders.length - packed}.`}</span></div><div className="progress-track"><span style={{ width: `${(packed / orders.length) * 100}%` }} /></div></div> : null}
+      {orders.length ? <div className="pack-list">{orders.map((o) => <PackCard key={o.id} order={o} send={send} />)}</div> : <Card title="Nada que armar"><Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." /></Card>}
       <Card title={`Entregas por zona (${stops.length})`}>
         {stops.length ? <div className="stop-list">{stops.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
           <div className="stop-card" key={zone.id}>
-            <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : <span className="state-pill">Por entregar</span>}</div>
+            <div className="stop-head"><strong>{zone.name}</strong><span>{zone.district}</span>{p.entrega ? <span className="state-pill state-pill--ok"><Icon name="check" size={13} /> Entregada a {p.entrega.recibe}</span> : p.fallida ? <span className="state-pill state-pill--bad">Entrega fallida</span> : p.en_camino ? <span className="state-pill"><Icon name="truck" size={13} /> En camino</span> : <span className="state-pill">Por entregar</span>}</div>
             {!packer && !p.entrega && !p.fallida ? <div className="stop-actions">
-              {p.en_camino ? <span className="state-pill"><Icon name="truck" size={13} /> En camino</span> : <button className="admin-row-button" type="button" onClick={() => void send('/api/admin/salidas', new FormData(), { ciclo: data.ciclo, zona: zone.id }, `El reparto salió hacia ${zone.name}: los vecinos reciben el aviso.`)}>Salió el reparto</button>}
+              {p.en_camino ? null : <button className="admin-row-button" type="button" onClick={() => void send('/api/admin/salidas', new FormData(), { ciclo: data.ciclo, zona: zone.id }, `El reparto salió hacia ${zone.name}: los vecinos reciben el aviso.`)}>Salió el reparto</button>}
               <PhotoForm label="Registrar entrega" onSend={(form) => send('/api/admin/entregas', form, { ciclo: data.ciclo, zona: zone.id }, `Entrega en ${zone.name} registrada.`)}><label className="checkout-field"><span>¿Quién recibió?</span><input name="recibe" defaultValue={zone.contact} required /></label></PhotoForm>
               <details><summary>No pudimos entregar</summary><div className="segmented">{FAILURES.map((f) => <button key={f.value} type="button" className={failure === f.value ? 'is-active' : ''} onClick={() => setFailure(f.value)}>{f.label}</button>)}</div><PhotoForm label="Registrar entrega fallida" onSend={(form) => send('/api/admin/entregas-fallidas', form, { ciclo: data.ciclo, zona: zone.id, motivo: failure }, 'Entrega fallida registrada: se devuelve todo menos el envío.')} /></details>
             </div> : null}
           </div>); })}</div> : <Empty icon="truck" title="No hay zonas que se atiendan" text="Ningún grupo llegó al mínimo en esta semana." />}
       </Card>
-      <Card title={`Bolsas por pedido (${orders.length})`}>
-        {orders.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Vecino</th><th>Productos</th><th>Bolsas</th><th>Foto de bolsa</th></tr></thead><tbody>{orders.map((o) => <tr key={o.id}><td><strong className="admin-order-code">{o.id}</strong></td><td>{o.customerName}<small className="admin-cell-note">{o.zoneId}</small></td><td><small>{o.lines.map((l) => `${l.name} ${formatQuantity(l.quantity)}`).join(' · ')}</small></td><td>{o.bags?.length ? <span className="state-pill state-pill--ok">{o.bags.length}</span> : <span className="state-pill">0</span>}{o.labels?.length ? <ul className="bag-labels">{o.labels.map((label) => <li key={label}>{label}</li>)}</ul> : null}</td><td><BagForm key={`${data.ciclo}-${o.id}`} onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(o.id) }, `Bolsa del pedido ${o.id} registrada.`)} /><details><summary>Algo llegó dañado</summary><PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(o.id) }, `Dañado del pedido ${o.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{o.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm></details></td></tr>)}</tbody></table></div> : <Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." />}
-      </Card>
     </>
+  );
+}
+
+// S-331: una tarjeta por pedido; las marcas son una ayuda en pantalla y la bolsa se registra al elegir la foto
+function PackCard({ order, send }: { order: Order; send: (path: string, form: FormData, extra: Record<string, string>, success: string) => Promise<boolean> }) {
+  const [checked, setChecked] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [damaged, setDamaged] = useState(false);
+  const bags = order.bags?.length ?? 0;
+  const upload = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.set('foto_archivo', file);
+    setBusy(true);
+    await send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa ${bags + 1} del pedido ${order.id} registrada.`);
+    setBusy(false);
+    input.value = '';
+  };
+  const all = order.lines.length > 0 && checked.length === order.lines.length;
+  return (
+    <article className={`pack-card${bags ? ' is-packed' : ''}`}>
+      <header className="pack-card-head">
+        <div><strong>Pedido {order.id}</strong><span>{order.customerName}{order.zoneName ? ` · ${order.zoneName}` : ''}</span></div>
+        <span className={`state-pill${bags ? ' state-pill--ok' : ''}`}>{bags ? `${bags} ${bags === 1 ? 'bolsa' : 'bolsas'}` : 'Sin bolsa'}</span>
+      </header>
+      <ul className="pack-lines" aria-label={`Productos del pedido ${order.id}`}>{order.lines.map((l) => {
+        const done = checked.includes(l.id);
+        return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setChecked((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{amountWithUnit(l.quantity, l.unit, formatQuantity)}</strong></label></li>;
+      })}</ul>
+      {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${b.number} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {b.number}</small></a></li>)}</ul> : null}
+      <p className="pack-labels"><Icon name="tag" size={15} />{order.labels?.length ? order.labels.join(' · ') : `Rotula la bolsa: Pedido ${order.id}${order.zoneName ? ` · ${order.zoneName}` : ''}`}</p>
+      <label className={`pack-camera${all || bags ? ' is-ready' : ''}${busy ? ' is-busy' : ''}`}>
+        <Icon name="camera" size={22} />
+        <span>{busy ? 'Subiendo la foto…' : bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'}</span>
+        <input type="file" accept="image/*" capture="environment" disabled={busy} onChange={(event) => void upload(event.currentTarget)} aria-label={`Foto de la bolsa del pedido ${order.id}`} />
+      </label>
+      <details className="pack-multiple-bags"><summary>Preparar varias bolsas con fotos</summary><BagForm key={order.id} onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada.`)} /></details>
+      <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>
+      {damaged ? <PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(order.id) }, `Dañado del pedido ${order.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{order.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm> : null}
+    </article>
   );
 }
 
@@ -324,7 +388,7 @@ function AiDraft({ kind, id }: { kind: 'reclamo' | 'incidencia'; id: number }) {
   if (!draft) return <><button className="text-button" type="button" disabled={busy} onClick={() => void ask()}>{busy ? 'Pensando…' : 'Sugerir con IA'}</button>{error ? <small className="admin-cell-note">{error}</small> : null}</>;
   return (
     <div className="ai-draft" aria-live="polite">
-      <div className="ai-draft-meta"><span className="state-pill">{draft.categoria}</span><span className="state-pill">{PRIORITY[draft.prioridad] ?? draft.prioridad}</span></div>
+      <div className="ai-draft-meta"><span className="state-pill">{AI_CATEGORIES[draft.categoria] ?? draft.categoria}</span><span className="state-pill">{PRIORITY[draft.prioridad] ?? draft.prioridad}</span></div>
       <p>{draft.borrador}</p>
       <div className="ai-draft-meta"><button className="admin-row-button" type="button" onClick={() => void copy()}>{copied ? '¡Copiado!' : 'Copiar respuesta'}</button><button className="text-button" type="button" onClick={() => setDraft(null)}>Cerrar</button></div>
     </div>
@@ -337,15 +401,30 @@ function Claims({ run, notify }: SectionProps) {
   const review = (id: number, decision: 'aprobar' | 'rechazar') => run(() => api.post(`/api/admin/reclamos/${id}/revisar`, { decision }), `Reclamo ${id} ${decision === 'aprobar' ? 'aprobado: se devuelve como saldo' : 'rechazado'}.`).then(() => reload());
   const pending = data.reclamos.filter((c: Raw) => c.estado === 'PENDIENTE');
   const done = data.reclamos.filter((c: Raw) => c.estado !== 'PENDIENTE');
+  const item = (c: Raw) => <div className="claim-item"><ProductThumb id={c.producto} size={44} /><div><strong>{c.nombre ?? c.producto} × {c.cantidad}</strong><span>{c.vecino} · pedido {c.pedido}</span></div></div>;
   return (
     <>
       <Card eyebrow="Por artículo, con foto" title={`Pendientes (${pending.length})`}>
-        {pending.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Motivo</th><th>Foto</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{pending.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}<small className="admin-cell-note">pedido {c.pedido}</small></td><td>{c.producto} × {c.cantidad}</td><td>{REASONS[c.motivo] ?? c.motivo}</td><td><ClaimPhoto route={c.foto} who={c.vecino} /></td><td className="row-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="text-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /><AiDraft kind="reclamo" id={c.id} /></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
+        {pending.length ? <div className="work-list">{pending.map((c: Raw) => (
+          <article className="work-card" key={c.id}>
+            <div className="work-card-top">{item(c)}<span className="state-pill">{REASONS[c.motivo] ?? c.motivo}</span></div>
+            <ClaimPhoto route={c.foto} who={c.vecino} />
+            <div className="work-actions"><ConfirmAction label="Aprobar" confirmLabel="Sí, aprobar" question={<>Reclamo de {c.vecino}: {claimEffect('aprobar')}. ¿Aprobar?</>} onConfirm={() => review(c.id, 'aprobar')} /><ConfirmAction label="Rechazar" className="secondary-button" confirmLabel="Sí, rechazar" question={<>Reclamo de {c.vecino}: {claimEffect('rechazar')}. ¿Rechazar?</>} onConfirm={() => review(c.id, 'rechazar')} /></div>
+            <AiDraft kind="reclamo" id={c.id} />
+          </article>
+        ))}</div> : <Empty icon="ok" title="Sin reclamos pendientes" text="Los vecinos reclaman hasta 24 h después de la entrega." />}
       </Card>
-      <Card title={`Completados (${done.length})`}>{done.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Artículo</th><th>Resultado</th><th>Devuelto</th></tr></thead><tbody>{done.map((c: Raw) => <tr key={c.id}><td>{c.id}</td><td>{c.vecino}</td><td>{c.producto} × {c.cantidad}</td><td>{CLAIM_STATUS[c.estado] ?? c.estado}</td><td>{formatMoney(num(c.devuelto))}</td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Todavía no hay reclamos completados" text="Aquí aparecerán los reclamos aprobados y rechazados, con su resultado." />}</Card>
+      <Card title={`Completados (${done.length})`}>{done.length ? <div className="work-list">{done.map((c: Raw) => (
+        <article className="work-card work-card--done" key={c.id}>
+          <div className="work-card-top">{item(c)}<span className={`state-pill ${c.estado === 'APROBADO' ? 'state-pill--ok' : 'state-pill--bad'}`}>{CLAIM_STATUS[c.estado] ?? c.estado}</span></div>
+          <p className="admin-muted">{c.estado === 'APROBADO' ? `Volvió ${formatMoney(num(c.devuelto))} a su saldo.` : 'No se devolvió dinero.'}</p>
+        </article>
+      ))}</div> : <Empty icon="ok" title="Todavía no hay reclamos completados" text="Aquí aparecerán los reclamos aprobados y rechazados, con su resultado." />}</Card>
     </>
   );
 }
+
+const shortDay = (iso: string | null) => (iso ? new Date(`${iso}T12:00:00`).toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short' }) : 'sin fecha');
 
 function Refunds({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/devoluciones', notify);
@@ -354,7 +433,13 @@ function Refunds({ run, notify }: SectionProps) {
   const pay = (id: number) => run(() => api.post(`/api/admin/devoluciones/${id}/pagar`, { codigo: codes[id] ?? '' }), `Devolución ${id} marcada como pagada.`).then(() => reload());
   return (
     <Card eyebrow="Plazo: hasta 30 días" title={`Por devolver a Yape o Plin (${data.devoluciones.length})`}>
-      {data.devoluciones.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Vecino</th><th>Motivo</th><th>Monto</th><th>Vence</th><th>Código de tu Yape</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.devoluciones.map((r: Raw) => <tr key={r.id}><td>{r.id}</td><td>{r.vecino}</td><td>{REASONS[r.motivo] ?? r.motivo}</td><td><strong>{formatMoney(num(r.monto))}</strong></td><td>{r.vence ?? '—'}</td><td><input className="admin-inline-input" value={codes[r.id] ?? ''} onChange={(event) => setCodes((c) => ({ ...c, [r.id]: event.target.value }))} placeholder="Ej. 04512873" inputMode="numeric" /></td><td><button className="admin-row-button" type="button" disabled={!codes[r.id]} onClick={() => void pay(r.id)}>Marcar pagado</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="No hay devoluciones pendientes" text="Zonas sin mínimo, cancelaciones y saldos pedidos de vuelta aparecen aquí." />}
+      {data.devoluciones.length ? <div className="work-list">{data.devoluciones.map((r: Raw) => (
+        <article className="work-card" key={r.id}>
+          <div className="work-card-top"><div className="claim-item"><span className="work-icon" aria-hidden="true"><Icon name="undo" size={20} /></span><div><strong>{r.vecino}</strong><span>{REASONS[r.motivo] ?? 'Devolución'} · vence el {shortDay(r.vence)}</span></div></div><strong className="work-amount">{formatMoney(num(r.monto))}</strong></div>
+          <label className="checkout-field"><span>N.º de operación de tu Yape o Plin</span><input value={codes[r.id] ?? ''} onChange={(event) => setCodes((c) => ({ ...c, [r.id]: event.target.value }))} placeholder="Ej. 04512873" inputMode="numeric" autoComplete="off" /></label>
+          <button className="primary-button" type="button" disabled={!codes[r.id]?.trim()} onClick={() => void pay(r.id)}>Ya le devolví {formatMoney(num(r.monto))}</button>
+        </article>
+      ))}</div> : <Empty icon="ok" title="No hay devoluciones pendientes" text="Zonas sin mínimo, cancelaciones y saldos pedidos de vuelta aparecen aquí." />}
     </Card>
   );
 }
@@ -395,7 +480,7 @@ function Metrics({ notify }: SectionProps) {
           <div className="admin-kpi"><span className="admin-kpi-label">Margen promedio</span><strong>{formatMoney(avg)}</strong><small>por pedido</small></div>
           <div className="admin-kpi"><span className="admin-kpi-label">Ahorro entregado</span><strong>{formatMoney(num(data.ahorro.total))}</strong><small>volumen {formatMoney(num(data.ahorro.volumen))} · envío {formatMoney(num(data.ahorro.envio))}</small></div>
           <div className="admin-kpi"><span className="admin-kpi-label">Frente al supermercado</span><strong>{data.frente_a.SUPERMERCADO?.porcentaje ? `${data.frente_a.SUPERMERCADO.porcentaje} %` : '—'}</strong><small>{data.frente_a.SUPERMERCADO?.canastas ?? 0} canastas comparadas</small></div>
-          <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? data.recompra.error.mensaje : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
+          <div className={`admin-kpi ${data.recompra.error ? '' : data.recompra.cumple ? '' : 'admin-kpi--attention'}`}><span className="admin-kpi-label">Recompra semana 4</span><strong>{data.recompra.error ? '—' : `${data.recompra.tasa} %`}</strong><small>{data.recompra.error ? humanizeWeeks(String(data.recompra.error.mensaje)) : `meta 50 % · ${data.recompra.volvieron} de ${data.recompra.vecinos}`}</small></div>
         </section>
         {data.margen_real ? <section className="admin-kpis">
           <div className={`admin-kpi ${data.margen_real.pierden ? 'admin-kpi--attention' : ''}`}><span className="admin-kpi-label">Margen real</span><strong>{data.margen_real.promedio != null ? formatMoney(num(data.margen_real.promedio)) : '—'}</strong><small>por pedido, con flete, armado y atención; cobro por Plin sin comisión</small></div>
@@ -415,14 +500,14 @@ function CatalogAdmin({ run, notify }: SectionProps) {
   useEffect(() => { if (data) setText(data.lista); }, [data]);
   if (!data) return <AdminSkeleton />;
   const deactivate = (id: string) => run(() => api.post('/api/admin/catalogo/desactivar', { ciclo: data.ciclo, producto: id }), 'Producto desactivado para esa semana.').then(() => reload());
-  const publish = () => run(() => api.post('/api/admin/catalogo', { ciclo: data.ciclo, lista: text }), `Catálogo de la semana ${data.ciclo} publicado.`).then(() => reload());
+  const publish = () => run(() => api.post('/api/admin/catalogo', { ciclo: data.ciclo, lista: text }), `Catálogo del ${weekRangeLabel(data.ciclo)} publicado.`).then(() => reload());
   return (
     <>
-      <section className="admin-intro"><div><h2>Semana {data.ciclo} · {data.publicado ? 'publicado' : 'usa el catálogo base'}</h2><p>Precio máximo = primer tramo del proveedor más la comisión. Se publica antes del lunes 00:00.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setWeek} /></section>
+      <section className="admin-intro"><div><h2>{weekRangeLabel(data.ciclo)} · {data.publicado ? 'publicado' : 'usa el catálogo base'}</h2><p>Precio máximo = primer tramo del proveedor más la comisión. Se publica antes del lunes 00:00.</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setWeek} /></section>
       <Card title={`Productos (${data.productos.length})`}>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th><th>Máximo</th><th>Estado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id} className={p.activo ? '' : 'is-muted'}><td><strong>{p.nombre}</strong><small className="admin-cell-note">{p.id} · por {p.unidad}</small></td><td>{formatMoney(num(p.precio_max))}</td><td><small className="admin-tiers">{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td><td>{p.maximo} {p.unidad}</td><td>{p.activo ? <button className="text-button" type="button" onClick={() => void deactivate(p.id)}>Desactivar</button> : <span className="state-pill">Desactivado</span>}</td></tr>)}</tbody></table></div>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Precio máximo</th><th>Tramos del proveedor</th><th>Máximo</th><th>Estado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id} className={p.activo ? '' : 'is-muted'}><td><strong>{p.nombre}</strong><small className="admin-cell-note">por {p.unidad}</small></td><td>{formatMoney(num(p.precio_max))}</td><td><small className="admin-tiers">{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td><td>{p.maximo} {p.unidad}</td><td>{p.activo ? <button className="text-button" type="button" onClick={() => void deactivate(p.id)}>Desactivar</button> : <span className="state-pill">Desactivado</span>}</td></tr>)}</tbody></table></div>
       </Card>
-      <details className="admin-card plegable"><summary>Publicar la lista del proveedor</summary><p className="admin-muted">Una línea por producto, separada por comas. Se publica todo o nada.</p><textarea className="admin-textarea" rows={10} value={text} onChange={(event) => setText(event.target.value)} /><button className="primary-button" type="button" onClick={() => void publish()}>Publicar semana {data.ciclo}</button></details>
+      <details className="admin-card plegable"><summary>Publicar la lista del proveedor</summary><p className="admin-muted">Una línea por producto, separada por comas. Se publica todo o nada.</p><textarea className="admin-textarea" rows={10} value={text} onChange={(event) => setText(event.target.value)} /><button className="primary-button" type="button" onClick={() => void publish()}>Publicar esta semana</button></details>
     </>
   );
 }
@@ -436,10 +521,10 @@ function References({ run, notify }: SectionProps) {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   if (!data) return <AdminSkeleton />;
   const save = (event: FormEvent) => { event.preventDefault(); void run(() => api.post('/api/admin/referencias', { producto: product || data.productos[0]?.id, tipo: kind, precio: price, fuente: source, fecha: date }), 'Precio de referencia guardado.').then((ok) => { if (ok) { setPrice(''); void reload(); } }); };
-  const cell = (ref: Raw | undefined) => ref ? <><strong>{formatMoney(num(ref.precio))}</strong><small className="admin-cell-note">{ref.fuente} · {ref.visto} · {Math.round(num(ref.ahorro))} % de ahorro</small></> : <span className="admin-muted">—</span>;
+  const cell = (ref: Raw | undefined) => ref ? <><strong>{formatMoney(num(ref.precio))}</strong><small className="admin-cell-note">{ref.fuente} · {shortDate(ref.visto) || ref.visto} · {Math.round(num(ref.ahorro))} % de ahorro</small></> : <span className="admin-muted">—</span>;
   return (
     <>
-      <Card eyebrow="Vigencia: 14 días" title="¿Cuánto costaría en otro lado?"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo Yapa</th><th>Mercado de barrio</th><th>Supermercado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id}><td><strong>{p.nombre}</strong></td><td>{formatMoney(num(p.precio_max))}</td><td>{cell(p.referencias.MERCADO)}</td><td>{cell(p.referencias.SUPERMERCADO)}</td></tr>)}</tbody></table></div></Card>
+      <Card eyebrow="Vigencia: 14 días" title="¿Cuánto costaría en otro lado?"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo Yapa</th><th>Mercado de barrio</th><th>Supermercado</th></tr></thead><tbody>{data.productos.map((p: Raw) => <tr key={p.id}><td><span className="cell-with-thumb"><ProductThumb id={p.id} size={32} /><strong>{p.nombre}</strong></span></td><td>{formatMoney(num(p.precio_max))}</td><td>{cell(p.referencias.MERCADO)}</td><td>{cell(p.referencias.SUPERMERCADO)}</td></tr>)}</tbody></table></div></Card>
       <form className="admin-card" onSubmit={save}><div className="admin-card-heading"><div><h2>Registrar un precio visto</h2></div></div>
         <div className="form-grid"><label className="checkout-field"><span>Producto</span><select value={product} onChange={(event) => setProduct(event.target.value)}>{data.productos.map((p: Raw) => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
           <div className="checkout-field"><span>Dónde</span><div className="segmented">{(['MERCADO', 'SUPERMERCADO'] as const).map((k) => <button type="button" key={k} className={kind === k ? 'is-active' : ''} onClick={() => setKind(k)}>{k === 'MERCADO' ? 'Mercado de barrio' : 'Supermercado'}</button>)}</div></div>
@@ -487,7 +572,7 @@ function Neighbors({ run, notify, onViewAs }: SectionProps) {
           <label className="checkout-field"><span>Código de quien lo invitó <small>opcional</small></span><input value={form.referido} onChange={(event) => setForm({ ...form, referido: event.target.value.toUpperCase() })} placeholder="Ej. ANA101" /></label></div>
         <label className="choice-row"><input type="checkbox" checked={form.consentimiento} onChange={(event) => setForm({ ...form, consentimiento: event.target.checked })} /><span className="choice-mark choice-mark--check" /><span className="choice-copy"><strong>El vecino aceptó que Yapa guarde su nombre, celular y correo para sus pedidos</strong><small>Sin consentimiento no se guarda nada.</small></span></label>
         <button className="primary-button" type="submit" disabled={!form.consentimiento}>Registrar y generar PIN</button></form>
-      <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{v.zona}</td><td><small>{v.consentimiento ? v.consentimiento.slice(0, 10) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button>{onViewAs ? <button className="text-button" type="button" onClick={() => void onViewAs(v.id)}>Ver como</button> : null}</td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
+      <Card title={`Vecinos (${query.trim() ? `${shown.length} de ${data.vecinos.length}` : data.vecinos.length})`} aside={<label className="admin-search"><span className="sr-only">Buscar vecino</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, número o celular" /></label>}><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>N.º</th><th>Nombre</th><th>Celular</th><th>Zona</th><th>Consentimiento</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{shown.map((v: Raw) => <tr key={v.id}><td>{v.id}</td><td><strong>{v.nombre}</strong>{v.suspendido ? <small className="admin-cell-warning">suspendido</small> : null}</td><td>{v.celular ?? '—'}</td><td>{zones.find((z) => z.id === v.zona)?.name ?? v.zona}</td><td><small>{v.consentimiento ? shortDate(v.consentimiento.slice(0, 10)) : '—'}</small></td><td><button className="text-button" type="button" onClick={() => void resetPin(v.id, v.celular)}>Nuevo PIN</button>{onViewAs ? <button className="text-button" type="button" onClick={() => void onViewAs(v.id)}>Ver como</button> : null}</td></tr>)}</tbody></table></div>{shown.length ? null : <p className="admin-muted">Ningún vecino coincide con la búsqueda.</p>}</Card>
     </>
   );
 }
@@ -520,12 +605,19 @@ function PinRequests({ run, notify }: SectionProps) {
 // iteración 55, CP-01..CP-03: el encargado de compras ve qué comprar a cada proveedor y maneja el colchón
 function Incidents({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/incidencias', notify);
+  const [week, setWeek] = useState('');
+  const { data: orderData } = useLoad<Raw>(`/api/admin/pedidos${week ? `?ciclo=${week}` : ''}`, notify);
   const [draft, setDraft] = useState({ pedido: '', tipo: 'ENTREGA', descripcion: '' });
+  const [search, setSearch] = useState('');
   const [notes, setNotes] = useState<Record<number, string>>({});
   if (!data) return <AdminSkeleton />;
+  // S-329: el pedido se elige de la lista; la búsqueda filtra por número, vecino o edificio
+  const choices: Raw[] = (orderData?.pedidos ?? []).filter((o: Raw) => { const q = search.trim().toLowerCase(); return !q || `${o.id} ${o.vecino} ${o.zona}`.toLowerCase().includes(q); });
+  const chosen = choices.some((o) => String(o.id) === draft.pedido) ? draft.pedido : String(choices[0]?.id ?? '');
   const open = async (event: FormEvent) => {
     event.preventDefault();
-    if (await run(() => api.post('/api/admin/incidencias', draft), `Incidencia del pedido ${draft.pedido} registrada.`)) { setDraft({ pedido: '', tipo: 'ENTREGA', descripcion: '' }); void reload(); }
+    if (!chosen) return;
+    if (await run(() => api.post('/api/admin/incidencias', { ...draft, pedido: chosen }), `Incidencia del pedido ${chosen} registrada.`)) { setDraft({ pedido: '', tipo: 'ENTREGA', descripcion: '' }); setSearch(''); void reload(); }
   };
   const close = (id: number) => run(() => api.post(`/api/admin/incidencias/${id}/cerrar`, { nota: notes[id] ?? '' }), `Incidencia ${id} cerrada.`).then(() => reload());
   const kind = (value: string) => INCIDENT_KINDS.find((k) => k.value === value)?.label ?? value;
@@ -535,17 +627,27 @@ function Incidents({ run, notify }: SectionProps) {
     <>
       <Card eyebrow="No mueve dinero" title="Registrar una incidencia">
         <form className="buffer-form" onSubmit={open}>
-          <label className="checkout-field"><span>Pedido</span><input value={draft.pedido} onChange={(event) => setDraft({ ...draft, pedido: event.target.value })} inputMode="numeric" placeholder="12" required /></label>
+          {orderData?.ciclos?.length ? <CycleSelect cycles={orderData.ciclos} value={orderData.ciclo} onChange={setWeek} /> : null}
+          <label className="checkout-field"><span>Buscar el pedido</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Número, vecino o edificio" /></label>
+          <label className="checkout-field"><span>Pedido</span><select value={chosen} onChange={(event) => setDraft({ ...draft, pedido: event.target.value })} required disabled={!choices.length}>{choices.length ? choices.map((o: Raw) => <option key={o.id} value={o.id}>Pedido {o.id} · {o.vecino} · {o.zona}</option>) : <option value="">Ningún pedido coincide</option>}</select></label>
           <div className="segmented">{INCIDENT_KINDS.map((k) => <button key={k.value} type="button" className={draft.tipo === k.value ? 'is-active' : ''} onClick={() => setDraft({ ...draft, tipo: k.value })}>{k.label}</button>)}</div>
           <label className="checkout-field"><span>Qué pasó</span><textarea value={draft.descripcion} onChange={(event) => setDraft({ ...draft, descripcion: event.target.value })} maxLength={500} rows={3} required /></label>
-          <button className="primary-button" type="submit">Registrar</button>
+          <button className="primary-button" type="submit" disabled={!chosen}>Registrar</button>
           <small>Si hay que devolver dinero, va por un reclamo o una devolución.</small>
         </form>
       </Card>
       <Card title={`Abiertas (${opened.length})`}>
-        {opened.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>#</th><th>Pedido</th><th>Tipo</th><th>Qué pasó</th><th>Nota de cierre</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{opened.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td><strong className="admin-order-code">{i.pedido}</strong></td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small><AiDraft kind="incidencia" id={i.id} /></td><td><input className="admin-inline-input" value={notes[i.id] ?? ''} onChange={(event) => setNotes((n) => ({ ...n, [i.id]: event.target.value }))} placeholder="Qué se hizo" aria-label={`Nota para cerrar la incidencia ${i.id}`} /></td><td><button className="admin-row-button" type="button" disabled={!notes[i.id]?.trim()} onClick={() => void close(i.id)}>Cerrar</button></td></tr>)}</tbody></table></div> : <Empty icon="ok" title="Sin incidencias abiertas" text="Aquí quedan las que registres al atender a un vecino." />}
+        {opened.length ? <div className="work-list">{opened.map((i: Raw) => (
+          <article className="work-card" key={i.id}>
+            <div className="work-card-top"><div className="claim-item"><span className="work-icon" aria-hidden="true"><Icon name="warning" size={20} /></span><div><strong>Pedido {i.pedido}</strong><span>{kind(i.tipo)}</span></div></div></div>
+            <p className="work-text">{i.descripcion}</p>
+            <AiDraft kind="incidencia" id={i.id} />
+            <label className="checkout-field"><span>Qué se hizo</span><input value={notes[i.id] ?? ''} onChange={(event) => setNotes((n) => ({ ...n, [i.id]: event.target.value }))} placeholder="Ej. Llamé a la portería y avisó a la vecina" aria-label={`Nota para cerrar la incidencia ${i.id}`} /></label>
+            <button className="primary-button" type="button" disabled={!notes[i.id]?.trim()} onClick={() => void close(i.id)}>Cerrar incidencia</button>
+          </article>
+        ))}</div> : <Empty icon="ok" title="Sin incidencias abiertas" text="Aquí quedan las que registres al atender a un vecino." />}
       </Card>
-      {closed.length ? <Card title="Cerradas"><div className="admin-table-wrap"><table className="admin-table"><tbody>{closed.map((i: Raw) => <tr key={i.id}><td>{i.id}</td><td>{i.pedido}</td><td>{kind(i.tipo)}</td><td><small>{i.descripcion}</small></td><td><small>{i.nota}</small></td></tr>)}</tbody></table></div></Card> : null}
+      {closed.length ? <Card title="Cerradas"><div className="work-list">{closed.map((i: Raw) => <article className="work-card work-card--done" key={i.id}><div className="work-card-top"><div className="claim-item"><div><strong>Pedido {i.pedido} · {kind(i.tipo)}</strong><span>{i.descripcion}</span></div></div><span className="state-pill state-pill--ok">Cerrada</span></div><p className="admin-muted">{i.nota}</p></article>)}</div></Card> : null}
     </>
   );
 }
@@ -553,7 +655,7 @@ function Incidents({ run, notify }: SectionProps) {
 function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>(`/api/compras${cycle ? `?ciclo=${cycle}` : ''}`, notify);
   const [add, setAdd] = useState({ producto: '', cantidad: '' });
-  const [use, setUse] = useState({ producto: '', cantidad: '', pedido: '' });
+  const [use, setUse] = useState({ faltante: '', cantidad: '' });
   const [freight, setFreight] = useState({ empresa: '', monto: '' });
   if (!data) return <AdminSkeleton />;
   const suppliers: Raw[] = data.proveedores;
@@ -565,9 +667,12 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
   const buffer: Raw = data.colchon;
   const used = Math.min(100, (num(buffer.valor) / Math.max(num(buffer.tope), 1)) * 100);
   const partial = Boolean(data.parcial);
+  const keepable: Raw[] = data.guardables ?? [];
+  const keepChoice = add.producto || keepable[0]?.id || '';
+  const nameOf = (id: string) => keepable.find((p) => p.id === id)?.nombre ?? buffer.stock.find((b: Raw) => b.producto === id)?.nombre ?? id;
   const addStock = async (event: FormEvent) => {
     event.preventDefault();
-    if (await run(() => api.post('/api/compras/colchon', { ciclo: data.ciclo, ...add }), `Se guardó ${add.cantidad} de ${add.producto} en el colchón.`)) { setAdd({ producto: '', cantidad: '' }); void reload(); }
+    if (await run(() => api.post('/api/compras/colchon', { ciclo: data.ciclo, producto: keepChoice, cantidad: add.cantidad }), `Se guardó ${add.cantidad} de ${nameOf(keepChoice)} en el colchón.`)) { setAdd({ producto: '', cantidad: '' }); void reload(); }
   };
   const real: Raw | null = data.compra_real;
   const ordered: Raw[] = suppliers.flatMap((p) => p.lineas);
@@ -578,9 +683,14 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
     for (const l of ordered) { const got = String(form.get(l.producto) ?? '').trim(); if (got && got !== String(l.cantidad)) recibido[l.producto] = got; } // CR-04: solo lo que faltó
     if (await run(() => api.post('/api/compras/recibido', { ciclo: data.ciclo, recibido }), Object.keys(recibido).length ? 'Compra registrada: lo que faltó se repone con el colchón o se devuelve a los vecinos.' : 'Compra registrada: llegó todo.')) void reload();
   };
+  // S-329: reponer desde el faltante, solo si el colchón tiene ese producto
+  const inStock = (id: string) => buffer.stock.some((b: Raw) => b.producto === id && num(b.cantidad) > 0);
+  const coverable: Raw[] = (real?.faltantes ?? []).map((f: Raw, i: number) => ({ ...f, key: String(i) })).filter((f: Raw) => num(f.cantidad) > num(f.colchon) && inStock(f.producto));
+  const useChoice = coverable.find((f) => f.key === use.faltante) ?? coverable[0];
   const useStock = async (event: FormEvent) => {
     event.preventDefault();
-    if (await run(() => api.post('/api/compras/colchon/usar', use), `Se repuso ${use.cantidad} de ${use.producto} al pedido ${use.pedido}.`)) { setUse({ producto: '', cantidad: '', pedido: '' }); void reload(); }
+    if (!useChoice) return;
+    if (await run(() => api.post('/api/compras/colchon/usar', { pedido: String(useChoice.pedido), producto: useChoice.producto, cantidad: use.cantidad }), `Se repuso ${use.cantidad} de ${useChoice.nombre ?? useChoice.producto} al pedido ${useChoice.pedido}.`)) { setUse({ faltante: '', cantidad: '' }); void reload(); }
   };
   return (
     <>
@@ -591,16 +701,16 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
         <div className="purchase-stat"><span>Estado</span><strong>{partial ? <span className="state-pill">Abierto</span> : <span className="state-pill state-pill--ok">Cerrado</span>}</strong></div>
       </div>
       {suppliers.length ? suppliers.map((p) => (
-        <Card key={p.id} eyebrow={p.id} title={p.nombre} aside={<strong className="purchase-total">{formatMoney(num(p.total))}</strong>}>
-          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Tramo</th><th>Precio</th><th>Monto</th></tr></thead><tbody>{p.lineas.map((l: Raw) => <tr key={l.producto}><td><strong>{l.nombre}</strong><small className="admin-cell-note">{l.producto}</small></td><td>{l.cantidad} {l.unidad}</td><td><small>desde {l.desde}</small></td><td>{formatMoney(num(l.precio))}</td><td><strong>{formatMoney(num(l.monto))}</strong></td></tr>)}</tbody></table></div>
+        <Card key={p.id} title={p.nombre} aside={<strong className="purchase-total">{formatMoney(num(p.total))}</strong>}>
+          <ul className="buy-lines">{p.lineas.map((l: Raw) => <li key={l.producto}><ProductThumb id={l.producto} size={44} /><div><strong>{l.nombre}</strong><span>{formatMoney(num(l.precio))} por {l.unidad}{l.desde !== '0' ? ` · precio desde ${l.desde} ${l.unidad}` : ''}</span></div><div className="buy-line-amount"><strong>{quantityWithUnit(l.cantidad, l.unidad)}</strong><span>{formatMoney(num(l.monto))}</span></div></li>)}</ul>
         </Card>
       )) : <Card title="Sin compras esta semana"><Empty icon="cart" title="Todavía no hay nada que comprar" text="Aparece cuando hay pedidos de grupos que llegan al mínimo." /></Card>}
       {!partial && ordered.length ? <Card eyebrow="Después de recibir al proveedor" title={real ? 'Compra registrada' : 'Lo que llegó'}>
         {real ? (real.faltantes.length
-          ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Producto</th><th>Faltó</th><th>Repuesto del colchón</th><th>Origen</th></tr></thead><tbody>{real.faltantes.map((f: Raw, i: number) => <tr key={i}><td><strong className="admin-order-code">{f.pedido}</strong></td><td>{f.producto}</td><td>{f.cantidad}</td><td>{f.colchon}</td><td>{f.origen === 'DANADO' ? 'Dañado al armar' : 'Faltó en la compra'}</td></tr>)}</tbody></table></div>
+          ? <ul className="buy-lines">{real.faltantes.map((f: Raw, i: number) => <li key={i}><ProductThumb id={f.producto} size={44} /><div><strong>{f.nombre ?? f.producto}</strong><span>Pedido {f.pedido} · {f.origen === 'DANADO' ? 'dañado al armar' : 'faltó en la compra'}{num(f.colchon) > 0 ? ` · el colchón repuso ${f.colchon}` : ''}</span></div><div className="buy-line-amount"><strong>Faltó {f.cantidad}</strong></div></li>)}</ul>
           : <p className="admin-muted">Llegó todo. El reparto ya puede salir.</p>)
           : <form onSubmit={registerPurchase}><p className="admin-muted">Corrige solo lo que llegó de menos. Lo que falte se repone primero con el colchón y el resto se descuenta a los últimos pedidos, que lo reciben de vuelta como saldo. El reparto no sale hasta registrar esto.</p>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Pedido</th><th>Llegó</th></tr></thead><tbody>{ordered.map((l) => <tr key={l.producto}><td><strong>{l.nombre}</strong></td><td>{l.cantidad} {l.unidad}</td><td><input className="admin-inline-input" name={l.producto} defaultValue={l.cantidad} inputMode="decimal" aria-label={`Cuánto llegó de ${l.nombre}`} /></td></tr>)}</tbody></table></div>
+            <ul className="buy-lines">{ordered.map((l) => <li key={l.producto}><ProductThumb id={l.producto} size={44} /><div><strong>{l.nombre}</strong><span>Pedido: {quantityWithUnit(l.cantidad, l.unidad)}</span></div><label className="buy-line-input"><span className="sr-only">Cuánto llegó de {l.nombre}</span><input className="admin-inline-input" name={l.producto} defaultValue={l.cantidad} inputMode="decimal" aria-label={`Cuánto llegó de ${l.nombre}`} /><small>{l.unidad}</small></label></li>)}</ul>
             <button className="primary-button" type="submit">Registrar la compra</button></form>}
       </Card> : null}
       {!partial && ordered.length ? <Card eyebrow="Lo paga Yapa: el proveedor no entrega" title="Flete de la compra">
@@ -612,18 +722,19 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
       </Card> : null}
       <Card eyebrow="Colchón de reposición" title={`${formatMoney(num(buffer.valor))} de ${formatMoney(num(buffer.tope))}`}>
         <div className="buffer-meter" role="meter" aria-valuemin={0} aria-valuemax={num(buffer.tope)} aria-valuenow={num(buffer.valor)} aria-label="Valor guardado en el colchón"><span style={{ width: `${used}%` }} /></div>
-        {buffer.stock.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr></thead><tbody>{buffer.stock.map((b: Raw) => <tr key={b.producto}><td>{b.producto}</td><td>{b.cantidad}</td><td>{formatMoney(num(b.valor))}</td></tr>)}</tbody></table></div> : <p className="admin-muted">El colchón está vacío. Solo se guardan productos de limpieza, que no se malogran.</p>}
+        {buffer.stock.length ? <ul className="buy-lines">{buffer.stock.map((b: Raw) => <li key={b.producto}><ProductThumb id={b.producto} size={44} /><div><strong>{b.nombre ?? b.producto}</strong><span>{formatMoney(num(b.valor))}</span></div><div className="buy-line-amount"><strong>{b.cantidad}</strong></div></li>)}</ul> : <p className="admin-muted">El colchón está vacío. Solo se guardan productos de limpieza, que no se malogran.</p>}
         <div className="buffer-forms">
           <form className="buffer-form" onSubmit={addStock}><h3>Guardar en el colchón</h3>
-            <label className="checkout-field"><span>Código del producto</span><input value={add.producto} onChange={(event) => setAdd({ ...add, producto: event.target.value.toUpperCase() })} placeholder="LIMPIATODO-GALON" spellCheck={false} required /></label>
+            <label className="checkout-field"><span>Producto</span><select value={keepChoice} onChange={(event) => setAdd({ ...add, producto: event.target.value })} required disabled={!keepable.length}>{keepable.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label>
             <label className="checkout-field"><span>Cantidad</span><input value={add.cantidad} onChange={(event) => setAdd({ ...add, cantidad: event.target.value })} inputMode="decimal" placeholder="2" required /></label>
-            <button className="primary-button" type="submit">Guardar</button>
+            <button className="primary-button" type="submit" disabled={!keepChoice}>Guardar</button>
           </form>
           <form className="buffer-form" onSubmit={useStock}><h3>Reponer un faltante</h3>
-            <label className="checkout-field"><span>Pedido</span><input value={use.pedido} onChange={(event) => setUse({ ...use, pedido: event.target.value })} inputMode="numeric" placeholder="12" required /></label>
-            <label className="checkout-field"><span>Código del producto</span><input value={use.producto} onChange={(event) => setUse({ ...use, producto: event.target.value.toUpperCase() })} placeholder="LIMPIATODO-GALON" spellCheck={false} required /></label>
-            <label className="checkout-field"><span>Cantidad</span><input value={use.cantidad} onChange={(event) => setUse({ ...use, cantidad: event.target.value })} inputMode="decimal" placeholder="1" required /></label>
-            <button className="admin-row-button" type="submit">Reponer</button>
+            {coverable.length ? <>
+              <label className="checkout-field"><span>Faltante</span><select value={useChoice?.key ?? ''} onChange={(event) => setUse({ ...use, faltante: event.target.value })}>{coverable.map((f) => <option key={f.key} value={f.key}>Pedido {f.pedido} · {f.nombre ?? f.producto} · faltó {f.cantidad}</option>)}</select></label>
+              <label className="checkout-field"><span>Cantidad</span><input value={use.cantidad} onChange={(event) => setUse({ ...use, cantidad: event.target.value })} inputMode="decimal" placeholder="1" required /></label>
+              <button className="admin-row-button" type="submit">Reponer</button>
+            </> : <p className="admin-muted">Aquí aparecen los faltantes de la semana que el colchón puede cubrir.</p>}
           </form>
         </div>
       </Card>
@@ -666,14 +777,14 @@ function Partners({ run, notify }: SectionProps) {
   };
   const offerKey = (o: Raw) => `${o.ciclo}/${o.proveedor}`;
   const review = (o: Raw, decision: 'aprobar' | 'rechazar') => run(() => api.post(`/api/admin/propuestas/${o.ciclo}/${o.proveedor}/${decision}`, decision === 'rechazar' ? { motivo: reasons[offerKey(o)] ?? '' } : {}),
-    decision === 'aprobar' ? `Lista de ${o.nombre_proveedor} publicada para la semana ${o.ciclo}.` : `Lista devuelta a ${o.nombre_proveedor} con tu motivo.`).then(() => reloadOffers());
+    decision === 'aprobar' ? `Lista de ${o.nombre_proveedor} publicada para el ${weekRangeLabel(o.ciclo)}.` : `Lista devuelta a ${o.nombre_proveedor} con tu motivo.`).then(() => reloadOffers());
   return (
     <>
       <Card title={`Listas de proveedores (${offerData.propuestas.length})`}>
         {offerData.propuestas.length ? <div className="offer-list">{offerData.propuestas.map((o: Raw) => (
           <article className="offer-card" key={offerKey(o)}>
-            <div className="stop-head"><strong>{o.nombre_proveedor}</strong><span>Semana {o.ciclo}</span><span className={`state-pill ${o.estado === 'APROBADA' ? 'state-pill--ok' : o.estado === 'RECHAZADA' ? 'state-pill--bad' : ''}`}>{OFFER_STATES[o.estado]}</span></div>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo</th><th>Tramos</th></tr></thead><tbody>{o.productos.map((p: Raw) => <tr key={p.id}><td>{p.nombre}<small className="admin-cell-note">{p.id}</small></td><td>{p.maximo} {p.unidad}</td><td><small>{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td></tr>)}</tbody></table></div>
+            <div className="stop-head"><strong>{o.nombre_proveedor}</strong><span>{weekRangeLabel(o.ciclo)}</span><span className={`state-pill ${o.estado === 'APROBADA' ? 'state-pill--ok' : o.estado === 'RECHAZADA' ? 'state-pill--bad' : ''}`}>{OFFER_STATES[o.estado]}</span></div>
+            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Producto</th><th>Máximo</th><th>Tramos</th></tr></thead><tbody>{o.productos.map((p: Raw) => <tr key={p.id}><td><span className="cell-with-thumb"><ProductThumb id={p.id} size={32} />{p.nombre}</span></td><td>{p.maximo} {p.unidad}</td><td><small>{p.tramos.map((t: Raw) => `desde ${t.desde}: ${formatMoney(num(t.precio))}`).join(' · ')}</small></td></tr>)}</tbody></table></div>
             {o.motivo ? <p className="admin-muted">Motivo: {o.motivo}</p> : null}
             {o.estado === 'PENDIENTE' ? <div className="offer-actions">
               <ConfirmAction label="Aprobar y publicar" question="Sus productos de esa semana se reemplazan por esta lista. ¿Publicar?" confirmLabel="Publicar" onConfirm={() => review(o, 'aprobar')} />
@@ -697,7 +808,7 @@ function Partners({ run, notify }: SectionProps) {
       <Card title={`Cuentas (${data.cuentas.length})`}>
         {data.cuentas.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead><tbody>{data.cuentas.map((c: Raw) => <tr key={c.usuario}>
           <td><strong>{c.usuario}</strong><small className="admin-cell-note">{c.nombre}</small></td>
-          <td>{ROLE_LABELS[c.tipo as Role] ?? c.tipo}{c.zona ? <small className="admin-cell-note">{c.zona}</small> : null}</td>
+          <td>{ROLE_LABELS[c.tipo as Role] ?? c.tipo}{c.zona ? <small className="admin-cell-note">{data.zonas.find((z: Raw) => z.id === c.zona)?.nombre ?? c.zona}</small> : null}</td>
           <td>{c.activa ? <span className="state-pill state-pill--ok">Activa</span> : <span className="state-pill state-pill--bad">Desactivada</span>}</td>
           <td className="admin-row-actions">{c.activa ? <ConfirmAction label="Desactivar" question={`${c.usuario} no podrá entrar. ¿Desactivar?`} confirmLabel="Desactivar" onConfirm={() => run(() => api.post(`/api/admin/cuentas/${c.usuario}/desactivar`), `${c.usuario} ya no puede entrar.`).then(() => reload())} /> : null}{editing?.user === c.usuario
             ? <form className="inline-form" onSubmit={savePassword}><label><span className="sr-only">Contraseña nueva</span><input value={editing?.password ?? ''} onChange={(event) => setEditing({ user: c.usuario, password: event.target.value })} minLength={10} placeholder="10 o más caracteres" autoComplete="off" autoFocus required /></label><button className="admin-row-button" type="submit">Guardar</button><button className="admin-row-button" type="button" onClick={() => setEditing(null)}>Cancelar</button></form>

@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { newSupplierRow, parseSupplierList, serializeSupplierList, validateSupplierRows, type SupplierRow } from '../utils/supplierDraft';
 import { Icon } from './Icon';
+import { ProductThumb } from './ProductThumb';
 
 interface Props { initialText: string; busy: boolean; onSubmit: (text: string) => Promise<boolean>; resubmit: boolean }
 
@@ -11,6 +12,7 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
     catch (error) { return { rows: [], error: error instanceof Error ? error.message : 'No se pudo leer la lista.' }; }
   });
   const [rows, setRows] = useState(() => initial.rows.map((row, id) => ({ id, row })));
+  const [fresh, setFresh] = useState<number[]>([]); // S-332: la clave solo se pide al crear un producto
   const nextId = useRef(rows.length);
   const [expanded, setExpanded] = useState<number[]>(rows.length ? [0] : []);
   const [errors, setErrors] = useState<string[]>([]);
@@ -27,16 +29,16 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
   return (
     <form className="supplier-editor" onSubmit={event => void submit(event)} noValidate>
       <p className="partner-muted">Revisa tu disponibilidad y tus precios por volumen. Los cambios se publican cuando el equipo los aprueba.</p>
-      <div className="supplier-editor-toolbar"><strong>{rows.length} {rows.length === 1 ? 'producto' : 'productos'}</strong><span role="status">{dirty ? 'Borrador con cambios sin enviar' : 'Lista lista para revisar'}</span></div>
+      <div className="supplier-editor-toolbar"><strong>{rows.length} {rows.length === 1 ? 'producto' : 'productos'}</strong><span role="status">{dirty ? 'Borrador con cambios sin enviar' : 'Sin cambios por enviar'}</span></div>
       {errors.length ? <div className="supplier-errors" role="alert"><strong>Revisa estos datos antes de enviar</strong><ul>{errors.map((error, i) => <li key={i}>{error}</li>)}</ul></div> : null}
       <fieldset disabled={busy} className="supplier-editor-fields"><legend className="sr-only">Productos de tu propuesta</legend>
         {rows.map(({ id, row }, index) => {
           const field = (label: string, key: 'code' | 'name' | 'step' | 'maximum', decimal = false) => <label className="checkout-field"><span>{label}</span><input aria-label={`${label}, producto ${index + 1}`} value={row[key]} inputMode={decimal ? 'decimal' : undefined} onChange={e => change(id, { ...row, [key]: e.target.value })} /></label>;
           return <details className="supplier-product" key={id} open={expanded.includes(id)} onToggle={event => { const open = event.currentTarget.open; setExpanded(all => open === all.includes(id) ? all : open ? [...all, id] : all.filter(n => n !== id)); }}>
-            <summary><span><strong>{row.name || `Nuevo producto ${index + 1}`}</strong><small>{row.code || 'Completa su código'} · {row.maximum || '0'} {row.unit === 'kg' ? 'kg disponibles' : 'unidades disponibles'}</small></span><span className="supplier-product-price">{row.tiers[0]?.price ? `S/ ${row.tiers[0].price} / ${row.unit === 'kg' ? 'kg' : 'u.'}` : 'Sin precio'}</span><Icon name="plus" size={18} /></summary>
+            <summary>{fresh.includes(id) ? null : <ProductThumb id={row.code} size={40} />}<span><strong>{row.name || `Nuevo producto ${index + 1}`}</strong><small>{row.maximum || '0'} {row.unit === 'kg' ? 'kg disponibles' : 'unidades disponibles'}</small></span><span className="supplier-product-price">{row.tiers[0]?.price ? `S/ ${row.tiers[0].price} / ${row.unit === 'kg' ? 'kg' : 'u.'}` : 'Sin precio'}</span><Icon name="plus" size={18} /></summary>
             <div className="supplier-product-content">
               <div className="form-grid">
-                {field('Código', 'code')}{field('Nombre del producto', 'name')}
+                {fresh.includes(id) ? field('Código (sin espacios, ej. PAPA-HUAYRO)', 'code') : null}{field('Nombre del producto', 'name')}
                 <label className="checkout-field"><span>Categoría</span><select aria-label={`Categoría, producto ${index + 1}`} value={row.category} onChange={e => change(id, { ...row, category: e.target.value })}><option value="FRESCOS">Frescos</option><option value="LIMPIEZA">Limpieza</option></select></label>
                 <label className="checkout-field"><span>Vendo por</span><select aria-label={`Unidad, producto ${index + 1}`} value={row.unit} onChange={e => change(id, { ...row, unit: e.target.value })}><option value="kg">Peso (kg)</option><option value="unidad">Unidad</option></select></label>
                 {field(`Paso de venta (${row.unit === 'kg' ? 'kg' : 'unidades'})`, 'step', true)}{field(`Cantidad disponible (${row.unit === 'kg' ? 'kg' : 'unidades'})`, 'maximum', true)}
@@ -54,7 +56,7 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
             </div>
           </details>;
         })}
-        <button className="secondary-button" type="button" onClick={() => { const id = nextId.current++; setRows(all => [...all, { id, row: newSupplierRow() }]); setExpanded(all => [...all, id]); setDirty(true); }}><Icon name="plus" size={18} />Añadir producto</button>
+        <button className="secondary-button" type="button" onClick={() => { const id = nextId.current++; setRows(all => [...all, { id, row: newSupplierRow() }]); setFresh(all => [...all, id]); setExpanded(all => [...all, id]); setDirty(true); }}><Icon name="plus" size={18} />Añadir producto</button>
       </fieldset>
       <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Enviando…' : resubmit ? 'Enviar de nuevo para revisión' : 'Enviar para revisión'}</button>
     </form>

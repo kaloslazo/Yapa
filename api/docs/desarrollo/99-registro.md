@@ -6,6 +6,37 @@
 - Armado permite elegir bolsas nuevas con −/+, cargar una foto por bolsa y confirmar con un botón pequeño. Conserva las pendientes cuando falla una y excluye del reintento las confirmadas.
 - TypeScript, 175 pruebas frontend y build aprobados; selector revisado en localhost. Sin cambios de API. Evidencia en `64-bolsas-rojo.txt` y `64-bolsas-verde.txt`.
 
+## Iteración 67 · Cantidades con su unidad (12/11/2026)
+
+- Hallado en la revisión: el armado, el carrito del pedido y el reclamo decían "Papa amarilla 8" sin decir si eran kilos o unidades. Spec: `67-cantidades-con-unidad.md`, supuesto S-338 a validar por el equipo.
+- Las líneas de los pedidos (también para el armador) y las opciones para reclamar traen la `unidad` del catálogo de su semana; la pantalla dice "5 kg" o "2 unidades".
+- Pruebas en rojo antes del código; resultado: 736 pruebas del motor, 185 de la web, TypeScript y build.
+
+## Iteración 66 · Ver la foto que se toma (12/11/2026)
+
+- Spec: `66-ver-la-foto.md`, supuestos S-336 y S-337 a validar por el equipo.
+- Al elegir una foto (entrega, entrega fallida, dañado o reclamo) se ve su miniatura antes de enviarla, con "Cambiar foto".
+- En el armado, cada pedido muestra las miniaturas de sus bolsas registradas; al tocar una se abre la foto.
+- Pruebas en rojo antes del código; resultado: 182 pruebas de la web, TypeScript y build; el motor no cambia.
+
+## Iteración 65 · Los pedidos y los reclamos del vecino, como un carrito (12/11/2026)
+
+- Pedido de Carlos después de la demo: el reclamo se veía como un historial de texto. Spec: `65-reclamos-como-un-carrito.md`, supuestos S-333..S-335 a validar por el equipo.
+- En Mis pedidos, cada producto del pedido se ve con su foto, su cantidad y su precio máximo.
+- Para reclamar se toca la tarjeta del producto; solo aparecen los de entregas de las últimas 24 horas, con su hora límite (antes salían pedidos viejos que daban error al enviar).
+- "Tus reclamos" muestra la foto del producto, el motivo, el estado y lo que volvió al saldo.
+- Pruebas en rojo antes del código; resultado: 733 pruebas del motor, 179 de la web, TypeScript y build. La regla de las 24 horas (RC-03) no cambia.
+
+## Iteración 64 · La operación en el celular (12/11/2026)
+
+- Pedido de Carlos después de la demo, con la recomendación del profesor: las pantallas de operación se usan desde el celular. Spec: `64-operacion-en-el-celular.md`, supuestos S-327..S-332 a validar por el equipo.
+- En el celular, cada fila de las tablas del panel se ve como una tarjeta con el nombre de cada dato.
+- Nombres y fotos en vez de claves: edificios, semanas en fechas, proveedores, productos con su foto y motivos en palabras.
+- Elegir en vez de escribir: el colchón se llena eligiendo un producto de limpieza, el faltante se repone desde su fila y la incidencia se registra eligiendo el pedido de una lista con búsqueda (`GET /api/admin/pedidos`, sin montos).
+- Armado: una tarjeta por pedido con sus productos y fotos, casillas para marcar, avance "N de M pedidos con bolsa" y un botón de cámara que registra la bolsa al elegir la foto.
+- Atención, compras, portería, reparto y proveedor con tarjetas, botones de 44 px o más y sin claves internas.
+- Pruebas en rojo antes del código; resultado: 731 pruebas del motor, 176 de la web, TypeScript y build. Sin cambios de reglas de negocio ni de dinero.
+
 ## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
 
 - Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.

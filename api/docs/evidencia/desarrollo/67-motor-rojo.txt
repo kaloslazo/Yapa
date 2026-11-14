@@ -1,0 +1,35 @@
+test_un_a_order_lines_carry_the_unit (test_cantidades_unidad_67.UnitTests.test_un_a_order_lines_carry_the_unit) ... ERROR
+test_un_b_the_packer_gets_the_unit (test_cantidades_unidad_67.UnitTests.test_un_b_the_packer_gets_the_unit) ... FAIL
+test_un_c_claim_options_carry_the_unit (test_cantidades_unidad_67.UnitTests.test_un_c_claim_options_carry_the_unit) ... ERROR
+
+======================================================================
+ERROR: test_un_a_order_lines_carry_the_unit (test_cantidades_unidad_67.UnitTests.test_un_a_order_lines_carry_the_unit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_cantidades_unidad_67.py", line 26, in test_un_a_order_lines_carry_the_unit
+    self.assertEqual({l["unidad"] for l in data["pedidos"][0]["lineas"]}, {"kg"})
+                      ~^^^^^^^^^^
+KeyError: 'unidad'
+
+======================================================================
+ERROR: test_un_c_claim_options_carry_the_unit (test_cantidades_unidad_67.UnitTests.test_un_c_claim_options_carry_the_unit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_cantidades_unidad_67.py", line 46, in test_un_c_claim_options_carry_the_unit
+    self.assertEqual({o["unidad"] for o in data["reclamables"]}, {"kg"})
+                      ~^^^^^^^^^^
+KeyError: 'unidad'
+
+======================================================================
+FAIL: test_un_b_the_packer_gets_the_unit (test_cantidades_unidad_67.UnitTests.test_un_b_the_packer_gets_the_unit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Dev\UTEC\Ciclo_8\DS\Proyecto\kalos-Yapa\api\tests\test_cantidades_unidad_67.py", line 35, in test_un_b_the_packer_gets_the_unit
+    self.assertEqual(set(data["pedidos"][0]["lineas"][0]), {"id", "nombre", "cantidad", "unidad"})
+AssertionError: Items in the second set but not the first:
+'unidad'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.015s
+
+FAILED (failures=1, errors=2)
