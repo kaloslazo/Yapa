@@ -33,6 +33,7 @@ import { formatMoney } from './utils/format';
 import { authHref, authRouteFromLocation, type AuthPageId, type ReturnView, type StaffLoginKind } from './utils/authRoutes';
 
 import './styles.css';
+import { FaqChatbot } from './components/FaqChatbot';
 
 // FE-SG-2: el panel del equipo se baja solo cuando se abre
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((module) => ({ default: module.AdminPanel })));
@@ -64,7 +65,7 @@ const VIEW_HASH: Record<View, string> = { store: 'catalog', explore: 'explorar',
 const RETURN_TO_VIEW: Record<ReturnView, View> = { cart: 'cart', orders: 'orders', zone: 'zone', cuenta: 'account' };
 const authRouteNow = () => authRouteFromLocation(window.location.pathname, window.location.search);
 
-export default function App() {
+function YapaApp() {
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [state, setState] = useState<CycleState | null>(null);
@@ -521,3 +522,5 @@ export default function App() {
     </InviteContext.Provider>
   );
 }
+
+export default function App() { return <><YapaApp /><FaqChatbot /></>; }
