@@ -1,0 +1,16 @@
+.faq-chat { position: fixed; right: 16px; bottom: 90px; z-index: 85; }
+.faq-chat-launcher { border: 0; border-radius: 30px; padding: 12px 18px; background: #073d30; color: white; font: inherit; font-weight: 700; box-shadow: 0 4px 20px #0002; cursor: pointer; min-height: 44px; }
+.faq-chat-panel { position: absolute; right: 0; bottom: 58px; width: min(380px, calc(100vw - 32px)); max-height: min(640px, calc(100dvh - 180px)); overflow: auto; background: #fff; color: #14251e; border: 1px solid #ccd8d1; border-radius: 20px; padding: 18px; box-shadow: 0 8px 35px #0003; font-size: 15px; }
+.faq-chat-panel header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.faq-chat-panel h2 { font-size: 21px; margin: 0; }
+.faq-chat-panel header button { border: 0; background: transparent; min-width: 44px; min-height: 44px; font-size: 26px; }
+.faq-chat-panel p { margin: 12px 0; line-height: 1.5; }
+.faq-chat-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.faq-chat-topics button { border: 1px solid #bccfc4; background: white; border-radius: 20px; padding: 8px 12px; min-height: 44px; font: inherit; }
+.faq-chat-topics button[aria-pressed=true] { background: #e2f5eb; border-color: #08794c; }
+.faq-chat-panel label { display: grid; gap: 6px; }
+.faq-chat-panel input { width: 100%; box-sizing: border-box; font: inherit; padding: 12px; border: 1px solid #9db7aa; border-radius: 10px; }
+.faq-chat-results { list-style: none; padding: 0; display: grid; gap: 5px; }
+.faq-chat-results button { background: #f4f8f5; border: 0; border-radius: 8px; padding: 12px; text-align: left; width: 100%; font: inherit; cursor: pointer; min-height: 44px; }
+.faq-chat-history article { border-left: 3px solid #0a8556; padding: 12px; margin: 12px 0; background: #f0faf4; }
+.faq-chat :focus-visible { outline: 3px solid #167d58; outline-offset: 3px; }
