@@ -20,8 +20,10 @@ from wsgiref.simple_server import make_server
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from yapa_sdd import catalog, customers, ia, incidents, invitations, supplier_offers  # noqa: E402
+from yapa_sdd import catalog, claims, customers, fulfillment, ia, incidents, invitations, logistics, purchase, supplier_offers  # noqa: E402
+from yapa_sdd.cycle import opens_at  # noqa: E402
 from yapa_sdd.cycle import add_weeks  # noqa: E402
+from decimal import Decimal as D  # noqa: E402
 from yapa_sdd.domain import Customer  # noqa: E402
 from yapa_sdd.order_registration import verify_payment  # noqa: E402
 from yapa_sdd.cycle import LIMA, cycle_id, is_open  # noqa: E402
@@ -104,6 +106,51 @@ def armar(now: datetime, credenciales: bool = True, completa: bool = True):
     return store
 
 
+# historia: las 5 semanas antes de la ya liquidada, para que la app se vea con semanas de uso real.
+# Los Álamos desde el inicio; Las Palmeras se suma en la tercera; San Felipe no llega al mínimo la primera semana
+# (se le devuelve todo) y desde la segunda sí; Arenales es nuevo esta semana. Un reclamo aprobado en la cuarta.
+ALAMOS = [101, 105, 106, 107, 108, 109, 110, 111, 112]
+SEMANAS_ATRAS = (6, 5, 4, 3, 2)
+
+
+def historial(store, ahora, nuevos: dict) -> None:
+    hechas = []
+    for k, atras in enumerate(SEMANAS_ATRAS):
+        semana = add_weeks(cycle_id(ahora), -atras)
+        miercoles = opens_at(semana) + timedelta(days=2, hours=10)
+        sabado = miercoles + timedelta(days=3)
+        quienes = ALAMOS[:8 + min(k, 1)] + nuevos.get("Z-LINCE-02", [])[:max(0, k - 1)]
+        quienes += [113, 114] + nuevos.get("Z-JM-01", [])[:2 if k == 0 else 6]
+        for i, cliente in enumerate(quienes):
+            orden = _order(store, cliente, BASKETS[(i + k) % len(BASKETS)], miercoles)
+            verify_payment(store, orden.order_id, now=miercoles)
+        ordenes = store.orders_in_cycle(semana)
+        atendidas = [o for o in ordenes if fulfillment.is_attended(store, o)]
+        for orden in atendidas:
+            fulfillment.pack_bag(store, orden.order_id, by="admin-yapa", photo=f"fotos/h{k}-pedido-{orden.order_id}.jpg",
+                                 now=sabado - timedelta(days=1))
+        purchase.register_purchase(store, semana, {}, by="admin-yapa", now=miercoles + timedelta(days=1))
+        logistics.register_freight(store, semana, "Fletes Santa Anita", D(str(110 + 5 * k)), by="admin-yapa",
+                                   now=miercoles + timedelta(days=1))
+        for zona in sorted({o.zone_id for o in atendidas}):
+            z = store.zones[zona]
+            logistics.dispatch_zone(store, semana, zona, by="admin-yapa", now=sabado)
+            fulfillment.deliver_zone(store, semana, zona, by="admin-yapa", photo=f"fotos/h{k}-entrega-{zona}.jpg",
+                                     received_by=z.reception_contact or "Recepción", now=sabado + timedelta(hours=1))
+        reclamo = None
+        if k == 3:
+            orden = next(o for o in atendidas if any(l.product_id == "CEBOLLA-ROJA" for l in o.lines))
+            reclamo = claims.file_claim(store, orden.order_id, customer_id=orden.customer_id, product_id="CEBOLLA-ROJA",
+                                        quantity="1", reason="DANADO", photo=f"fotos/h{k}-reclamo.jpg",
+                                        now=sabado + timedelta(hours=8))
+        fulfillment.close_cycle(store, semana, at=sabado + timedelta(hours=23))
+        if reclamo is not None:
+            claims.review_claim(store, reclamo.claim_id, by="admin-yapa", approve=True, now=sabado + timedelta(days=1))
+        hechas.append(semana)
+    for clave in [c for c in store.demand_history if c[0] in hechas]:  # la historia real reemplaza a la sembrada
+        del store.demand_history[clave]
+
+
 def poblar(store, credenciales: bool) -> None:
     """Datos de prueba para el video: más edificios que llegan al mínimo (compras, armado, reparto con mapa y portería),
     pagos por verificar, la lista del proveedor esperando aprobación, una incidencia abierta y un pedido de PIN."""
@@ -112,14 +159,19 @@ def poblar(store, credenciales: bool) -> None:
         z = store.zones[zona]
         z.reception_kind, z.reception_contact = z.reception_kind or "PORTERIA", z.reception_contact or contacto
     numero = max(store.customers) + 1
+    nuevos: dict[str, list[int]] = {}
     for zona, nombres in VECINOS_EXTRA.items():
         z = store.zones[zona]
-        for i, nombre in enumerate(nombres):
+        for nombre in nombres:
             store.add_customer(Customer(numero, nombre, zona, lat=z.lat, lon=z.lon))
-            orden = _order(store, numero, BASKETS[(numero + i) % len(BASKETS)], ahora)
+            nuevos.setdefault(zona, []).append(numero)
+            numero += 1
+    historial(store, ahora, nuevos)
+    for zona, clientes in nuevos.items():
+        for i, cliente in enumerate(clientes):
+            orden = _order(store, cliente, BASKETS[(cliente + i) % len(BASKETS)], ahora)
             if zona not in SIN_VERIFICAR or i == 0:
                 verify_payment(store, orden.order_id, now=ahora)
-            numero += 1
     for orden in store.orders_in_cycle(cycle_id(ahora)):  # San Felipe: los dos vecinos que ya tenía también pagan
         if orden.zone_id == "Z-JM-01" and orden.payment_status != "VERIFICADO":
             verify_payment(store, orden.order_id, now=ahora)
