@@ -1,5 +1,10 @@
 /* ayuda de Yapa como chat: mismo tono que la tienda y el panel */
-.faq-chat { position: fixed; right: 16px; bottom: 90px; z-index: 85; }
+.faq-chat { position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 85; }
+/* en el celular sube sobre la barra de pestañas y las barras fijas de la tienda */
+@media (max-width: 900px) {
+  body:has(.tab-bar) .faq-chat { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  body:has(.tab-bar):has(.mobile-cart-bar, .sticky-cta, .pp-cta) .faq-chat { bottom: calc(150px + env(safe-area-inset-bottom)); }
+}
 .faq-chat-launcher { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 18px 6px 6px; border: 0; border-radius: var(--radius-pill); background: var(--deep); color: #fff; font: inherit; font-weight: 700; box-shadow: 0 12px 30px -12px rgba(4, 48, 29, .6); cursor: pointer; transition: transform .25s var(--ease), box-shadow .25s ease; }
 .faq-chat-launcher:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -12px rgba(4, 48, 29, .7); }
 .faq-chat-launcher:active { transform: scale(.97); }

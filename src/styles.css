@@ -2614,18 +2614,16 @@ select:not([multiple]) { appearance: none; -webkit-appearance: none; padding-rig
 .partner-hero-progress { height: 6px; overflow: hidden; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .14); }
 .partner-hero-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--vivid), #8ef0c1); transform-origin: left; transition: transform .9s var(--ease); animation: fill 1.1s var(--ease) both; }
 
-/* entrada escalonada (animated content, react bits) y brillo que sigue al puntero (spotlight card) */
+/* entrada escalonada (animated content, react bits) */
 .partner-main > * { animation: rise .55s var(--ease) both; }
 .partner-main > :nth-child(2) { animation-delay: 70ms; }
 .partner-main > :nth-child(3) { animation-delay: 140ms; }
 .partner-main > :nth-child(4) { animation-delay: 210ms; }
 .partner-main > :nth-child(n + 5) { animation-delay: 280ms; }
 .stop-route > li { animation: rise .55s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + 200ms); }
-.partner-card, .route-stop, .route-planner, .photo-product-review, .partner-empty { position: relative; transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s ease; }
-.partner-card::after, .route-stop::after, .route-planner::after, .photo-product-review::after, .partner-empty::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0), rgba(7, 172, 107, .08), transparent 45%); transition: opacity .3s ease; }
+.partner-card, .route-stop, .route-planner, .photo-product-review, .partner-empty { transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s ease; }
 @media (hover: hover) {
   .partner-card:hover, .route-stop:hover, .route-planner:hover, .photo-product-review:hover { border-color: var(--edge-strong); box-shadow: 0 10px 30px -18px rgba(16, 35, 26, .35); }
-  .partner-card:hover::after, .route-stop:hover::after, .route-planner:hover::after, .photo-product-review:hover::after, .partner-empty:hover::after { opacity: 1; }
 }
 .partner-view .primary-button, .partner-view .secondary-button { transition: transform .2s var(--ease), background .2s ease, box-shadow .2s ease; }
 .partner-view .primary-button:active, .partner-view .secondary-button:active { transform: scale(.97); }
@@ -2635,3 +2633,19 @@ select:not([multiple]) { appearance: none; -webkit-appearance: none; padding-rig
   .partner-hero-aurora, .partner-main > *, .stop-route > li, .partner-hero-progress span { animation: none; }
 }
 .rolling-char { white-space: pre; }
+
+/* barra de arriba de cada rol: marca, rol con ícono, fecha, quién está y salir */
+.partner-topbar { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 12px; min-height: 64px; padding: 10px max(16px, calc((100vw - 720px) / 2)); border-bottom: 1px solid var(--edge); background: color-mix(in srgb, var(--canvas) 86%, transparent); backdrop-filter: saturate(1.4) blur(12px); }
+.partner-brand { gap: 8px; font-size: 1.2rem; letter-spacing: -0.02em; }
+.partner-brand img { width: 30px; height: 30px; }
+.partner-role { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 8px; border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-dark); font-size: .8125rem; font-weight: 700; }
+.partner-user { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.partner-avatar { display: grid; flex: none; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--deep); color: #fff; font-size: .875rem; font-weight: 700; }
+.partner-user-name { overflow: hidden; color: var(--ink); font-size: .875rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.partner-logout { min-height: 38px; margin-left: 4px; padding: 0 14px; border: 1px solid var(--edge); background: var(--canvas); color: var(--copy); font-weight: 600; transition: border-color .2s ease, color .2s ease, background .2s ease; }
+.partner-logout:hover { border-color: var(--ink); color: var(--ink); }
+@media (max-width: 640px) {
+  .partner-user-name { display: none; }
+  .partner-logout { width: 38px; padding: 0; justify-content: center; }
+  .partner-logout span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}

@@ -4,8 +4,8 @@ import type { Account } from '../types';
 import { PhotoProductReview } from './PhotoProductReview';
 import { formatMoney, quantityWithUnit } from '../utils/format';
 import { weekLabel } from '../utils/week';
-import { Icon } from './Icon';
-import { RollingNumber, spotlight } from './motion';
+import { Icon, type IconName } from './Icon';
+import { RollingNumber } from './motion';
 import { PhotoForm } from './PhotoForm';
 import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
@@ -60,16 +60,22 @@ function PartnerHero({ kicker, title, stats, progress, children }: { kicker: str
   );
 }
 
-const SCREENS: Record<string, string> = { transportista: 'reparto', proveedor: 'proveedores', porteria: 'portería' };
+const SCREENS: Record<string, string> = { transportista: 'Reparto', proveedor: 'Proveedor', porteria: 'Portería' };
+const ROLE_ICONS: Record<string, IconName> = { transportista: 'truck', proveedor: 'box', porteria: 'building' };
 
 export function PartnerPanel({ account, notify, onLogout }: PartnerPanelProps) {
   return (
     <div className="partner-view">
       <header className="partner-topbar">
-        <div className="partner-brand"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span><small>{SCREENS[account.role]}</small></div>
-        <button className="partner-logout" type="button" onClick={onLogout}><Icon name="signout" size={18} />Salir</button>
+        <div className="partner-brand"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span></div>
+        <span className="partner-role"><Icon name={ROLE_ICONS[account.role] ?? 'user'} size={16} />{SCREENS[account.role]}</span>
+        <div className="partner-user">
+          <span className="partner-avatar" aria-hidden="true">{account.name.trim().charAt(0).toUpperCase() || 'Y'}</span>
+          <span className="partner-user-name">{account.name}</span>
+          <button className="partner-logout" type="button" onClick={onLogout} aria-label="Salir"><Icon name="signout" size={18} /><span>Salir</span></button>
+        </div>
       </header>
-      <main className="partner-main" id="contenido" onPointerMove={spotlight}>
+      <main className="partner-main" id="contenido">
         {account.role === 'transportista' ? <DriverRoute name={account.name} notify={notify} /> : account.role === 'porteria' ? <ConciergeHome name={account.name} notify={notify} /> : <SupplierHome notify={notify} />}
       </main>
     </div>
