@@ -43,7 +43,8 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 - Iteración 65 (12/11/2026): pedidos y reclamos del vecino como un carrito, `docs/desarrollo/65-reclamos-como-un-carrito.md`; 733 pruebas del motor y 179 de la web.
 - Iteración 66 (12/11/2026): ver la foto que se toma, `docs/desarrollo/66-ver-la-foto.md`; 182 pruebas de la web.
 - Iteración 67 (12/11/2026): cantidades con su unidad, `docs/desarrollo/67-cantidades-con-unidad.md`; 736 pruebas del motor y 185 de la web.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-338. **El siguiente libre es S-339.**
+- Iteración 68 (16/11/2026): predicción de demanda, `docs/desarrollo/68-prediccion-de-demanda.md`.
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-344. **El siguiente libre es S-345.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. El margen ya se lee con los costos reales (iteración 58: Plin al 0 % y flete propio); la parte del ahorro es 25 % (iteración 57). El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas, suma los faltantes de compra y dañados, y retiene el 25 % del ahorro, S-301). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador (0 % por defecto).
 - Desde la iteración 56 una zona no se entrega sin la compra real registrada (S-299); en las pruebas, `buy_all` de `test_settlement.py`.

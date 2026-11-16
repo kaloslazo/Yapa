@@ -569,3 +569,10 @@
 - Revisado en el navegador con la demo: Ana (101) y Carmen (105) ven «4 de 8» con la barra a la mitad, en celular y en escritorio.
 - Resultado: 698 pruebas del motor (6 nuevas) y 152 del frontend (3 nuevas) en verde; typecheck y build sin errores (`62-avance-grupo-motor-verde.txt`, `62-avance-grupo-web-verde.txt`).
 
+## Iteración 68 · Predicción de demanda (16/11/2026)
+
+- Spec: `68-prediccion-de-demanda.md` (S-339..S-344). Origen: la propuesta del curso pide IA en el producto, con predicción de la canasta semanal por zona para ajustar la cotización con el mayorista antes del cierre.
+- Motor: `forecast.py` ajusta una recta por mínimos cuadrados a las 8 semanas anteriores de cada zona y producto (promedio con 1 o 2 semanas) y suma por producto, redondeando al paso. `GET /api/compras` trae `prediccion` con historia, estimado, lo ya pedido, si supera el máximo del catálogo y, con la semana cerrada, el error medio. `store.demand_history` permite cargar historia previa; la demo siembra 6 semanas ficticias.
+- Panel: tarjeta "Lo que se viene esta semana" en Compra de la semana, con barras de la historia y aviso "Pide más al mayorista".
+- Sin costo: no usa servicios externos ni claves.
+- De paso, pulido del panel y la tienda: bordes sencillos en tarjetas, KPIs, grupos y fotos de producto, y botón de archivo con estilo en vez del nativo.
