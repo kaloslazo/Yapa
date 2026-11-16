@@ -8,6 +8,7 @@ Solo biblioteca estándar, como el resto del motor.
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import re
@@ -44,6 +45,7 @@ class Provider:
     url: str
     key: str
     model: str
+    vision_model: str = ""  # S-345: el modelo que lee fotos; vacío, el mismo de texto
 
 
 def http_post(url: str, headers: dict, body: dict, timeout: float) -> dict:
@@ -61,11 +63,18 @@ class AIClient:
         self.post = post
         self.timeout = timeout
 
-    def ask_json(self, system: str, user: str) -> tuple[dict, str]:
-        """IA-04: el principal y, si falla, el respaldo. Devuelve el JSON y el nombre del proveedor que respondió."""
+    def ask_json(self, system: str, user: str, image: tuple[str, bytes] | None = None) -> tuple[dict, str]:
+        """IA-04: el principal y, si falla, el respaldo. Devuelve el JSON y el nombre del proveedor que respondió.
+        Con `image` (tipo y bytes), la foto va como image_url en base64 al modelo de visión (S-345)."""
+        content = user
+        if image is not None:
+            encoded = base64.b64encode(image[1]).decode("ascii")
+            content = [{"type": "text", "text": user},
+                       {"type": "image_url", "image_url": {"url": f"data:{image[0]};base64,{encoded}"}}]
         for provider in self.providers:
-            body = {"model": provider.model, "temperature": 0.2, "response_format": {"type": "json_object"},
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+            model = (provider.vision_model or provider.model) if image is not None else provider.model
+            body = {"model": model, "temperature": 0.2, "response_format": {"type": "json_object"},
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]}
             headers = {"Authorization": f"Bearer {provider.key}", "Content-Type": "application/json",
                        "User-Agent": "yapa"}
             try:
@@ -81,10 +90,12 @@ def from_env(env) -> AIClient | None:
     providers = []
     if (env.get("YAPA_GROQ_CLAVE") or "").strip():
         providers.append(Provider("groq", GROQ_URL, env["YAPA_GROQ_CLAVE"].strip(),
-                                  (env.get("YAPA_GROQ_MODELO") or "openai/gpt-oss-120b").strip()))
+                                  (env.get("YAPA_GROQ_MODELO") or "openai/gpt-oss-120b").strip(),
+                                  (env.get("YAPA_GROQ_MODELO_VISION") or "qwen/qwen3.8-27b").strip()))
     if (env.get("YAPA_GITHUB_MODELS_CLAVE") or "").strip():
         providers.append(Provider("github", GITHUB_URL, env["YAPA_GITHUB_MODELS_CLAVE"].strip(),
-                                  (env.get("YAPA_GITHUB_MODELS_MODELO") or "openai/gpt-4o-mini").strip()))
+                                  (env.get("YAPA_GITHUB_MODELS_MODELO") or "openai/gpt-4o-mini").strip(),
+                                  (env.get("YAPA_GITHUB_MODELS_MODELO_VISION") or "openai/gpt-4o-mini").strip()))
     return AIClient(providers) if providers else None
 
 

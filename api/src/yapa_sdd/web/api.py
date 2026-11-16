@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import vision
+from .. import quote_reader, vision
 from .. import audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
@@ -1102,6 +1102,15 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "lista_actual": export_catalog(p for p in store.catalog_for(cycle.add_weeks(current, 1)).values()
                                                if p.supplier_id == supplier_id)}
 
+    def proveedor_lista_leer(environ, data, session):
+        """LP-01..LP-06: la cotización (foto o texto) como borrador de la lista; no guarda nada."""
+        result = quote_reader.read_quote(store, ai, session["principal"], text=data.get("texto", ""),
+                                         photo=data.get("_quote_upload"), now=clock())
+        rows = [r | {"paso": qty(r["paso"]), "maximo": qty(r["maximo"]),
+                     "tramos": [{"desde": qty(t["desde"]), "precio": money(t["precio"])} for t in r["tramos"]]}
+                for r in result["filas"]]
+        return result | {"filas": rows}
+
     def proveedor_propuesta(environ, data, session):
         offer = supplier_offers.submit_offer(store, str(data.get("ciclo", "")).strip(), str(data.get("lista", "")),
                                              by=session["principal"], now=clock())  # PV-01..PV-03
@@ -1326,6 +1335,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/reparto/entregas-fallidas", {"POST": (reparto_entrega_fallida, partners.DRIVER)}),
         (r"/api/proveedor", {"GET": (proveedor, partners.SUPPLIER)}),
         (r"/api/proveedor/propuestas", {"POST": (proveedor_propuesta, partners.SUPPLIER)}),
+        (r"/api/proveedor/lista/leer", {"POST": (proveedor_lista_leer, partners.SUPPLIER)}),  # LP-01
         (r"/api/compras", {"GET": (compras, BUYING)}),
         (r"/api/compras/colchon", {"POST": (compras_colchon, BUYING)}),
         (r"/api/compras/colchon/usar", {"POST": (compras_colchon_usar, BUYING)}),
@@ -1363,6 +1373,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
         if handler is vision_analizar:
             data['_vision_upload'] = files.get('foto_archivo')
+        if handler is proveedor_lista_leer:
+            data['_quote_upload'] = files.get('foto_archivo')
         saved = ""
         if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])

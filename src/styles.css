@@ -2552,3 +2552,16 @@ input[type='file']::file-selector-button:hover { border-color: var(--ink); backg
   .forecast-warning { order: 10; grid-column: 1 / -1; }
   .admin-kpi + .admin-kpi { border-left: 0; }
 }
+
+/* iteración 69: leer la cotización del proveedor con IA */
+.quote-reader { display: grid; gap: 10px; margin-bottom: 16px; padding: 16px; border: 1px solid var(--edge); border-radius: var(--radius-card); background: linear-gradient(180deg, var(--accent-soft), var(--canvas) 70%); }
+.quote-reader-head { display: flex; gap: 10px; align-items: flex-start; }
+.quote-reader-head > .icon { flex: none; margin-top: 3px; color: var(--accent); }
+.quote-reader-head h3 { font-size: 1rem; font-weight: 650; }
+.quote-reader-head p { margin-top: 2px; color: var(--muted); font-size: .8125rem; }
+.quote-reader textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--edge-strong); border-radius: var(--radius-field); background: var(--canvas); color: var(--ink); font: inherit; font-size: .875rem; resize: vertical; }
+.quote-reader-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.quote-reader-actions .photo-field { flex: 1 1 220px; }
+.quote-reader-summary { color: var(--accent-dark); font-size: .875rem; font-weight: 600; }
+.quote-reader-error { color: var(--danger); font-size: .875rem; }
+.quote-reader-warnings { margin: 0; padding-left: 18px; color: var(--peach-ink); font-size: .8125rem; }

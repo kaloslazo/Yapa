@@ -1,7 +1,44 @@
 import { useRef, useState, type FormEvent } from 'react';
+import { api } from '../services/api';
 import { newSupplierRow, parseSupplierList, serializeSupplierList, validateSupplierRows, type SupplierRow } from '../utils/supplierDraft';
 import { Icon } from './Icon';
 import { ProductThumb } from './ProductThumb';
+
+interface QuoteRow { codigo: string; nombre: string; categoria: string; unidad: string; paso: string; maximo: string; tramos: Array<{ desde: string; precio: string }> }
+interface QuoteRead { filas: QuoteRow[]; nuevos: string[]; avisos: string[]; fuente: 'ia' | 'reglas' }
+
+// iteración 69, LP-01: la foto o el mensaje de la cotización llenan el borrador; el proveedor revisa y envía como siempre
+function QuoteReader({ disabled, onRead }: { disabled: boolean; onRead: (read: QuoteRead) => string }) {
+  const [text, setText] = useState('');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [state, setState] = useState<{ busy: boolean; summary: string; warnings: string[]; error: string }>({ busy: false, summary: '', warnings: [], error: '' });
+  const read = async () => {
+    if (!text.trim() && !photo) { setState({ busy: false, summary: '', warnings: [], error: 'Pega el mensaje o elige la foto de tu cotización.' }); return; }
+    const form = new FormData();
+    if (text.trim()) form.set('texto', text.trim());
+    if (photo) form.set('foto_archivo', photo);
+    setState({ busy: true, summary: '', warnings: [], error: '' });
+    try {
+      const result = await api.post<QuoteRead>('/api/proveedor/lista/leer', form);
+      setState({ busy: false, summary: onRead(result), warnings: result.avisos, error: '' });
+    } catch (error) {
+      setState({ busy: false, summary: '', warnings: [], error: error instanceof Error ? error.message : 'No pudimos leer la cotización.' });
+    }
+  };
+  return (
+    <section className="quote-reader" aria-labelledby="quote-reader-title">
+      <div className="quote-reader-head"><Icon name="sparkle" size={18} /><div><h3 id="quote-reader-title">Leer cotización con IA</h3><p>Sube la foto de tu pizarra o lista, o pega el mensaje que mandas por WhatsApp. Llenamos el borrador y tú lo revisas.</p></div></div>
+      <textarea value={text} onChange={e => setText(e.target.value)} rows={3} maxLength={4000} placeholder={'Papa amarilla S/ 3.40 el kg, hay 300 kg\ndesde 100 kg a 3.10'} aria-label="Mensaje de tu cotización" disabled={disabled || state.busy} />
+      <div className="quote-reader-actions">
+        <label className="photo-field"><Icon name="camera" size={18} /><span>{photo ? photo.name : 'Foto de la cotización'}</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhoto(e.currentTarget.files?.[0] ?? null)} disabled={disabled || state.busy} /></label>
+        <button className="secondary-button" type="button" onClick={() => void read()} disabled={disabled || state.busy}>{state.busy ? 'Leyendo…' : 'Leer cotización'}</button>
+      </div>
+      {state.error ? <p className="quote-reader-error" role="alert">{state.error}</p> : null}
+      {state.summary ? <p className="quote-reader-summary" role="status">{state.summary}</p> : null}
+      {state.warnings.length ? <ul className="quote-reader-warnings">{state.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul> : null}
+    </section>
+  );
+}
 
 interface Props { initialText: string; busy: boolean; onSubmit: (text: string) => Promise<boolean>; resubmit: boolean }
 
@@ -25,8 +62,31 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
     if (problems.length) return;
     if (await onSubmit(serializeSupplierList(rows.map(r => r.row)))) setDirty(false);
   };
+  const fill = (read: QuoteRead) => {
+    let updated = 0, added = 0;
+    const known = new Map(rows.map(r => [r.row.code, r]));
+    const next = [...rows];
+    const freshIds: number[] = [];
+    for (const f of read.filas) {
+      const tiers = f.tramos.map(t => ({ from: t.desde, price: t.precio }));
+      const current = known.get(f.codigo);
+      if (current) { updated++; next[next.indexOf(current)] = { id: current.id, row: { ...current.row, maximum: f.maximo, tiers } }; continue; }
+      added++;
+      const id = nextId.current++;
+      freshIds.push(id);
+      next.push({ id, row: { ...newSupplierRow(), code: f.codigo, name: f.nombre, category: f.categoria, unit: f.unidad, step: f.paso, maximum: f.maximo, tiers } });
+    }
+    setRows(next);
+    setFresh(all => [...all, ...freshIds]);
+    setExpanded(all => [...all, ...freshIds]);
+    if (updated || added) setDirty(true);
+    const how = read.fuente === 'ia' ? 'Leído con IA' : 'Leído con reglas simples';
+    return updated || added ? `${how}: ${updated} ${updated === 1 ? 'actualizado' : 'actualizados'} y ${added} ${added === 1 ? 'nuevo' : 'nuevos'}. Revisa cada producto antes de enviar.` : `${how}: no encontramos productos con precio. Prueba con otra foto o pega el texto.`;
+  };
   if (initial.error) return <p role="alert">{initial.error} Conservamos tu lista original. Recarga la página o consulta al equipo antes de editar.</p>;
   return (
+    <>
+    <QuoteReader disabled={busy} onRead={fill} />
     <form className="supplier-editor" onSubmit={event => void submit(event)} noValidate>
       <p className="partner-muted">Revisa tu disponibilidad y tus precios por volumen. Los cambios se publican cuando el equipo los aprueba.</p>
       <div className="supplier-editor-toolbar"><strong>{rows.length} {rows.length === 1 ? 'producto' : 'productos'}</strong><span role="status">{dirty ? 'Borrador con cambios sin enviar' : 'Sin cambios por enviar'}</span></div>
@@ -60,5 +120,6 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
       </fieldset>
       <button className="primary-button" type="submit" disabled={busy}>{busy ? 'Enviando…' : resubmit ? 'Enviar de nuevo para revisión' : 'Enviar para revisión'}</button>
     </form>
+    </>
   );
 }
