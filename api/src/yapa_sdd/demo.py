@@ -109,8 +109,29 @@ def demo_store(now: datetime | None = None) -> InMemoryStore:
         order = _order(store, customer_id, BASKETS[(i + 1) % len(BASKETS)], demo_now)
         if i < 4:
             verify_payment(store, order.order_id, now=demo_now)
+    seed_demand_history(store, cycle39)
     store.demo_now = demo_now if now else None
     return store
+
+
+# S-343: historia ficticia de las 6 semanas antes de la primera de la demo, kg o unidades por semana y zona;
+# cada zona sube un poco cada semana para que la predicción tenga una tendencia que mostrar
+HISTORY_BASE = {
+    "Z-LINCE-01": {"PAPA-AMARILLA": 22, "PAPA-BLANCA": 18, "CEBOLLA-ROJA": 16, "LIMON": 6, "AJO": 2, "ZANAHORIA": 9,
+                   "CAMOTE": 5, "LIMPIATODO-GALON": 3, "LEJIA-GALON": 4, "DETERGENTE-LIQUIDO-GALON": 2},
+    "Z-LINCE-02": {"PAPA-AMARILLA": 10, "PAPA-BLANCA": 8, "CEBOLLA-ROJA": 7, "LIMON": 3, "ZANAHORIA": 4, "LEJIA-GALON": 2},
+    "Z-JM-01": {"PAPA-AMARILLA": 12, "PAPA-BLANCA": 14, "CEBOLLA-ROJA": 10, "LIMON": 4, "AJO": 1, "CAMOTE": 4,
+                "LIMPIATODO-GALON": 2},
+}
+
+
+def seed_demand_history(store: InMemoryStore, first_cycle: str) -> None:
+    for back in range(6, 0, -1):
+        week = cycle.add_weeks(first_cycle, -back)
+        growth = D(100 + (6 - back) * 7 + (3 if back % 2 else -2)) / 100  # +7 % por semana, con un vaivén
+        for zone_id, products in HISTORY_BASE.items():
+            for product_id, base in products.items():
+                store.demand_history[(week, zone_id, product_id)] = (D(base) * growth).quantize(D("1"))
 
 
 def parse_demo_pins(text: str) -> dict:

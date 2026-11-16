@@ -605,6 +605,34 @@ function PinRequests({ run, notify }: SectionProps) {
   );
 }
 
+// iteración 68, PD-01..PD-04: regresión sobre las 8 semanas anteriores para cotizar con el mayorista antes del cierre
+function Forecast({ data, partial }: { data: Raw; partial: boolean }) {
+  const rows: Raw[] = data.productos.filter((p: Raw) => num(p.estimado) > 0 || num(p.pedido) > 0);
+  if (!rows.length) return null;
+  const over = rows.filter((p) => p.supera_maximo).length;
+  const error = data.error_medio === null ? null : Math.round(num(data.error_medio) * 100);
+  return (
+    <Card id="prediccion" eyebrow="Predicción con IA · regresión sobre 8 semanas" title="Lo que se viene esta semana" aside={over ? <span className="state-pill state-pill--warn">{over} por encima del máximo</span> : null}>
+      <div className="forecast-card">
+        <p className="admin-muted">{partial ? 'Estimado de lo que pedirán los vecinos hasta el cierre. Úsalo para pedir la cotización al mayorista antes del miércoles.' : `La semana cerró: el estimado se equivocó ${error ?? 0} % en promedio frente a lo pedido.`}</p>
+        <ul className="forecast-list">{rows.map((p) => {
+          const top = Math.max(...p.historia.map(num), num(p.estimado), 1);
+          return (
+            <li key={p.id} className={`forecast-row${p.supera_maximo ? ' is-over' : ''}`}>
+              <ProductThumb id={p.id} size={40} />
+              <div className="forecast-name"><strong>{p.nombre}</strong><span>{p.metodo === 'tendencia' ? 'según la tendencia' : 'promedio: poca historia'}</span></div>
+              <div className="forecast-spark" aria-hidden="true">{p.historia.map((h: string, i: number) => <i key={i} style={{ height: `${Math.max(4, (num(h) / top) * 100)}%` }} />)}<i className="is-estimate" style={{ height: `${Math.max(4, (num(p.estimado) / top) * 100)}%` }} /></div>
+              <div className="forecast-figure"><span>Estimado</span><strong>{quantityWithUnit(p.estimado, p.unidad)}</strong></div>
+              <div className="forecast-figure"><span>{partial ? 'Ya pedido' : 'Pedido'}</span><strong>{quantityWithUnit(p.pedido, p.unidad)}</strong></div>
+              {p.supera_maximo ? <span className="forecast-warning">Pide más al mayorista: el catálogo llega a {quantityWithUnit(p.maximo, p.unidad)}</span> : null}
+            </li>
+          );
+        })}</ul>
+      </div>
+    </Card>
+  );
+}
+
 // iteración 55, CP-01..CP-03: el encargado de compras ve qué comprar a cada proveedor y maneja el colchón
 function Incidents({ run, notify }: SectionProps) {
   const { data, reload } = useLoad<Raw>('/api/admin/incidencias', notify);
@@ -703,6 +731,7 @@ function Purchases({ cycle, setCycle, run, notify }: SectionProps) {
         <div className="purchase-stat"><span>Total a pagar</span><strong>{formatMoney(total)}</strong></div>
         <div className="purchase-stat"><span>Estado</span><strong>{partial ? <span className="state-pill">Abierto</span> : <span className="state-pill state-pill--ok">Cerrado</span>}</strong></div>
       </div>
+      {data.prediccion ? <Forecast data={data.prediccion} partial={partial} /> : null}
       {suppliers.length ? suppliers.map((p) => (
         <Card key={p.id} title={p.nombre} aside={<strong className="purchase-total">{formatMoney(num(p.total))}</strong>}>
           <ul className="buy-lines">{p.lineas.map((l: Raw) => <li key={l.producto}><ProductThumb id={l.producto} size={44} /><div><strong>{l.nombre}</strong><span>{formatMoney(num(l.precio))} por {l.unidad}{l.desde !== '0' ? ` · precio desde ${l.desde} ${l.unidad}` : ''}</span></div><div className="buy-line-amount"><strong>{quantityWithUnit(l.cantidad, l.unidad)}</strong><span>{formatMoney(num(l.monto))}</span></div></li>)}</ul>

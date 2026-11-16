@@ -21,6 +21,9 @@ done
 
 [ -d node_modules ] || npm install
 
+# claves locales (por ejemplo YAPA_GROQ_CLAVE) desde .env, que git ignora
+if [ -f .env ]; then set -a; . ./.env; set +a; fi
+
 python3 api/tools/demo_semana.py --puerto "$MOTOR" &
 motor=$!
 trap 'kill "$motor" 2>/dev/null' EXIT

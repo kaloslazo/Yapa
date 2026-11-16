@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 from .. import vision
-from .. import audit, auth, buffer, claims, customers, cycle, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
+from .. import audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -1142,7 +1142,16 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                     if p.category in buffer.NON_PERISHABLE and p.active]  # OC-04, S-329
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "proveedores": suppliers,
                 "parcial": cycle.to_lima(clock()) < cycle.closes_at(cycle_id), "colchon": admin_colchon(environ, data, session),
-                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id)), "guardables": keepable}
+                "compra_real": real, "flete": freight_json(store.freights.get(cycle_id)), "guardables": keepable,
+                "prediccion": forecast_json(forecast.forecast(store, cycle_id, clock()))}  # PD-01
+
+    def forecast_json(f: dict) -> dict:
+        """PD-01..PD-04: cantidades como texto, igual que el resto de la API."""
+        products = [p | {"historia": [qty(q) for q in p["historia"]], "estimado": qty(p["estimado"]),
+                         "pedido": qty(p["pedido"]), "maximo": qty(p["maximo"])} for p in f["productos"]]
+        zones = [z | {"productos": [p | {"estimado": qty(p["estimado"])} for p in z["productos"]]} for z in f["zonas"]]
+        return f | {"productos": products, "zonas": zones,
+                    "error_medio": None if f["error_medio"] is None else f"{f['error_medio']}"}
 
     def freight_json(f) -> dict | None:
         return {"empresa": f.company, "monto": money(f.amount)} if f else None

@@ -49,6 +49,7 @@ class InMemoryStore:
         self.freights: dict = {}  # flete de compra: ciclo -> empresa y monto (iteración 58, S-306)
         self.dispatches: dict = {}  # salida a reparto: (ciclo, zona) -> salida (S-308)
         self.ia_usage: dict = {}  # sugerencias de IA por vecino y día: "cliente:fecha" -> cuántas (S-315)
+        self.demand_history: dict = {}  # historia importada de pedidos: (ciclo, zona, producto) -> cantidad (S-343)
         self._next_claim_id = 1
         self._next_zone_number = 1
         self._next_merge_id = 1
