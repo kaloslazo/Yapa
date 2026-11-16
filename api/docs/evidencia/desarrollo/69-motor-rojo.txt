@@ -1,0 +1,5 @@
+    from yapa_sdd import ia, partners, quote_reader
+ImportError: cannot import name 'quote_reader' from 'yapa_sdd' (/Users/kalosroots/personal/yapa/api/src/yapa_sdd/__init__.py)
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+FAILED (errors=1)

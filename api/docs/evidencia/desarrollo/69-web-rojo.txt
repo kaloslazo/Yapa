@@ -1,0 +1,3 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/components/cotizacionIa.test.ts > LP-K · leer la cotización con IA llena el borrador > actualiza lo que ya vende, agrega lo nuevo y queda como borrador sin enviar
+      Tests  1 failed (1)
