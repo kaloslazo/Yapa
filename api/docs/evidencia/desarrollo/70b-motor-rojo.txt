@@ -1,0 +1,8 @@
+ERROR: test_as_m_low_reasoning_and_rules_for_gpt_oss (test_asistente_70.AssistantFixesTests.test_as_m_low_reasoning_and_rules_for_gpt_oss)
+    self.assertEqual(fake.enviados[0]["reasoning_effort"], "low")
+KeyError: 'reasoning_effort'
+FAIL: test_as_l_last_saving_is_the_latest_week (test_asistente_70.AssistantFixesTests.test_as_l_last_saving_is_the_latest_week)
+    self.assertIn(f"pedido {self.first.order_id}", text)
+AssertionError: 'pedido 1' not found in 'En tu pedido 9 pagaste S/ 68.84, costó S/ 68.84 y te devolvimos S/ 1.00. Tu saldo es S/ 0.00 y lo puedes usar en tu próximo pedido.'
+Ran 12 tests in 0.009s
+FAILED (failures=1, errors=1)
