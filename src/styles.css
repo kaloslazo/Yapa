@@ -2565,3 +2565,24 @@ input[type='file']::file-selector-button:hover { border-color: var(--ink); backg
 .quote-reader-summary { color: var(--accent-dark); font-size: .875rem; font-weight: 600; }
 .quote-reader-error { color: var(--danger); font-size: .875rem; }
 .quote-reader-warnings { margin: 0; padding-left: 18px; color: var(--peach-ink); font-size: .8125rem; }
+
+/* pantallas del equipo de todos los días (proveedor, reparto, portería): mismo tono que el panel, con bordes */
+.partner-topbar { border-bottom: 1px solid var(--edge); background: color-mix(in srgb, var(--canvas) 92%, transparent); backdrop-filter: blur(8px); }
+.partner-card, .partner-empty, .route-stop, .photo-product-review { border: 1px solid var(--edge); box-shadow: var(--lift); }
+.partner-card h2 { display: flex; align-items: center; gap: 8px; }
+.route-stop--entregada, .route-stop--fallida { background: var(--canvas); }
+.route-stop--entregada .route-stop-head h2, .route-stop--fallida .route-stop-head h2 { color: var(--copy); }
+.route-stop--entregada .route-facts div, .route-stop--fallida .route-facts div, .route-stop--entregada .route-orders li, .route-stop--fallida .route-orders li { background: var(--paper); }
+.route-facts div { border: 1px solid var(--edge); background: var(--canvas); }
+.route-orders li { border: 1px solid var(--edge); background: var(--canvas); }
+.partner-week select { border: 1px solid var(--edge-strong); background-color: var(--canvas); }
+.partner-note { border: 1px solid rgba(16, 35, 26, .06); }
+.supplier-product { border-color: var(--edge); background: var(--canvas); }
+.supplier-lines li { border-bottom-color: var(--edge); }
+.photo-product-review { margin: 0; padding: 20px; border-radius: var(--radius-card); background: var(--canvas); }
+.photo-product-review h3 { font-size: 1.15rem; }
+.photo-product-review p { color: var(--muted); font-size: .9rem; }
+.photo-product-row input, .photo-product-row select { border-color: var(--edge-strong); border-radius: var(--radius-field); background: var(--canvas); }
+.partner-note--warn, .route-orders li.is-missing { border-color: #f1c7ae; background: #fff4ec; color: var(--peach-ink); }
+.route-orders li.is-missing span { color: var(--peach-ink); }
+.supplier-product-price { margin-left: auto; }
