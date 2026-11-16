@@ -31,6 +31,10 @@ El motor sigue usando solo la biblioteca estándar, pero el detector de Armado y
 
 Cómo se agrandó (16/11/2026): se detuvo el servicio, se respaldó la base, snapshot `yapa-antes-2gb-20261116`, servidor nuevo `yapa-2gb` desde el snapshot con `small_3_0`, los mismos puertos y la IP fija `yapa-ip` movida al nuevo. El dominio y el secreto `AWS_HOST` no cambian; la llave de host SSH sí (el CI la lee con `ssh-keyscan` en cada despliegue).
 
+## Base poblada para presentar
+
+El 16/11/2026 se reemplazó la base de producción por una poblada con `api/tools/poblar_base.py`: la semana actual (reloj de la demo en el miércoles, con pagos por verificar, la lista del proveedor por aprobar y una incidencia abierta) y 6 semanas de historia liquidadas. Conserva las cuentas, claves y PIN de la base anterior; la anterior quedó en `/opt/yapa/backups/antes-de-poblar-20261116.db`. Para volver: detener `yapa`, copiar ese respaldo sobre `/opt/yapa/data/yapa.db` y arrancar.
+
 ## Armarlo (una sola vez)
 
 1. **Credenciales de la cuenta estudiantil** en un perfil aparte:
