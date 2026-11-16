@@ -584,3 +584,10 @@
 - `ia.AIClient.ask_json` acepta una imagen (base64 en `image_url`) y cada proveedor tiene su modelo de visión.
 - Proveedor: "Leer cotización con IA" arriba del editor de su lista; llena el borrador y el proveedor revisa y envía como siempre (PV-01..PV-03 sin cambios).
 - Probado con la clave real de Groq: foto en 1.8 s, mensaje en 2.2 s.
+
+## Iteración 70 · Asistente de compra (16/11/2026)
+
+- Spec: `70-asistente-de-compra.md` (S-351..S-354). Origen: la propuesta pide un chatbot con IA para consultar estado del pedido, precios, ahorro y ventana de entrega.
+- Motor: `assistant.py` responde pedido, entrega, ahorro, precio y grupo con los datos del vecino (sin IA); lo demás va a Groq con el contexto de ese vecino, 300 tokens y 10 por día. `POST /api/asistente` solo para vecinos. `ask_json` acepta `max_tokens`.
+- Web: "¿Te ayudamos?" manda lo que se escribe al asistente y muestra la respuesta con "Con tus datos" o "Con IA"; sin sesión, sigue con las preguntas frecuentes.
+- Demo: 5 semanas reales antes de la liquidada (pedidos, compra, bolsas, reparto, liquidación, un grupo que no llega y un reclamo aprobado), para que la app se vea con semanas de uso. Documentado en `docs/ia-en-el-proceso.md`.

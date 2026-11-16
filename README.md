@@ -4,9 +4,13 @@ Compras grupales semanales entre vecinos de Lince, Jesús María y La Victoria: 
 
 En producción en [holayapa.app](https://holayapa.app). Equipo: Carlos Bravo, Aaron Gonzales y Kalos Lazo. Se desarrolla con **Specification-Driven Development (SDD)**: cada regla del negocio tiene su spec, su prueba y su código.
 
-## Ayuda con preguntas frecuentes
+## IA en Yapa
 
-Esta rama añade «¿Te ayudamos?»: temas, buscador y respuestas preparadas, sin LLM ni configuración adicional en AWS. [Funcionamiento, capturas y pruebas](docs/chatbot-faq/README.md).
+Ruta del reparto con mapa, predicción de demanda, asistente de compra, lectura de la cotización del proveedor, "Arma mi canasta", ayuda para atención y revisión de bolsas por foto; y cómo usamos IA para construirlo (SDD con pruebas antes del código). Todo con nivel gratuito salvo el servidor del detector. Ver [docs/ia-en-el-proceso.md](docs/ia-en-el-proceso.md). Para el video: [docs/guia-demo-video.md](docs/guia-demo-video.md).
+
+## Ayuda y asistente de compra
+
+«¿Te ayudamos?» responde con los datos del vecino (estado del pedido, entrega, ahorro, precios y avance del grupo) y usa IA solo para lo demás (iteración 70); sin sesión muestra las preguntas frecuentes. [Preguntas frecuentes, capturas y pruebas](docs/chatbot-faq/README.md).
 
 ## Cómo está armado
 
