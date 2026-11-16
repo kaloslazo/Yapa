@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { api } from '../services/api';
 import type { Account } from '../types';
 import { PhotoProductReview } from './PhotoProductReview';
 import { formatMoney, quantityWithUnit } from '../utils/format';
 import { weekLabel } from '../utils/week';
 import { Icon } from './Icon';
+import { RollingNumber, spotlight } from './motion';
 import { PhotoForm } from './PhotoForm';
 import { ProductThumb } from './ProductThumb';
 import { ReceptionCard } from './ReceptionCard';
@@ -46,6 +47,19 @@ function WeekSelect({ cycles, value, onChange }: { cycles: string[]; value: stri
   return <label className="partner-week"><span className="sr-only">Semana</span><select value={value} onChange={(event) => onChange(event.target.value)}>{cycles.map((c) => <option key={c} value={c}>{weekLabel(c)}</option>)}</select></label>;
 }
 
+interface HeroStat { label: string; value: string; hint?: string }
+// cabecera de cada pantalla del equipo: saludo, semana y cifras que ruedan al entrar (RollingNumber, react bits)
+function PartnerHero({ kicker, title, stats, progress, children }: { kicker: string; title: string; stats: HeroStat[]; progress?: number; children?: ReactNode }) {
+  return (
+    <section className="partner-head partner-hero">
+      <span className="partner-hero-aurora" aria-hidden="true" />
+      <div className="partner-hero-copy"><span className="partner-hero-kicker">{kicker}</span><h1>{title}</h1>{children}</div>
+      {stats.length ? <dl className="partner-stats">{stats.map((s) => <div key={s.label}><dt>{s.label}</dt><dd><RollingNumber value={s.value} /></dd>{s.hint ? <small>{s.hint}</small> : null}</div>)}</dl> : null}
+      {progress !== undefined ? <div className="partner-hero-progress" role="presentation"><span style={{ transform: `scaleX(${Math.max(0, Math.min(1, progress))})` }} /></div> : null}
+    </section>
+  );
+}
+
 const SCREENS: Record<string, string> = { transportista: 'reparto', proveedor: 'proveedores', porteria: 'portería' };
 
 export function PartnerPanel({ account, notify, onLogout }: PartnerPanelProps) {
@@ -55,7 +69,7 @@ export function PartnerPanel({ account, notify, onLogout }: PartnerPanelProps) {
         <div className="partner-brand"><img src="/images/brand/yapa-mark.webp" alt="" width="192" height="192" /><span>yapa</span><small>{SCREENS[account.role]}</small></div>
         <button className="partner-logout" type="button" onClick={onLogout}><Icon name="signout" size={18} />Salir</button>
       </header>
-      <main className="partner-main" id="contenido">
+      <main className="partner-main" id="contenido" onPointerMove={spotlight}>
         {account.role === 'transportista' ? <DriverRoute name={account.name} notify={notify} /> : account.role === 'porteria' ? <ConciergeHome name={account.name} notify={notify} /> : <SupplierHome notify={notify} />}
       </main>
     </div>
@@ -85,11 +99,11 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
   };
   return (
     <>
-      <section className="partner-head">
-        <h1>Hola, {name.split(' ')[0]}</h1>
+      <PartnerHero kicker="Tu ruta de la semana" title={`Hola, ${name.split(' ')[0]}`} progress={stops.length ? done / stops.length : undefined}
+        stats={stops.length ? [{ label: 'Paradas', value: String(stops.length) }, { label: 'Pedidos', value: String(stops.reduce((n, s) => n + s.pedidos.length, 0)) }, { label: 'Bolsas', value: String(stops.reduce((n, s) => n + s.pedidos.reduce((b: number, o: Raw) => b + o.bolsas, 0), 0)) }] : []}>
         <WeekSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} />
         {stops.length ? <p className="partner-progress"><strong>{done} de {stops.length}</strong> paradas listas</p> : null}
-      </section>
+      </PartnerHero>
       {!data.cerrado && stops.length ? <p className="partner-note"><Icon name="calendar" size={18} />Los pedidos cierran el miércoles a las 8 p. m. Las paradas pueden cambiar hasta entonces.</p> : null}
       {stops.length ? <RoutePlanner key={data.ciclo} stops={data.paradas} active={Boolean(routeIds)} onOrder={setRouteIds} /> : null}
       {stops.length ? <ol className="stop-route">{stops.map((stop, index) => {
@@ -97,7 +111,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
         const unpacked = stop.pedidos.filter((o: Raw) => o.bolsas === 0).length;
         const bags = stop.pedidos.reduce((sum: number, o: Raw) => sum + o.bolsas, 0);
         return (
-          <li key={zone.id} className={`route-stop route-stop--${stop.estado}`}>
+          <li key={zone.id} className={`route-stop route-stop--${stop.estado}`} style={{ '--i': index } as CSSProperties}>
             <div className="route-stop-head">
               <span className="route-stop-number" aria-hidden="true">{stop.estado === 'entregada' ? <Icon name="check" size={16} /> : index + 1}</span>
               <div><h2>{zone.nombre}</h2><p>{zone.distrito}</p></div>
@@ -181,11 +195,11 @@ function ConciergeHome({ name, notify }: { name: string; notify: Notify }) {
   };
   return (
     <>
-      <section className="partner-head">
-        <h1>Hola, {name.split(' ')[0]}</h1>
+      <PartnerHero kicker="Portería" title={`Hola, ${name.split(' ')[0]}`}
+        stats={[{ label: 'Pedidos', value: String(data.pedidos.length) }, { label: 'Bolsas', value: String(data.pedidos.reduce((n: number, o: Raw) => n + o.bolsas, 0)) }]}>
         <p className="partner-building"><Icon name="building" size={18} />{data.zona.nombre}</p>
         <WeekSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} />
-      </section>
+      </PartnerHero>
       <div className="concierge-filters">
         <label className="checkout-field"><span>Filtrar por estado</span><select value={status} onChange={e => setStatus(e.target.value)}><option value="todos">Todos los estados</option>{Object.entries(RECEPTION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <button className="secondary-button" type="button" onClick={() => void reload()}>Actualizar</button>
@@ -221,10 +235,10 @@ function SupplierHome({ notify }: { notify: Notify }) {
   };
   return (
     <>
-      <section className="partner-head">
-        <h1>{data.proveedor.nombre}</h1>
+      <PartnerHero kicker="Proveedor aliado" title={data.proveedor.nombre}
+        stats={[{ label: 'Productos', value: String(order.lineas.length) }, { label: 'Total a tu precio', value: formatMoney(Number(order.total)) }]}>
         <WeekSelect cycles={data.ciclos} value={order.ciclo} onChange={setCycle} />
-      </section>
+      </PartnerHero>
       <section className="partner-card" aria-labelledby="pedido-title">
         <h2 id="pedido-title">Lo que te compramos</h2>
         {order.parcial ? <p className="partner-note"><Icon name="calendar" size={18} />Parcial: los pedidos cierran el miércoles a las 8 p. m.</p> : null}

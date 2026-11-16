@@ -39,3 +39,14 @@ export function RollingNumber({ value, className = '' }: { value: string; classN
   );
 }
 const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+const SPOTLIGHT = '.partner-card, .route-stop, .route-planner, .photo-product-review, .partner-empty';
+// spotlight card (react bits): el brillo sigue al puntero dentro de la tarjeta que se toca; un solo oyente por pantalla
+export function spotlight(event: React.PointerEvent<HTMLElement>) {
+  if (event.pointerType !== 'mouse') return;
+  const card = (event.target as HTMLElement).closest<HTMLElement>(SPOTLIGHT);
+  if (!card) return;
+  const box = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${event.clientX - box.left}px`);
+  card.style.setProperty('--my', `${event.clientY - box.top}px`);
+}
