@@ -1,0 +1,6 @@
+     × muestra el estimado, lo ya pedido y el aviso cuando supera el máximo 27ms
+     × con la semana cerrada muestra cuánto se equivocó 6ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/components/prediccion.test.ts > PD-K · lo que se viene en Compra de la semana > muestra el estimado, lo ya pedido y el aviso cuando supera el máximo
+ FAIL  src/components/prediccion.test.ts > PD-K · lo que se viene en Compra de la semana > con la semana cerrada muestra cuánto se equivocó
+      Tests  2 failed (2)
