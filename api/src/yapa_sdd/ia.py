@@ -63,7 +63,8 @@ class AIClient:
         self.post = post
         self.timeout = timeout
 
-    def ask_json(self, system: str, user: str, image: tuple[str, bytes] | None = None) -> tuple[dict, str]:
+    def ask_json(self, system: str, user: str, image: tuple[str, bytes] | None = None,
+                 max_tokens: int | None = None) -> tuple[dict, str]:
         """IA-04: el principal y, si falla, el respaldo. Devuelve el JSON y el nombre del proveedor que respondió.
         Con `image` (tipo y bytes), la foto va como image_url en base64 al modelo de visión (S-345)."""
         content = user
@@ -75,6 +76,10 @@ class AIClient:
             model = (provider.vision_model or provider.model) if image is not None else provider.model
             body = {"model": model, "temperature": 0.2, "response_format": {"type": "json_object"},
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]}
+            if max_tokens:
+                body["max_tokens"] = max_tokens  # S-352: respuestas cortas gastan menos cupo
+            if model.startswith("openai/gpt-oss"):
+                body["reasoning_effort"] = "low"  # S-355: si razona mucho se queda sin tokens para responder
             headers = {"Authorization": f"Bearer {provider.key}", "Content-Type": "application/json",
                        "User-Agent": "yapa"}
             try:

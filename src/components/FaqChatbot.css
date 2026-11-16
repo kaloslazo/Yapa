@@ -57,3 +57,12 @@
   .faq-chat-launcher-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .faq-chat-launcher-icon { width: 44px; height: 44px; }
 }
+.faq-chat-send { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--deep); color: #fff; cursor: pointer; transition: transform .2s var(--ease), opacity .2s ease; }
+.faq-chat-send:disabled { opacity: .35; cursor: default; }
+.faq-chat-send:not(:disabled):hover { transform: translateX(2px); }
+.faq-bubble-tag { display: block; margin-top: 6px; color: var(--accent-dark); font-size: .7rem; font-weight: 700; letter-spacing: .02em; }
+.faq-typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+.faq-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: faq-dot 1s ease-in-out infinite; }
+.faq-typing i:nth-child(2) { animation-delay: .15s; }
+.faq-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes faq-dot { 50% { opacity: .3; transform: translateY(-3px); } }

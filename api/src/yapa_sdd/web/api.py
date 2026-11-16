@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs
 
 from .. import quote_reader, vision
-from .. import audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
+from .. import assistant, audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
 from ..catalog import deactivate_product, export_catalog, parse_catalog, publish_catalog
@@ -1102,6 +1102,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "lista_actual": export_catalog(p for p in store.catalog_for(cycle.add_weeks(current, 1)).values()
                                                if p.supplier_id == supplier_id)}
 
+    def asistente(environ, data, session):
+        """AS-01..AS-05: el asistente de compra responde con los datos de este vecino."""
+        customer = store.customers[session["principal"]]
+        return assistant.answer(store, ai, customer.customer_id, data.get("pregunta"), clock(),
+                                group_progress(store.zones[customer.zone_id]))
+
     def proveedor_lista_leer(environ, data, session):
         """LP-01..LP-06: la cotización (foto o texto) como borrador de la lista; no guarda nada."""
         result = quote_reader.read_quote(store, ai, session["principal"], text=data.get("texto", ""),
@@ -1336,6 +1342,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/proveedor", {"GET": (proveedor, partners.SUPPLIER)}),
         (r"/api/proveedor/propuestas", {"POST": (proveedor_propuesta, partners.SUPPLIER)}),
         (r"/api/proveedor/lista/leer", {"POST": (proveedor_lista_leer, partners.SUPPLIER)}),  # LP-01
+        (r"/api/asistente", {"POST": (asistente, "vecino")}),  # AS-01
         (r"/api/compras", {"GET": (compras, BUYING)}),
         (r"/api/compras/colchon", {"POST": (compras_colchon, BUYING)}),
         (r"/api/compras/colchon/usar", {"POST": (compras_colchon_usar, BUYING)}),
