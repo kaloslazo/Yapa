@@ -55,6 +55,23 @@ ${DOMINIO}, www.${DOMINIO} {
 }
 CADDY
 
+# detector de productos por foto (YOLO, iteración 63 de Aaron): torch CPU y ultralytics en un entorno aparte.
+# Necesita el plan small_3_0 (2 GB): el modelo usa ~540 MB y en 512 MB tumbaría al motor.
+if [ "${VISION:-1}" = 1 ]; then
+  apt-get install -y -q python3-venv libgl1 libglib2.0-0t64
+  [ -x /opt/yapa/venv/bin/python ] || python3 -m venv /opt/yapa/venv
+  /opt/yapa/venv/bin/pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
+  /opt/yapa/venv/bin/pip install -q ultralytics==8.4.211  # igual que api/requirements-vision.txt
+  mkdir -p /etc/systemd/system/yapa.service.d
+  cat > /etc/systemd/system/yapa.service.d/vision.conf <<'UNIT'
+# detector de productos (YOLO): el motor corre con el Python del entorno que tiene torch y ultralytics
+[Service]
+Environment=YOLO_CONFIG_DIR=/opt/yapa/data/.ultralytics MPLCONFIGDIR=/opt/yapa/data/.matplotlib YOLO_OFFLINE=1
+ExecStart=
+ExecStart=/opt/yapa/venv/bin/python -m yapa_sdd.web --base /opt/yapa/data/yapa.db --sembrar-demo --puerto 8000 --estaticos /opt/yapa/current/dist
+UNIT
+fi
+
 systemctl daemon-reload
 systemctl enable yapa caddy
 systemctl restart caddy

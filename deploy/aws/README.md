@@ -6,12 +6,12 @@ Reemplaza a la VPS con runner propio (`deploy/vps/`, iteración 52). Todo es sim
 
 | Pieza | Qué es | Costo al mes |
 |---|---|---|
-| Servidor | Lightsail `nano_3_0`: Ubuntu 24.04, 512 MB, 2 vCPU, 20 GB SSD, 1 TB de tráfico | USD 5 |
+| Servidor | Lightsail `small_3_0`: Ubuntu 24.04, 2 GB, 2 vCPU, 60 GB SSD, 3 TB de tráfico (desde el 16/11/2026; antes `nano_3_0` de 512 MB) | USD 12 |
 | IP fija | IP estática de Lightsail, incluida mientras esté conectada al servidor | USD 0 |
 | HTTPS | Caddy con certificado gratis de Let's Encrypt, que se renueva solo | USD 0 |
 | Base y fotos | SQLite y la carpeta `fotos/` en el disco del servidor, con respaldo en cada despliegue | USD 0 |
 | Pruebas y build | GitHub Actions (como hoy) | USD 0 |
-| **Total** | | **≈ USD 5: USD 100 alcanzan para unos 20 meses** |
+| **Total** | | **≈ USD 12: USD 100 alcanzan para unos 8 meses** |
 
 Por qué así y no otra cosa:
 
@@ -24,6 +24,12 @@ GitHub (push a main) ─ pruebas motor y web ─ paquete ─ scp/ssh ─► Ligh
                                                                    ├─ Caddy :443 (holayapa.app) ─► motor 127.0.0.1:8000
                                                                    └─ /opt/yapa/data: yapa.db y fotos (no se tocan al desplegar)
 ```
+
+## Detector de productos por foto (YOLO)
+
+El motor sigue usando solo la biblioteca estándar, pero el detector de Armado y Proveedor necesita torch y ultralytics. `servidor.sh` los instala en `/opt/yapa/venv` y agrega `/etc/systemd/system/yapa.service.d/vision.conf` para que el servicio use ese Python (con `VISION=0` no se instala). El modelo (`api/src/yapa_sdd/modelos/vegetable4-v8s.pt`) llega con cada despliegue. Medido en el servidor: ~540 MB de RAM con el modelo cargado; la primera foto tarda ~10 s y las siguientes ~0,3 s. Por eso el servidor pasó de 512 MB a 2 GB: con 512 MB, el sistema mataría al motor.
+
+Cómo se agrandó (16/11/2026): se detuvo el servicio, se respaldó la base, snapshot `yapa-antes-2gb-20261116`, servidor nuevo `yapa-2gb` desde el snapshot con `small_3_0`, los mismos puertos y la IP fija `yapa-ip` movida al nuevo. El dominio y el secreto `AWS_HOST` no cambian; la llave de host SSH sí (el CI la lee con `ssh-keyscan` en cada despliegue).
 
 ## Armarlo (una sola vez)
 
