@@ -576,3 +576,11 @@
 - Panel: tarjeta "Lo que se viene esta semana" en Compra de la semana, con barras de la historia y aviso "Pide más al mayorista".
 - Sin costo: no usa servicios externos ni claves.
 - De paso, pulido del panel y la tienda: bordes sencillos en tarjetas, KPIs, grupos y fotos de producto, y botón de archivo con estilo en vez del nativo.
+
+## Iteración 69 · La cotización del proveedor leída con IA (16/11/2026)
+
+- Spec: `69-lista-del-proveedor-con-ia.md` (S-345..S-350). Origen: la propuesta del curso pide procesar con IA las cotizaciones del mayorista (imágenes o listas) para actualizar precios rápido.
+- Motor: `quote_reader.py` lee la foto (modelo de visión de Groq, `qwen/qwen3.8-27b`, con GitHub Models de respaldo) o el mensaje, y devuelve el borrador validado contra la lista del proveedor: conserva código, categoría, unidad y paso de lo que ya vende, crea código para lo nuevo, descarta lo ajeno y los precios inválidos con aviso. Sin IA, el texto se lee con reglas. `POST /api/proveedor/lista/leer` no guarda nada.
+- `ia.AIClient.ask_json` acepta una imagen (base64 en `image_url`) y cada proveedor tiene su modelo de visión.
+- Proveedor: "Leer cotización con IA" arriba del editor de su lista; llena el borrador y el proveedor revisa y envía como siempre (PV-01..PV-03 sin cambios).
+- Probado con la clave real de Groq: foto en 1.8 s, mensaje en 2.2 s.

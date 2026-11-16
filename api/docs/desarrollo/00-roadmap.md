@@ -83,6 +83,7 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 66 | **Ver la foto que se toma** (vista previa antes de enviar, miniaturas de las bolsas en el armado) | revisión del 12/11 | completa, ver `66-ver-la-foto.md` |
 | 67 | **Cantidades con su unidad** (5 kg o 2 unidades en armado, pedido y reclamos) | revisión del 12/11 | completa, ver `67-cantidades-con-unidad.md` |
 | 68 | **Predicción de demanda** (regresión sobre 8 semanas por zona, estimado y aviso para cotizar con el mayorista) | propuesta de IA del curso, 16/11 | completa, ver `68-prediccion-de-demanda.md` |
+| 69 | **La cotización del proveedor leída con IA** (foto o mensaje → borrador de su lista, con reglas si no hay IA) | propuesta de IA del curso, 16/11 | completa, ver `69-lista-del-proveedor-con-ia.md` |
 | 50 | **Endurecimiento antes de abrir** (tope del cuerpo fuera del cerrojo, fotos solo donde se usan y con tipo real, cambiar el PIN cierra las sesiones, "ver como" sin sacar dinero, CI en la raíz) | revisión de seguridad 21/10 | completa, ver `50-endurecimiento-antes-de-abrir.md` |
 | 51 | **Cierre de huecos para pasar a `main`** (límites por dirección, zonas públicas sin contacto, correo apagado sin SMTP en servidor, CSP y HSTS, sesiones vencidas, semana en palabras, panel y mapa bajo demanda) | revisión de seguridad 21/10 | completa, ver `51-cierre-de-huecos-para-main.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |
