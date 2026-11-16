@@ -15,7 +15,6 @@
 .faq-chat-panel { position: absolute; right: 0; bottom: 60px; display: flex; flex-direction: column; width: min(390px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 170px)); overflow: hidden; border: 1px solid var(--edge, #e1e6e3); border-radius: 24px; background: var(--canvas); color: var(--ink); box-shadow: 0 30px 60px -20px rgba(16, 35, 26, .35); transform-origin: bottom right; animation: faq-open .35s var(--ease) both; }
 @keyframes faq-open { from { opacity: 0; transform: translateY(12px) scale(.96); } }
 .faq-chat-header { position: relative; display: flex; align-items: center; gap: 12px; padding: 16px; overflow: hidden; isolation: isolate; background: var(--deep); color: #fff; }
-.faq-chat-header::before { content: ''; position: absolute; inset: -60%; z-index: -1; background: radial-gradient(40% 50% at 25% 40%, rgba(7, 172, 107, .55), transparent 70%), radial-gradient(35% 45% at 85% 30%, rgba(242, 201, 76, .25), transparent 70%); filter: blur(24px); animation: aurora 14s ease-in-out infinite alternate; }
 .faq-chat-avatar { display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden; border-radius: 50%; background: #fff; }
 .faq-chat-avatar img { width: 30px; height: 30px; }
 .faq-chat-header h2 { margin: 0; font-size: 1.05rem; color: #fff; }
@@ -51,7 +50,7 @@
 .faq-chat-composer input:focus { border-color: var(--accent); background: var(--canvas); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
 .faq-chat :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-  .faq-chat-panel, .faq-bubble, .faq-chat-results li, .faq-chat-header::before, .faq-chat-launcher-icon::after { animation: none !important; }
+  .faq-chat-panel, .faq-bubble, .faq-chat-results li, .faq-chat-launcher-icon::after { animation: none !important; }
 }
 @media (max-width: 560px) {
   .faq-chat-launcher { padding: 6px; }

@@ -52,7 +52,6 @@ interface HeroStat { label: string; value: string; hint?: string }
 function PartnerHero({ kicker, title, stats, progress, children }: { kicker: string; title: string; stats: HeroStat[]; progress?: number; children?: ReactNode }) {
   return (
     <section className="partner-head partner-hero">
-      <span className="partner-hero-aurora" aria-hidden="true" />
       <div className="partner-hero-copy"><span className="partner-hero-kicker">{kicker}</span><h1>{title}</h1>{children}</div>
       {stats.length ? <dl className="partner-stats">{stats.map((s) => <div key={s.label}><dt>{s.label}</dt><dd><RollingNumber value={s.value} /></dd>{s.hint ? <small>{s.hint}</small> : null}</div>)}</dl> : null}
       {progress !== undefined ? <div className="partner-hero-progress" role="presentation"><span style={{ transform: `scaleX(${Math.max(0, Math.min(1, progress))})` }} /></div> : null}
