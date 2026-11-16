@@ -40,6 +40,7 @@ cat <<FIN
                        atencion-demo / atencion-yapa-2026 · porteria-demo / porteria-yapa-2026
                        reparto-demo / reparto-yapa-2026 · frescos-demo / frescos-yapa-2026 (proveedor)
   Todo vive en memoria: Ctrl+C y vuelve a correrlo para empezar de cero.
+  Qué mostrar en cada módulo: docs/guia-demo-video.md
 
 FIN
 

@@ -20,9 +20,12 @@ from wsgiref.simple_server import make_server
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from yapa_sdd import ia, invitations  # noqa: E402
+from yapa_sdd import catalog, customers, ia, incidents, invitations, supplier_offers  # noqa: E402
+from yapa_sdd.cycle import add_weeks  # noqa: E402
+from yapa_sdd.domain import Customer  # noqa: E402
+from yapa_sdd.order_registration import verify_payment  # noqa: E402
 from yapa_sdd.cycle import LIMA, cycle_id, is_open  # noqa: E402
-from yapa_sdd.demo import _order, demo_store  # noqa: E402
+from yapa_sdd.demo import BASKETS, _order, demo_store  # noqa: E402
 from yapa_sdd.google_identity import google_from_env  # noqa: E402
 from yapa_sdd.mailer import mailer_from_env  # noqa: E402
 from yapa_sdd.web import produccion  # noqa: E402
@@ -78,14 +81,68 @@ def con_reloj(app, reloj: dict, base: datetime):
     return wrapped
 
 
-def armar(now: datetime, credenciales: bool = True):
-    """La semana de demo de `now` (la anterior liquidada, esta abierta) con los dos pedidos de lejía."""
+# vecinos de prueba para que la semana tenga varios edificios que llegan al mínimo (y una ruta de verdad)
+VECINOS_EXTRA = {
+    "Z-LINCE-02": ["Gloria Huerta", "Óscar Linares", "Patricia Cueva"],
+    "Z-JM-01": ["Hugo Benavides", "Silvia Ponce", "Andrés Tello", "Karina Soto", "Mario Gálvez", "Nora Villa"],
+    "Z-LINCE-03": ["Iván Ríos", "Lorena Campos", "Fabio Ortiz", "Celia Muñoz", "Diego Arce", "Vilma Rojas", "Ernesto Paz", "Rubén Salas"],
+}
+SIN_VERIFICAR = {"Z-LINCE-02"}
+RECIBEN = {"Z-LINCE-02": "Conserje Las Palmeras", "Z-JM-01": "Recepción San Felipe", "Z-LINCE-03": "Portería Arenales"}  # quedan pagos por verificar para mostrarlo en el Resumen
+
+
+def armar(now: datetime, credenciales: bool = True, completa: bool = True):
+    """La semana de demo de `now` (la anterior liquidada, esta abierta) con los dos pedidos de lejía.
+    Con `completa`, también la semana poblada para probar cada módulo (ver `poblar`)."""
     store = demo_store(now)
     if credenciales:
         _demo_credentials(store)
     for customer_id, basket in PEDIDOS_EXTRA.items():
         _order(store, customer_id, basket, store.demo_now)
+    if completa:
+        poblar(store, credenciales)
     return store
+
+
+def poblar(store, credenciales: bool) -> None:
+    """Datos de prueba para el video: más edificios que llegan al mínimo (compras, armado, reparto con mapa y portería),
+    pagos por verificar, la lista del proveedor esperando aprobación, una incidencia abierta y un pedido de PIN."""
+    ahora = store.demo_now
+    for zona, contacto in RECIBEN.items():  # cada edificio con quién recibe, para que el reparto pueda entregar
+        z = store.zones[zona]
+        z.reception_kind, z.reception_contact = z.reception_kind or "PORTERIA", z.reception_contact or contacto
+    numero = max(store.customers) + 1
+    for zona, nombres in VECINOS_EXTRA.items():
+        z = store.zones[zona]
+        for i, nombre in enumerate(nombres):
+            store.add_customer(Customer(numero, nombre, zona, lat=z.lat, lon=z.lon))
+            orden = _order(store, numero, BASKETS[(numero + i) % len(BASKETS)], ahora)
+            if zona not in SIN_VERIFICAR or i == 0:
+                verify_payment(store, orden.order_id, now=ahora)
+            numero += 1
+    for orden in store.orders_in_cycle(cycle_id(ahora)):  # San Felipe: los dos vecinos que ya tenía también pagan
+        if orden.zone_id == "Z-JM-01" and orden.payment_status != "VERIFICADO":
+            verify_payment(store, orden.order_id, now=ahora)
+    for cliente in (113, 114):
+        if store.find_order(cliente, cycle_id(ahora)) is None:
+            orden = _order(store, cliente, BASKETS[cliente % len(BASKETS)], ahora)
+            verify_payment(store, orden.order_id, now=ahora)
+    if not credenciales:
+        return
+    proveedor = "frescos-demo"
+    proxima = add_weeks(cycle_id(ahora), 1)
+    lista = catalog.export_catalog(p for p in store.catalog_for(proxima).values() if p.supplier_id == "SUP-FRESCOS")
+    lista = lista.replace(",3.60", ",3.40").replace(",1.90", ",1.80")  # baja dos precios: el admin lo ve en Propuestas
+    try:
+        supplier_offers.submit_offer(store, proxima, lista, by=proveedor, now=ahora)
+    except Exception as error:  # la demo sigue aunque cambie el catálogo
+        print(f"(demo) sin propuesta del proveedor: {error}")
+    pasada = next((o for o in store.orders.values() if o.cycle == add_weeks(cycle_id(ahora), -1)), None)
+    if pasada is not None:
+        incidents.open_incident(store, pasada.order_id, "ENTREGA",
+                                "La vecina dice que la bolsa llegó con la cebolla suelta; revisar con armado.",
+                                by="atencion-demo", now=ahora)
+    customers.request_pin_help(store, 114, ahora)
 
 
 def fotos_de_la_semilla(store, carpeta: str = "fotos") -> None:

@@ -3,6 +3,8 @@ import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { expect, it, vi } from 'vitest';
 import { RoutePlanner } from './RoutePlanner';
+// el mapa real (Leaflet) no corre en jsdom: se muestra el esquema que es su respaldo
+vi.mock('./LazyRouteMap', () => ({ LazyRouteMap: ({ fallback }: { fallback: unknown }) => fallback }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 it('muestra puntos, advierte coordenadas faltantes y aplica el orden calculado', async () => {
   const host = document.createElement('div'); document.body.append(host); const root = createRoot(host); const apply = vi.fn();
