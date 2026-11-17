@@ -110,7 +110,7 @@ function DriverRoute({ name, notify }: { name: string; notify: Notify }) {
         {stops.length ? <p className="partner-progress"><strong>{done} de {stops.length}</strong> paradas listas</p> : null}
       </PartnerHero>
       {!data.cerrado && stops.length ? <p className="partner-note"><Icon name="calendar" size={18} />Los pedidos cierran el miércoles a las 8 p. m. Las paradas pueden cambiar hasta entonces.</p> : null}
-      {stops.length ? <RoutePlanner key={data.ciclo} stops={data.paradas} active={Boolean(routeIds)} onOrder={setRouteIds} /> : null}
+      {stops.length ? <RoutePlanner cycle={data.ciclo} key={data.ciclo} stops={data.paradas} active={Boolean(routeIds)} onOrder={setRouteIds} /> : null}
       {stops.length ? <ol className="stop-route">{stops.map((stop, index) => {
         const zone = stop.zona;
         const unpacked = stop.pedidos.filter((o: Raw) => o.bolsas === 0).length;
