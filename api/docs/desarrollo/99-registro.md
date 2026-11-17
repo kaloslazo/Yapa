@@ -1,5 +1,11 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 71 · Armado con cámara y revisión unificadas (17/11/2026)
+
+- Spec 71-armado-unificado.md. Captura con detector, correspondencia por SKU, confirmación y baja antes del despacho con auditoría y foto conservada.
+- 768 pruebas motor (4 omitidas), 213 web, TypeScript y build aprobados.
+
+
 ## Iteración 64 · Bolsas con selector y foto individual (13/11/2026)
 
 - Spec: `64-bolsas-con-selector.md`, S-327 y S-328 (a validar por el equipo).
