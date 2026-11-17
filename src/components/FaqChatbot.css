@@ -71,3 +71,4 @@
 .faq-chat-history article { scroll-margin-bottom: 12px; }
 .faq-assistant-option { border: 1px solid var(--edge); padding: 10px 14px; border-radius: 14px; background: white; font: inherit; min-height: 44px; }
 .faq-show-all { margin: 4px 0 12px; }
+.faq-chat-history .faq-bubble { animation: none; }

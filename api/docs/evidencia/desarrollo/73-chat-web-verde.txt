@@ -1,0 +1,54 @@
+$ npm.cmd run typecheck
+
+> yapa@0.1.0 typecheck
+> tsc -b
+
+
+$ npm.cmd test
+
+> yapa@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.5 C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-chatbot-faq
+
+
+ Test Files  39 passed (39)
+      Tests  214 passed (214)
+   Start at  01:10:48
+   Duration  56.61s (import 80%, environment 17%, tests 3%)
+
+    Isolate  39 workers spawned · ~2.00s startup each (spawn + environment, per file)
+             at least ~9.16s faster with isolate: false — reuses workers across files instead of one per file
+
+
+$ npm.cmd run build
+
+> yapa@0.1.0 build
+> vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 4642 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                              1.93 kB │ gzip:   0.74 kB
+dist/assets/urbanist-latin-ext-wght-normal-Bdxck5Au.woff2   16.60 kB
+dist/assets/urbanist-latin-wght-normal-D69JTELx.woff2       27.75 kB
+dist/assets/PhotoProductReview-DkK4LZFE.css                  0.91 kB │ gzip:   0.41 kB
+dist/assets/PartnerPanel-BQTdXgfx.css                        3.26 kB │ gzip:   1.07 kB
+dist/assets/leaflet-CIGW-MKW.css                            15.61 kB │ gzip:   6.46 kB
+dist/assets/index-CSaOm47x.css                             197.83 kB │ gzip:  35.11 kB
+dist/assets/RouteMap-Be00-edt.js                             1.45 kB │ gzip:   0.84 kB
+dist/assets/ZonesMap-vt-tdn5K.js                             2.30 kB │ gzip:   1.24 kB
+dist/assets/PhotoProductReview-BMDhk6mA.js                   3.50 kB │ gzip:   1.64 kB
+dist/assets/PartnerPanel-Dm8FdG7I.js                        29.91 kB │ gzip:  10.29 kB
+dist/assets/AdminPanel-CeNtQC-w.js                          77.91 kB │ gzip:  20.18 kB
+dist/assets/leaflet-DjwTzH8_.js                            149.57 kB │ gzip:  43.30 kB
+dist/assets/index-DUDBHd8f.js                              530.40 kB │ gzip: 150.96 kB
+✓ built in 6.74s
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
