@@ -8,7 +8,7 @@ const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 // mapa real de la ruta sugerida: calles de OpenStreetMap (gratis, ya permitido en la CSP), paradas numeradas y la línea del orden
-export function RouteMap({ points, label }: { points: RoutePoint[]; label: string }) {
+export function RouteMap({ points, label, geometry }: { points: RoutePoint[]; label: string; geometry?: Array<[number, number]> }) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const element = host.current;
@@ -20,9 +20,9 @@ export function RouteMap({ points, label }: { points: RoutePoint[]; label: strin
       L.control.zoom({ position: 'bottomright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(m);
       L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(m);
       L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION, className: 'route-map-tiles' }).addTo(m);
-      const line = points.map((p) => L.latLng(p.lat, p.lon));
+      const line = geometry?.length ? geometry.map(([lon,lat])=>L.latLng(lat,lon)) : points.map((p) => L.latLng(p.lat, p.lon));
       L.polyline(line, { color: '#04301d', weight: 7, opacity: 0.15 }).addTo(m);
-      L.polyline(line, { color: '#0a7d4e', weight: 4, dashArray: '8 8', className: 'route-map-line' }).addTo(m);
+      L.polyline(line, { color: '#0a7d4e', weight: 4, dashArray: geometry?.length ? undefined : '8 8', className: 'route-map-line' }).addTo(m);
       points.forEach((p, i) => {
         const icon = L.divIcon({ className: '', html: `<span class="route-pin${i ? '' : ' is-first'}">${i + 1}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
         L.marker([p.lat, p.lon], { icon, keyboard: false, title: `${i + 1}. ${p.name}` })
@@ -34,6 +34,6 @@ export function RouteMap({ points, label }: { points: RoutePoint[]; label: strin
       map = null;
     }
     return () => { map?.remove(); };
-  }, [points]);
+  }, [points, geometry]);
   return <div className="route-map-real" ref={host} role="img" aria-label={label} />;
 }

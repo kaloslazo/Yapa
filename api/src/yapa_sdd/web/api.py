@@ -15,6 +15,7 @@ from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
+from ..street_routing import street_route
 
 from .. import quote_reader, vision
 from .. import assistant, audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
@@ -1074,6 +1075,17 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                              data.get("monto"), by=session["principal"], now=clock())
         return {"ciclo": freight.cycle, "empresa": freight.company, "monto": money(freight.amount)}
 
+    def reparto_ruta(environ, data, session):
+        week=str(data.get('ciclo',''));cycle.check_cycle_id(week)
+        try:ids=json.loads(data.get('zonas','[]'))
+        except (ValueError,TypeError):raise BusinessRuleError('INVALID_ROUTE','La lista de paradas no es válida.')
+        if not isinstance(ids,list) or not 2<=len(ids)<=25 or not all(isinstance(z,str) for z in ids) or len(set(ids))!=len(ids):
+            raise BusinessRuleError('INVALID_ROUTE','Elige entre 2 y 25 zonas distintas.')
+        allowed={o.zone_id for o in store.orders_in_cycle(week) if fulfillment.is_attended(store,o)}
+        if any(z not in allowed or (week,z) in store.deliveries or (week,z) in store.failed_deliveries for z in ids):
+            raise BusinessRuleError('INVALID_ROUTE','La ruta solo puede incluir zonas pendientes de esta semana.')
+        return street_route([(store.zones[z].lon,store.zones[z].lat) for z in ids])
+
     def reparto_entrega(environ, data, session):
         return admin_entrega(environ, data, session)  # TR-02: mismas reglas; el motor revisa quién entrega
 
@@ -1335,6 +1347,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/propuestas", {"GET": (admin_propuestas, "admin")}),
         (r"/api/admin/propuestas/(\d{4}-W\d{2})/([\w-]+)/aprobar", {"POST": (admin_propuesta_aprobar, "admin")}),
         (r"/api/admin/propuestas/(\d{4}-W\d{2})/([\w-]+)/rechazar", {"POST": (admin_propuesta_rechazar, "admin")}),
+        (r"/api/reparto/ruta", {"POST": (reparto_ruta, ("admin", partners.DRIVER))}),
         (r"/api/reparto", {"GET": (reparto, partners.DRIVER)}),
         (r"/api/reparto/entregas", {"POST": (reparto_entrega, partners.DRIVER)}),
         (r"/api/reparto/salidas", {"POST": (reparto_salida, partners.DRIVER)}),

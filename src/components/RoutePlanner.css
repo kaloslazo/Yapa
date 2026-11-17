@@ -33,3 +33,5 @@
 @media (max-width: 560px) { .route-map-real { height: 240px; } }
 .route-planner-actions .primary-button { flex: 1 1 200px; }
 .route-planner .route-planner-google { flex: 0 1 auto; justify-content: center; width: auto; padding: 0 18px; }
+
+.route-road-tools { padding: 12px 0; border-top: 1px solid var(--edge); }.route-road-tools p { font-size: 14px; line-height: 1.5; }
