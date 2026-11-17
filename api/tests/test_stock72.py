@@ -35,3 +35,18 @@ class Stock72Tests(unittest.TestCase):
   self.confirm([{'id':'AJO','unidades':1,'peso':'1'}])
   with self.assertRaises(BusinessRuleError) as e:self.confirm([{'id':'AJO','unidades':2,'peso':'2'}])
   self.assertEqual(e.exception.code,'STOCK_ALREADY_CONFIRMED')
+
+ def test_api_confirms_and_replays_without_modifying_catalog(self):
+  import json
+  from api_client import ApiClient
+  from yapa_sdd.web.api import create_api
+  app=create_api(self.store,clock=lambda:NOW);client=ApiClient(app)
+  self.assertEqual(client.login('stock-frescos','clave-prueba-2026','proveedor')[0],200)
+  original=self.store.products['AJO'].max_available
+  data={'ciclo':'2026-W39','conteo':json.dumps([{'id':'AJO','unidades':2,'peso':'0.5'}])}
+  photo={'foto_archivo':('x.jpg',b'\xff\xd8\xfffoto-api')}
+  status,first=client.post_file('/api/proveedor/stock/confirmar',data,photo)
+  self.assertEqual(status,200);self.assertEqual(first['productos'][0]['cantidad'],'0.5')
+  status,replay=client.post_file('/api/proveedor/stock/confirmar',data,photo)
+  self.assertTrue(replay['repetida']);self.assertEqual(self.store.products['AJO'].max_available,original)
+  public=ApiClient(app);self.assertEqual(public.get('/api/proveedor/stock?ciclo=2026-W39')[0],401)

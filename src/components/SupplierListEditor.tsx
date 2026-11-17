@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { newSupplierRow, parseSupplierList, serializeSupplierList, validateSupplierRows, type SupplierRow } from '../utils/supplierDraft';
 import { Icon } from './Icon';
 import { ProductThumb } from './ProductThumb';
+import { SupplierStock, type StockTotal } from './SupplierStock';
 
 interface QuoteRow { codigo: string; nombre: string; categoria: string; unidad: string; paso: string; maximo: string; tramos: Array<{ desde: string; precio: string }> }
 interface QuoteRead { filas: QuoteRow[]; nuevos: string[]; avisos: string[]; fuente: 'ia' | 'reglas' }
@@ -40,10 +41,10 @@ function QuoteReader({ disabled, onRead }: { disabled: boolean; onRead: (read: Q
   );
 }
 
-interface Props { initialText: string; busy: boolean; onSubmit: (text: string) => Promise<boolean>; resubmit: boolean }
+interface Props { initialText: string; busy: boolean; onSubmit: (text: string) => Promise<boolean>; resubmit: boolean; cycle?: string }
 
 // Edita un borrador; solo el endpoint existente puede enviarlo para revisión.
-export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Props) {
+export function SupplierListEditor({ initialText, busy, onSubmit, resubmit, cycle }: Props) {
   const [initial] = useState(() => {
     try { return { rows: parseSupplierList(initialText), error: '' }; }
     catch (error) { return { rows: [], error: error instanceof Error ? error.message : 'No se pudo leer la lista.' }; }
@@ -83,9 +84,15 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
     const how = read.fuente === 'ia' ? 'Leído con IA' : 'Leído con reglas simples';
     return updated || added ? `${how}: ${updated} ${updated === 1 ? 'actualizado' : 'actualizados'} y ${added} ${added === 1 ? 'nuevo' : 'nuevos'}. Revisa cada producto antes de enviar.` : `${how}: no encontramos productos con precio. Prueba con otra foto o pega el texto.`;
   };
+  const applyStock = (totals:StockTotal[]) => {
+    const quantities=new Map(totals.map(p=>[p.id,p.disponible]));
+    setRows(current=>current.map(p=>quantities.has(p.row.code)?{...p,row:{...p.row,maximum:quantities.get(p.row.code)!}}:p));
+    if(totals.length)setDirty(true);
+  };
   if (initial.error) return <p role="alert">{initial.error} Conservamos tu lista original. Recarga la página o consulta al equipo antes de editar.</p>;
   return (
     <>
+    {cycle ? <SupplierStock cycle={cycle} candidates={rows.filter(p=>p.row.code).map(p=>({id:p.row.code,name:p.row.name,unit:p.row.unit}))} onApply={applyStock}/> : null}
     <QuoteReader disabled={busy} onRead={fill} />
     <form className="supplier-editor" onSubmit={event => void submit(event)} noValidate>
       <p className="partner-muted">Revisa tu disponibilidad y tus precios por volumen. Los cambios se publican cuando el equipo los aprueba.</p>
@@ -104,14 +111,14 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit }: Pr
                 {field(`Paso de venta (${row.unit === 'kg' ? 'kg' : 'unidades'})`, 'step', true)}{field(`Cantidad disponible (${row.unit === 'kg' ? 'kg' : 'unidades'})`, 'maximum', true)}
               </div>
               <p className="supplier-field-hint">El paso es la cantidad mínima que se puede sumar: por ejemplo, 0.25 kg o 1 unidad.</p>
-              <fieldset className="supplier-tiers"><legend>Precios por volumen</legend>
+              <details className="supplier-volume"><summary>Precios por volumen de {row.name || "este producto"}</summary><fieldset className="supplier-tiers"><legend className="sr-only">Precios por volumen</legend>
                 {row.tiers.map((tier, j) => <div className="supplier-tier" key={j}>
                   <label className="checkout-field"><span>Desde ({row.unit === 'kg' ? 'kg' : 'unidades'})</span><input aria-label={`Desde, tramo ${j + 1}, producto ${index + 1}`} inputMode="decimal" value={tier.from} readOnly={j === 0} onChange={e => change(id, { ...row, tiers: row.tiers.map((t, n) => n === j ? { ...t, from: e.target.value } : t) })} /></label>
                   <label className="checkout-field"><span>Precio por {row.unit === 'kg' ? 'kg' : 'unidad'} (S/)</span><input aria-label={`Precio, tramo ${j + 1}, producto ${index + 1}`} inputMode="decimal" value={tier.price} onChange={e => change(id, { ...row, tiers: row.tiers.map((t, n) => n === j ? { ...t, price: e.target.value } : t) })} /></label>
                   {j > 0 ? <button className="text-button" type="button" aria-label={`Quitar tramo ${j + 1}, producto ${index + 1}`} onClick={() => change(id, { ...row, tiers: row.tiers.filter((_, n) => n !== j) })}>Quitar</button> : <span className="supplier-field-hint">Precio inicial</span>}
                 </div>)}
                 <button className="secondary-button" type="button" onClick={() => change(id, { ...row, tiers: [...row.tiers, { from: '', price: '' }] })}>Añadir precio por volumen</button>
-              </fieldset>
+              </fieldset></details>
               <button className="text-button" type="button" onClick={() => { setRows(all => all.filter(r => r.id !== id)); setDirty(true); }}>Quitar {row.name || 'producto'} del borrador</button>
             </div>
           </details>;

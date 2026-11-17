@@ -6,9 +6,9 @@ import './PhotoProductReview.css';
 
 export type ProductCount = { producto: string; cantidad: number; confianza?: number; codigo?: string; confirmado?: boolean; peso?: string };
 const PRODUCTS = ['papa', 'cebolla', 'ajo', 'zanahoria', 'limon', 'camote', 'otro'];
-export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de referencia', candidates, onMatchesChange, photoLabel = 'Elegir foto para revisar', requireWeight = false }: {
+export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de referencia', candidates, onMatchesChange, photoLabel = 'Elegir foto para revisar', requireWeight = false, title = 'Foto de la bolsa y sus productos' }: {
  onConfirm?: (file: File, products: ProductCount[]) => Promise<boolean>; label?: string; candidates?: PhotoCandidate[];
- onMatchesChange?: (codes: string[]) => void; photoLabel?: string; requireWeight?: boolean;
+ onMatchesChange?: (codes: string[]) => void; photoLabel?: string; requireWeight?: boolean; title?: string;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [products, setProducts] = useState<ProductCount[]>([]);
@@ -42,7 +42,7 @@ export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de ref
     finally { saving.current = false; }
   };
   return <section className="photo-product-review" aria-label="Revisión de productos por foto">
-    <h3>Foto de la bolsa y sus productos</h3>
+    <h3>{title}</h3>
     <p>El detector se activa al elegir la foto. Estima papa, cebolla, ajo y zanahoria; corrige o añade lo que falte. Las unidades visibles no son kilos.</p>
     <label className="photo-field pack-camera"><span>{photoLabel}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={state === 'saving'} onChange={event => void analyze(event.target.files?.[0])} /></label>
     <PhotoPreview src={preview} />
