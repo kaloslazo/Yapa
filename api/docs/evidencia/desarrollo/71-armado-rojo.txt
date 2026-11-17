@@ -1,0 +1,40 @@
+EEEE
+======================================================================
+ERROR: test_cannot_remove_after_dispatch_and_cannot_pack_before_close (test_armado71.Armado71Tests.test_cannot_remove_after_dispatch_and_cannot_pack_before_close)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-modelo-yolo\api\tests\test_armado71.py", line 29, in test_cannot_remove_after_dispatch_and_cannot_pack_before_close
+    with self.assertRaises(BusinessRuleError) as e:fulfillment.remove_bag(self.store,self.order.order_id,bag.number,by='admin-yapa',now=FRIDAY)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'remove_bag'
+
+======================================================================
+ERROR: test_missing_bag_has_clear_error (test_armado71.Armado71Tests.test_missing_bag_has_clear_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-modelo-yolo\api\tests\test_armado71.py", line 34, in test_missing_bag_has_clear_error
+    with self.assertRaises(BusinessRuleError) as e:fulfillment.remove_bag(self.store,self.order.order_id,99,by='admin-yapa',now=FRIDAY)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'remove_bag'
+
+======================================================================
+ERROR: test_rejects_foreign_product_and_invalid_counts_without_bag (test_armado71.Armado71Tests.test_rejects_foreign_product_and_invalid_counts_without_bag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-modelo-yolo\api\tests\test_armado71.py", line 23, in test_rejects_foreign_product_and_invalid_counts_without_bag
+    fulfillment.pack_bag(self.store,self.order.order_id,by='admin-yapa',photo='x.jpg',now=FRIDAY,review=[row])
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: pack_bag() got an unexpected keyword argument 'review'
+
+======================================================================
+ERROR: test_review_survives_persistence_and_removal_keeps_ids (test_armado71.Armado71Tests.test_review_survives_persistence_and_removal_keeps_ids)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-modelo-yolo\api\tests\test_armado71.py", line 12, in test_review_survives_persistence_and_removal_keeps_ids
+    first=fulfillment.pack_bag(self.store,self.order.order_id,by='admin-yapa',photo='uno.jpg',now=FRIDAY,review=[{'id':'PAPA-AMARILLA','unidades':2}])
+TypeError: pack_bag() got an unexpected keyword argument 'review'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.007s
+
+FAILED (errors=4)
