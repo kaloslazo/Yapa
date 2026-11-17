@@ -55,6 +55,7 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit, cycl
   const [expanded, setExpanded] = useState<number[]>(rows.length ? [0] : []);
   const [errors, setErrors] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [stockWarning,setStockWarning]=useState('');
   const change = (id: number, row: SupplierRow) => { setRows(all => all.map(r => r.id === id ? { id, row } : r)); setDirty(true); };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -85,14 +86,17 @@ export function SupplierListEditor({ initialText, busy, onSubmit, resubmit, cycl
     return updated || added ? `${how}: ${updated} ${updated === 1 ? 'actualizado' : 'actualizados'} y ${added} ${added === 1 ? 'nuevo' : 'nuevos'}. Revisa cada producto antes de enviar.` : `${how}: no encontramos productos con precio. Prueba con otra foto o pega el texto.`;
   };
   const applyStock = (totals:StockTotal[]) => {
-    const quantities=new Map(totals.map(p=>[p.id,p.disponible]));
-    setRows(current=>current.map(p=>quantities.has(p.row.code)?{...p,row:{...p.row,maximum:quantities.get(p.row.code)!}}:p));
+    const quantities=new Map(totals.map(p=>[p.id,p]));
+    const incompatible=rows.filter(p=>quantities.has(p.row.code)&&quantities.get(p.row.code)!.unidad!==p.row.unit);
+    setStockWarning(incompatible.length?'Hay productos con una unidad distinta en el borrador. Sus cantidades no se aplicaron: revisa la unidad antes de enviar.':'');
+    setRows(current=>current.map(p=>quantities.get(p.row.code)?.unidad===p.row.unit?{...p,row:{...p.row,maximum:quantities.get(p.row.code)!.disponible}}:p));
     if(totals.length)setDirty(true);
   };
   if (initial.error) return <p role="alert">{initial.error} Conservamos tu lista original. Recarga la página o consulta al equipo antes de editar.</p>;
   return (
     <>
     {cycle ? <SupplierStock cycle={cycle} candidates={rows.filter(p=>p.row.code).map(p=>({id:p.row.code,name:p.row.name,unit:p.row.unit}))} onApply={applyStock}/> : null}
+    {stockWarning?<p role="alert">{stockWarning}</p>:null}
     <QuoteReader disabled={busy} onRead={fill} />
     <form className="supplier-editor" onSubmit={event => void submit(event)} noValidate>
       <p className="partner-muted">Revisa tu disponibilidad y tus precios por volumen. Los cambios se publican cuando el equipo los aprueba.</p>

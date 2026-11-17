@@ -15,4 +15,4 @@ Aceptación: papa única asignada, papa ambigua sin asignar, corrección/manual,
 - AR71-1/2: PhotoProductReview, photoMatches y PackCard; photoMatches.test y caso de papa ambigua en PhotoProductReview.test. La prueba de cámara ahora exige análisis previo y ausencia de guardado automático.
 - AR71-3/4: fulfillment.pack_bag/remove_bag, bag_reviews/bag_counters/bag_removals, endpoints de bolsa y baja; test_armado71 y regresión de fotos/persistencia. La foto no se borra.
 - 768 pruebas del motor ejecutadas: 764 aprobadas y 4 omitidas. 213 pruebas web aprobadas; TypeScript y build aprobados. Evidencia 71-armado-*-verde.txt. Permanece el aviso Vite por chunk mayor de 500 kB y un ResourceWarning SQLite de la suite.
-- Siguiente validación conjunta: recorrido en navegador de las cuatro vistas sobre esta base. No se alteró dinero, inventario publicado ni infraestructura.
+- Navegador posterior: cámara única con YOLO real, corrección de unidades, check superior, guardado y recarga de revisión, baja y desmarcado; 390 px. Captura en docs/modelo-yolo/armado-17nov.png. No se alteró dinero, inventario publicado ni infraestructura.

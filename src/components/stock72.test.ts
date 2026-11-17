@@ -28,3 +28,13 @@ it('precios por volumen comienza cerrado en cada producto',async()=>{
  await act(async()=>root.render(createElement(SupplierListEditor,{initialText:'PAPA-AMARILLA,Papa amarilla,FRESCOS,kg,1,40,SUP-FRESCOS,0,3.60\nAJO,Ajo,FRESCOS,kg,0.25,40,SUP-FRESCOS,0,4.80',busy:false,resubmit:false,onSubmit:vi.fn()})));
  expect(host.querySelectorAll('.supplier-volume')).toHaveLength(2);expect(host.querySelectorAll('.supplier-volume[open]')).toHaveLength(0);
 });
+it('recupera stock por SKU sin convertir kilos a unidades del borrador',async()=>{
+ vi.mocked(api.get).mockResolvedValue({productos:[
+  {id:'PAPA-AMARILLA',nombre:'Papa amarilla',cantidad:'4',disponible:'4',unidades:5,unidad:'kg'},
+  {id:'AJO',nombre:'Ajo',cantidad:'2',disponible:'2',unidades:3,unidad:'kg'},
+ ]});
+ await act(async()=>root.render(createElement(SupplierListEditor,{cycle:'2026-W40',initialText:'PAPA-AMARILLA,Papa amarilla,FRESCOS,kg,1,40,SUP-FRESCOS,0,3.60\nAJO,Ajo,FRESCOS,unidad,1,40,SUP-FRESCOS,0,4.80',busy:false,resubmit:false,onSubmit:vi.fn()})));
+ expect(host.querySelector<HTMLInputElement>('[aria-label="Cantidad disponible (kg), producto 1"]')!.value).toBe('4');
+ expect(host.querySelector<HTMLInputElement>('[aria-label="Cantidad disponible (unidades), producto 2"]')!.value).toBe('40');
+ expect(host.querySelector('[role=alert]')!.textContent).toContain('unidad distinta');
+});

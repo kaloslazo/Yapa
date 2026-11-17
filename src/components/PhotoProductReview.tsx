@@ -44,7 +44,7 @@ export function PhotoProductReview({ onConfirm, label = 'Confirmar conteo de ref
   return <section className="photo-product-review" aria-label="Revisión de productos por foto">
     <h3>{title}</h3>
     <p>El detector se activa al elegir la foto. Estima papa, cebolla, ajo y zanahoria; corrige o añade lo que falte. Las unidades visibles no son kilos.</p>
-    <label className="photo-field pack-camera"><span>{photoLabel}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={state === 'saving'} onChange={event => void analyze(event.target.files?.[0])} /></label>
+    <label className="photo-field pack-camera"><span>{photoLabel}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={state === 'saving'} onChange={event => { const photo=event.target.files?.[0]; event.target.value=''; void analyze(photo); }} /></label>
     <PhotoPreview src={preview} />
     {state === 'analyzing' ? <p role="status">Analizando la foto…</p> : null}
     {error ? <p role="alert">{error}</p> : null}

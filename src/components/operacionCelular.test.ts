@@ -77,7 +77,7 @@ describe('OC-F · elegir en vez de escribir', () => {
 });
 
 describe('OC-G · armado con la cámara', () => {
-  it('una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto', async () => {
+  it('una tarjeta por pedido, el avance y la foto se analiza antes de guardar', async () => {
     vi.mocked(api.get).mockImplementation(async () => packing as never);
     vi.mocked(api.post).mockResolvedValue({productos:[{producto:'papa',cantidad:2}]} as never);
     await mount(panel('armador'));

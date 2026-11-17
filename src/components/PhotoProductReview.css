@@ -11,3 +11,4 @@
 @media (max-width: 480px) { .photo-product-row { grid-template-columns: 1fr 1fr; }.photo-product-row button { grid-column: 1 / -1; } }
 
 .photo-product-row .photo-row-check[aria-pressed=true] { background: #d5f5e2; border: 1px solid #15804b; border-radius: 8px; }
+.photo-product-review .photo-field.pack-camera { background: var(--deep, #073d30); color: #fff; border-color: transparent; }
