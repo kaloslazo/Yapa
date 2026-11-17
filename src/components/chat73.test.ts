@@ -21,3 +21,11 @@ it('no fabrica respuesta ni consulta un modelo para una duda desconocida',async(
  await start();await ask('astronauta galaxia');expect(api.post).not.toHaveBeenCalled();expect(host.textContent).toContain('No encontré una respuesta segura');
  expect([...host.querySelectorAll('button')].some(b=>b.textContent==='Consultar asistente de compra')).toBe(true);
 });
+
+it('reiniciar impide que reaparezca una respuesta que estaba en curso',async()=>{
+ let resolve!:(value:unknown)=>void;vi.mocked(api.post).mockImplementationOnce(()=>new Promise(r=>{resolve=r;}) as never);
+ await start();await ask('¿Dónde está mi pedido?');
+ await act(async()=>[...host.querySelectorAll<HTMLButtonElement>('button')].find(b=>b.textContent==='Reiniciar')!.click());
+ await act(async()=>resolve({respuesta:'Respuesta antigua',fuente:'datos',sugerencias:[]}));
+ expect(host.querySelector('[role=log]')!.textContent).toBe('');
+});
