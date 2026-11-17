@@ -13,6 +13,7 @@ it('muestra puntos, advierte coordenadas faltantes y aplica el orden calculado',
     await act(async () => root.render(createElement(RoutePlanner, { stops, active: false, onOrder: apply })));
     expect(host.querySelectorAll('svg circle')).toHaveLength(3); expect(host.textContent).toContain('Sin coordenadas: Edificio 3');
     await act(async () => host.querySelector<HTMLButtonElement>('.primary-button')!.click());
-    expect(apply).toHaveBeenCalledWith(['0', '2', '1', '3']); expect(host.textContent).toContain('no representa calles');
+    expect(apply).toHaveBeenCalledWith(['0', '2', '1', '3']); expect(host.textContent).toContain('El orden se propone por distancia en línea recta');
+    expect(host.textContent).not.toContain('Recorrido vial:');
   } finally { await act(async () => root.unmount()); host.remove(); }
 });

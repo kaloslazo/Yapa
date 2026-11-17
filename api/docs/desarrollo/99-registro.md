@@ -577,6 +577,11 @@
 - Sin costo: no usa servicios externos ni claves.
 - De paso, pulido del panel y la tienda: bordes sencillos en tarjetas, KPIs, grupos y fotos de producto, y botón de archivo con estilo en vez del nativo.
 
+## Iteración 74 · Trazado por calles para reparto (17/11/2026)
+
+- Spec 74-ruta-por-calles.md. OSRM bajo petición sobre Leaflet, métricas viales diferenciadas, caché y recuperación ante fallo; conserva la propuesta geográfica y Google Maps. Sin LLM ni cambios en AWS.
+- 768 pruebas motor (764 aprobadas, 4 omitidas), 213 web, TypeScript y build aprobados; OSRM real en navegador: 92 puntos, 2,63 km, cambio de inicio y vista móvil.
+
 ## Iteración 69 · La cotización del proveedor leída con IA (16/11/2026)
 
 - Spec: `69-lista-del-proveedor-con-ia.md` (S-345..S-350). Origen: la propuesta del curso pide procesar con IA las cotizaciones del mayorista (imágenes o listas) para actualizar precios rápido.

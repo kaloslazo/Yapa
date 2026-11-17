@@ -25,8 +25,10 @@ export function RouteMap({ points, label, geometry }: { points: RoutePoint[]; la
       L.polyline(line, { color: '#0a7d4e', weight: 4, dashArray: geometry?.length ? undefined : '8 8', className: 'route-map-line' }).addTo(m);
       points.forEach((p, i) => {
         const icon = L.divIcon({ className: '', html: `<span class="route-pin${i ? '' : ' is-first'}">${i + 1}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+        const tooltip=document.createElement('span');
+        tooltip.textContent=`${p.name} · ${p.orders} ${p.orders === 1 ? 'pedido' : 'pedidos'}`;
         L.marker([p.lat, p.lon], { icon, keyboard: false, title: `${i + 1}. ${p.name}` })
-          .bindTooltip(`${p.name} · ${p.orders} ${p.orders === 1 ? 'pedido' : 'pedidos'}`, { direction: 'top', offset: [0, -14], className: 'route-map-label' }).addTo(m);
+          .bindTooltip(tooltip, { direction: 'top', offset: [0, -14], className: 'route-map-label' }).addTo(m);
       });
       m.fitBounds(L.latLngBounds(line).pad(0.25), { maxZoom: 16 });
     } catch {
