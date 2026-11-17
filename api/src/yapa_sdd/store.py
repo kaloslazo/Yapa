@@ -32,6 +32,9 @@ class InMemoryStore:
         self.signups: dict = {}  # registros a medio hacer, por correo (iteración 45)
         self.pin_requests: dict = {}  # "Olvidé mi PIN": id -> (cliente, hora) (iteración 39, S-199)
         self.settlements: dict = {}  # resultado de la liquidación por ciclo (iteración 7)
+        self.bag_reviews: dict = {}
+        self.bag_counters: dict = {}
+        self.bag_removals: list = []
         self.bags: dict = {}  # armado: bolsas por pedido
         self.deliveries: dict = {}  # entrega: (ciclo, zona) -> entrega
         self.cash_in: list = []  # registro de caja (iteración 19, S-114)

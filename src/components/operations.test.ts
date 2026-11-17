@@ -30,7 +30,8 @@ describe('PA-02 y AT-01 · operación por zona y completados', () => {
     await mount(createElement(AdminPanel, { adminName: 'Armado', role: 'armador', notify, onLogout: vi.fn() }));
     expect(host.textContent).toContain('Antes de esa hora, la semana todavía recibe compras.');
     expect(host.textContent).toContain('miércoles a las 8 p. m. (hora de Lima)');
-    expect(host.querySelectorAll('.pack-multiple-bags')).toHaveLength(2);
+    expect(host.querySelectorAll('.photo-product-review')).toHaveLength(2);
+    expect(host.querySelector('.pack-multiple-bags')).toBeNull();
     expect(host.textContent).toContain('Entregas por zona (2)');
     expect(host.querySelector('option')?.textContent).toBe('21 sep – 27 sep 2026');
     const filter = [...host.querySelectorAll('select')].find(s => [...s.options].some(o => o.textContent === 'Todas las zonas'))!;

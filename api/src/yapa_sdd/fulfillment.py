@@ -85,7 +85,7 @@ def is_attended(store: InMemoryStore, order: Order) -> bool:
     return len(in_group) >= MIN_ORDERS_PER_GROUP
 
 
-def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: datetime) -> Bag:
+def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: datetime, review=()) -> Bag:
     check_role(store, by, partners.PACKER)  # AR-01, AM-02
     order = store.orders.get(order_id)
     if order is None:  # AR-02
@@ -98,8 +98,20 @@ def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: d
     if closed in store.deliveries or closed in store.failed_deliveries:  # AR-06, S-121
         raise BusinessRuleError("ZONE_ALREADY_CLOSED", "La zona ya se entregó o falló; lo que falte va por reclamo.")
     photo = check_photo(photo)  # AR-05
+    clean = []
+    ids = {line.product_id for line in order.lines}
+    if not isinstance(review, (list, tuple)) or len(review) > 30:
+        raise BusinessRuleError('INVALID_BAG_REVIEW', 'Revisa los productos confirmados de la bolsa.')
+    for row in review:
+        units = row.get('unidades') if isinstance(row, dict) else None
+        if not isinstance(row, dict) or row.get('id') not in ids or type(units) is not int or not 1 <= units <= 300:
+            raise BusinessRuleError('INVALID_BAG_REVIEW', 'Elige productos del pedido y unidades enteras entre 1 y 300.')
+        clean.append({'id': row['id'], 'unidades': units})
     bags = store.bags.setdefault(order_id, [])
-    bag = Bag(order_id, len(bags) + 1, photo, by, now)
+    number = max(store.bag_counters.get(order_id, 0), max((b.number for b in bags), default=0)) + 1
+    store.bag_counters[order_id] = number
+    bag = Bag(order_id, number, photo, by, now)
+    store.bag_reviews[(order_id, number)] = clean
     bags.append(bag)
     return bag
 
@@ -141,7 +153,7 @@ def bag_labels(store: InMemoryStore, order_id: int) -> list[str]:
     order = store.orders[order_id]
     bags = store.bags.get(order_id, [])
     zone = store.zones[order.zone_id].name
-    return [f"Pedido {order_id} · {zone} · Bolsa {bag.number} de {len(bags)}" for bag in bags]
+    return [f"Pedido {order_id} · {zone} · Bolsa {index + 1} de {len(bags)}" for index, bag in enumerate(bags)]
 
 
 def _ready_orders(store: InMemoryStore, cycle: str, zone_id: str) -> list[Order]:
@@ -181,3 +193,22 @@ def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleS
     from .purchase import missing_for_settlement  # CR-06 (purchase importa este módulo)
     missing = list(missing) + missing_for_settlement(store, cycle)
     return settle_cycle(store, cycle, missing, at=at, savings_share=OPERATING_SAVINGS_SHARE)  # S-301
+
+
+def remove_bag(store, order_id, number, *, by, now):
+    """AR71-4: baja lógica antes del despacho; la evidencia fotográfica se conserva."""
+    check_role(store, by, partners.PACKER)
+    order = store.orders.get(order_id)
+    if order is None:
+        raise BusinessRuleError('ORDER_NOT_FOUND', 'El pedido no existe.')
+    key = (order.cycle, order.zone_id)
+    if key in store.dispatches or key in store.deliveries or key in store.failed_deliveries or order.cycle in store.settlements:
+        raise BusinessRuleError('ZONE_ALREADY_CLOSED', 'La bolsa ya salió a reparto o la semana está cerrada. Registra una incidencia.')
+    bag = next((b for b in store.bags.get(order_id, []) if b.number == number), None)
+    if bag is None:
+        raise BusinessRuleError('BAG_NOT_FOUND', 'Esta bolsa ya no está registrada. Actualiza la lista.')
+    store.bag_counters[order_id] = max(store.bag_counters.get(order_id, 0), max(b.number for b in store.bags[order_id]))
+    store.bags[order_id] = [b for b in store.bags[order_id] if b.number != number]
+    store.bag_removals.append({'pedido': order_id, 'numero': number, 'foto': bag.photo, 'por': by, 'hora': now,
+                               'revision': store.bag_reviews.pop((order_id, number), [])})
+    return bag

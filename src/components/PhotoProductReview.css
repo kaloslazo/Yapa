@@ -9,3 +9,5 @@
 .photo-product-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .photo-product-review .photo-preview img { max-height: 220px; object-fit: contain; }
 @media (max-width: 480px) { .photo-product-row { grid-template-columns: 1fr 1fr; }.photo-product-row button { grid-column: 1 / -1; } }
+
+.photo-product-row .photo-row-check[aria-pressed=true] { background: #d5f5e2; border: 1px solid #15804b; border-radius: 8px; }

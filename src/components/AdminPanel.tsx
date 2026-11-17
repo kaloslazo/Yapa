@@ -10,7 +10,6 @@ import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
-import { BagForm } from './BagForm';
 import { PhotoProductReview } from './PhotoProductReview';
 import { ProductThumb } from './ProductThumb';
 import { AdminSkeleton } from './Skeleton';
@@ -319,21 +318,12 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
 
 // S-331: una tarjeta por pedido; las marcas son una ayuda en pantalla y la bolsa se registra al elegir la foto
 function PackCard({ order, send }: { order: Order; send: (path: string, form: FormData, extra: Record<string, string>, success: string) => Promise<boolean> }) {
-  const [checked, setChecked] = useState<string[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [manual, setManual] = useState<string[]>([]);
+  const [detected, setDetected] = useState<string[]>([]);
+  const [photoKey, setPhotoKey] = useState(0);
   const [damaged, setDamaged] = useState(false);
+  const checked = [...new Set([...manual, ...detected, ...(order.bags ?? []).flatMap(b => (b.products ?? []).map(p => p.id))])];
   const bags = order.bags?.length ?? 0;
-  const upload = async (input: HTMLInputElement) => {
-    const file = input.files?.[0];
-    if (!file) return;
-    const form = new FormData();
-    form.set('foto_archivo', file);
-    setBusy(true);
-    await send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa ${bags + 1} del pedido ${order.id} registrada.`);
-    setBusy(false);
-    input.value = '';
-  };
-  const all = order.lines.length > 0 && checked.length === order.lines.length;
   return (
     <article className={`pack-card${bags ? ' is-packed' : ''}`}>
       <header className="pack-card-head">
@@ -342,17 +332,15 @@ function PackCard({ order, send }: { order: Order; send: (path: string, form: Fo
       </header>
       <ul className="pack-lines" aria-label={`Productos del pedido ${order.id}`}>{order.lines.map((l) => {
         const done = checked.includes(l.id);
-        return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setChecked((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{amountWithUnit(l.quantity, l.unit, formatQuantity)}</strong></label></li>;
+        return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setManual((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{amountWithUnit(l.quantity, l.unit, formatQuantity)}</strong></label></li>;
       })}</ul>
-      {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${b.number} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {b.number}</small></a></li>)}</ul> : null}
+      {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${b.number} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {b.number}</small></a><ConfirmAction label="Quitar bolsa" question="¿Quitar esta bolsa del pedido? La foto se conserva como evidencia." confirmLabel="Sí, quitar bolsa" onConfirm={async () => { const form=new FormData(); form.set('numero',String(b.number)); if (await send('/api/admin/bolsas/quitar',form,{pedido:String(order.id)},'Bolsa retirada del pedido.')) { setDetected([]);setPhotoKey(k=>k+1); } }} /></li>)}</ul> : null}
       <p className="pack-labels"><Icon name="tag" size={15} />{order.labels?.length ? order.labels.join(' · ') : `Rotula la bolsa: Pedido ${order.id}${order.zoneName ? ` · ${order.zoneName}` : ''}`}</p>
-      <label className={`pack-camera${all || bags ? ' is-ready' : ''}${busy ? ' is-busy' : ''}`}>
-        <Icon name="camera" size={22} />
-        <span>{busy ? 'Subiendo la foto…' : bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'}</span>
-        <input type="file" accept="image/*" capture="environment" disabled={busy} onChange={(event) => void upload(event.currentTarget)} aria-label={`Foto de la bolsa del pedido ${order.id}`} />
-      </label>
-      <details className="pack-photo-review"><summary>Revisar una bolsa con el detector</summary><PhotoProductReview label="Confirmar revisión y guardar bolsa" onConfirm={(file) => { const form = new FormData(); form.set('foto_archivo', file); return send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada con tu revisión.`); }} /></details>
-      <details className="pack-multiple-bags"><summary>Preparar varias bolsas con fotos</summary><BagForm key={order.id} onSend={(form) => send('/api/admin/bolsas', form, { pedido: String(order.id) }, `Bolsa del pedido ${order.id} registrada.`)} /></details>
+      <p className="admin-muted">Las marcas confirman presencia visual; comprueba el peso de cada producto por separado.</p>
+      <PhotoProductReview key={`${order.id}-${photoKey}`} candidates={order.lines} onMatchesChange={setDetected} photoLabel={bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'} label="Confirmar revisión y guardar bolsa" onConfirm={(file, products) => {
+        const form=new FormData();form.set('foto_archivo',file);form.set('revision',JSON.stringify(products.map(p=>({id:p.codigo,unidades:p.cantidad}))));
+        return send('/api/admin/bolsas',form,{pedido:String(order.id)},`Bolsa del pedido ${order.id} registrada con su revisión.`);
+      }} />
       <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>
       {damaged ? <PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(order.id) }, `Dañado del pedido ${order.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{order.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm> : null}
     </article>

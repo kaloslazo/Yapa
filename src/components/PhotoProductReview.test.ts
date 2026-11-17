@@ -50,3 +50,15 @@ it('ignora la respuesta de una foto anterior al elegir otra', async () => {
   await upload();await upload();await act(async()=>resolve({productos:[{producto:'papa',cantidad:8}]}));
   expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('cebolla');
 });
+
+it('exige elegir la variedad de papa y confirmar la fila antes de guardar', async () => {
+  const candidates=[{id:'PAPA-AMARILLA',name:'Papa amarilla',unit:'kg'},{id:'PAPA-BLANCA',name:'Papa blanca',unit:'kg'}];
+  vi.mocked(api.post).mockResolvedValue({productos:[{producto:'papa',cantidad:3}]});
+  await act(async()=>root.render(createElement(PhotoProductReview,{onConfirm:confirm,candidates})));
+  await upload();expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('');
+  expect(host.querySelector<HTMLButtonElement>('.primary-button')!.disabled).toBe(true);
+  await act(async()=>{const select=host.querySelector('select')!;select.value='PAPA-BLANCA';select.dispatchEvent(new Event('change',{bubbles:true}));});
+  await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Confirmar producto 1"]')!.click());
+  await act(async()=>host.querySelector<HTMLButtonElement>('.primary-button')!.click());
+  expect(confirm.mock.calls[0][1][0]).toMatchObject({codigo:'PAPA-BLANCA',cantidad:3,confirmado:true});
+});

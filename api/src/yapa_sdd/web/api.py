@@ -769,7 +769,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                           "fallida": bool(failed), "en_camino": (cycle_id, zone_id) in store.dispatches})  # S-308
         orders = [order_json(o, names, clock()) | {
             "vecino": store.customers[o.customer_id].name,
-            "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])],
+            "bolsas": [{"numero": b.number, "foto": b.photo, "productos": store.bag_reviews.get((o.order_id, b.number), [])} for b in store.bags.get(o.order_id, [])],
             "rotulos": fulfillment.bag_labels(store, o.order_id)} for o in attended]  # RT-01
         if session["kind"] == partners.PACKER:  # AM-01, S-290
             orders = [{key: o[key] for key in PACKER_ORDER + ("rotulos",)} | {
@@ -780,9 +780,18 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return vision.analyze_photo(data.get('_vision_upload'))
 
     def admin_bolsa(environ, data, session):
+        try:
+            review = json.loads(data.get('revision', '[]'))
+        except (ValueError, TypeError):
+            raise BusinessRuleError('INVALID_BAG_REVIEW', 'La revisión de la bolsa no es válida.')
         bag = fulfillment.pack_bag(store, _int(data.get("pedido"), "Número de pedido"), by=session["principal"],
-                                   photo=data.get("foto", ""), now=clock())
+                                   photo=data.get("foto", ""), now=clock(), review=review)
         return {"pedido": bag.order_id, "numero": bag.number, "foto": bag.photo}
+
+    def admin_bolsa_quitar(environ, data, session):
+        bag = fulfillment.remove_bag(store, _int(data.get('pedido'), 'Pedido'), _int(data.get('numero'), 'Bolsa'),
+                                     by=session['principal'], now=clock())
+        return {'pedido': bag.order_id, 'numero': bag.number}
 
     def admin_entrega(environ, data, session):
         delivery = fulfillment.deliver_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
@@ -1289,6 +1298,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
         (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
         (r"/api/vision/analizar", {"POST": (vision_analizar, ("admin", partners.PACKER, partners.SUPPLIER))}),
+        (r"/api/admin/bolsas/quitar", {"POST": (admin_bolsa_quitar, PACKING)}),
         (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
         (r"/api/admin/danados", {"POST": (admin_danado, PACKING)}),
         (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),
