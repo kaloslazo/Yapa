@@ -1,31 +1,30 @@
-# Chatbot de preguntas frecuentes
+# Ayuda de Yapa como conversación
 
-Rama `aaron/chatbot-faq`, independiente de las otras dos funciones y basada en main `1942dea`.
+Rama `aaron/chatbot-faq`, actualizada a main `8b24c0e` el 17/11/2026. Conserva el asistente de compra con datos del vecino, las burbujas y la IA opcional incorporados por Kalos.
 
-El botón «¿Te ayudamos?» abre respuestas de las diez preguntas compartidas por Explorar y Cómo funciona. Hay filtros Pagos, Entregas, Pedidos y Cuenta, búsqueda sin tildes, sinónimos, selección de preguntas, historial de hasta seis respuestas y reinicio. Si no hay coincidencia, se indica; no se inventan respuestas.
+## Uso
 
-Es búsqueda y reglas, no un LLM. No necesita una cuenta, clave, modelo descargado ni servicios extra en AWS. El historial vive en memoria del navegador, no se envía al backend ni consulta datos personales. Desplegar el frontend actualizado basta para habilitarlo. Las reglas de negocio siguen en el motor.
+«¿Te ayudamos?» abre el chat. Escribir una pregunta frecuente y enviarla agrega el mensaje del usuario y propone preguntas relacionadas. Elegir una añade la respuesta vigente de las FAQ compartidas por Explorar y Cómo funciona. Se conservan temas, búsqueda sin tildes, opciones iniciales y «Ver todas». Las nuevas respuestas quedan visibles al final de la conversación.
 
-![Ayuda con temas y búsqueda](chatbot.png)
+Si no hay coincidencia, se indica que no se encontró una respuesta segura y se ofrecen temas y «Consultar asistente de compra». No se inventa una respuesta. Las consultas personales reconocidas mantienen el endpoint existente con los datos autorizados del vecino y sus rótulos de fuente. Reiniciar descarta el historial y las respuestas que estuvieran en curso. Escape cierra y devuelve el foco.
 
-![Ayuda en pantalla de 390 px](chatbot-movil.png)
+Las FAQ y sus sugerencias son reglas locales: no requieren un LLM ni llaman a la API del asistente. El asistente personal o la opción explícita pueden utilizar la configuración de IA que ya tiene el proyecto; no se añadieron proveedores, claves, software o hardware. El historial de la pantalla vive en memoria, no se guarda como una conversación permanente.
 
-## Probar y arrancar
+![Conversación móvil y última respuesta visible](chat-17nov.png)
+
+## Arranque local
 
 ```powershell
 cd "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-chatbot-faq"
 npm.cmd ci
-npm.cmd run typecheck
-npm.cmd test
 npm.cmd run build
-python api/tools/servir_demo.py --puerto 8011 --estaticos dist
+python api/tools/servir_pruebas_roles.py --puerto 8021
 ```
 
-Abrir http://127.0.0.1:8011 y pulsar «¿Te ayudamos?». Buscar «PAGUÉ», elegir «¿Cómo pago mi pedido?», cambiar a Entregas y probar una consulta desconocida. Escape cierra y devuelve el foco. Detener con Ctrl+C. No usar 8000, reservado en esta computadora.
+Abrir http://ayuda.localhost:8021 y pulsar «¿Te ayudamos?». Probar «pagué», elegir una opción varias veces y comprobar el desplazamiento. Probar una pregunta desconocida y reiniciar. Ctrl+C detiene la demo. Para comprobar datos propios se requiere la sesión de un vecino de esa demo; no se usan cuentas de producción.
 
-## Validación local, 14/11/2026
+## Validación, 17/11/2026
 
-- 196 pruebas frontend aprobadas, TypeScript y build aprobados.
-- Navegador Chrome de pruebas, escritorio y 390 px: búsqueda con tilde, respuesta, temas, sin coincidencias, Escape y foco. Capturas reales arriba.
-- No cambió el backend. El aviso previo de Vite por un chunk mayor de 500 kB continúa.
-- Se verificó funcionalmente en localhost; no se desplegó en producción.
+- 764 pruebas del motor ejecutadas: 760 aprobadas y 4 omitidas. 214 pruebas web, TypeScript y build aprobados. Evidencia 73-chat-*-verde.txt en api/docs/evidencia/desarrollo.
+- Pruebas de FAQ sin API, pregunta desconocida, reinicio con una respuesta pendiente y regresión del asistente con datos personales. Chrome a 390 px: cinco respuestas, la última dentro del área visible, y ninguna llamada al asistente para FAQ o consulta desconocida.
+- [Spec y trazabilidad](../../api/docs/desarrollo/73-chat-conversacion.md). Permanece el aviso de Vite por chunk grande. No se modificó la infraestructura AWS ni se desplegó en producción.

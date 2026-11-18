@@ -601,6 +601,11 @@
 - Proveedor: "Leer cotización con IA" arriba del editor de su lista; llena el borrador y el proveedor revisa y envía como siempre (PV-01..PV-03 sin cambios).
 - Probado con la clave real de Groq: foto en 1.8 s, mensaje en 2.2 s.
 
+## Iteración 73 · Conversación y sugerencias del chat (17/11/2026)
+
+- Spec 73-chat-conversacion.md. Pregunta del usuario, opciones relacionadas, respuesta compartida y desplazamiento al final; salida segura y reinicio sin respuestas antiguas. Se conserva el asistente de Kalos con datos y configuración de IA opcional.
+- 764 pruebas motor (760 aprobadas, 4 omitidas), 214 web, TypeScript y build aprobados; navegador a 390 px con la última respuesta visible y FAQ sin API.
+
 ## Iteración 70 · Asistente de compra (16/11/2026)
 
 - Spec: `70-asistente-de-compra.md` (S-351..S-354). Origen: la propuesta pide un chatbot con IA para consultar estado del pedido, precios, ahorro y ventana de entrega.

@@ -1,0 +1,66 @@
+> yapa@0.1.0 test
+> vitest run src/components/chat73.test.ts
+
+
+ RUN  v5.0.5 C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-chatbot-faq
+
+ ❯ src/components/chat73.test.ts (2 tests | 2 failed) 134ms
+   × propone opciones para pagos sin llamar a IA y añade la respuesta al final 99ms
+   × no fabrica respuesta ni consulta un modelo para una duda desconocida 34ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  01:02:01
+   Duration  6.39s (import 80%, environment 16%, tests 2%, transform 2%)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/chat73.test.ts > propone opciones para pagos sin llamar a IA y añade la respuesta al final
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/api/asistente",
+      Object {
+        "pregunta": "pagué",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/components/chat73.test.ts:14:56
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/chat73.test.ts > no fabrica respuesta ni consulta un modelo para una duda desconocida
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/api/asistente",
+      Object {
+        "pregunta": "astronauta galaxia",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/components/chat73.test.ts:21:69
+     19| });
+     20| it('no fabrica respuesta ni consulta un modelo para una duda desconoci…
+     21|  await start();await ask('astronauta galaxia');expect(api.post).not.to…
+       |                                                                     ^
+     22|  expect([...host.querySelectorAll('button')].some(b=>b.textContent==='…
+     23| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
