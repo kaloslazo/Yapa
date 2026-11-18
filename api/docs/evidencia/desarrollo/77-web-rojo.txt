@@ -1,0 +1,49 @@
+
+ RUN  v5.0.5 /Users/kalosroots/Documents/Yapa
+
+ ❯ src/components/bolsaIa77.test.ts (2 tests | 2 failed) 85ms
+   × VB-J · con código de la IA la fila llega con el producto elegido, dice de dónde salió y lo que también se ve 73ms
+   × VB-J · si respondió el detector local, lo dice 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/bolsaIa77.test.ts > VB-J · con código de la IA la fila llega con el producto elegido, dice de dónde salió y lo que también se ve
+AssertionError: expected '' to be 'PAPA-BLANCA' // Object.is equality
+
+- Expected
++ Received
+
+- PAPA-BLANCA
+
+ ❯ src/components/bolsaIa77.test.ts:38:85
+     36| it('VB-J · con código de la IA la fila llega con el producto elegido, …
+     37|   await review({ fuente: 'ia', productos: [{ codigo: 'PAPA-BLANCA', no…
+     38|   expect(host.querySelector<HTMLSelectElement>('.photo-product-row sel…
+       |                                                                                     ^
+     39|   expect(host.querySelector<HTMLInputElement>('.photo-product-row inpu…
+     40|   expect(host.textContent).toContain('Con IA');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/bolsaIa77.test.ts > VB-J · si respondió el detector local, lo dice
+AssertionError: expected 'Foto de la bolsa y sus productosSi qu…' to contain 'Con el detector local'
+
+Expected: "Con el detector local"
+Received: "Foto de la bolsa y sus productosSi quieres ayuda, toca «Sugerir con el detector»: reconoce papa, cebolla, ajo y zanahoria, y se equivoca seguido. Corrige o añade lo que falte. Las unidades que se ven no son kilos.Corresponde a, producto 1Elige el producto exactoPapa amarillaPapa blancaUnidades visibles 1✓ ConfirmarQuitarSugerido: papa · puntuación 80 %. Revísalo.Sugerir con el detectorAñadir producto manualmenteConfirmar conteo de referencia"
+
+ ❯ src/components/bolsaIa77.test.ts:49:28
+     47| it('VB-J · si respondió el detector local, lo dice', async () => {
+     48|   await review({ fuente: 'detector', productos: [{ producto: 'papa', c…
+     49|   expect(host.textContent).toContain('Con el detector local');
+       |                            ^
+     50|   expect(host.querySelector<HTMLSelectElement>('.photo-product-row sel…
+     51| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:52:39
+   Duration  2.87s (import 69%, environment 25%, tests 3%, transform 2%)
+
