@@ -20,13 +20,17 @@ async function upload() {
   Object.defineProperty(input,'files',{configurable:true,value:[file]});
   await act(async () => input.dispatchEvent(new Event('change',{bubbles:true})));return file;
 }
+// iteración 76 (S-369, S-373): el detector corre solo al tocar el botón
+async function suggest() {
+  await act(async () => [...host.querySelectorAll<HTMLButtonElement>('button')].find(b=>b.textContent==='Sugerir con el detector')!.click());
+}
 async function quantity(value:string) {
   const input=host.querySelector<HTMLInputElement>('input[type=number]')!;
   await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true})); });
 }
 it('corrige el conteo y confirma con la misma foto, sin guardar automáticamente', async () => {
   vi.mocked(api.post).mockResolvedValue({productos:[{producto:'zanahoria',cantidad:3,confianza:.6}]});
-  const file=await upload(); expect(confirm).not.toHaveBeenCalled(); await quantity('2');
+  const file=await upload(); expect(api.post).not.toHaveBeenCalled(); await suggest(); expect(confirm).not.toHaveBeenCalled(); await quantity('2');
   await act(async () => host.querySelector<HTMLButtonElement>('.primary-button')!.click());
   expect(confirm).toHaveBeenCalledWith(file,[{producto:'zanahoria',cantidad:2,confianza:undefined}]); expect(host.textContent).toContain('Confirmado por ti');
   expect(host.querySelector<HTMLInputElement>('input[type=number]')!.disabled).toBe(true);
@@ -34,20 +38,20 @@ it('corrige el conteo y confirma con la misma foto, sin guardar automáticamente
   expect(confirm).toHaveBeenCalledTimes(1);
 });
 it('permite revisión manual si el análisis falla y rechaza cantidades inválidas', async () => {
-  vi.mocked(api.post).mockRejectedValue(new Error('Análisis no instalado')); await upload();
+  vi.mocked(api.post).mockRejectedValue(new Error('Análisis no instalado')); await upload(); await suggest();
   await act(async () => [...host.querySelectorAll('button')].find(b=>b.textContent==='Añadir producto manualmente')!.click());
   await quantity('0');expect(host.querySelector<HTMLButtonElement>('.primary-button')!.disabled).toBe(true);
   await quantity('1');expect(host.querySelector<HTMLButtonElement>('.primary-button')!.disabled).toBe(false);
 });
 it('conserva las correcciones si guardar falla', async () => {
-  vi.mocked(api.post).mockResolvedValue({productos:[{producto:'ajo',cantidad:2}]});confirm.mockResolvedValue(false);await upload();
+  vi.mocked(api.post).mockResolvedValue({productos:[{producto:'ajo',cantidad:2}]});confirm.mockResolvedValue(false);await upload();await suggest();
   await act(async () => host.querySelector<HTMLButtonElement>('.primary-button')!.click());
   expect(host.querySelector<HTMLInputElement>('input[type=number]')!.value).toBe('2');expect(host.textContent).not.toContain('Confirmado por ti');
 });
 it('ignora la respuesta de una foto anterior al elegir otra', async () => {
   let resolve!: (value: unknown)=>void;
   vi.mocked(api.post).mockImplementationOnce(()=>new Promise(r=>{resolve=r;}) as never).mockResolvedValueOnce({productos:[{producto:'cebolla',cantidad:1}]});
-  await upload();await upload();await act(async()=>resolve({productos:[{producto:'papa',cantidad:8}]}));
+  await upload();await suggest();await upload();await suggest();await act(async()=>resolve({productos:[{producto:'papa',cantidad:8}]}));
   expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('cebolla');
 });
 
@@ -55,7 +59,7 @@ it('exige elegir la variedad de papa y confirmar la fila antes de guardar', asyn
   const candidates=[{id:'PAPA-AMARILLA',name:'Papa amarilla',unit:'kg'},{id:'PAPA-BLANCA',name:'Papa blanca',unit:'kg'}];
   vi.mocked(api.post).mockResolvedValue({productos:[{producto:'papa',cantidad:3}]});
   await act(async()=>root.render(createElement(PhotoProductReview,{onConfirm:confirm,candidates})));
-  await upload();expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('');
+  await upload();await suggest();expect(host.querySelector<HTMLSelectElement>('select')!.value).toBe('');
   expect(host.querySelector<HTMLButtonElement>('.primary-button')!.disabled).toBe(true);
   await act(async()=>{const select=host.querySelector('select')!;select.value='PAPA-BLANCA';select.dispatchEvent(new Event('change',{bubbles:true}));});
   await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Confirmar producto 1"]')!.click());

@@ -16,6 +16,7 @@ it('requiere peso, confirma carga y aplica el total devuelto al borrador',async(
  await act(async()=>root.render(createElement(SupplierStock,{cycle:'2026-W40',candidates:[{id:'PAPA-AMARILLA',name:'Papa amarilla',unit:'kg'}],onApply:apply})));
  const file=host.querySelector('input[type=file]')!;Object.defineProperty(file,'files',{value:[new File(['x'],'foto.jpg',{type:'image/jpeg'})]});
  await act(async()=>file.dispatchEvent(new Event('change',{bubbles:true})));
+ await act(async()=>[...host.querySelectorAll<HTMLButtonElement>('button')].find(b=>b.textContent==='Sugerir con el detector')!.click());
  expect(host.querySelector<HTMLButtonElement>('[aria-label="Confirmar producto 1"]')!.disabled).toBe(true);
  const weight=host.querySelectorAll('input[type=number]')[1];
  await act(async()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(weight,'2.5');weight.dispatchEvent(new Event('input',{bubbles:true}));});
