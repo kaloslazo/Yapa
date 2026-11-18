@@ -68,7 +68,25 @@ Escenario base: 8 pedidos de Residencial San Felipe, viernes después del cierre
 
 ## Trazabilidad
 
-(se completa al terminar)
+| Regla | Código | Pruebas |
+|---|---|---|
+| AR76-1, S-369 | `PackCard` y `saveBag` en `AdminPanel.tsx` (la cámara sube al elegir la foto) | `operacionCelular.test.ts` (OC-G, de vuelta a su versión de la 64), `armado76.test.ts` (AR76-G) |
+| AR76-2, S-372 | `fulfillment.review_bag` y `_open_bag`; `web/api.py` `admin_bolsa_revision` y la ruta `/api/admin/bolsas/revision` | `test_armado76.test_ar76_b_*` (motor y API) |
+| AR76-3 | `fulfillment._clean_review` (compartida con `pack_bag`) y `bag_review` en la API | `test_ar76_c_*` |
+| AR76-4 | `_open_bag` (`BAG_NOT_FOUND`) | `test_ar76_d_*` |
+| AR76-5 | `_check_bag_open` (compartida con `remove_bag`) | `test_ar76_e_*` |
+| AR76-6 | ruta con `PACKING` y `check_role` | `test_ar76_f_*` |
+| AR76-7, S-370, S-371 | `PhotoProductReview.tsx` (`pick` sin detector, `suggest` a pedido, `keepKnown` descarta lo que no está) y el desplegable `.pack-review` | `armado76.test.ts` (AR76-G), `PhotoProductReview.test.ts`, `operations.test.ts` (PA-02) |
+| S-373 | `SupplierStock.tsx` con `scope="tu lista"` | `armado76.test.ts` (AR76-H), `stock72.test.ts` (ST72-G) |
+| S-374 | `BagForm.tsx`, `BagForm.test.ts` y los estilos `.bag-*` borrados | — |
+
+Pruebas que cambiaron por esta spec (no se debilitaron: piden lo nuevo):
+
+- `operacionCelular.test.ts` OC-G vuelve a la versión de la iteración 64, que la 71 había cambiado para exigir lo contrario.
+- `operations.test.ts` PA-02 pedía un revisor del detector en cada tarjeta; ahora pide la cámara y ningún revisor antes de guardar una bolsa.
+- `PhotoProductReview.test.ts` y `stock72.test.ts` tocan "Sugerir con el detector" antes de esperar sugerencias.
+
+Revisado en el navegador con la demo (viernes de armado, `armado-demo`): elegir la foto registró la bolsa 1 del pedido 110 sin llamar al detector; "Sugerir con el detector" devolvió papa ×4 sin producto asignado (el pedido tiene papa blanca y amarilla, S-359); al elegir Papa amarilla y guardar, `/api/admin/armado` devuelve la bolsa con `[PAPA-AMARILLA ×4]` y la lista del pedido la marca.
 
 ## Evidencia
 
