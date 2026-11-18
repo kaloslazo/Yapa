@@ -5,21 +5,42 @@ import { LazyRouteMap } from './LazyRouteMap';
 import { Icon } from './Icon';
 import './RoutePlanner.css';
 
+type Road = { distancia_m: number; duracion_s: number; coordenadas: Array<[number, number]> };
+const MAX_ROAD_STOPS = 25; // RP74-1
+
 export function RoutePlanner({ stops, active, onOrder, cycle }: { stops: RouteStop[]; active: boolean; onOrder: (ids: string[] | null) => void; cycle?: string }) {
   const [start, setStart] = useState('');
-  const [road,setRoad]=useState<{distancia_m:number;duracion_s:number;coordenadas:Array<[number,number]>}|null>(null);
-  const [busy,setBusy]=useState(false),[routeError,setRouteError]=useState('');
-  const requestVersion=useRef(0);
+  const [road, setRoad] = useState<Road | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [routeError, setRouteError] = useState('');
+  const requestVersion = useRef(0);
   const plan = useMemo(() => planDelivery(stops, start), [stops, start]);
   const shown = plan.route;
   const points = useMemo(() => shown.map(s => ({ id: s.zona.id, name: s.zona.nombre, lat: s.zona.lat!, lon: s.zona.lon!, orders: s.pedidos.length })), [shown]);
-  const routeKey=points.map(p=>`${p.id}:${p.lat}:${p.lon}`).join('|');
-  useEffect(()=>{requestVersion.current++;setRoad(null);setRouteError('');setBusy(false);return()=>{requestVersion.current++;};},[routeKey,cycle]);
-  const trace=async()=>{
-    const request=++requestVersion.current;setBusy(true);setRouteError('');
-    try { const result=await api.post<{distancia_m:number;duracion_s:number;coordenadas:Array<[number,number]>}>('/api/reparto/ruta',{ciclo:cycle,zonas:JSON.stringify(points.map(p=>p.id))}); if(request===requestVersion.current)setRoad(result); }
-    catch(error){if(request===requestVersion.current){setRoad(null);setRouteError(error instanceof Error?error.message:'No pudimos trazar por calles.');}}
-    finally{if(request===requestVersion.current)setBusy(false);}
+  const routeKey = points.map((p) => `${p.id}:${p.lat}:${p.lon}`).join('|');
+  // RP74-4: cambiar el inicio o la semana borra el trazado anterior y descarta respuestas viejas
+  useEffect(() => {
+    requestVersion.current++;
+    setRoad(null);
+    setRouteError('');
+    setBusy(false);
+    return () => { requestVersion.current++; };
+  }, [routeKey, cycle]);
+  // iteración 74: el recorrido por calles se pide solo con el botón
+  const trace = async () => {
+    const request = ++requestVersion.current;
+    setBusy(true);
+    setRouteError('');
+    try {
+      const result = await api.post<Road>('/api/reparto/ruta', { ciclo: cycle, zonas: JSON.stringify(points.map((p) => p.id)) });
+      if (request === requestVersion.current) setRoad(result);
+    } catch (error) {
+      if (request !== requestVersion.current) return;
+      setRoad(null);
+      setRouteError(error instanceof Error ? error.message : 'No pudimos trazar por calles.');
+    } finally {
+      if (request === requestVersion.current) setBusy(false);
+    }
   };
   // la ruta completa en Google Maps (sin clave): sale desde donde está el transportista, con las paradas en este orden
   const google = shown.length ? `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${points[points.length - 1].lat},${points[points.length - 1].lon}${points.length > 1 ? `&waypoints=${encodeURIComponent(points.slice(0, -1).map(p => `${p.lat},${p.lon}`).join('|'))}` : ''}` : '';
@@ -53,9 +74,12 @@ export function RoutePlanner({ stops, active, onOrder, cycle }: { stops: RouteSt
     {plan.fixedStart ? <small className="route-planner-note">La zona en camino se mantiene primero.</small> : null}
     {plan.missing.length ? <p className="route-planner-warning" role="status">Sin coordenadas: {plan.missing.map(s => s.zona.nombre).join(', ')}. Se mantienen al final de las pendientes, fuera del cálculo.</p> : null}
     {plan.limited ? <p className="route-planner-note">Hay más de 100 puntos; se conserva el orden inicial.</p> : null}
-    <div className="route-road-tools"><button className="secondary-button" type="button" disabled={!cycle||shown.length<2||shown.length>25||busy} onClick={()=>void trace()}>{busy?'Trazando…':'Trazar por calles'}</button>
-      {road?<p role="status">Recorrido vial: {(road.distancia_m/1000).toFixed(2)} km · {Math.ceil(road.duracion_s/60)} min estimados, sin tráfico en tiempo real. La línea continua sigue las calles del orden elegido.</p>:<p>La línea discontinua une paradas en línea recta. Pulsa «Trazar por calles» para consultar el recorrido vial.</p>}
-      {routeError?<p role="alert">{routeError}</p>:null}
+    <div className="route-road-tools">
+      <button className="secondary-button" type="button" disabled={!cycle || shown.length < 2 || shown.length > MAX_ROAD_STOPS || busy} onClick={() => void trace()}>{busy ? 'Trazando…' : 'Trazar por calles'}</button>
+      {road
+        ? <p role="status">Recorrido vial: {km(road.distancia_m)} km · {Math.ceil(road.duracion_s / 60)} min estimados, sin tráfico en tiempo real. La línea continua sigue las calles del orden elegido.</p>
+        : <p>La línea discontinua une paradas en línea recta. Pulsa «Trazar por calles» para consultar el recorrido vial.</p>}
+      {routeError ? <p role="alert">{routeError}</p> : null}
     </div>
     <div className="route-planner-actions">{google ? <a className="secondary-button route-planner-google" href={google} target="_blank" rel="noreferrer"><Icon name="map" size={17} />Abrir ruta en Google Maps</a> : null}<button type="button" className="primary-button" disabled={shown.length < 2 || active} onClick={() => onOrder(plan.ids)}>Usar este orden</button>{active ? <button type="button" className="secondary-button" onClick={() => onOrder(null)}>Restaurar orden</button> : null}</div>
     {active ? <p className="route-planner-ok" role="status">Orden sugerido aplicado a la lista. Las entregas se registran con sus botones habituales.</p> : null}
