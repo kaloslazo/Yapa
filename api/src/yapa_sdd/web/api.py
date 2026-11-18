@@ -15,10 +15,9 @@ from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
-from ..street_routing import street_route
 
-from .. import supplier_stock
-from .. import quote_reader, vision
+from .. import quote_reader, supplier_stock, vision
+from ..street_routing import street_route
 from .. import assistant, audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
 from ..mailer import ConsoleMailer, MailError
@@ -779,21 +778,24 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
     def vision_analizar(environ, data, session):
-        return vision.analyze_photo(data.get('_vision_upload'))
+        return vision.analyze_photo(data.get("_vision_upload"))
+
+    def bag_review(data) -> list:
+        """AR71-2: la revisión llega como texto JSON en el formulario de la foto."""
+        try:
+            return json.loads(data.get("revision", "[]"))
+        except (ValueError, TypeError):
+            raise BusinessRuleError("INVALID_BAG_REVIEW", "La revisión de la bolsa no es válida.") from None
 
     def admin_bolsa(environ, data, session):
-        try:
-            review = json.loads(data.get('revision', '[]'))
-        except (ValueError, TypeError):
-            raise BusinessRuleError('INVALID_BAG_REVIEW', 'La revisión de la bolsa no es válida.')
         bag = fulfillment.pack_bag(store, _int(data.get("pedido"), "Número de pedido"), by=session["principal"],
-                                   photo=data.get("foto", ""), now=clock(), review=review)
+                                   photo=data.get("foto", ""), now=clock(), review=bag_review(data))
         return {"pedido": bag.order_id, "numero": bag.number, "foto": bag.photo}
 
     def admin_bolsa_quitar(environ, data, session):
-        bag = fulfillment.remove_bag(store, _int(data.get('pedido'), 'Pedido'), _int(data.get('numero'), 'Bolsa'),
-                                     by=session['principal'], now=clock())
-        return {'pedido': bag.order_id, 'numero': bag.number}
+        bag = fulfillment.remove_bag(store, _int(data.get("pedido"), "Pedido"), _int(data.get("numero"), "Bolsa"),
+                                     by=session["principal"], now=clock())
+        return {"pedido": bag.order_id, "numero": bag.number}
 
     def admin_entrega(environ, data, session):
         delivery = fulfillment.deliver_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
@@ -1086,15 +1088,22 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ciclo": freight.cycle, "empresa": freight.company, "monto": money(freight.amount)}
 
     def reparto_ruta(environ, data, session):
-        week=str(data.get('ciclo',''));cycle.check_cycle_id(week)
-        try:ids=json.loads(data.get('zonas','[]'))
-        except (ValueError,TypeError):raise BusinessRuleError('INVALID_ROUTE','La lista de paradas no es válida.')
-        if not isinstance(ids,list) or not 2<=len(ids)<=25 or not all(isinstance(z,str) for z in ids) or len(set(ids))!=len(ids):
-            raise BusinessRuleError('INVALID_ROUTE','Elige entre 2 y 25 zonas distintas.')
-        allowed={o.zone_id for o in store.orders_in_cycle(week) if fulfillment.is_attended(store,o)}
-        if any(z not in allowed or (week,z) in store.deliveries or (week,z) in store.failed_deliveries for z in ids):
-            raise BusinessRuleError('INVALID_ROUTE','La ruta solo puede incluir zonas pendientes de esta semana.')
-        return street_route([(store.zones[z].lon,store.zones[z].lat) for z in ids])
+        """RP74-1: las coordenadas salen de las zonas pendientes de la semana, nunca de lo que mande el navegador."""
+        week = str(data.get("ciclo", ""))
+        cycle.check_cycle_id(week)
+        try:
+            ids = json.loads(data.get("zonas", "[]"))
+        except (ValueError, TypeError):
+            raise BusinessRuleError("INVALID_ROUTE", "La lista de paradas no es válida.") from None
+        if not isinstance(ids, list) or not 2 <= len(ids) <= 25 or not all(isinstance(z, str) for z in ids):
+            raise BusinessRuleError("INVALID_ROUTE", "Elige entre 2 y 25 zonas distintas.")
+        if len(set(ids)) != len(ids):
+            raise BusinessRuleError("INVALID_ROUTE", "Elige entre 2 y 25 zonas distintas.")
+        attended = {o.zone_id for o in store.orders_in_cycle(week) if fulfillment.is_attended(store, o)}
+        closed = set(store.deliveries) | set(store.failed_deliveries)
+        if any(z not in attended or (week, z) in closed for z in ids):
+            raise BusinessRuleError("INVALID_ROUTE", "La ruta solo puede incluir zonas pendientes de esta semana.")
+        return street_route([(store.zones[z].lon, store.zones[z].lat) for z in ids])
 
     def reparto_entrega(environ, data, session):
         return admin_entrega(environ, data, session)  # TR-02: mismas reglas; el motor revisa quién entrega
@@ -1125,14 +1134,17 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                                if p.supplier_id == supplier_id)}
 
     def proveedor_stock(environ, data, session):
-        return supplier_stock.snapshot(store, session['principal'], query_cycle(environ))
+        """ST72-1."""
+        return supplier_stock.snapshot(store, session["principal"], query_cycle(environ))
 
     def proveedor_stock_confirmar(environ, data, session):
+        """ST72-1..ST72-3: la foto y el conteo de una carga."""
         try:
-            rows=json.loads(data.get('conteo','[]'))
-        except (ValueError,TypeError):
-            raise BusinessRuleError('INVALID_STOCK_ITEM','El conteo de la carga no es válido.')
-        return supplier_stock.confirm(store,session['principal'],data.get('ciclo',''),rows,data.get('_stock_upload'),clock())
+            rows = json.loads(data.get("conteo", "[]"))
+        except (ValueError, TypeError):
+            raise BusinessRuleError("INVALID_STOCK_ITEM", "El conteo de la carga no es válido.") from None
+        return supplier_stock.confirm(store, session["principal"], data.get("ciclo", ""), rows,
+                                      data.get("_stock_upload"), clock())
 
     def asistente(environ, data, session):
         """AS-01..AS-05: el asistente de compra responde con los datos de este vecino."""
@@ -1414,12 +1426,11 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             if not hmac.compare_digest(environ.get("HTTP_X_YAPA_CSRF", ""), session["csrf"]):
                 raise ApiError("403 Forbidden", "CSRF", "La sesión venció. Recarga la página.")
         data, files = _body(environ) if method in ("POST", "DELETE") else ({}, {})
-        if handler is vision_analizar:
-            data['_vision_upload'] = files.get('foto_archivo')
-        if handler is proveedor_lista_leer:
-            data['_quote_upload'] = files.get('foto_archivo')
-        if handler is proveedor_stock_confirmar:
-            data['_stock_upload'] = files.get('foto_archivo')
+        # fotos que se leen y no se guardan: el detector, la cotización y la carga del proveedor
+        uploads = {vision_analizar: "_vision_upload", proveedor_lista_leer: "_quote_upload",
+                   proveedor_stock_confirmar: "_stock_upload"}
+        if handler in uploads:
+            data[uploads[handler]] = files.get("foto_archivo")
         saved = ""
         if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])
