@@ -56,7 +56,7 @@ export function toOrder(raw: Raw): Order {
     total: num(raw.total), subtotal: num(raw.subtotal), delivery: num(raw.envio), withBalance: num(raw.con_saldo),
     toPay: num(raw.a_yapear), delivered: Boolean(raw.entregado), cancellable: Boolean(raw.cancelable),
     lines: (raw.lineas ?? []).map(toLine), settlement: toSettlement(raw.liquidacion),
-    bags: raw.bolsas?.map((b: Raw) => ({ number: b.numero, photo: b.foto })),
+    bags: raw.bolsas?.map((b: Raw) => ({ number: b.numero, photo: b.foto, products: b.productos?.map((p: Raw) => ({ id: p.id, units: Number(p.unidades) })) })),
     labels: raw.rotulos,
     tracking: raw.seguimiento?.map((s: Raw) => ({ step: s.paso, done: Boolean(s.hecho), ...('cuando' in s ? { when: s.cuando } : {}), ...('detalle' in s ? { detail: s.detalle } : {}) })),
     trackingStatus: raw.estado_seguimiento ? { title: raw.estado_seguimiento.titulo, detail: raw.estado_seguimiento.detalle } : undefined,

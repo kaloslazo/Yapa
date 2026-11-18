@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.parse import parse_qs
 from ..street_routing import street_route
 
+from .. import supplier_stock
 from .. import quote_reader, vision
 from .. import assistant, audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
@@ -770,7 +771,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                           "fallida": bool(failed), "en_camino": (cycle_id, zone_id) in store.dispatches})  # S-308
         orders = [order_json(o, names, clock()) | {
             "vecino": store.customers[o.customer_id].name,
-            "bolsas": [{"numero": b.number, "foto": b.photo} for b in store.bags.get(o.order_id, [])],
+            "bolsas": [{"numero": b.number, "foto": b.photo, "productos": store.bag_reviews.get((o.order_id, b.number), [])} for b in store.bags.get(o.order_id, [])],
             "rotulos": fulfillment.bag_labels(store, o.order_id)} for o in attended]  # RT-01
         if session["kind"] == partners.PACKER:  # AM-01, S-290
             orders = [{key: o[key] for key in PACKER_ORDER + ("rotulos",)} | {
@@ -781,9 +782,18 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return vision.analyze_photo(data.get('_vision_upload'))
 
     def admin_bolsa(environ, data, session):
+        try:
+            review = json.loads(data.get('revision', '[]'))
+        except (ValueError, TypeError):
+            raise BusinessRuleError('INVALID_BAG_REVIEW', 'La revisión de la bolsa no es válida.')
         bag = fulfillment.pack_bag(store, _int(data.get("pedido"), "Número de pedido"), by=session["principal"],
-                                   photo=data.get("foto", ""), now=clock())
+                                   photo=data.get("foto", ""), now=clock(), review=review)
         return {"pedido": bag.order_id, "numero": bag.number, "foto": bag.photo}
+
+    def admin_bolsa_quitar(environ, data, session):
+        bag = fulfillment.remove_bag(store, _int(data.get('pedido'), 'Pedido'), _int(data.get('numero'), 'Bolsa'),
+                                     by=session['principal'], now=clock())
+        return {'pedido': bag.order_id, 'numero': bag.number}
 
     def admin_entrega(environ, data, session):
         delivery = fulfillment.deliver_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
@@ -1114,6 +1124,16 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                 "lista_actual": export_catalog(p for p in store.catalog_for(cycle.add_weeks(current, 1)).values()
                                                if p.supplier_id == supplier_id)}
 
+    def proveedor_stock(environ, data, session):
+        return supplier_stock.snapshot(store, session['principal'], query_cycle(environ))
+
+    def proveedor_stock_confirmar(environ, data, session):
+        try:
+            rows=json.loads(data.get('conteo','[]'))
+        except (ValueError,TypeError):
+            raise BusinessRuleError('INVALID_STOCK_ITEM','El conteo de la carga no es válido.')
+        return supplier_stock.confirm(store,session['principal'],data.get('ciclo',''),rows,data.get('_stock_upload'),clock())
+
     def asistente(environ, data, session):
         """AS-01..AS-05: el asistente de compra responde con los datos de este vecino."""
         customer = store.customers[session["principal"]]
@@ -1301,6 +1321,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/ciclos/(\d{4}-W\d{2})/liquidar", {"POST": (admin_liquidar, "admin")}),
         (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
         (r"/api/vision/analizar", {"POST": (vision_analizar, ("admin", partners.PACKER, partners.SUPPLIER))}),
+        (r"/api/admin/bolsas/quitar", {"POST": (admin_bolsa_quitar, PACKING)}),
         (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
         (r"/api/admin/danados", {"POST": (admin_danado, PACKING)}),
         (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),
@@ -1352,6 +1373,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/reparto/entregas", {"POST": (reparto_entrega, partners.DRIVER)}),
         (r"/api/reparto/salidas", {"POST": (reparto_salida, partners.DRIVER)}),
         (r"/api/reparto/entregas-fallidas", {"POST": (reparto_entrega_fallida, partners.DRIVER)}),
+        (r"/api/proveedor/stock", {"GET": (proveedor_stock, partners.SUPPLIER)}),
+        (r"/api/proveedor/stock/confirmar", {"POST": (proveedor_stock_confirmar, partners.SUPPLIER)}),
         (r"/api/proveedor", {"GET": (proveedor, partners.SUPPLIER)}),
         (r"/api/proveedor/propuestas", {"POST": (proveedor_propuesta, partners.SUPPLIER)}),
         (r"/api/proveedor/lista/leer", {"POST": (proveedor_lista_leer, partners.SUPPLIER)}),  # LP-01
@@ -1395,6 +1418,8 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
             data['_vision_upload'] = files.get('foto_archivo')
         if handler is proveedor_lista_leer:
             data['_quote_upload'] = files.get('foto_archivo')
+        if handler is proveedor_stock_confirmar:
+            data['_stock_upload'] = files.get('foto_archivo')
         saved = ""
         if path.rstrip("/") in PHOTO_ROUTES and files.get("foto_archivo") and files["foto_archivo"][1]:  # S-151, SG-02
             saved = data["foto"] = _save_photo(photo_dir, files["foto_archivo"])

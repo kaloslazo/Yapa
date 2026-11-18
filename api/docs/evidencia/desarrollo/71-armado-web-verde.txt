@@ -1,0 +1,18 @@
+> yapa@0.1.0 typecheck
+> tsc -b
+
+
+> yapa@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.5 C:/Users/aaroo/Documents/DesignSoftware-projectU/Yapa-modelo-yolo
+
+
+ Test Files  39 passed (39)
+      Tests  213 passed (213)
+   Start at  01:00:30
+   Duration  28.75s (import 80%, environment 17%, tests 3%)
+
+    Isolate  39 workers spawned · ~991ms startup each (spawn + environment, per file)
+             at least ~4.53s faster with isolate: false — reuses workers across files instead of one per file

@@ -111,7 +111,7 @@ export interface Order {
   cancellable: boolean;
   lines: OrderLine[];
   settlement: Settlement | null;
-  bags?: Array<{ number: number; photo: string }>;
+  bags?: Array<{ number: number; photo: string; products?: Array<{ id: string; units: number }> }>;
   labels?: string[]; // S-298: rótulo de cada bolsa
   tracking?: TrackingStep[]; // S-309, S-312: los siete pasos con hora y detalle
   trackingStatus?: { title: string; detail: string }; // S-311: el estado en una frase

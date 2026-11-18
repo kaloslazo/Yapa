@@ -1,6 +1,6 @@
 # YOLOv8 Small para revisión por foto
 
-Rama `aaron/modelo-yolo`, independiente y basada en main `1942dea`.
+Rama `aaron/modelo-yolo`, actualizada a main `8b24c0e` el 17/11/2026. Incluye las mejoras de Armado y Proveedor; conserva el lector de cotizaciones y el despliegue de visión incorporados por Kalos.
 
 ## Modelo y alcance
 
@@ -35,15 +35,17 @@ Columnas: etiqueta real. Filas: predicción. La diagonal recoge coincidencias; f
 
 La curva PR muestra el intercambio entre detectar más objetos y producir falsos positivos al variar el umbral. El servidor utiliza conf=0,35. Las puntuaciones que muestra el detector no garantizan que el conteo sea correcto.
 
-## Uso en las pantallas
+## Uso actual en las pantallas
 
-- Armado: abrir un pedido y «Revisar una bolsa con el detector», elegir foto, corregir producto/unidades y «Confirmar revisión y guardar bolsa». Se guarda una bolsa por foto, no una bolsa por objeto. Se mantienen cierre semanal, permisos y validaciones del endpoint de bolsas.
-- Proveedor: elegir foto en «Revisar productos con una foto» y confirmar el conteo de referencia. La lista semanal se edita y envía por separado: una foto no estima pesos, stock o precios.
-- Se pueden agregar/quitar filas y corregir cantidades. Si el análisis falla o no detecta nada, queda disponible la revisión manual. El análisis no guarda la foto en disco; Armado la guarda solo al confirmar con éxito. El conteo corregido queda como referencia en la pantalla y se pierde al recargar; no se añade al pedido, catálogo ni base de datos.
+- Armado: abrir un pedido y elegir «Tomar foto de la bolsa». El detector se activa automáticamente. Corregir las unidades, elegir el producto exacto y confirmar cada fila con su check; esto marca la lista superior como comprobación visual. Si el pedido tiene ambas variedades de papa, se debe elegir cuál corresponde. Se puede completar manualmente cuando la detección falla.
+- «Confirmar revisión y guardar bolsa» guarda una bolsa por foto junto con sus productos revisados. Para otra bolsa, elegir otra foto. Al recargar se recuperan las revisiones. «Quitar bolsa» exige confirmación, funciona antes del despacho y conserva la foto y la auditoría. Se mantiene el cierre semanal y las reglas de entrega.
+- Proveedor: «Stock confirmado para tu propuesta» acumula cargas de la misma semana y SKU. Elegir foto, corregir producto/unidades, ingresar el peso medido cuando se vende por kg y confirmar las filas. «Confirmar y acumular stock» persiste los totales y actualiza la disponibilidad del borrador; enviar y aprobar la lista sigue siendo necesario para publicar.
+- El stock confirmado comienza en cero: no suma el catálogo de ejemplo a lo contado. El total vendible se redondea hacia abajo al paso del producto. El sistema no convierte unidades visibles a kilos ni modifica los precios. La misma foto exacta se deduplica por proveedor y semana; dos fotos distintas de la misma carga física requieren control del proveedor.
+- Los precios por volumen de cada producto comienzan plegados. Se conserva «Leer cotización con IA» de Kalos; leer una lista con precios y contar verduras son operaciones diferentes.
 
-![Foto revisada en Armado](revision-armado.png)
+![Armado unificado, revisión móvil](armado-17nov.png)
 
-![Foto revisada por Proveedor](revision-proveedor.png)
+![Stock acumulado del proveedor, vista móvil](proveedor-17nov.png)
 
 ## Instalación y arranque local
 
@@ -56,23 +58,32 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r api/requirements-vision.txt
 npm.cmd ci
 npm.cmd run build
-.\.venv\Scripts\python.exe api/tools/servir_pruebas_roles.py --puerto 8013
+.\.venv\Scripts\python.exe api/tools/servir_pruebas_roles.py --puerto 8023
 ```
 
-Abrir http://127.0.0.1:8013/equipo?rol=armador, usuario `armado-demo`, clave `armado-yapa-2026`; o `?rol=proveedor`, usuario `frescos-demo`, clave `frescos-yapa-2026`. La demo crea pedidos y pagos ficticios en memoria en tres zonas y fija el jueves 01/10/2026 después del cierre; no toca bases existentes. Sus fotos se guardan en una carpeta temporal y se descartan al cerrar esta demo. Ctrl+C detiene el servidor. La demo habitual también sirve, pero puede no alcanzar el mínimo de pedidos.
+Abrir http://yolo.localhost:8023/equipo?rol=armador, usuario `armado-demo`, clave `armado-yapa-2026`; o `?rol=proveedor`, usuario `frescos-demo`, clave `frescos-yapa-2026`. La demo crea pedidos y pagos ficticios en memoria en tres zonas y fija el jueves 01/10/2026 después del cierre; no toca bases existentes. Sus fotos se guardan en una carpeta temporal y se descartan al cerrar esta demo. Ctrl+C detiene el servidor. La demo habitual también sirve, pero puede no alcanzar el mínimo de pedidos.
 
 ## AWS y dependencias
 
-El backend normal sigue arrancando sin PyTorch/Ultralytics: se importan al solicitar análisis. Si faltan, la foto se revisa manualmente. No se instalaron paquetes en AWS ni se modificó la instancia. Para habilitar la inferencia allí hay que instalar las dependencias opcionales en el entorno Python del servicio y medir memoria/latencia: el tamaño del archivo no refleja la RAM consumida. En Linux con OpenCV pueden hacer falta libGL y GLib. El Dockerfile habitual no instala estas dependencias opcionales. El paquete de CI sí incluye los pesos porque están dentro de api/src; no incluye el dataset. No hay descargas automáticas de dependencias durante la inferencia.
+Según [la documentación de Kalos](../../deploy/aws/README.md), el 16/11 se habilitaron las dependencias de visión en el servicio y se amplió Lightsail a 2 GB. Esta revisión no accedió a AWS ni modificó su configuración. El modelo ya forma parte de `api/src`; el dataset no se sube. El Dockerfile habitual no instala las dependencias opcionales.
 
-## Validación local, 14/11/2026
+El backend sigue arrancando sin PyTorch/Ultralytics: se importan al solicitar análisis. Si faltan, queda la revisión manual. No hay instalación automática durante una petición. Para una instalación nueva se necesitan las dependencias de `api/requirements-vision.txt` en el Python que ejecuta el servicio, además de memoria suficiente; el peso del archivo no representa la RAM necesaria.
+
+## Validación actual, 17/11/2026
+
+- Regresión conjunta de Armado y stock: 774 pruebas del motor (770 aprobadas, 4 omitidas), 216 web, TypeScript y build aprobados. Los últimos ajustes de selección repetida de foto, unidad del borrador y cámara se comprobaron con las pruebas relacionadas y un nuevo build. Evidencia en `api/docs/evidencia/desarrollo/71-armado-*` y `72-stock-*`.
+- Chrome real a 390 px con API y YOLO locales: detectar zanahorias, corregir a 2, confirmar el SKU, comprobar el check superior, guardar, recargar y quitar la bolsa. Una foto se mantiene como una bolsa.
+- Dos fotos de papa: 2 + 3 unidades visibles y 1,25 + 2,75 kg medidos producen 5 unidades y 4 kg confirmados. Se verificaron la recarga, el máximo de 4 kg en el borrador y que repetir la foto no sume otra vez. Precios plegados y lector de cotizaciones conservados.
+- No se reentrenó el modelo. Permanecen el aviso Vite por chunk grande y el ResourceWarning SQLite de la suite. [Decisiones y alineación](../propuestas/alineacion-17nov.md), [spec de Armado](../../api/docs/desarrollo/71-armado-unificado.md), [spec de stock](../../api/docs/desarrollo/72-stock-confirmado.md).
+
+## Validación histórica, 14/11/2026
 
 - 729 pruebas del motor: 725 aprobadas y 4 omitidas. Roles permitidos, anónimo/vecino denegados, CSRF, tamaño/foto requerida y conteo por cajas. Sin dependencias de visión, las pruebas generales siguen pasando.
 - 194 pruebas frontend, TypeScript y build aprobados. Correcciones, recuperación manual, fallo al guardar y respuesta antigua de otra foto cubiertos.
 - Prueba funcional real con el best.pt y cuatro fotos del test: papa 1/1, cebolla 1/1, ajo 2/3 y zanahoria 3/3, en formato detectado/etiquetado. Es una muestra de funcionamiento, NO una estimación estadística nueva. [Respuestas y tiempos](prueba-local.json). Primera carga del modelo unos 6,7 s; siguientes fotos de esa prueba unos 0,12–0,15 s en esta CPU.
 - Chrome de pruebas, escritorio y 390 px: Armado detectó 3 zanahorias, permitió corregir a 2 y guardó la misma foto como una bolsa. Proveedor detectó 2 ajos, permitió corregir a 3 y confirmó sin publicar una propuesta. Se verificó el rechazo de una foto inválida. No se entrenó de nuevo.
 - Entorno de inferencia: Python 3.12, Ultralytics 8.4.211, PyTorch 2.15.0+cpu. La regresión general también se ejecutó en Python 3.14.7. Avisos previos: chunk Vite >500 kB y ResourceWarning SQLite durante pruebas del motor.
-- No se desplegó ni se hizo push. Los cambios están listos para revisión en esta rama.
+- En esa validación del 14/11 no se había desplegado ni hecho push. La validación actual se describe arriba.
 
 ## Fuente
 

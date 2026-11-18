@@ -1,5 +1,16 @@
 # Registro de iteraciones de desarrollo
 
+## Iteración 72 · Stock confirmado por cargas (17/11/2026)
+
+- Spec 72-stock-confirmado.md. Acumulación por proveedor, semana y SKU; deduplicación de foto exacta; peso medido para kg; actualización del borrador y precios por volumen plegados. Se conserva el lector de cotizaciones.
+- 774 pruebas motor (770 aprobadas, 4 omitidas), 216 web, TypeScript y build aprobados. Navegador con YOLO real: 5 unidades y 4 kg, recarga y repetición sin doble conteo. También se verificó el recorrido final de Armado.
+
+## Iteración 71 · Armado con cámara y revisión unificadas (17/11/2026)
+
+- Spec 71-armado-unificado.md. Captura con detector, correspondencia por SKU, confirmación y baja antes del despacho con auditoría y foto conservada.
+- 768 pruebas motor (4 omitidas), 213 web, TypeScript y build aprobados.
+
+
 ## Iteración 64 · Bolsas con selector y foto individual (13/11/2026)
 
 - Spec: `64-bolsas-con-selector.md`, S-327 y S-328 (a validar por el equipo).
@@ -347,7 +358,7 @@
 
 ## Iteración 41 · Entrar con Google (18/10/2026)
 
-- Spec: `41-entrar-con-google.md` (S-210..S-215, a validar). Opcional y complementa al PIN y al código por correo: se activa con el Client ID público de Google Cloud; sin él no aparece nada.
+- Spec: `41-entrar-con-google.md` (S-210..S-216, a validar). Opcional y complementa al PIN y al código por correo: se activa con el Client ID público de Google Cloud; sin él no aparece nada.
 - El vecino entra al menos una vez con su PIN y vincula su cuenta de Google. Después entra con un toque. Se guarda el identificador estable de Google, no el correo. Si no tenía correo verificado, el de Google (ya verificado por Google) pasa a serlo.
 - El motor verifica el token con PyJWT: firma RS256 con las llaves públicas de Google, audiencia, emisor, vencimiento y correo verificado. Es una dependencia **opcional**: el resto del motor sigue usando solo la biblioteca estándar.
 - Las pruebas firman tokens de verdad con una llave propia (incluidos los ataques típicos: sin firma y confusión de algoritmo) y se comprobó con mutaciones que muerden.
