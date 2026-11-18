@@ -1,0 +1,192 @@
+
+ RUN  v5.0.5 /Users/kalosroots/Documents/Yapa
+
+ ❯ src/components/PhotoProductReview.test.ts (5 tests | 5 failed) 63ms
+   × corrige el conteo y confirma con la misma foto, sin guardar automáticamente 42ms
+   × permite revisión manual si el análisis falla y rechaza cantidades inválidas 7ms
+   × conserva las correcciones si guardar falla 5ms
+   × ignora la respuesta de una foto anterior al elegir otra 3ms
+   × exige elegir la variedad de papa y confirmar la fila antes de guardar 5ms
+ ❯ src/components/stock72.test.ts (3 tests | 1 failed) 87ms
+   × requiere peso, confirma carga y aplica el total devuelto al borrador 42ms
+ ❯ src/components/armado76.test.ts (2 tests | 2 failed) 76ms
+   ❯ AR76-G · detector a pedido en el armado (1)
+     × registra la bolsa con la foto y luego sugiere solo lo que está en el pedido 69ms
+   ❯ AR76-H · detector a pedido en el stock del proveedor (1)
+     × elegir la foto no llama al detector; el botón sí 6ms
+ ❯ src/components/operacionCelular.test.ts (6 tests | 1 failed) 173ms
+   ❯ OC-G · armado con la cámara (1)
+     × una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto 29ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/PhotoProductReview.test.ts > corrige el conteo y confirma con la misma foto, sin guardar automáticamente
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/api/vision/analizar",
+      FormData {},
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/components/PhotoProductReview.test.ts:33:51
+     31| it('corrige el conteo y confirma con la misma foto, sin guardar automá…
+     32|   vi.mocked(api.post).mockResolvedValue({productos:[{producto:'zanahor…
+     33|   const file=await upload(); expect(api.post).not.toHaveBeenCalled(); …
+       |                                                   ^
+     34|   await act(async () => host.querySelector<HTMLButtonElement>('.primar…
+     35|   expect(confirm).toHaveBeenCalledWith(file,[{producto:'zanahoria',can…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/components/PhotoProductReview.test.ts > permite revisión manual si el análisis falla y rechaza cantidades inválidas
+TypeError: Cannot read properties of undefined (reading 'click')
+ ❯ src/components/PhotoProductReview.test.ts:25:130
+     23| // iteración 76 (S-369, S-373): el detector corre solo al tocar el bot…
+     24| async function suggest() {
+     25|   await act(async () => [...host.querySelectorAll<HTMLButtonElement>('…
+       |                                                                                                                                  ^
+     26| }
+     27| async function quantity(value:string) {
+ ❯ Proxy.process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:890:22
+ ❯ suggest src/components/PhotoProductReview.test.ts:25:9
+ ❯ src/components/PhotoProductReview.test.ts:41:100
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/components/PhotoProductReview.test.ts > conserva las correcciones si guardar falla
+TypeError: Cannot read properties of undefined (reading 'click')
+ ❯ src/components/PhotoProductReview.test.ts:25:130
+     23| // iteración 76 (S-369, S-373): el detector corre solo al tocar el bot…
+     24| async function suggest() {
+     25|   await act(async () => [...host.querySelectorAll<HTMLButtonElement>('…
+       |                                                                                                                                  ^
+     26| }
+     27| async function quantity(value:string) {
+ ❯ Proxy.process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:890:22
+ ❯ suggest src/components/PhotoProductReview.test.ts:25:9
+ ❯ src/components/PhotoProductReview.test.ts:47:138
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/components/PhotoProductReview.test.ts > ignora la respuesta de una foto anterior al elegir otra
+TypeError: Cannot read properties of undefined (reading 'click')
+ ❯ src/components/PhotoProductReview.test.ts:25:130
+     23| // iteración 76 (S-369, S-373): el detector corre solo al tocar el bot…
+     24| async function suggest() {
+     25|   await act(async () => [...host.querySelectorAll<HTMLButtonElement>('…
+       |                                                                                                                                  ^
+     26| }
+     27| async function quantity(value:string) {
+ ❯ Proxy.process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:890:22
+ ❯ suggest src/components/PhotoProductReview.test.ts:25:9
+ ❯ src/components/PhotoProductReview.test.ts:54:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/components/PhotoProductReview.test.ts > exige elegir la variedad de papa y confirmar la fila antes de guardar
+TypeError: Cannot read properties of undefined (reading 'click')
+ ❯ src/components/PhotoProductReview.test.ts:25:130
+     23| // iteración 76 (S-369, S-373): el detector corre solo al tocar el bot…
+     24| async function suggest() {
+     25|   await act(async () => [...host.querySelectorAll<HTMLButtonElement>('…
+       |                                                                                                                                  ^
+     26| }
+     27| async function quantity(value:string) {
+ ❯ Proxy.process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:890:22
+ ❯ suggest src/components/PhotoProductReview.test.ts:25:9
+ ❯ src/components/PhotoProductReview.test.ts:62:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/components/armado76.test.ts > AR76-G · detector a pedido en el armado > registra la bolsa con la foto y luego sugiere solo lo que está en el pedido
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/components/armado76.test.ts:69:41
+     67|
+     68|     await choosePhoto(host.querySelector<HTMLInputElement>('.pack-card…
+     69|     expect(posted('/api/admin/bolsas')).toHaveLength(1);
+       |                                         ^
+     70|     expect(posted('/api/vision/analizar')).toHaveLength(0);
+     71|     expect(host.querySelector('.pack-review summary')?.textContent).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/components/armado76.test.ts > AR76-H · detector a pedido en el stock del proveedor > elegir la foto no llama al detector; el botón sí
+AssertionError: expected [ [ '/api/vision/analizar', …(1) ] ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/components/armado76.test.ts:99:44
+     97|     }));
+     98|     await choosePhoto(host.querySelector<HTMLInputElement>('input[type…
+     99|     expect(posted('/api/vision/analizar')).toHaveLength(0);
+       |                                            ^
+    100|     await act(async () => button('Sugerir con el detector')!.click());
+    101|     expect(posted('/api/vision/analizar')).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/components/operacionCelular.test.ts > OC-G · armado con la cámara > una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto
+AssertionError: expected "vi.fn()" to be called with arguments: [ '/api/admin/bolsas', Any<FormData> ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "/api/admin/bolsas",
+-   Any<FormData>,
++   "/api/vision/analizar",
++   FormData {},
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/components/operacionCelular.test.ts:92:22
+     90|     Object.defineProperty(camera, 'files', { value: [file] });
+     91|     await act(async () => { camera.dispatchEvent(new Event('change', {…
+     92|     expect(api.post).toHaveBeenCalledWith('/api/admin/bolsas', expect.…
+       |                      ^
+     93|     expect(vi.mocked(api.post).mock.calls.some((call) => call[0] === '…
+     94|     const sent = vi.mocked(api.post).mock.calls[0][1] as FormData;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/components/stock72.test.ts > requiere peso, confirma carga y aplica el total devuelto al borrador
+TypeError: Cannot read properties of undefined (reading 'click')
+ ❯ src/components/stock72.test.ts:19:126
+     17|  const file=host.querySelector('input[type=file]')!;Object.definePrope…
+     18|  await act(async()=>file.dispatchEvent(new Event('change',{bubbles:tru…
+     19|  await act(async()=>[...host.querySelectorAll<HTMLButtonElement>('butt…
+       |                                                                                                                              ^
+     20|  expect(host.querySelector<HTMLButtonElement>('[aria-label="Confirmar …
+     21|  const weight=host.querySelectorAll('input[type=number]')[1];
+ ❯ Proxy.process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:890:22
+ ❯ src/components/stock72.test.ts:19:8
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  9 failed | 7 passed (16)
+   Start at  18:28:32
+   Duration  3.80s (import 72%, environment 23%, tests 3%, transform 3%)
+

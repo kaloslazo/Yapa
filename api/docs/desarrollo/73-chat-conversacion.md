@@ -1,15 +1,45 @@
-# Iteración 73 · Preguntas, opciones y última respuesta
+# Iteración 73 · El chat como conversación: preguntas, opciones y última respuesta
 
-S-365 (a validar por el equipo): conservar el chat y el asistente de Kalos. La búsqueda y sugerencias de FAQ funcionan sin IA; consultas personales conocidas conservan el endpoint con datos del vecino. Las consultas libres sin coincidencias ofrecen ayuda segura y la opción explícita de consultar el asistente existente, que puede usar la IA ya configurada. No se añaden proveedores, claves ni servicios.
+> **Reescrita el 18/11/2026** con el formato de las demás specs. Las reglas y las pruebas son las mismas. El 18/11 también se juntó el tema y las palabras extra de cada pregunta frecuente con la pregunta (`data/faqs.ts`): estaban en dos listas aparte por posición y una pregunta 11 habría roto el chat.
 
-CH73-1: escribir y enviar una pregunta frecuente muestra la pregunta del usuario y opciones relacionadas; no necesita API. Elegir una opción añade su respuesta vigente de la lista compartida.
-CH73-2: preguntas personales siguen consultando /api/asistente; no se inventa información del pedido. Se conservan los rótulos de fuente y las sugerencias del motor.
-CH73-3: la respuesta nueva queda al final del área de conversación y se desplaza allí. Las sugerencias no empujan la respuesta fuera de vista. Acceso por teclado, temas, sin coincidencias y vista móvil.
-CH73-4: reiniciar invalida respuestas en curso. Se conserva la entrada con Escape y la restauración de foco. Reemplazar el asistente con datos por un FAQ exclusivamente está en pausa por solaparse con la iteración 70.
+## Requisito (Aaron, 17/11/2026)
 
-## Trazabilidad y validación
+Como vecino, quiero escribir mi duda en "¿Te ayudamos?" y ver mi pregunta, opciones parecidas y la respuesta al final de la conversación, sin que el chat llame a la IA para lo que ya está en las preguntas frecuentes.
 
-- CH73-1/2: FaqChatbot y faqSearch; chat73.test y regresión de Assistant.test. Se mantienen las sugerencias y fuentes de la API existente.
-- CH73-3/4: desplazamiento local del área de conversación, opciones antes del historial, eliminación de la animación de entrada de respuestas y generación de peticiones para descartar respuestas tras reiniciar. FaqChatbot.test y chat73.test.
-- 764 pruebas motor (760 aprobadas y 4 omitidas), 214 web, TypeScript y build aprobados: 73-chat-*-verde.txt.
-- Chrome a 390 px: pregunta, opciones sin API, cinco respuestas y última respuesta visible, salida segura para una pregunta desconocida. Captura docs/chatbot-faq/chat-17nov.png.
+## Alcance
+
+Solo pantalla. Se conserva el asistente de la iteración 70 (`/api/asistente`) para lo personal y para lo que el vecino quiera consultar. No agrega servicios ni claves.
+
+## Supuestos (a validar por el equipo)
+
+| # | Supuesto | Valor |
+|---|---|---|
+| S-365 | Lo que no es personal se busca primero en las preguntas frecuentes, sin IA. Si no hay coincidencias, el chat lo dice y ofrece "Consultar asistente de compra"; solo con ese toque va al asistente (que puede usar IA, iteración 70). | — |
+
+## Reglas
+
+| Regla | Comportamiento | Error |
+|---|---|---|
+| CH73-1 | Enviar una duda muestra la pregunta del vecino y opciones de las preguntas frecuentes; elegir una agrega su respuesta. No llama a la API. | — |
+| CH73-2 | Las preguntas personales (pedido, entrega, ahorro, precio, grupo) van a `/api/asistente` como en la 70, con su rótulo "Con tus datos" o "Con IA". | — |
+| CH73-3 | La respuesta nueva queda al final de la conversación y a la vista. | — |
+| CH73-4 | "Reiniciar" borra la conversación y descarta las respuestas que estaban en camino. Escape cierra y devuelve el foco al botón. | — |
+
+## Criterios de aceptación
+
+- **CH73-A · Opciones sin IA.** "pagué" muestra la pregunta en la conversación y opciones; elegir "¿Cómo pago mi pedido?" agrega la respuesta con "Yape o Plin" al final. No hay llamadas a la API. → CH73-1, CH73-3
+- **CH73-B · Duda desconocida.** "astronauta galaxia" responde "No encontré una respuesta segura" y ofrece "Consultar asistente de compra"; no llama a la API. → S-365
+- **CH73-C · Reiniciar.** Con "¿Dónde está mi pedido?" en camino, reiniciar y luego recibir la respuesta deja la conversación vacía. → CH73-4
+
+## Trazabilidad
+
+| Regla | Código | Pruebas |
+|---|---|---|
+| CH73-1, S-365 | `FaqChatbot.tsx` (`askQuestion` sin `forceAssistant`) y `utils/faqSearch.ts` | `chat73.test.ts` (CH73-A, CH73-B), `faqSearch.test.ts` |
+| CH73-2 | `FaqChatbot.tsx` (`personal`, `askQuestion`) | `asistente.test.ts` (AS-K) |
+| CH73-3 | efecto que baja la conversación y `data-chat-bottom` | `chat73.test.ts` (CH73-A) |
+| CH73-4 | `generation` en `FaqChatbot.tsx` | `chat73.test.ts` (CH73-C), `FaqChatbot.test.ts` |
+
+## Evidencia
+
+`73-chat-rojo.txt`, `73-chat-motor-verde.txt` y `73-chat-web-verde.txt` (17/11/2026, en la máquina de Aaron).

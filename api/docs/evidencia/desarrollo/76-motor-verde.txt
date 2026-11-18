@@ -1,0 +1,14 @@
+.................................................................................................................................................................................................................................................................................................................................................s.....................................sss.......................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 785 tests in 2.261s
+
+OK (skipped=4)
+test_ar76_b_api_saves_and_shows_the_review (test_armado76.BagReviewApiTests.test_ar76_b_api_saves_and_shows_the_review) ... ok
+test_ar76_c_api_rejects_a_broken_review (test_armado76.BagReviewApiTests.test_ar76_c_api_rejects_a_broken_review) ... ok
+test_ar76_f_a_neighbor_cannot (test_armado76.BagReviewApiTests.test_ar76_f_a_neighbor_cannot) ... ok
+test_ar76_b_the_review_is_saved_on_the_bag_and_replaced (test_armado76.BagReviewLaterTests.test_ar76_b_the_review_is_saved_on_the_bag_and_replaced) ... ok
+test_ar76_c_an_invalid_review_changes_nothing (test_armado76.BagReviewLaterTests.test_ar76_c_an_invalid_review_changes_nothing) ... ok
+test_ar76_d_unknown_bag (test_armado76.BagReviewLaterTests.test_ar76_d_unknown_bag) ... ok
+test_ar76_e_not_after_the_zone_left (test_armado76.BagReviewLaterTests.test_ar76_e_not_after_the_zone_left) ... ok
+Ran 7 tests in 0.009s
+OK

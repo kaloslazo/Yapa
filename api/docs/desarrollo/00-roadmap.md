@@ -1,6 +1,6 @@
 # Desarrollo de Yapa después del Lab 4
 
-Iteración 64 validada localmente (13/11/2026), pendiente de revisión: `64-bolsas-con-selector.md`. Selector de bolsas nuevas con una foto por bolsa, confirmación y reintento parcial; 175 pruebas frontend, TypeScript y build aprobados.
+Estado al 18/11/2026: iteraciones hasta la 76 completas y en verde. La 75 es la antigua "64" de Aaron (`75-bolsas-con-selector.md`), renumerada porque repetía el número y los supuestos de la 64 de Carlos; su selector quedó retirado en la 76.
 
 Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `main` de `Raith726/yapa-desarrollo`.
 
@@ -85,6 +85,12 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 68 | **Predicción de demanda** (regresión sobre 8 semanas por zona, estimado y aviso para cotizar con el mayorista) | propuesta de IA del curso, 16/11 | completa, ver `68-prediccion-de-demanda.md` |
 | 69 | **La cotización del proveedor leída con IA** (foto o mensaje → borrador de su lista, con reglas si no hay IA) | propuesta de IA del curso, 16/11 | completa, ver `69-lista-del-proveedor-con-ia.md` |
 | 70 | **Asistente de compra** (estado, entrega, ahorro, precios y grupo con datos; IA solo para lo demás) | propuesta de IA del curso, 16/11 | completa, ver `70-asistente-de-compra.md` |
+| 71 | **Revisión de productos por bolsa y baja de una bolsa** (la revisión se guarda con la bolsa; quitar una bolsa antes del despacho conserva la foto) | pedido de Aaron, 17/11 | completa, ver `71-armado-unificado.md`; su cambio a S-331 lo revirtió la 76 |
+| 72 | **Stock confirmado por cargas** (el proveedor suma cada carga con foto y peso; el vendible llena su borrador) | pedido de Aaron, 17/11 | completa, ver `72-stock-confirmado.md` |
+| 73 | **El chat como conversación** (pregunta, opciones de las frecuentes sin IA y última respuesta a la vista) | pedido de Aaron, 17/11 | completa, ver `73-chat-conversacion.md` |
+| 74 | **Recorrido por calles para el reparto** (OSRM a pedido, distancia y tiempo sin tráfico) | pedido de Aaron, 17/11 | completa, ver `74-ruta-por-calles.md` (servidor de demostración: no apto para producción, S-366) |
+| 75 | **Seleccionar bolsas y confirmar sus fotos** (antes "64" duplicada, 13/11) | pedido de Aaron, 13/11 | retirada: la 71 dejó de mostrarla y la 76 la borró; ver `75-bolsas-con-selector.md` |
+| 76 | **La bolsa se guarda con la foto y el detector se usa cuando se pide** (vuelve S-331; revisión después y filtrada por pedido) | revisión de Kalos, 18/11 | completa, ver `76-bolsa-con-un-toque-y-detector-a-pedido.md` |
 | 50 | **Endurecimiento antes de abrir** (tope del cuerpo fuera del cerrojo, fotos solo donde se usan y con tipo real, cambiar el PIN cierra las sesiones, "ver como" sin sacar dinero, CI en la raíz) | revisión de seguridad 21/10 | completa, ver `50-endurecimiento-antes-de-abrir.md` |
 | 51 | **Cierre de huecos para pasar a `main`** (límites por dirección, zonas públicas sin contacto, correo apagado sin SMTP en servidor, CSP y HSTS, sesiones vencidas, semana en palabras, panel y mapa bajo demanda) | revisión de seguridad 21/10 | completa, ver `51-cierre-de-huecos-para-main.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |

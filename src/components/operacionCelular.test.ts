@@ -77,21 +77,22 @@ describe('OC-F · elegir en vez de escribir', () => {
 });
 
 describe('OC-G · armado con la cámara', () => {
-  it('una tarjeta por pedido, el avance y la foto se analiza antes de guardar', async () => {
+  // S-331, vuelto en la iteración 76 (S-369): la bolsa se registra al elegir la foto y el detector no corre solo
+  it('una tarjeta por pedido, el avance y la bolsa se registra al elegir la foto', async () => {
     vi.mocked(api.get).mockImplementation(async () => packing as never);
-    vi.mocked(api.post).mockResolvedValue({productos:[{producto:'papa',cantidad:2}]} as never);
+    vi.mocked(api.post).mockResolvedValue({} as never);
     await mount(panel('armador'));
     expect(host.querySelectorAll('.pack-card')).toHaveLength(3);
     expect(visible()).toContain('1 de 3 pedidos con bolsa');
     expect(host.querySelector('.pack-card')?.textContent).toContain('Papa amarilla');
-    // La tarjeta también ofrece fotos pendientes con confirmación; aquí probamos la cámara directa.
-    const camera = host.querySelectorAll<HTMLInputElement>('.pack-camera input[type=file]')[1];
+    const camera = host.querySelectorAll<HTMLInputElement>('.pack-card input[type=file][capture]')[1];
     const file = new File(['x'], 'bolsa.png', { type: 'image/png' });
     Object.defineProperty(camera, 'files', { value: [file] });
     await act(async () => { camera.dispatchEvent(new Event('change', { bubbles: true })); });
-    expect(api.post).toHaveBeenCalledWith('/api/vision/analizar', expect.any(FormData));
-    expect(vi.mocked(api.post).mock.calls.some(c=>c[0]==='/api/admin/bolsas')).toBe(false);
+    expect(api.post).toHaveBeenCalledWith('/api/admin/bolsas', expect.any(FormData));
+    expect(vi.mocked(api.post).mock.calls.some((call) => call[0] === '/api/vision/analizar')).toBe(false);
     const sent = vi.mocked(api.post).mock.calls[0][1] as FormData;
+    expect(sent.get('pedido')).toBe('13');
     expect(sent.get('foto_archivo')).toBe(file);
   });
 });

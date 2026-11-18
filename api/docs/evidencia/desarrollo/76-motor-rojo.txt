@@ -1,0 +1,87 @@
+test_ar76_b_api_saves_and_shows_the_review (test_armado76.BagReviewApiTests.test_ar76_b_api_saves_and_shows_the_review) ... FAIL
+test_ar76_c_api_rejects_a_broken_review (test_armado76.BagReviewApiTests.test_ar76_c_api_rejects_a_broken_review) ... FAIL
+test_ar76_f_a_neighbor_cannot (test_armado76.BagReviewApiTests.test_ar76_f_a_neighbor_cannot) ... FAIL
+test_ar76_b_the_review_is_saved_on_the_bag_and_replaced (test_armado76.BagReviewLaterTests.test_ar76_b_the_review_is_saved_on_the_bag_and_replaced) ... ERROR
+test_ar76_c_an_invalid_review_changes_nothing (test_armado76.BagReviewLaterTests.test_ar76_c_an_invalid_review_changes_nothing) ... ERROR
+test_ar76_d_unknown_bag (test_armado76.BagReviewLaterTests.test_ar76_d_unknown_bag) ... ERROR
+test_ar76_e_not_after_the_zone_left (test_armado76.BagReviewLaterTests.test_ar76_e_not_after_the_zone_left) ... ERROR
+
+======================================================================
+ERROR: test_ar76_b_the_review_is_saved_on_the_bag_and_replaced (test_armado76.BagReviewLaterTests.test_ar76_b_the_review_is_saved_on_the_bag_and_replaced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 29, in test_ar76_b_the_review_is_saved_on_the_bag_and_replaced
+    self.review([{"id": "PAPA-AMARILLA", "unidades": 2}])
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 24, in review
+    return fulfillment.review_bag(self.store, self.first.order_id, number or self.bag.number, rows,
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'review_bag'
+
+======================================================================
+ERROR: test_ar76_c_an_invalid_review_changes_nothing (test_armado76.BagReviewLaterTests.test_ar76_c_an_invalid_review_changes_nothing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 38, in test_ar76_c_an_invalid_review_changes_nothing
+    self.review([{"id": "PAPA-AMARILLA", "unidades": 2}])
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 24, in review
+    return fulfillment.review_bag(self.store, self.first.order_id, number or self.bag.number, rows,
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'review_bag'
+
+======================================================================
+ERROR: test_ar76_d_unknown_bag (test_armado76.BagReviewLaterTests.test_ar76_d_unknown_bag)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 46, in test_ar76_d_unknown_bag
+    self.assertRule("BAG_NOT_FOUND", self.review, [{"id": "PAPA-AMARILLA", "unidades": 1}], 99)
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_personal_por_rol.py", line 41, in assertRule
+    fn(*args, **kwargs)
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 24, in review
+    return fulfillment.review_bag(self.store, self.first.order_id, number or self.bag.number, rows,
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'review_bag'
+
+======================================================================
+ERROR: test_ar76_e_not_after_the_zone_left (test_armado76.BagReviewLaterTests.test_ar76_e_not_after_the_zone_left)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 51, in test_ar76_e_not_after_the_zone_left
+    self.assertRule("ZONE_ALREADY_CLOSED", self.review, [{"id": "PAPA-AMARILLA", "unidades": 1}])
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_personal_por_rol.py", line 41, in assertRule
+    fn(*args, **kwargs)
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 24, in review
+    return fulfillment.review_bag(self.store, self.first.order_id, number or self.bag.number, rows,
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'yapa_sdd.fulfillment' has no attribute 'review_bag'
+
+======================================================================
+FAIL: test_ar76_b_api_saves_and_shows_the_review (test_armado76.BagReviewApiTests.test_ar76_b_api_saves_and_shows_the_review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 73, in test_ar76_b_api_saves_and_shows_the_review
+    self.assertEqual(status, 200)
+AssertionError: 404 != 200
+
+======================================================================
+FAIL: test_ar76_c_api_rejects_a_broken_review (test_armado76.BagReviewApiTests.test_ar76_c_api_rejects_a_broken_review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 83, in test_ar76_c_api_rejects_a_broken_review
+    self.assertEqual(data["error"]["codigo"], "INVALID_BAG_REVIEW")
+AssertionError: 'NOT_FOUND' != 'INVALID_BAG_REVIEW'
+- NOT_FOUND
++ INVALID_BAG_REVIEW
+
+
+======================================================================
+FAIL: test_ar76_f_a_neighbor_cannot (test_armado76.BagReviewApiTests.test_ar76_f_a_neighbor_cannot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_armado76.py", line 90, in test_ar76_f_a_neighbor_cannot
+    self.assertEqual(self.send(neighbor, None)[0], 403)
+AssertionError: 404 != 403
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.013s
+
+FAILED (failures=3, errors=4)

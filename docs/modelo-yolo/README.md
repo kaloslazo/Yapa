@@ -35,13 +35,35 @@ Columnas: etiqueta real. Filas: predicción. La diagonal recoge coincidencias; f
 
 La curva PR muestra el intercambio entre detectar más objetos y producir falsos positivos al variar el umbral. El servidor utiliza conf=0,35. Las puntuaciones que muestra el detector no garantizan que el conteo sea correcto.
 
-## Uso actual en las pantallas
+## Prueba con las fotos del catálogo (18/11/2026)
 
-- Armado: abrir un pedido y elegir «Tomar foto de la bolsa». El detector se activa automáticamente. Corregir las unidades, elegir el producto exacto y confirmar cada fila con su check; esto marca la lista superior como comprobación visual. Si el pedido tiene ambas variedades de papa, se debe elegir cuál corresponde. Se puede completar manualmente cuando la detección falla.
-- «Confirmar revisión y guardar bolsa» guarda una bolsa por foto junto con sus productos revisados. Para otra bolsa, elegir otra foto. Al recargar se recuperan las revisiones. «Quitar bolsa» exige confirmación, funciona antes del despacho y conserva la foto y la auditoría. Se mantiene el cierre semanal y las reglas de entrega.
-- Proveedor: «Stock confirmado para tu propuesta» acumula cargas de la misma semana y SKU. Elegir foto, corregir producto/unidades, ingresar el peso medido cuando se vende por kg y confirmar las filas. «Confirmar y acumular stock» persiste los totales y actualiza la disponibilidad del borrador; enviar y aprobar la lista sigue siendo necesario para publicar.
-- El stock confirmado comienza en cero: no suma el catálogo de ejemplo a lo contado. El total vendible se redondea hacia abajo al paso del producto. El sistema no convierte unidades visibles a kilos ni modifica los precios. La misma foto exacta se deduplica por proveedor y semana; dos fotos distintas de la misma carga física requieren control del proveedor.
-- Los precios por volumen de cada producto comienzan plegados. Se conserva «Leer cotización con IA» de Kalos; leer una lista con precios y contar verduras son operaciones diferentes.
+Se pasaron por `/api/vision/analizar` las 16 fotos de `public/images/products` (umbral 0,35). Son fotos de catálogo, no de bolsas armadas, pero son nuestros productos:
+
+| Foto | El detector dice | ¿Bien? |
+|---|---|---|
+| Papa amarilla | papa ×4 | sí |
+| Cebolla roja | cebolla ×3 | sí |
+| Ajo | cebolla ×3, ajo ×1 | a medias |
+| Papa blanca | cebolla ×1 | no |
+| Zanahoria | papa ×4, zanahoria ×2 | no |
+| Camote | papa ×4, cebolla ×1 | no |
+| Tomate italiano | cebolla ×2 | no |
+| Limón | cebolla ×2 | no |
+| Plátano de seda | zanahoria ×2 | no |
+| Leche en pack | cebolla ×2 | no |
+| Limpiatodo | ajo ×1, zanahoria ×1 | no |
+| Aceite, arroz, detergente, lavavajillas, lejía | nada | sí |
+
+Acierta 2 de las 11 fotos donde sugiere algo. Por eso, desde la iteración 76, el detector no corre solo: es una ayuda opcional.
+
+## Uso en las pantallas (desde la iteración 76)
+
+- Armado: «Tomar foto de la bolsa» registra la bolsa al elegir la foto, sin otro toque (S-331). Después, «Revisar la foto con el detector (opcional)» muestra «Sugerir con el detector»: solo aparecen sugerencias de productos del pedido (las demás se descartan y se dice cuántas). Las filas confirmadas se guardan en esa bolsa con «Guardar revisión de la bolsa» y marcan la lista del pedido. «Quitar bolsa» pide confirmación, funciona antes del despacho y conserva la foto.
+- Proveedor: en «Stock confirmado para tu propuesta» se elige la foto de la carga y, si sirve, «Sugerir con el detector» (solo productos de su lista). Se corrigen producto y unidades, se ingresa el peso medido cuando se vende por kg y se confirman las filas. El total vendible llena el borrador; publicar sigue pidiendo la aprobación del equipo.
+- El sistema nunca pasa unidades visibles a kilos ni cambia precios. La misma foto exacta no se suma dos veces al stock.
+- Se conserva «Leer cotización con IA» (iteración 69): leer una lista con precios y contar verduras son cosas distintas.
+
+Las capturas de abajo son de la versión del 17/11, cuando el detector corría solo.
 
 ![Armado unificado, revisión móvil](armado-17nov.png)
 
@@ -49,16 +71,21 @@ La curva PR muestra el intercambio entre detectar más objetos y producir falsos
 
 ## Instalación y arranque local
 
-Usar Python 3.12 para reproducir el entorno de inferencia; no se requiere GPU. Desde la carpeta de esta rama:
+Con Python 3.11 o 3.12, sin GPU, desde la raíz del repo:
 
-```powershell
-cd "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-modelo-yolo"
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-.\.venv\Scripts\python.exe -m pip install -r api/requirements-vision.txt
-npm.cmd ci
-npm.cmd run build
-.\.venv\Scripts\python.exe api/tools/servir_pruebas_roles.py --puerto 8023
+```bash
+python3 -m venv api/.venv
+api/.venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+api/.venv/bin/pip install -r api/requirements-vision.txt
+npm ci
+npm run demo   # usa api/.venv si existe, así el detector funciona
+```
+
+Otra opción, con la demo de roles de Aaron:
+
+```bash
+npm ci && npm run build
+api/.venv/bin/python api/tools/servir_pruebas_roles.py --puerto 8023
 ```
 
 Abrir http://yolo.localhost:8023/equipo?rol=armador, usuario `armado-demo`, clave `armado-yapa-2026`; o `?rol=proveedor`, usuario `frescos-demo`, clave `frescos-yapa-2026`. La demo crea pedidos y pagos ficticios en memoria en tres zonas y fija el jueves 01/10/2026 después del cierre; no toca bases existentes. Sus fotos se guardan en una carpeta temporal y se descartan al cerrar esta demo. Ctrl+C detiene el servidor. La demo habitual también sirve, pero puede no alcanzar el mínimo de pedidos.
