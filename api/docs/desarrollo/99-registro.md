@@ -1,63 +1,5 @@
 # Registro de iteraciones de desarrollo
 
-## Iteración 72 · Stock confirmado por cargas (17/11/2026)
-
-- Spec 72-stock-confirmado.md. Acumulación por proveedor, semana y SKU; deduplicación de foto exacta; peso medido para kg; actualización del borrador y precios por volumen plegados. Se conserva el lector de cotizaciones.
-- 774 pruebas motor (770 aprobadas, 4 omitidas), 216 web, TypeScript y build aprobados. Navegador con YOLO real: 5 unidades y 4 kg, recarga y repetición sin doble conteo. También se verificó el recorrido final de Armado.
-
-## Iteración 71 · Armado con cámara y revisión unificadas (17/11/2026)
-
-- Spec 71-armado-unificado.md. Captura con detector, correspondencia por SKU, confirmación y baja antes del despacho con auditoría y foto conservada.
-- 768 pruebas motor (4 omitidas), 213 web, TypeScript y build aprobados.
-
-
-## Iteración 64 · Bolsas con selector y foto individual (13/11/2026)
-
-- Spec: `64-bolsas-con-selector.md`, S-327 y S-328 (a validar por el equipo).
-- Armado permite elegir bolsas nuevas con −/+, cargar una foto por bolsa y confirmar con un botón pequeño. Conserva las pendientes cuando falla una y excluye del reintento las confirmadas.
-- TypeScript, 175 pruebas frontend y build aprobados; selector revisado en localhost. Sin cambios de API. Evidencia en `64-bolsas-rojo.txt` y `64-bolsas-verde.txt`.
-
-## Iteración 67 · Cantidades con su unidad (12/11/2026)
-
-- Hallado en la revisión: el armado, el carrito del pedido y el reclamo decían "Papa amarilla 8" sin decir si eran kilos o unidades. Spec: `67-cantidades-con-unidad.md`, supuesto S-338 a validar por el equipo.
-- Las líneas de los pedidos (también para el armador) y las opciones para reclamar traen la `unidad` del catálogo de su semana; la pantalla dice "5 kg" o "2 unidades".
-- Pruebas en rojo antes del código; resultado: 736 pruebas del motor, 185 de la web, TypeScript y build.
-
-## Iteración 66 · Ver la foto que se toma (12/11/2026)
-
-- Spec: `66-ver-la-foto.md`, supuestos S-336 y S-337 a validar por el equipo.
-- Al elegir una foto (entrega, entrega fallida, dañado o reclamo) se ve su miniatura antes de enviarla, con "Cambiar foto".
-- En el armado, cada pedido muestra las miniaturas de sus bolsas registradas; al tocar una se abre la foto.
-- Pruebas en rojo antes del código; resultado: 182 pruebas de la web, TypeScript y build; el motor no cambia.
-
-## Iteración 65 · Los pedidos y los reclamos del vecino, como un carrito (12/11/2026)
-
-- Pedido de Carlos después de la demo: el reclamo se veía como un historial de texto. Spec: `65-reclamos-como-un-carrito.md`, supuestos S-333..S-335 a validar por el equipo.
-- En Mis pedidos, cada producto del pedido se ve con su foto, su cantidad y su precio máximo.
-- Para reclamar se toca la tarjeta del producto; solo aparecen los de entregas de las últimas 24 horas, con su hora límite (antes salían pedidos viejos que daban error al enviar).
-- "Tus reclamos" muestra la foto del producto, el motivo, el estado y lo que volvió al saldo.
-- Pruebas en rojo antes del código; resultado: 733 pruebas del motor, 179 de la web, TypeScript y build. La regla de las 24 horas (RC-03) no cambia.
-
-## Iteración 64 · La operación en el celular (12/11/2026)
-
-- Pedido de Carlos después de la demo, con la recomendación del profesor: las pantallas de operación se usan desde el celular. Spec: `64-operacion-en-el-celular.md`, supuestos S-327..S-332 a validar por el equipo.
-- En el celular, cada fila de las tablas del panel se ve como una tarjeta con el nombre de cada dato.
-- Nombres y fotos en vez de claves: edificios, semanas en fechas, proveedores, productos con su foto y motivos en palabras.
-- Elegir en vez de escribir: el colchón se llena eligiendo un producto de limpieza, el faltante se repone desde su fila y la incidencia se registra eligiendo el pedido de una lista con búsqueda (`GET /api/admin/pedidos`, sin montos).
-- Armado: una tarjeta por pedido con sus productos y fotos, casillas para marcar, avance "N de M pedidos con bolsa" y un botón de cámara que registra la bolsa al elegir la foto.
-- Atención, compras, portería, reparto y proveedor con tarjetas, botones de 44 px o más y sin claves internas.
-- Pruebas en rojo antes del código; resultado: 731 pruebas del motor, 176 de la web, TypeScript y build. Sin cambios de reglas de negocio ni de dinero.
-
-## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
-
-- Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.
-- Armado muestra fechas completas y filtra entregas y bolsas por zona; Atención muestra Completados con contador y estado vacío.
-- Portería conserva su única zona autorizada; muestra hitos derivados de bolsas, despacho, entrega y recepción, filtro por estado y avisos al actualizar cada 15 segundos. La cola conserva varios cambios entre consultas y se limpia al salir.
-- El proveedor edita fichas de producto con cantidad, unidad, paso y precios por volumen, añade productos y envía la lista al flujo existente de aprobación. No se publica automáticamente.
-- En Explorar las guías van en un desplegable con frase y foto; FAQ muestra cinco preguntas al inicio, con acceso a las diez. Cómo funciona conserva todas.
-- Pruebas en rojo antes del código; resultado: 718 pruebas del motor, 169 del frontend, TypeScript y build aprobados. Node 22.23.4 y Python 3.12; evidencia `63-*-rojo.txt` y `63-*-verde.txt`.
-- Verificado en escritorio y móvil. Compras y Reparto se compararon contra main y sus funciones no cambiaron. Sin publicaciones ni cambios en main.
-
 ## Iteración 3 · Billetera de saldo (24/09/2026)
 
 - Spec: `03-billetera-saldo.md`. Se agregan los supuestos S-13..S-17, que el equipo debe validar.
@@ -109,7 +51,6 @@
 - Hallazgo: con una parada de S/ 100 y 8 pedidos, el tope de envío de S/ 5 deja cada pedido con margen negativo (−S/ 1.86). El mínimo de 8 pedidos (S-06) solo cubre paradas de hasta S/ 40.
 - Se anotaron cuatro huecos para el equipo en la spec.
 - Resultado: 140 pruebas en verde (`docs/evidencia/desarrollo/08-metricas-verde.txt`).
-
 
 ## Iteración 9 · Interfaz web (24/09/2026, rama `carlos/web`)
 
@@ -236,7 +177,6 @@
 - Spec: `24-alta-vecinos.md` (S-133..S-138). El admin da de alta a un vecino en `/admin/vecinos` con nombre, celular, zona y consentimiento (Ley 29733). El sistema genera el PIN y lo muestra una sola vez. Si el vecino olvida el PIN, el admin genera uno nuevo, y eso también desbloquea la cuenta.
 - Cierra el hueco de S-65: el PIN inicial lo asignaba el admin "al dar de alta", pero no había alta.
 - Resultado: 282 pruebas en verde.
-
 
 ## Iteración 25 · Presentación de la web y semana de demo (17/10/2026)
 
@@ -580,6 +520,47 @@
 - Revisado en el navegador con la demo: Ana (101) y Carmen (105) ven «4 de 8» con la barra a la mitad, en celular y en escritorio.
 - Resultado: 698 pruebas del motor (6 nuevas) y 152 del frontend (3 nuevas) en verde; typecheck y build sin errores (`62-avance-grupo-motor-verde.txt`, `62-avance-grupo-web-verde.txt`).
 
+## Iteración 63 · Paneles y Explorar más claros (11/11/2026)
+
+- Pedido de Aaron tras probar los roles en localhost. Spec: `63-paneles-y-explorar.md`, supuestos S-322..S-326 a validar por el equipo.
+- Armado muestra fechas completas y filtra entregas y bolsas por zona; Atención muestra Completados con contador y estado vacío.
+- Portería conserva su única zona autorizada; muestra hitos derivados de bolsas, despacho, entrega y recepción, filtro por estado y avisos al actualizar cada 15 segundos. La cola conserva varios cambios entre consultas y se limpia al salir.
+- El proveedor edita fichas de producto con cantidad, unidad, paso y precios por volumen, añade productos y envía la lista al flujo existente de aprobación. No se publica automáticamente.
+- En Explorar las guías van en un desplegable con frase y foto; FAQ muestra cinco preguntas al inicio, con acceso a las diez. Cómo funciona conserva todas.
+- Pruebas en rojo antes del código; resultado: 718 pruebas del motor, 169 del frontend, TypeScript y build aprobados. Node 22.23.4 y Python 3.12; evidencia `63-*-rojo.txt` y `63-*-verde.txt`.
+- Verificado en escritorio y móvil. Compras y Reparto se compararon contra main y sus funciones no cambiaron. Sin publicaciones ni cambios en main.
+
+## Iteración 64 · La operación en el celular (12/11/2026)
+
+- Pedido de Carlos después de la demo, con la recomendación del profesor: las pantallas de operación se usan desde el celular. Spec: `64-operacion-en-el-celular.md`, supuestos S-327..S-332 a validar por el equipo.
+- En el celular, cada fila de las tablas del panel se ve como una tarjeta con el nombre de cada dato.
+- Nombres y fotos en vez de claves: edificios, semanas en fechas, proveedores, productos con su foto y motivos en palabras.
+- Elegir en vez de escribir: el colchón se llena eligiendo un producto de limpieza, el faltante se repone desde su fila y la incidencia se registra eligiendo el pedido de una lista con búsqueda (`GET /api/admin/pedidos`, sin montos).
+- Armado: una tarjeta por pedido con sus productos y fotos, casillas para marcar, avance "N de M pedidos con bolsa" y un botón de cámara que registra la bolsa al elegir la foto.
+- Atención, compras, portería, reparto y proveedor con tarjetas, botones de 44 px o más y sin claves internas.
+- Pruebas en rojo antes del código; resultado: 731 pruebas del motor, 176 de la web, TypeScript y build. Sin cambios de reglas de negocio ni de dinero.
+
+## Iteración 65 · Los pedidos y los reclamos del vecino, como un carrito (12/11/2026)
+
+- Pedido de Carlos después de la demo: el reclamo se veía como un historial de texto. Spec: `65-reclamos-como-un-carrito.md`, supuestos S-333..S-335 a validar por el equipo.
+- En Mis pedidos, cada producto del pedido se ve con su foto, su cantidad y su precio máximo.
+- Para reclamar se toca la tarjeta del producto; solo aparecen los de entregas de las últimas 24 horas, con su hora límite (antes salían pedidos viejos que daban error al enviar).
+- "Tus reclamos" muestra la foto del producto, el motivo, el estado y lo que volvió al saldo.
+- Pruebas en rojo antes del código; resultado: 733 pruebas del motor, 179 de la web, TypeScript y build. La regla de las 24 horas (RC-03) no cambia.
+
+## Iteración 66 · Ver la foto que se toma (12/11/2026)
+
+- Spec: `66-ver-la-foto.md`, supuestos S-336 y S-337 a validar por el equipo.
+- Al elegir una foto (entrega, entrega fallida, dañado o reclamo) se ve su miniatura antes de enviarla, con "Cambiar foto".
+- En el armado, cada pedido muestra las miniaturas de sus bolsas registradas; al tocar una se abre la foto.
+- Pruebas en rojo antes del código; resultado: 182 pruebas de la web, TypeScript y build; el motor no cambia.
+
+## Iteración 67 · Cantidades con su unidad (12/11/2026)
+
+- Hallado en la revisión: el armado, el carrito del pedido y el reclamo decían "Papa amarilla 8" sin decir si eran kilos o unidades. Spec: `67-cantidades-con-unidad.md`, supuesto S-338 a validar por el equipo.
+- Las líneas de los pedidos (también para el armador) y las opciones para reclamar traen la `unidad` del catálogo de su semana; la pantalla dice "5 kg" o "2 unidades".
+- Pruebas en rojo antes del código; resultado: 736 pruebas del motor, 185 de la web, TypeScript y build.
+
 ## Iteración 68 · Predicción de demanda (16/11/2026)
 
 - Spec: `68-prediccion-de-demanda.md` (S-339..S-344). Origen: la propuesta del curso pide IA en el producto, con predicción de la canasta semanal por zona para ajustar la cotización con el mayorista antes del cierre.
@@ -587,11 +568,6 @@
 - Panel: tarjeta "Lo que se viene esta semana" en Compra de la semana, con barras de la historia y aviso "Pide más al mayorista".
 - Sin costo: no usa servicios externos ni claves.
 - De paso, pulido del panel y la tienda: bordes sencillos en tarjetas, KPIs, grupos y fotos de producto, y botón de archivo con estilo en vez del nativo.
-
-## Iteración 74 · Trazado por calles para reparto (17/11/2026)
-
-- Spec 74-ruta-por-calles.md. OSRM bajo petición sobre Leaflet, métricas viales diferenciadas, caché y recuperación ante fallo; conserva la propuesta geográfica y Google Maps. Sin LLM ni cambios en AWS.
-- 768 pruebas motor (764 aprobadas, 4 omitidas), 213 web, TypeScript y build aprobados; OSRM real en navegador: 92 puntos, 2,63 km, cambio de inicio y vista móvil.
 
 ## Iteración 69 · La cotización del proveedor leída con IA (16/11/2026)
 
@@ -601,14 +577,48 @@
 - Proveedor: "Leer cotización con IA" arriba del editor de su lista; llena el borrador y el proveedor revisa y envía como siempre (PV-01..PV-03 sin cambios).
 - Probado con la clave real de Groq: foto en 1.8 s, mensaje en 2.2 s.
 
-## Iteración 73 · Conversación y sugerencias del chat (17/11/2026)
-
-- Spec 73-chat-conversacion.md. Pregunta del usuario, opciones relacionadas, respuesta compartida y desplazamiento al final; salida segura y reinicio sin respuestas antiguas. Se conserva el asistente de Kalos con datos y configuración de IA opcional.
-- 764 pruebas motor (760 aprobadas, 4 omitidas), 214 web, TypeScript y build aprobados; navegador a 390 px con la última respuesta visible y FAQ sin API.
-
 ## Iteración 70 · Asistente de compra (16/11/2026)
 
 - Spec: `70-asistente-de-compra.md` (S-351..S-354). Origen: la propuesta pide un chatbot con IA para consultar estado del pedido, precios, ahorro y ventana de entrega.
 - Motor: `assistant.py` responde pedido, entrega, ahorro, precio y grupo con los datos del vecino (sin IA); lo demás va a Groq con el contexto de ese vecino, 300 tokens y 10 por día. `POST /api/asistente` solo para vecinos. `ask_json` acepta `max_tokens`.
 - Web: "¿Te ayudamos?" manda lo que se escribe al asistente y muestra la respuesta con "Con tus datos" o "Con IA"; sin sesión, sigue con las preguntas frecuentes.
 - Demo: 5 semanas reales antes de la liquidada (pedidos, compra, bolsas, reparto, liquidación, un grupo que no llega y un reclamo aprobado), para que la app se vea con semanas de uso. Documentado en `docs/ia-en-el-proceso.md`.
+
+## Iteración 71 · Revisión de productos por bolsa y baja de una bolsa (17/11/2026, Aaron)
+
+- Spec: `71-armado-unificado.md` (S-357..S-360; reescrita el 18/11 con el formato de las demás).
+- La bolsa guarda la revisión de productos y unidades que se ven en su foto; una bolsa registrada por error se puede quitar antes del despacho, sin borrar la foto y sin reutilizar su número (`POST /api/admin/bolsas/quitar`).
+- Además hizo que la foto pasara primero por el detector y que la bolsa se guardara recién al confirmar cada fila. Eso contradecía S-331 y OC-G de la 64, y se hizo cambiando la prueba de OC-G sin tocar la spec de la 64. Lo revirtió la 76.
+- 768 pruebas del motor (4 omitidas), 213 de la web, TypeScript y build en su máquina.
+
+## Iteración 72 · Stock confirmado por cargas (17/11/2026, Aaron)
+
+- Spec: `72-stock-confirmado.md` (S-361..S-364; reescrita el 18/11 con el formato de las demás).
+- El proveedor suma cada carga con foto y conteo (`/api/proveedor/stock`); en kg pide el peso medido, la misma foto no se suma dos veces y el vendible, redondeado al paso, llena la cantidad disponible de su borrador. No publica nada.
+- 774 pruebas del motor (4 omitidas), 216 de la web, TypeScript y build en su máquina.
+
+## Iteración 73 · El chat como conversación (17/11/2026, Aaron)
+
+- Spec: `73-chat-conversacion.md` (S-365; reescrita el 18/11 con el formato de las demás).
+- "¿Te ayudamos?" muestra la pregunta, opciones de las preguntas frecuentes sin IA y la respuesta al final; lo desconocido ofrece consultar al asistente de la 70; reiniciar descarta respuestas en camino.
+- 764 pruebas del motor (4 omitidas), 214 de la web, TypeScript y build en su máquina.
+
+## Iteración 74 · Recorrido por calles para el reparto (17/11/2026, Aaron)
+
+- Spec: `74-ruta-por-calles.md` (S-366; reescrita el 18/11 con el formato de las demás).
+- "Trazar por calles" pide a OSRM el camino del orden elegido (`POST /api/reparto/ruta`) y lo dibuja con distancia y tiempo sin tráfico. Usa el servidor público de demostración: sirve para el curso, no para producción.
+- 768 pruebas del motor (4 omitidas), 213 de la web, TypeScript y build en su máquina.
+
+## Iteración 75 · Seleccionar bolsas y confirmar sus fotos (13/11/2026, Aaron; renumerada el 18/11)
+
+- Spec: `75-bolsas-con-selector.md` (S-367 y S-368). Se había registrado como "Iteración 64", número que ya tenía la de Carlos del 12/11, y con S-327 y S-328, que ya tenían otro significado. Se renumeró; las evidencias pasaron a `75-bolsas-*.txt` sin cambios.
+- Selector «− 1 +» de bolsas con una foto por bolsa. La 71 dejó de mostrarlo y la 76 lo borró.
+
+## Iteración 76 · La bolsa se guarda con la foto y el detector se usa cuando se pide (18/11/2026)
+
+- Spec: `76-bolsa-con-un-toque-y-detector-a-pedido.md` (S-369..S-374). Origen: revisión de lo que entró del 13 al 18/11.
+- Vuelve S-331: elegir la foto registra la bolsa sin otro toque (la prueba OC-G vuelve a su versión original). El detector ya no corre solo: tras guardar la bolsa, "Revisar la foto con el detector (opcional)" lo usa a pedido, solo muestra lo que está en el pedido y guarda la revisión en esa bolsa (`POST /api/admin/bolsas/revision`). En Stock del proveedor el detector también va a pedido.
+- Por qué: con las 16 fotos del catálogo el detector acierta 2 (al tomate, al limón y a la leche les dice cebolla), y en automático llenaba filas que había que borrar antes de poder guardar.
+- Se borró el selector de bolsas sin uso (`BagForm`, iteración 75) y sus estilos.
+- En el mismo cambio: el código y las pruebas de las iteraciones 71 a 74 pasaron al estilo del repo sin cambiar lo que hacen (`refactor:`), sus specs se reescribieron con el formato de las demás y el tema de cada pregunta frecuente se juntó con la pregunta.
+- Pruebas en rojo antes del código (`76-motor-rojo.txt`, `76-web-rojo.txt`); resultado en `76-motor-verde.txt` y `76-web-verde.txt`.

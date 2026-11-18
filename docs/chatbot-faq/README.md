@@ -14,11 +14,11 @@ Las FAQ y sus sugerencias son reglas locales: no requieren un LLM ni llaman a la
 
 ## Arranque local
 
-```powershell
-cd "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-chatbot-faq"
-npm.cmd ci
-npm.cmd run build
-python api/tools/servir_pruebas_roles.py --puerto 8021
+Desde la raíz del repo:
+
+```bash
+npm ci && npm run build
+python3 api/tools/servir_pruebas_roles.py --puerto 8021
 ```
 
 Abrir http://ayuda.localhost:8021 y pulsar «¿Te ayudamos?». Probar «pagué», elegir una opción varias veces y comprobar el desplazamiento. Probar una pregunta desconocida y reiniciar. Ctrl+C detiene la demo. Para comprobar datos propios se requiere la sesión de un vecino de esa demo; no se usan cuentas de producción.

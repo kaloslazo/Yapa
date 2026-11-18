@@ -20,11 +20,11 @@ En AWS esta implementación requiere salida HTTPS al servicio de rutas y las tes
 
 ## Arranque local
 
-```powershell
-cd "C:\Users\aaroo\Documents\DesignSoftware-projectU\Yapa-ruta-transportista"
-npm.cmd ci
-npm.cmd run build
-python api/tools/servir_pruebas_roles.py --puerto 8024
+Desde la raíz del repo:
+
+```bash
+npm ci && npm run build
+python3 api/tools/servir_pruebas_roles.py --puerto 8024
 ```
 
 Abrir http://ruta.localhost:8024/equipo?rol=transportista. Usuario `reparto-demo`, clave `reparto-yapa-2026`. Elegir inicio, trazar por calles, aplicar o restaurar el orden y abrir Google Maps si se desea. La demo crea pedidos y pagos ficticios en memoria; no abre bases anteriores. Ctrl+C la detiene.
