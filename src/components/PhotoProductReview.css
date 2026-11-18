@@ -12,3 +12,7 @@
 
 .photo-product-row .photo-row-check[aria-pressed=true] { background: #d5f5e2; border: 1px solid #15804b; border-radius: 8px; }
 .photo-product-review .photo-field.pack-camera { background: var(--deep, #073d30); color: #fff; border-color: transparent; }
+
+/* iteración 76: la revisión con el detector, detrás de un toque */
+.pack-review > summary { display: flex; align-items: center; min-height: 44px; font-weight: 600; cursor: pointer; }
+.pack-review .photo-product-review { margin-top: 6px; }

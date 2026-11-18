@@ -10,7 +10,7 @@ import { formatQuantity } from '../utils/cart';
 import { claimEffect, filterNeighbors, photoUrl } from '../utils/admin';
 import { ConfirmAction } from './ConfirmAction';
 import { PhotoForm } from './PhotoForm';
-import { PhotoProductReview } from './PhotoProductReview';
+import { PhotoProductReview, type ProductCount } from './PhotoProductReview';
 import { ProductThumb } from './ProductThumb';
 import { AdminSkeleton } from './Skeleton';
 import type { MapUnion, MapZone } from './ZonesMap';
@@ -294,13 +294,23 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
     return run(() => api.post(path, form), success).then(async (ok) => { await reload(); return ok; });
   };
+  // S-369: la bolsa se guarda con la foto; devuelve su número para revisarla después con el detector
+  const saveBag = async (orderId: number, file: File, success: string) => {
+    const form = new FormData();
+    form.set('foto_archivo', file);
+    form.set('pedido', String(orderId));
+    const result: { bag?: Raw } = {};
+    const ok = await run(async () => { result.bag = await api.post<Raw>('/api/admin/bolsas', form); }, success);
+    await reload();
+    return ok ? Number(result.bag?.numero) || null : null;
+  };
   return (
     <>
       <section className="admin-intro"><div><h2>{packer ? 'Arma cada bolsa y tómale foto' : 'Foto de cada bolsa y de cada entrega'}</h2><p>{packer ? 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Marca cada producto al meterlo y toma la foto de la bolsa: sin bolsas, el reparto no puede salir.' : 'Solo aparecen los pedidos de grupos que llegaron al mínimo. Sin foto no se puede entregar.'}</p></div><CycleSelect cycles={data.ciclos} value={data.ciclo} onChange={setCycle} /></section>
       <p className="admin-muted">El armado se habilita después del cierre de compras: miércoles a las 8 p. m. (hora de Lima). Antes de esa hora, la semana todavía recibe compras.</p>
       {data.paradas.length > 1 ? <label className="checkout-field packing-zone-filter"><span>Edificio</span><select value={zoneFilter} onChange={event => setZoneFilter(event.target.value)}><option value="">Todas las zonas</option>{data.paradas.map((p: Raw) => <option key={p.zona.id} value={p.zona.id}>{p.zona.nombre}</option>)}</select></label> : null}
       {orders.length ? <div className="pack-progress" role="status"><div><strong>{packed} de {orders.length} pedidos con bolsa</strong><span>{packed === orders.length ? 'Todo armado: el reparto ya puede salir.' : `Faltan ${orders.length - packed}.`}</span></div><div className="progress-track"><span style={{ width: `${(packed / orders.length) * 100}%` }} /></div></div> : null}
-      {orders.length ? <div className="pack-list">{orders.map((o) => <PackCard key={o.id} order={o} send={send} />)}</div> : <Card title="Nada que armar"><Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." /></Card>}
+      {orders.length ? <div className="pack-list">{orders.map((o) => <PackCard key={o.id} order={o} send={send} saveBag={saveBag} />)}</div> : <Card title="Nada que armar"><Empty icon="box" title="Nada que armar" text="Los pedidos aparecen cuando su grupo llega al mínimo." /></Card>}
       <Card title={`Entregas por zona (${stops.length})`}>
         {stops.length ? <div className="stop-list">{stops.map((p: Raw) => { const zone: Zone = toZone(p.zona); return (
           <div className="stop-card" key={zone.id}>
@@ -316,14 +326,42 @@ function Packing({ cycle, setCycle, run, notify, role }: SectionProps) {
   );
 }
 
-// S-331: una tarjeta por pedido; las marcas son una ayuda en pantalla y la bolsa se registra al elegir la foto
-function PackCard({ order, send }: { order: Order; send: (path: string, form: FormData, extra: Record<string, string>, success: string) => Promise<boolean> }) {
+type SendFn = (path: string, form: FormData, extra: Record<string, string>, success: string) => Promise<boolean>;
+type SaveBagFn = (orderId: number, file: File, success: string) => Promise<number | null>;
+
+// S-331 y S-369: una tarjeta por pedido; las marcas son una ayuda en pantalla y la bolsa se registra al elegir la foto.
+// El detector es opcional y se usa después, sobre la foto recién tomada (iteración 76).
+function PackCard({ order, send, saveBag }: { order: Order; send: SendFn; saveBag: SaveBagFn }) {
   const [manual, setManual] = useState<string[]>([]);
   const [detected, setDetected] = useState<string[]>([]);
-  const [photoKey, setPhotoKey] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [last, setLast] = useState<{ number: number; file: File } | null>(null);
   const [damaged, setDamaged] = useState(false);
-  const checked = [...new Set([...manual, ...detected, ...(order.bags ?? []).flatMap(b => (b.products ?? []).map(p => p.id))])];
+  const checked = [...new Set([...manual, ...detected, ...(order.bags ?? []).flatMap((b) => (b.products ?? []).map((p) => p.id))])];
   const bags = order.bags?.length ?? 0;
+  const all = order.lines.length > 0 && order.lines.every((l) => checked.includes(l.id));
+  const upload = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    const number = await saveBag(order.id, file, `Bolsa ${bags + 1} del pedido ${order.id} registrada.`);
+    setBusy(false);
+    input.value = '';
+    if (number) { setDetected([]); setLast({ number, file }); }
+  };
+  const removeBag = async (number: number) => {
+    const form = new FormData();
+    form.set('numero', String(number));
+    if (!await send('/api/admin/bolsas/quitar', form, { pedido: String(order.id) }, 'Bolsa retirada del pedido.')) return;
+    setDetected([]);
+    if (last?.number === number) setLast(null);
+  };
+  const saveReview = (products: ProductCount[]) => {
+    const form = new FormData();
+    form.set('numero', String(last!.number));
+    form.set('revision', JSON.stringify(products.map((p) => ({ id: p.codigo, unidades: p.cantidad }))));
+    return send('/api/admin/bolsas/revision', form, { pedido: String(order.id) }, 'Revisión guardada en la bolsa.');
+  };
   return (
     <article className={`pack-card${bags ? ' is-packed' : ''}`}>
       <header className="pack-card-head">
@@ -334,13 +372,18 @@ function PackCard({ order, send }: { order: Order; send: (path: string, form: Fo
         const done = checked.includes(l.id);
         return <li key={l.id}><label className={done ? 'is-checked' : ''}><input type="checkbox" checked={done} onChange={() => setManual((c) => (done ? c.filter((x) => x !== l.id) : [...c, l.id]))} /><ProductThumb id={l.id} size={40} /><span className="pack-line-name">{l.name}</span><strong>{amountWithUnit(l.quantity, l.unit, formatQuantity)}</strong></label></li>;
       })}</ul>
-      {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b, index) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${index + 1} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {index + 1}</small></a><ConfirmAction label="Quitar bolsa" question="¿Quitar esta bolsa del pedido? La foto se conserva como evidencia." confirmLabel="Sí, quitar bolsa" onConfirm={async () => { const form=new FormData(); form.set('numero',String(b.number)); if (await send('/api/admin/bolsas/quitar',form,{pedido:String(order.id)},'Bolsa retirada del pedido.')) { setDetected([]);setPhotoKey(k=>k+1); } }} /></li>)}</ul> : null}
+      {bags ? <ul className="pack-bags" aria-label={`Bolsas registradas del pedido ${order.id}`}>{order.bags!.map((b, index) => <li key={b.number}><a href={photoUrl(b.photo)} target="_blank" rel="noopener"><img src={photoUrl(b.photo)} alt={`Foto de la bolsa ${index + 1} del pedido ${order.id}`} width="56" height="56" loading="lazy" /><small>Bolsa {index + 1}</small></a><ConfirmAction label="Quitar bolsa" question="¿Quitar esta bolsa del pedido? La foto se conserva como evidencia." confirmLabel="Sí, quitar bolsa" onConfirm={() => removeBag(b.number)} /></li>)}</ul> : null}
       <p className="pack-labels"><Icon name="tag" size={15} />{order.labels?.length ? order.labels.join(' · ') : `Rotula la bolsa: Pedido ${order.id}${order.zoneName ? ` · ${order.zoneName}` : ''}`}</p>
-      <p className="admin-muted">Las marcas confirman presencia visual; comprueba el peso de cada producto por separado.</p>
-      <PhotoProductReview key={`${order.id}-${photoKey}`} candidates={order.lines} onMatchesChange={setDetected} photoLabel={bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'} label="Confirmar revisión y guardar bolsa" onConfirm={(file, products) => {
-        const form=new FormData();form.set('foto_archivo',file);form.set('revision',JSON.stringify(products.map(p=>({id:p.codigo,unidades:p.cantidad}))));
-        return send('/api/admin/bolsas',form,{pedido:String(order.id)},`Bolsa del pedido ${order.id} registrada con su revisión.`);
-      }} />
+      <label className={`pack-camera${all || bags ? ' is-ready' : ''}${busy ? ' is-busy' : ''}`}>
+        <Icon name="camera" size={22} />
+        <span>{busy ? 'Subiendo la foto…' : bags ? 'Tomar foto de otra bolsa' : 'Tomar foto de la bolsa'}</span>
+        <input type="file" accept="image/*" capture="environment" disabled={busy} onChange={(event) => void upload(event.currentTarget)} aria-label={`Foto de la bolsa del pedido ${order.id}`} />
+      </label>
+      {last ? <details className="pack-review">
+        <summary>Revisar la foto con el detector (opcional)</summary>
+        <PhotoProductReview key={last.number} photo={last.file} candidates={order.lines} scope="el pedido" onMatchesChange={setDetected}
+          title="Productos de la última bolsa" label="Guardar revisión de la bolsa" onConfirm={(_file, products) => saveReview(products)} />
+      </details> : null}
       <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>
       {damaged ? <PhotoForm label="Registrar dañado" onSend={(form) => send('/api/admin/danados', form, { pedido: String(order.id) }, `Dañado del pedido ${order.id} registrado: se repone con el colchón o se devuelve en la liquidación.`)}><label className="checkout-field"><span>Producto</span><select name="producto" required>{order.lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="checkout-field"><span>Cantidad</span><input name="cantidad" inputMode="decimal" placeholder="1" required /></label></PhotoForm> : null}
     </article>

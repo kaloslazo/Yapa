@@ -797,6 +797,12 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
                                      by=session["principal"], now=clock())
         return {"pedido": bag.order_id, "numero": bag.number}
 
+    def admin_bolsa_revision(environ, data, session):
+        """AR76-2..AR76-6: lo que el armador confirmó del detector, en una bolsa ya registrada."""
+        order_id, number = _int(data.get("pedido"), "Pedido"), _int(data.get("numero"), "Bolsa")
+        review = fulfillment.review_bag(store, order_id, number, bag_review(data), by=session["principal"], now=clock())
+        return {"pedido": order_id, "numero": number, "revision": review}
+
     def admin_entrega(environ, data, session):
         delivery = fulfillment.deliver_zone(store, str(data.get("ciclo", "")).strip(), str(data.get("zona", "")),
                                             by=session["principal"], photo=data.get("foto", ""),
@@ -1334,6 +1340,7 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         (r"/api/admin/armado", {"GET": (admin_armado, PACKING)}),
         (r"/api/vision/analizar", {"POST": (vision_analizar, ("admin", partners.PACKER, partners.SUPPLIER))}),
         (r"/api/admin/bolsas/quitar", {"POST": (admin_bolsa_quitar, PACKING)}),
+        (r"/api/admin/bolsas/revision", {"POST": (admin_bolsa_revision, PACKING)}),  # AR76-2
         (r"/api/admin/bolsas", {"POST": (admin_bolsa, PACKING)}),
         (r"/api/admin/danados", {"POST": (admin_danado, PACKING)}),
         (r"/api/admin/incidencias", {"GET": (admin_incidencias, ATTENDING), "POST": (admin_incidencia_abrir, ATTENDING)}),

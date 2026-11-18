@@ -85,6 +85,35 @@ def is_attended(store: InMemoryStore, order: Order) -> bool:
     return len(in_group) >= MIN_ORDERS_PER_GROUP
 
 
+MAX_REVIEW_ROWS = 30
+MAX_REVIEW_UNITS = 300
+
+
+def _clean_review(order, review) -> list[dict]:
+    """AR71-2 y AR76-3: solo productos del pedido y unidades enteras de 1 a 300 (no son kilos)."""
+    if not isinstance(review, (list, tuple)) or len(review) > MAX_REVIEW_ROWS:
+        raise BusinessRuleError("INVALID_BAG_REVIEW", "Revisa los productos confirmados de la bolsa.")
+    ids = {line.product_id for line in order.lines}
+    clean = []
+    for row in review:
+        units = row.get("unidades") if isinstance(row, dict) else None
+        if not isinstance(row, dict) or row.get("id") not in ids:
+            raise BusinessRuleError("INVALID_BAG_REVIEW", "Elige productos del pedido y unidades enteras entre 1 y 300.")
+        if type(units) is not int or not 1 <= units <= MAX_REVIEW_UNITS:
+            raise BusinessRuleError("INVALID_BAG_REVIEW", "Elige productos del pedido y unidades enteras entre 1 y 300.")
+        clean.append({"id": row["id"], "unidades": units})
+    return clean
+
+
+def _check_bag_open(store: InMemoryStore, order) -> None:
+    """AR71-4 y AR76-5: una bolsa se toca solo antes de que su zona salga a reparto o se cierre la semana."""
+    key = (order.cycle, order.zone_id)
+    if key in store.dispatches or key in store.deliveries or key in store.failed_deliveries \
+            or order.cycle in store.settlements:
+        raise BusinessRuleError("ZONE_ALREADY_CLOSED",
+                                "La bolsa ya salió a reparto o la semana está cerrada. Registra una incidencia.")
+
+
 def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: datetime, review=()) -> Bag:
     check_role(store, by, partners.PACKER)  # AR-01, AM-02
     order = store.orders.get(order_id)
@@ -98,15 +127,7 @@ def pack_bag(store: InMemoryStore, order_id: int, *, by: str, photo: str, now: d
     if closed in store.deliveries or closed in store.failed_deliveries:  # AR-06, S-121
         raise BusinessRuleError("ZONE_ALREADY_CLOSED", "La zona ya se entregó o falló; lo que falte va por reclamo.")
     photo = check_photo(photo)  # AR-05
-    clean = []
-    ids = {line.product_id for line in order.lines}
-    if not isinstance(review, (list, tuple)) or len(review) > 30:
-        raise BusinessRuleError('INVALID_BAG_REVIEW', 'Revisa los productos confirmados de la bolsa.')
-    for row in review:
-        units = row.get('unidades') if isinstance(row, dict) else None
-        if not isinstance(row, dict) or row.get('id') not in ids or type(units) is not int or not 1 <= units <= 300:
-            raise BusinessRuleError('INVALID_BAG_REVIEW', 'Elige productos del pedido y unidades enteras entre 1 y 300.')
-        clean.append({'id': row['id'], 'unidades': units})
+    clean = _clean_review(order, review)  # AR71-2: la revisión es opcional al guardar la bolsa
     bags = store.bags.setdefault(order_id, [])
     number = max(store.bag_counters.get(order_id, 0), max((b.number for b in bags), default=0)) + 1
     store.bag_counters[order_id] = number
@@ -195,20 +216,35 @@ def close_cycle(store: InMemoryStore, cycle: str, missing=(), at=None) -> CycleS
     return settle_cycle(store, cycle, missing, at=at, savings_share=OPERATING_SAVINGS_SHARE)  # S-301
 
 
-def remove_bag(store, order_id, number, *, by, now):
-    """AR71-4: baja lógica antes del despacho; la evidencia fotográfica se conserva."""
+def _open_bag(store: InMemoryStore, order_id: int, number: int, by: str):
+    """El pedido y su bolsa, si todavía se pueden tocar."""
     check_role(store, by, partners.PACKER)
     order = store.orders.get(order_id)
     if order is None:
-        raise BusinessRuleError('ORDER_NOT_FOUND', 'El pedido no existe.')
-    key = (order.cycle, order.zone_id)
-    if key in store.dispatches or key in store.deliveries or key in store.failed_deliveries or order.cycle in store.settlements:
-        raise BusinessRuleError('ZONE_ALREADY_CLOSED', 'La bolsa ya salió a reparto o la semana está cerrada. Registra una incidencia.')
+        raise BusinessRuleError("ORDER_NOT_FOUND", "El pedido no existe.")
+    _check_bag_open(store, order)
     bag = next((b for b in store.bags.get(order_id, []) if b.number == number), None)
     if bag is None:
-        raise BusinessRuleError('BAG_NOT_FOUND', 'Esta bolsa ya no está registrada. Actualiza la lista.')
-    store.bag_counters[order_id] = max(store.bag_counters.get(order_id, 0), max(b.number for b in store.bags[order_id]))
-    store.bags[order_id] = [b for b in store.bags[order_id] if b.number != number]
-    store.bag_removals.append({'pedido': order_id, 'numero': number, 'foto': bag.photo, 'por': by, 'hora': now,
-                               'revision': store.bag_reviews.pop((order_id, number), [])})
+        raise BusinessRuleError("BAG_NOT_FOUND", "Esta bolsa ya no está registrada. Actualiza la lista.")
+    return order, bag
+
+
+def remove_bag(store: InMemoryStore, order_id: int, number: int, *, by: str, now: datetime) -> Bag:
+    """AR71-4: baja lógica antes del despacho; la evidencia fotográfica se conserva y el número no se reutiliza."""
+    _order, bag = _open_bag(store, order_id, number, by)
+    bags = store.bags[order_id]
+    store.bag_counters[order_id] = max(store.bag_counters.get(order_id, 0), max(b.number for b in bags))
+    store.bags[order_id] = [b for b in bags if b.number != number]
+    store.bag_removals.append({"pedido": order_id, "numero": number, "foto": bag.photo, "por": by, "hora": now,
+                               "revision": store.bag_reviews.pop((order_id, number), [])})
     return bag
+
+
+def review_bag(store: InMemoryStore, order_id: int, number: int, review, *, by: str, now: datetime) -> list[dict]:
+    """AR76-2..AR76-5 (S-372): la revisión del detector se guarda en una bolsa ya registrada y reemplaza la anterior."""
+    order, _bag = _open_bag(store, order_id, number, by)
+    if not review:
+        raise BusinessRuleError("INVALID_BAG_REVIEW", "Confirma al menos un producto de la bolsa.")
+    clean = _clean_review(order, review)
+    store.bag_reviews[(order_id, number)] = clean
+    return clean
