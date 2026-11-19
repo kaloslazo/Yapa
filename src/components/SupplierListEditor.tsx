@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { api } from '../services/api';
 import { newSupplierRow, parseSupplierList, serializeSupplierList, validateSupplierRows, type SupplierRow } from '../utils/supplierDraft';
+import { photoForAI, QUOTE_SIDE } from '../utils/photoResize';
 import { Icon } from './Icon';
 import { ProductThumb } from './ProductThumb';
 import { SupplierStock, type StockTotal } from './SupplierStock';
@@ -17,9 +18,9 @@ function QuoteReader({ disabled, onRead }: { disabled: boolean; onRead: (read: Q
     if (!text.trim() && !photo) { setState({ busy: false, summary: '', warnings: [], error: 'Pega el mensaje o elige la foto de tu cotización.' }); return; }
     const form = new FormData();
     if (text.trim()) form.set('texto', text.trim());
-    if (photo) form.set('foto_archivo', photo);
     setState({ busy: true, summary: '', warnings: [], error: '' });
     try {
+      if (photo) form.set('foto_archivo', await photoForAI(photo, QUOTE_SIDE)); // S-387: JPEG con fondo blanco
       const result = await api.post<QuoteRead>('/api/proveedor/lista/leer', form);
       setState({ busy: false, summary: onRead(result), warnings: result.avisos, error: '' });
     } catch (error) {
