@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import { PhotoPreview, usePhotoPreview } from './PhotoForm';
 import { matchPhotoProduct, photoKind, type PhotoCandidate } from '../utils/photoMatches';
-import { shrinkPhoto } from '../utils/photoResize';
+import { photoForAI } from '../utils/photoResize';
 import './PhotoProductReview.css';
 
 export type ProductCount = { producto: string; cantidad: number; confianza?: number; codigo?: string; confirmado?: boolean; peso?: string };
@@ -86,7 +86,7 @@ export function PhotoProductReview({
     const form = new FormData();
     for (const [key, value] of Object.entries(context ?? {})) form.set(key, value);
     try {
-      form.set('foto_archivo', await shrinkPhoto(file));
+      form.set('foto_archivo', await photoForAI(file));
       const response = await api.post<Analysis>('/api/vision/analizar', form);
       if (request !== version.current) return;
       const { rows, dropped: left } = keepKnown(response.productos ?? [], candidates);

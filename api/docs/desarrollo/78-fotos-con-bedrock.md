@@ -37,6 +37,7 @@ Solo cambia quién lee las fotos. Las reglas de la 69 (cotización) y de la 77 (
 | S-384 | Si se define `YAPA_BEDROCK_CUENTA`, antes de la primera foto el motor pregunta a AWS de qué cuenta son las credenciales; si no es esa, no usa Bedrock (sigue con Groq) hasta reiniciar. | 434415659695 |
 | S-385 | Cada foto va con máximo 400 fichas de respuesta para bolsas y 2000 para cotizaciones (Bedrock reserva cupo según ese máximo). | 400 / 2000 |
 | S-386 | Si el modelo responde el JSON entre marcas de código (```json ... ```), se toma el objeto de adentro, como ya hace `ia._json_object`. | — |
+| S-387 | Antes de mandar una foto a la IA (bolsa, carga o cotización), la pantalla la pasa siempre a JPEG sobre fondo blanco: una foto PNG o WebP con fondo transparente se leyó mal (un camote como papa amarilla) y la misma en JPEG, bien. Bolsas y cargas quedan en 1024 px de lado como máximo; cotizaciones en 1600 px, para que se lean los precios. Una foto que ya es JPEG, chica y sin pasar el tamaño, va tal cual. | 1024 / 1600 px |
 
 ## Reglas
 
@@ -57,6 +58,7 @@ Solo cambia quién lee las fotos. Las reglas de la 69 (cotización) y de la 77 (
 - **BR-E · Bedrock caído.** Si Bedrock da 403 o 429, responde Groq. → BR-03
 - **BR-F · Cuenta equivocada.** Con `YAPA_BEDROCK_CUENTA=434415659695` y STS diciendo `111111111111`, la foto va a Groq y Bedrock no se vuelve a llamar. Con la cuenta correcta, se pregunta a STS una sola vez. → BR-05, S-384
 - **BR-G · Variables propias.** Con solo `AWS_ACCESS_KEY_ID` y `AWS_SECRET_ACCESS_KEY` en el entorno, no hay Bedrock. → S-383
+- **BR-I · Foto en JPEG.** Un PNG transparente de 480 px se dibuja sobre fondo blanco y sale como `image/jpeg`; un JPEG de 800 px y 100 KB sale igual; una foto de 4000 px sale a 1024 px (bolsa) o 1600 px (cotización). El lector de cotizaciones manda la foto ya convertida. → S-387
 - **BR-H · Bolsa con Bedrock.** En la API de la 77, con Bedrock como único proveedor, la revisión de una bolsa responde con `fuente: ia` y los códigos del pedido. → S-381
 
 ## Trazabilidad
@@ -70,6 +72,7 @@ Solo cambia quién lee las fotos. Las reglas de la 69 (cotización) y de la 77 (
 | BR-05, S-384 | `bedrock._check_account` (STS una vez por clave) | `test_br_f_*` |
 | S-381 con la 77 | `bag_reader` sin cambios: usa `ask_json` | `test_br_h_*` |
 | S-386 | `ia._json_object` ya toma el objeto entre marcas de código | `test_ia` |
+| S-387, BR-I | `utils/photoResize.ts` (`photoForAI`: fondo blanco, JPEG, 1024 o 1600 px); `PhotoProductReview` y `QuoteReader` en `SupplierListEditor` | `photoForAI.test.ts` |
 
 Verificado contra AWS con la cuenta UTEC (no en CI): STS respondió 434415659695; Converse con Nova Pro respondió con la firma propia; Claude Haiku 4.5 devolvió "no se enviaron los datos de caso de uso de Anthropic". Revisado en el navegador con la demo y Bedrock: la bolsa del pedido 111 (camote, limón, limpiatodo y papa blanca en la foto) dio "Con IA" con camote ×4, limón ×2 y limpiatodo ×1; se le pasó la papa blanca.
 
@@ -78,3 +81,5 @@ Verificado contra AWS con la cuenta UTEC (no en CI): STS respondió 434415659695
 - `78-motor-rojo.txt`: las pruebas fallan antes del código.
 - `78-motor-verde.txt` y `78-web-verde.txt`: motor, TypeScript, web y build en verde.
 - `docs/modelo-yolo/banco-18nov.md`: Claude Haiku 4.5 por Bedrock en el banco de 46 fotos, con la cuenta UTEC.
+
+Revisado después del arreglo de S-387, con la clave del usuario `yapa-bedrock`: la foto del catálogo del camote (WebP con fondo transparente), que antes salía "papa amarilla", ahora da "Con IA" con camote ×4.

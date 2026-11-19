@@ -1,0 +1,29 @@
+$ npm run typecheck
+
+> yapa@0.1.0 typecheck
+> tsc -b
+
+$ npm test
+
+> yapa@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.5 /Users/kalosroots/Documents/Yapa
+
+
+ Test Files  44 passed (44)
+      Tests  224 passed (224)
+   Start at  20:40:41
+   Duration  10.59s (import 75%, environment 19%, tests 4%, transform 1%)
+
+    Isolate  44 workers spawned · ~470ms startup each (spawn + environment, per file)
+             at least ~1.83s faster with isolate: false — reuses workers across files instead of one per file
+
+$ npm run build
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.18s

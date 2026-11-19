@@ -638,4 +638,4 @@
 - Probado en la app con la demo y la cuenta UTEC: la revisión de una bolsa respondió "Con IA" con camote, limón y limpiatodo.
 - Falta la clave del usuario IAM solo para Bedrock en el servidor (`deploy/aws/README.md`); hasta entonces todo sigue como en la 77.
 - Pruebas en rojo antes del código; resultado en `78-motor-verde.txt` y `78-web-verde.txt`.
-
+- Arreglo del 18/11 (S-387): toda foto que va a la IA (bolsa, carga o cotización) se pasa a JPEG con fondo blanco antes de enviarla; un WebP con fondo transparente se leía mal. Evidencia `78-jpeg-web-rojo.txt` y `78-jpeg-web-verde.txt`; 224 pruebas de la web.
