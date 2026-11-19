@@ -61,7 +61,17 @@ Solo cambia quién lee las fotos. Las reglas de la 69 (cotización) y de la 77 (
 
 ## Trazabilidad
 
-(se completa al terminar)
+| Regla | Código | Pruebas |
+|---|---|---|
+| BR-01, S-381, S-383 | `ia.from_env` (Bedrock primero solo con `YAPA_BEDROCK_CLAVE_ID` y `YAPA_BEDROCK_CLAVE_SECRETA`) | `test_bedrock_78.test_br_a_*`, `test_br_g_*` |
+| BR-02, S-382, S-385 | `bedrock.converse` y `bedrock.signed_headers`; `ia.http_post` acepta el cuerpo ya firmado | `test_br_c_*`, `test_br_d_*` |
+| BR-03 | `ia.AIClient.ask_json` pasa al siguiente proveedor | `test_br_e_*` |
+| BR-04 | `ask_json` salta a Bedrock sin foto | `test_br_b_*` |
+| BR-05, S-384 | `bedrock._check_account` (STS una vez por clave) | `test_br_f_*` |
+| S-381 con la 77 | `bag_reader` sin cambios: usa `ask_json` | `test_br_h_*` |
+| S-386 | `ia._json_object` ya toma el objeto entre marcas de código | `test_ia` |
+
+Verificado contra AWS con la cuenta UTEC (no en CI): STS respondió 434415659695; Converse con Nova Pro respondió con la firma propia; Claude Haiku 4.5 devolvió "no se enviaron los datos de caso de uso de Anthropic". Revisado en el navegador con la demo y Bedrock: la bolsa del pedido 111 (camote, limón, limpiatodo y papa blanca en la foto) dio "Con IA" con camote ×4, limón ×2 y limpiatodo ×1; se le pasó la papa blanca.
 
 ## Evidencia
 

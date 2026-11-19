@@ -1,0 +1,27 @@
+.....................................................................................................................................................................................................................................................................................................................................................................s.....................................sss.......................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 805 tests in 2.269s
+
+OK (skipped=4)
+test_br_h_bag_review_uses_bedrock (test_bedrock_78.BagWithBedrockTests.test_br_h_bag_review_uses_bedrock) ... ok
+test_br_a_a_photo_goes_to_bedrock_first (test_bedrock_78.BedrockProviderTests.test_br_a_a_photo_goes_to_bedrock_first) ... ok
+test_br_b_text_never_goes_to_bedrock (test_bedrock_78.BedrockProviderTests.test_br_b_text_never_goes_to_bedrock) ... ok
+test_br_c_converse_request (test_bedrock_78.BedrockProviderTests.test_br_c_converse_request) ... ok
+test_br_d_signature_matches_the_aws_example (test_bedrock_78.BedrockProviderTests.test_br_d_signature_matches_the_aws_example) ... ok
+test_br_e_bedrock_down_groq_answers (test_bedrock_78.BedrockProviderTests.test_br_e_bedrock_down_groq_answers) ... ok
+test_br_f_right_account_is_checked_once (test_bedrock_78.BedrockProviderTests.test_br_f_right_account_is_checked_once) ... ok
+test_br_f_wrong_account_turns_bedrock_off (test_bedrock_78.BedrockProviderTests.test_br_f_wrong_account_turns_bedrock_off) ... ok
+test_br_g_system_aws_variables_are_not_used (test_bedrock_78.BedrockProviderTests.test_br_g_system_aws_variables_are_not_used) ... ok
+test_vb_01_without_context_only_the_detector (test_bolsa_ia_77.BagReaderTests.test_vb_01_without_context_only_the_detector) ... ok
+test_vb_a_ai_answers_with_codes_of_the_order (test_bolsa_ia_77.BagReaderTests.test_vb_a_ai_answers_with_codes_of_the_order) ... ok
+test_vb_b_only_codes_of_the_order_once (test_bolsa_ia_77.BagReaderTests.test_vb_b_only_codes_of_the_order_once) ... ok
+test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor (test_bolsa_ia_77.BagReaderTests.test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor) ... ok
+test_vb_d_without_ai_the_local_detector_answers (test_bolsa_ia_77.BagReaderTests.test_vb_d_without_ai_the_local_detector_answers) ... ok
+test_vb_e_ai_down_falls_back_to_the_detector (test_bolsa_ia_77.BagReaderTests.test_vb_e_ai_down_falls_back_to_the_detector) ... ok
+test_vb_f_after_150_reviews_the_ai_is_not_called (test_bolsa_ia_77.BagReaderTests.test_vb_f_after_150_reviews_the_ai_is_not_called) ... ok
+test_vb_f_each_ai_review_counts (test_bolsa_ia_77.BagReaderTests.test_vb_f_each_ai_review_counts) ... ok
+test_vb_g_the_supplier_list_is_his_own_products (test_bolsa_ia_77.BagReaderTests.test_vb_g_the_supplier_list_is_his_own_products) ... ok
+test_vb_h_unknown_order (test_bolsa_ia_77.BagReaderTests.test_vb_h_unknown_order) ... ok
+test_vb_i_units_are_pieces_from_1_to_300 (test_bolsa_ia_77.BagReaderTests.test_vb_i_units_are_pieces_from_1_to_300) ... ok
+Ran 20 tests in 0.030s
+OK

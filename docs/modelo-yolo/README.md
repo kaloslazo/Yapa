@@ -58,6 +58,8 @@ Acierta 2 de las 11 fotos donde sugiere algo. Por eso, desde la iteración 76, e
 
 ## Uso en las pantallas (desde la iteración 76)
 
+> Desde la iteración 77, «Sugerir con el detector» pregunta primero a la IA de visión de Groq con la lista del pedido (o de los productos del proveedor) y este modelo queda de respaldo cuando no hay IA o se acabó el cupo. Comparación en [banco-18nov.md](banco-18nov.md).
+
 - Armado: «Tomar foto de la bolsa» registra la bolsa al elegir la foto, sin otro toque (S-331). Después, «Revisar la foto con el detector (opcional)» muestra «Sugerir con el detector»: solo aparecen sugerencias de productos del pedido (las demás se descartan y se dice cuántas). Las filas confirmadas se guardan en esa bolsa con «Guardar revisión de la bolsa» y marcan la lista del pedido. «Quitar bolsa» pide confirmación, funciona antes del despacho y conserva la foto.
 - Proveedor: en «Stock confirmado para tu propuesta» se elige la foto de la carga y, si sirve, «Sugerir con el detector» (solo productos de su lista). Se corrigen producto y unidades, se ingresa el peso medido cuando se vende por kg y se confirman las filas. El total vendible llena el borrador; publicar sigue pidiendo la aprobación del equipo.
 - El sistema nunca pasa unidades visibles a kilos ni cambia precios. La misma foto exacta no se suma dos veces al stock.

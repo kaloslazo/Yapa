@@ -28,7 +28,7 @@ Solo cambia de dónde salen las sugerencias. La revisión sigue siendo opcional 
 | S-375 | En Armado, la foto se revisa con IA dándole la lista de productos del pedido (código y nombre). Solo cuentan los códigos de esa lista; lo que la IA nombre fuera de ella se muestra aparte como "También se ve", sin código. | — |
 | S-376 | En Stock del proveedor, la lista que recibe la IA son los productos de ese proveedor para la semana que viene. | — |
 | S-377 | Si no hay IA configurada, si falla o si se pasó el límite del día, se usa el detector local (YOLO) como antes; si tampoco está, se revisa a mano. La respuesta dice de dónde salió ("Con IA" o "Con el detector local"). | — |
-| S-378 | Hasta 150 revisiones con IA por cuenta y día de Lima. El nivel gratuito de Groq deja unas 7000 fichas por minuto y cada foto gasta unas 1000 a 2000: la pantalla achica la foto a 1024 px de lado antes de enviarla. | 150 por día |
+| S-378 | Hasta 150 revisiones con IA por cuenta y día de Lima. El nivel gratuito de Groq deja unas 7000 fichas por minuto y cada foto gasta unas 2000 a 3000: alcanza para 2 o 3 fotos por minuto entre todos. La pantalla achica la foto a 1024 px de lado antes de enviarla. Si se pasa el límite del minuto, responde el detector local y la pantalla lo dice; se puede volver a tocar el botón en un rato. | 150 por día |
 | S-379 | La foto de la bolsa sale a Groq solo para leerla, como la cotización de la iteración 69. Puede tener el rótulo (número de pedido y edificio), no el nombre del vecino. No se guarda allá ni aquí: la foto que queda es la de la bolsa ya registrada. | — |
 | S-380 | Las unidades que diga la IA son piezas o envases que se ven, de 1 a 300; nunca kilos (como S-358). Si no da un número válido, se pone 1 y el armador lo corrige. | 1..300 |
 
@@ -61,7 +61,18 @@ Escenario base: un pedido de Residencial San Felipe con papa amarilla, papa blan
 
 ## Trazabilidad
 
-(se completa al terminar)
+| Regla | Código | Pruebas |
+|---|---|---|
+| VB-01, S-375 | `bag_reader.order_products` y `read_bag`; `web/api.py` `vision_analizar` con `pedido` | `test_bolsa_ia_77.test_vb_a_*`, `test_vb_01_*` |
+| VB-02, S-380 | `bag_reader._clean` y `_units` | `test_vb_b_*`, `test_vb_i_*` |
+| S-375, S-379 | `bag_reader._with_ai` (lista con código y nombre, foto como imagen) | `test_vb_c_*` |
+| VB-03, S-377 | `read_bag` cae a `vision.analyze_photo` | `test_vb_d_*`, `test_vb_e_*` |
+| VB-04 | `order_products` (`ORDER_NOT_FOUND`) | `test_vb_h_*` |
+| VB-05, S-378 | `bag_reader._take_use` (`bolsa:<cuenta>:<fecha>` en `ia_usage`) | `test_vb_f_*` |
+| S-376 | `bag_reader.supplier_products`; `vision_analizar` con `para=stock` | `test_vb_g_*` |
+| VB-07 | `PhotoProductReview.tsx` (`context`, `keepKnown` con `codigo`, `SOURCE_LABEL`, "También se ve") y `utils/photoResize.ts`; `PackCard` y `SupplierStock` mandan el contexto | `bolsaIa77.test.ts`, `armado76.test.ts` |
+
+El banco de fotos (`tools/banco_bolsas.py`) mide con el mismo `bag_reader._with_ai` que usa la app. Revisado en el navegador con la demo: sin cupo de IA la pantalla dijo "Con el detector local"; con Bedrock (iteración 78), "Con IA".
 
 ## Evidencia
 
