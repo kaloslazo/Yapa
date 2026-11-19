@@ -1,0 +1,70 @@
+
+ RUN  v5.0.5 /Users/kalosroots/Documents/Yapa
+
+ ❯ src/utils/photoForAI.test.ts (4 tests | 4 failed) 51ms
+   ❯ BR-I · foto en JPEG (4)
+     × un PNG transparente se dibuja sobre blanco y sale JPEG 4ms
+     × un JPEG chico va tal cual 0ms
+     × una foto grande baja a 1024 px (bolsa) o 1600 px (cotización) 0ms
+     × el lector de cotizaciones manda la foto ya en JPEG 45ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/photoForAI.test.ts > BR-I · foto en JPEG > un PNG transparente se dibuja sobre blanco y sale JPEG
+TypeError: photoForAI is not a function
+ ❯ src/utils/photoForAI.test.ts:44:23
+     42|   it('un PNG transparente se dibuja sobre blanco y sale JPEG', async (…
+     43|     size = { width: 480, height: 480 };
+     44|     const out = await photoForAI(file('camote.png', 'image/png'));
+       |                       ^
+     45|     expect(out.type).toBe('image/jpeg');
+     46|     expect(drawn).toEqual(['fondo #ffffff', 'foto']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/utils/photoForAI.test.ts > BR-I · foto en JPEG > un JPEG chico va tal cual
+TypeError: photoForAI is not a function
+ ❯ src/utils/photoForAI.test.ts:53:18
+     51|     size = { width: 800, height: 600 };
+     52|     const original = file('bolsa.jpg', 'image/jpeg', 100_000);
+     53|     expect(await photoForAI(original)).toBe(original);
+       |                  ^
+     54|     expect(drawn).toEqual([]);
+     55|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/utils/photoForAI.test.ts > BR-I · foto en JPEG > una foto grande baja a 1024 px (bolsa) o 1600 px (cotización)
+TypeError: photoForAI is not a function
+ ❯ src/utils/photoForAI.test.ts:59:11
+     57|   it('una foto grande baja a 1024 px (bolsa) o 1600 px (cotización)', …
+     58|     size = { width: 4000, height: 3000 };
+     59|     await photoForAI(file('bolsa.jpg', 'image/jpeg'));
+       |           ^
+     60|     expect(lastCanvas!.width).toBe(1024);
+     61|     await photoForAI(file('lista.jpg', 'image/jpeg'), QUOTE_SIDE);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/utils/photoForAI.test.ts > BR-I · foto en JPEG > el lector de cotizaciones manda la foto ya en JPEG
+AssertionError: expected 'image/webp' to be 'image/jpeg' // Object.is equality
+
+Expected: "image/jpeg"
+Received: "image/webp"
+
+ ❯ src/utils/photoForAI.test.ts:79:53
+     77|     await act(async () => [...host.querySelectorAll<HTMLButtonElement>…
+     78|     const sent = vi.mocked(api.post).mock.calls[0][1] as FormData;
+     79|     expect((sent.get('foto_archivo') as File).type).toBe('image/jpeg');
+       |                                                     ^
+     80|     await act(async () => root.unmount());
+     81|     host.remove();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  20:38:52
+   Duration  2.18s (import 67%, environment 28%, transform 3%, tests 2%)
+
