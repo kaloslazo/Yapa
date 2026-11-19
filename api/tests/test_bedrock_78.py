@@ -1,4 +1,4 @@
-"""Iteración 78 · Las fotos se leen con Claude en Bedrock (cuenta estudiantil). Spec: docs/desarrollo/78-fotos-con-bedrock.md.
+"""Iteración 78 · Las fotos se leen con Bedrock de la cuenta estudiantil. Spec: docs/desarrollo/78-fotos-con-bedrock.md.
 
 Ninguna prueba sale a internet: Bedrock, STS y Groq se reemplazan por un envío falso.
 """
@@ -77,7 +77,7 @@ class BedrockProviderTests(unittest.TestCase):
         client(envio).ask_json("sistema", "lista", image=("image/jpeg", JPEG), max_tokens=400)
         url, headers, body = envio.urls("bedrock-runtime")[0]
         self.assertEqual(url, "https://bedrock-runtime.us-east-2.amazonaws.com/model/"
-                              "us.anthropic.claude-haiku-4-5-20251001-v1%3A0/converse")
+                              "us.amazon.nova-pro-v1%3A0/converse")
         sent = json.loads(body)
         self.assertEqual(sent["system"], [{"text": "sistema"}])
         image = sent["messages"][0]["content"][0]["image"]
