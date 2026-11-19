@@ -381,7 +381,7 @@ function PackCard({ order, send, saveBag }: { order: Order; send: SendFn; saveBa
       </label>
       {last ? <details className="pack-review">
         <summary>Revisar la foto con el detector (opcional)</summary>
-        <PhotoProductReview key={last.number} photo={last.file} candidates={order.lines} scope="el pedido" onMatchesChange={setDetected}
+        <PhotoProductReview key={last.number} photo={last.file} candidates={order.lines} scope="el pedido" context={{ pedido: String(order.id) }} onMatchesChange={setDetected}
           title="Productos de la última bolsa" label="Guardar revisión de la bolsa" onConfirm={(_file, products) => saveReview(products)} />
       </details> : null}
       <button className="text-button pack-damaged-toggle" type="button" aria-expanded={damaged} onClick={() => setDamaged((d) => !d)}>Algo llegó dañado</button>

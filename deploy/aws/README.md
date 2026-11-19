@@ -31,6 +31,27 @@ El motor sigue usando solo la biblioteca estándar, pero el detector de Armado y
 
 Cómo se agrandó (16/11/2026): se detuvo el servicio, se respaldó la base, snapshot `yapa-antes-2gb-20261116`, servidor nuevo `yapa-2gb` desde el snapshot con `small_3_0`, los mismos puertos y la IP fija `yapa-ip` movida al nuevo. El dominio y el secreto `AWS_HOST` no cambian; la llave de host SSH sí (el CI la lee con `ssh-keyscan` en cada despliegue).
 
+## Fotos con Bedrock (iteración 78)
+
+Las fotos (revisión de bolsas y cotizaciones) se leen primero con Amazon Bedrock de **esta misma cuenta estudiantil** (UTEC, `434415659695`); si no está configurado o falla, siguen con Groq y, para bolsas, con el detector local. El motor firma las llamadas él mismo (SigV4), sin instalar nada.
+
+1. **Usuario IAM solo para Bedrock** (una vez, con el perfil `utec`): un usuario `yapa-bedrock` cuya única política deja invocar el modelo que se usa (los perfiles `us.` reparten entre `us-east-1`, `us-east-2` y `us-west-2`):
+   ```json
+   {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": ["bedrock:InvokeModel"], "Resource": [
+     "arn:aws:bedrock:us-east-2:434415659695:inference-profile/us.amazon.nova-pro-v1:0",
+     "arn:aws:bedrock:*::foundation-model/amazon.nova-pro-v1:0"]}]}
+   ```
+   Para Claude Haiku 4.5 se agregan `inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0` y `foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0`, y antes alguien de la cuenta tiene que enviar el formulario de caso de uso de Anthropic en la consola de Bedrock.
+2. **La clave la crea y la copia una persona**, no el CI: `AWS_PROFILE=utec aws iam create-access-key --user-name yapa-bedrock`.
+3. **En `/etc/yapa/yapa.env`** del servidor:
+   ```
+   YAPA_BEDROCK_CLAVE_ID=<AccessKeyId>
+   YAPA_BEDROCK_CLAVE_SECRETA=<SecretAccessKey>
+   YAPA_BEDROCK_CUENTA=434415659695
+   # opcionales: YAPA_BEDROCK_REGION=us-east-2, YAPA_BEDROCK_MODELO=us.amazon.nova-pro-v1:0
+   ```
+   y `sudo systemctl restart yapa`. Se usan variables propias, no `AWS_*`, para que nunca tome credenciales de otra cuenta; con `YAPA_BEDROCK_CUENTA`, si la clave fuera de otra cuenta, Bedrock se apaga solo (S-384).
+
 ## Base poblada para presentar
 
 El 16/11/2026 se reemplazó la base de producción por una poblada con `api/tools/poblar_base.py`: la semana actual (reloj de la demo en el miércoles, con pagos por verificar, la lista del proveedor por aprobar y una incidencia abierta) y 6 semanas de historia liquidadas. Conserva las cuentas, claves y PIN de la base anterior; la anterior quedó en `/opt/yapa/backups/antes-de-poblar-20261116.db`. Para volver: detener `yapa`, copiar ese respaldo sobre `/opt/yapa/data/yapa.db` y arrancar.

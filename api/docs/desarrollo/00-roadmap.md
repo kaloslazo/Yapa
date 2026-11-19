@@ -1,6 +1,6 @@
 # Desarrollo de Yapa después del Lab 4
 
-Estado al 18/11/2026: iteraciones hasta la 76 completas y en verde. La 75 es la antigua "64" de Aaron (`75-bolsas-con-selector.md`), renumerada porque repetía el número y los supuestos de la 64 de Carlos; su selector quedó retirado en la 76.
+Estado al 18/11/2026: iteraciones hasta la 78 completas y en verde. La 75 es la antigua "64" de Aaron (`75-bolsas-con-selector.md`), renumerada porque repetía el número y los supuestos de la 64 de Carlos; su selector quedó retirado en la 76.
 
 Esta copia parte del checkpoint entregado en el Lab 4 (tag `checkpoint-lab4`, rama `carlos/iteracion-2-sdd`, PR #1). El checkpoint no se toca. Aquí se sigue desarrollando en la rama `main` de `Raith726/yapa-desarrollo`.
 
@@ -91,6 +91,8 @@ Se respetan las decisiones C-01..C-12 y los supuestos S-01..S-12 de `docs/sdd/10
 | 74 | **Recorrido por calles para el reparto** (OSRM a pedido, distancia y tiempo sin tráfico) | pedido de Aaron, 17/11 | completa, ver `74-ruta-por-calles.md` (servidor de demostración: no apto para producción, S-366) |
 | 75 | **Seleccionar bolsas y confirmar sus fotos** (antes "64" duplicada, 13/11) | pedido de Aaron, 13/11 | retirada: la 71 dejó de mostrarla y la 76 la borró; ver `75-bolsas-con-selector.md` |
 | 76 | **La bolsa se guarda con la foto y el detector se usa cuando se pide** (vuelve S-331; revisión después y filtrada por pedido) | revisión de Kalos, 18/11 | completa, ver `76-bolsa-con-un-toque-y-detector-a-pedido.md` |
+| 77 | **Revisar la bolsa con IA que conoce el pedido** (visión de Groq con la lista del pedido o del proveedor; YOLO de respaldo; banco de 46 fotos para medir) | revisión de Kalos, 18/11 | completa, ver `77-revision-de-bolsas-con-ia.md` |
+| 78 | **Las fotos se leen con Bedrock de la cuenta estudiantil** (Converse con firma SigV4 propia, cuenta verificada con STS, Nova Pro por defecto; Groq y YOLO de respaldo) | pedido de Kalos, 18/11 | completa, ver `78-fotos-con-bedrock.md`; falta la clave en el servidor |
 | 50 | **Endurecimiento antes de abrir** (tope del cuerpo fuera del cerrojo, fotos solo donde se usan y con tipo real, cambiar el PIN cierra las sesiones, "ver como" sin sacar dinero, CI en la raíz) | revisión de seguridad 21/10 | completa, ver `50-endurecimiento-antes-de-abrir.md` |
 | 51 | **Cierre de huecos para pasar a `main`** (límites por dirección, zonas públicas sin contacto, correo apagado sin SMTP en servidor, CSP y HSTS, sesiones vencidas, semana en palabras, panel y mapa bajo demanda) | revisión de seguridad 21/10 | completa, ver `51-cierre-de-huecos-para-main.md` |
 | — | **Costos operativos en el margen** (armado, cobro, atención) | hallazgo de la iteración 8: el margen sin estos costos puede ser engañoso | necesita decisión del equipo |

@@ -622,3 +622,20 @@
 - Se borró el selector de bolsas sin uso (`BagForm`, iteración 75) y sus estilos.
 - En el mismo cambio: el código y las pruebas de las iteraciones 71 a 74 pasaron al estilo del repo sin cambiar lo que hacen (`refactor:`), sus specs se reescribieron con el formato de las demás y el tema de cada pregunta frecuente se juntó con la pregunta.
 - Pruebas en rojo antes del código (`76-motor-rojo.txt`, `76-web-rojo.txt`); resultado en `76-motor-verde.txt` y `76-web-verde.txt`.
+
+## Iteración 77 · Revisar la bolsa con IA que conoce el pedido (18/11/2026)
+
+- Spec: `77-revision-de-bolsas-con-ia.md` (S-375..S-380). Origen: el detector YOLO solo conoce 4 de los 12 productos.
+- Banco de 46 fotos con respuesta conocida (`tools/banco_bolsas.py`, `docs/modelo-yolo/banco-18nov.md`): YOLO encuentra el 27 % de lo que hay; la IA con la lista del pedido, más del 90 %.
+- `bag_reader.py`: con `pedido` (armado) o `para=stock` (proveedor), `/api/vision/analizar` le da a la IA la lista y solo acepta esos códigos; sin IA, con falla o pasado el límite (150 al día por cuenta), responde el detector local. La pantalla achica la foto a 1024 px, elige el producto que dio la IA y dice "Con IA" o "Con el detector local" y "También se ve: …".
+- Pruebas en rojo antes del código; resultado en `77-motor-verde.txt` y `77-web-verde.txt`.
+
+## Iteración 78 · Las fotos se leen con Bedrock de la cuenta estudiantil (18/11/2026)
+
+- Spec: `78-fotos-con-bedrock.md` (S-381..S-386). Origen: el nivel gratuito de Groq cortó 13 de 46 fotos por sus límites por minuto y por día.
+- `bedrock.py`: API Converse de `bedrock-runtime` con la firma SigV4 hecha con la biblioteca estándar (reproduce el ejemplo publicado por AWS) y verificación de la cuenta con STS. Las fotos van primero a Bedrock; el texto sigue con Groq.
+- En la cuenta UTEC responden Nova (sin formulario) y Claude 4.x pide el formulario de caso de uso de Anthropic. Medido en el banco: Nova Pro 95 % de precisión y 94 % de cobertura, el modelo por defecto.
+- Probado en la app con la demo y la cuenta UTEC: la revisión de una bolsa respondió "Con IA" con camote, limón y limpiatodo.
+- Falta la clave del usuario IAM solo para Bedrock en el servidor (`deploy/aws/README.md`); hasta entonces todo sigue como en la 77.
+- Pruebas en rojo antes del código; resultado en `78-motor-verde.txt` y `78-web-verde.txt`.
+

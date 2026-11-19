@@ -16,7 +16,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from .. import quote_reader, supplier_stock, vision
+from .. import bag_reader, quote_reader, supplier_stock, vision
 from ..street_routing import street_route
 from .. import assistant, audit, auth, buffer, claims, customers, cycle, forecast, fulfillment, ia, incidents, insights, invitations, logistics, metrics, notices, partners, purchase, reception, recovery, reference, supplier_offers, wallet, zones
 from ..google_identity import GoogleError
@@ -778,7 +778,14 @@ def create_api(store: InMemoryStore, clock=None, on_change=None, photo_dir: str 
         return {"ciclo": cycle_id, "ciclos": known_cycles(), "paradas": stops, "pedidos": orders}
 
     def vision_analizar(environ, data, session):
-        return vision.analyze_photo(data.get("_vision_upload"))
+        """VB-01: con `pedido` (armado) o `para=stock` (proveedor), la IA revisa con esa lista; si no, el detector local."""
+        products = None
+        if session["kind"] == partners.SUPPLIER:
+            if data.get("para") == "stock":
+                products = bag_reader.supplier_products(store, session["principal"], clock())  # S-376
+        elif str(data.get("pedido") or "").strip():
+            products = bag_reader.order_products(store, _int(data.get("pedido"), "Pedido"))  # S-375
+        return bag_reader.read_bag(store, ai, session["principal"], data.get("_vision_upload"), products, clock())
 
     def bag_review(data) -> list:
         """AR71-2: la revisión llega como texto JSON en el formulario de la foto."""

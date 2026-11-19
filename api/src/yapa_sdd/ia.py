@@ -3,6 +3,7 @@
 Specs: docs/desarrollo/60-arma-mi-canasta-ia.md y 61-atencion-con-ia.md.
 La IA solo sugiere: los precios, los pasos, los topes y el mínimo los sigue aplicando el motor, y nada cambia de estado.
 Proveedores con el formato "chat completions" de OpenAI: Groq (principal) y GitHub Models (respaldo), S-314.
+Para fotos, primero Claude en Amazon Bedrock si está configurado (iteración 78, `bedrock.py`).
 Solo biblioteca estándar, como el resto del motor.
 """
 
@@ -19,6 +20,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Callable
 
+from . import bedrock
 from . import cycle as cycles
 from . import partners
 from .domain import MAX_QUANTITY, MIN_SUBTOTAL, BusinessRuleError, ceil_cents
@@ -46,10 +48,16 @@ class Provider:
     key: str
     model: str
     vision_model: str = ""  # S-345: el modelo que lee fotos; vacío, el mismo de texto
+    kind: str = "openai"  # "bedrock": solo fotos, con la API Converse y firma de AWS (iteración 78)
+    secret: str = ""  # Bedrock: la clave secreta del usuario IAM (S-383)
+    region: str = ""
+    token: str = ""
+    account: str = ""  # S-384: la cuenta de AWS esperada; vacío, no se revisa
 
 
-def http_post(url: str, headers: dict, body: dict, timeout: float) -> dict:
-    request = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
+def http_post(url: str, headers: dict, body: dict | bytes, timeout: float) -> dict:
+    data = body if isinstance(body, bytes) else json.dumps(body).encode("utf-8")  # bytes: ya firmados (Bedrock)
+    request = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 (URL fija de S-314)
             return json.loads(response.read().decode("utf-8"))
@@ -73,6 +81,14 @@ class AIClient:
             content = [{"type": "text", "text": user},
                        {"type": "image_url", "image_url": {"url": f"data:{image[0]};base64,{encoded}"}}]
         for provider in self.providers:
+            if provider.kind == "bedrock":
+                if image is None:  # BR-04: el texto no va a Bedrock
+                    continue
+                try:  # BR-02, BR-03
+                    text = bedrock.converse(provider, system, user, image, max_tokens, self.post, self.timeout)
+                    return _json_object(text), provider.name
+                except (AIError, KeyError, IndexError, TypeError, ValueError, StopIteration):
+                    continue
             model = (provider.vision_model or provider.model) if image is not None else provider.model
             body = {"model": model, "temperature": 0.2, "response_format": {"type": "json_object"},
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]}
@@ -91,8 +107,17 @@ class AIClient:
 
 
 def from_env(env) -> AIClient | None:
-    """S-314: Groq primero y GitHub Models de respaldo; sin ninguna clave, no hay IA."""
+    """S-314: Groq primero y GitHub Models de respaldo; sin ninguna clave, no hay IA.
+    S-381 y S-383: con las claves propias de Bedrock, las fotos van primero a Bedrock."""
     providers = []
+    key_id = (env.get("YAPA_BEDROCK_CLAVE_ID") or "").strip()
+    secret = (env.get("YAPA_BEDROCK_CLAVE_SECRETA") or "").strip()
+    if key_id and secret:
+        region = (env.get("YAPA_BEDROCK_REGION") or bedrock.DEFAULT_REGION).strip()
+        providers.append(Provider("bedrock", "", key_id, (env.get("YAPA_BEDROCK_MODELO") or bedrock.DEFAULT_MODEL).strip(),
+                                  kind="bedrock", secret=secret, region=region,
+                                  token=(env.get("YAPA_BEDROCK_TOKEN_SESION") or "").strip(),
+                                  account=(env.get("YAPA_BEDROCK_CUENTA") or "").strip()))
     if (env.get("YAPA_GROQ_CLAVE") or "").strip():
         providers.append(Provider("groq", GROQ_URL, env["YAPA_GROQ_CLAVE"].strip(),
                                   (env.get("YAPA_GROQ_MODELO") or "openai/gpt-oss-120b").strip(),

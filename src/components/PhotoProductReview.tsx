@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../services/api';
 import { PhotoPreview, usePhotoPreview } from './PhotoForm';
 import { matchPhotoProduct, photoKind, type PhotoCandidate } from '../utils/photoMatches';
+import { shrinkPhoto } from '../utils/photoResize';
 import './PhotoProductReview.css';
 
 export type ProductCount = { producto: string; cantidad: number; confianza?: number; codigo?: string; confirmado?: boolean; peso?: string };
 type State = 'idle' | 'analyzing' | 'saving' | 'confirmed';
+type Source = 'ia' | 'detector';
+type Analysis = { productos: ProductCount[]; fuente?: Source; otros?: string[] };
 type Props = {
   onConfirm?: (file: File, products: ProductCount[]) => Promise<boolean>;
   label?: string;
@@ -16,26 +19,34 @@ type Props = {
   title?: string;
   photo?: File; // iteración 76: la foto ya se tomó (la bolsa ya está registrada) y aquí solo se revisa
   scope?: string; // dónde deben estar los productos sugeridos: "el pedido", "tu lista"
+  context?: Record<string, string>; // iteración 77: { pedido } o { para: 'stock' }, para que la IA reciba esa lista
 };
 
 const PRODUCTS = ['papa', 'cebolla', 'ajo', 'zanahoria', 'limon', 'camote', 'otro'];
 const MAX_UNITS = 300;
+const SOURCE_LABEL: Record<Source, string> = { ia: 'Con IA', detector: 'Con el detector local' };
 
-// S-371: con candidatos, solo queda lo que corresponde a alguno; lo demás se descarta y se cuenta
+// S-371: con candidatos, solo queda lo que corresponde a alguno; lo demás se descarta y se cuenta.
+// Iteración 77: si la IA ya dio el código del producto, se usa tal cual (no hay que adivinar cuál papa)
 function keepKnown(found: ProductCount[], candidates?: PhotoCandidate[]) {
   if (!candidates) return { rows: found, dropped: 0 };
-  const known = found.filter((p) => candidates.some((c) => photoKind(c.name) === p.producto || photoKind(c.id) === p.producto));
-  const rows = known.map((p) => ({ ...p, codigo: matchPhotoProduct(p.producto, candidates), confirmado: false }));
+  const fits = (p: ProductCount) => (p.codigo
+    ? candidates.some((c) => c.id === p.codigo)
+    : candidates.some((c) => photoKind(c.name) === p.producto || photoKind(c.id) === p.producto));
+  const known = found.filter(fits);
+  const rows = known.map((p) => ({ ...p, codigo: p.codigo || matchPhotoProduct(p.producto, candidates), confirmado: false }));
   return { rows, dropped: found.length - known.length };
 }
 
 export function PhotoProductReview({
   onConfirm, label = 'Confirmar conteo de referencia', candidates, onMatchesChange, photoLabel = 'Elegir foto para revisar',
-  requireWeight = false, title = 'Foto de la bolsa y sus productos', photo, scope = 'la lista',
+  requireWeight = false, title = 'Foto de la bolsa y sus productos', photo, scope = 'la lista', context,
 }: Props) {
   const [file, setFile] = useState<File | null>(photo ?? null);
   const [products, setProducts] = useState<ProductCount[]>([]);
   const [dropped, setDropped] = useState(0);
+  const [source, setSource] = useState<Source | null>(null);
+  const [others, setOthers] = useState<string[]>([]);
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState('');
   const version = useRef(0);
@@ -56,6 +67,8 @@ export function PhotoProductReview({
     setFile(chosen ?? null);
     setProducts([]);
     setDropped(0);
+    setSource(null);
+    setOthers([]);
     setError('');
     choose(chosen);
     setState('idle');
@@ -66,16 +79,21 @@ export function PhotoProductReview({
     const request = ++version.current;
     setProducts([]);
     setDropped(0);
+    setSource(null);
+    setOthers([]);
     setError('');
     setState('analyzing');
     const form = new FormData();
-    form.set('foto_archivo', file);
+    for (const [key, value] of Object.entries(context ?? {})) form.set(key, value);
     try {
-      const response = await api.post<{ productos: ProductCount[] }>('/api/vision/analizar', form);
+      form.set('foto_archivo', await shrinkPhoto(file));
+      const response = await api.post<Analysis>('/api/vision/analizar', form);
       if (request !== version.current) return;
       const { rows, dropped: left } = keepKnown(response.productos ?? [], candidates);
       setProducts(rows);
       setDropped(left);
+      setSource(response.fuente ?? null);
+      setOthers(response.otros ?? []);
     } catch (problem) {
       if (request === version.current) setError(problem instanceof Error ? problem.message : 'No pudimos analizar. Completa la revisión manualmente.');
     } finally {
@@ -121,13 +139,15 @@ export function PhotoProductReview({
 
   return <section className="photo-product-review" aria-label="Revisión de productos por foto">
     <h3>{title}</h3>
-    <p>Si quieres ayuda, toca «Sugerir con el detector»: reconoce papa, cebolla, ajo y zanahoria, y se equivoca seguido. Corrige o añade lo que falte. Las unidades que se ven no son kilos.</p>
+    <p>Si quieres ayuda, toca «Sugerir con el detector»: la IA revisa la foto con los productos de {scope}. Sin IA, el detector local solo reconoce papa, cebolla, ajo y zanahoria. Corrige o añade lo que falte. Las unidades que se ven no son kilos.</p>
     {photo ? null : <label className="photo-field pack-camera"><span>{photoLabel}</span>
       <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={state === 'saving'}
         onChange={(event) => { const chosen = event.target.files?.[0]; event.target.value = ''; pick(chosen); }} /></label>}
     <PhotoPreview src={preview} />
     {state === 'analyzing' ? <p role="status">Analizando la foto…</p> : null}
     {error ? <p role="alert">{error}</p> : null}
+    {source ? <p className="photo-source">{SOURCE_LABEL[source]}</p> : null}
+    {others.length ? <p className="photo-others">También se ve: {others.join(', ')}</p> : null}
     {dropped ? <p role="status">{dropped === 1 ? `1 sugerencia no está en ${scope} y no se muestra.` : `${dropped} sugerencias no están en ${scope} y no se muestran.`}</p> : null}
     {products.map((p, i) => <div className="photo-product-row" key={i}>
       <label>{candidates ? `Corresponde a, producto ${i + 1}` : `Producto ${i + 1}`}

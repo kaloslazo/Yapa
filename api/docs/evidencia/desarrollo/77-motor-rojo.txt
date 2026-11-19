@@ -1,0 +1,116 @@
+test_vb_01_without_context_only_the_detector (test_bolsa_ia_77.BagReaderTests.test_vb_01_without_context_only_the_detector) ... ok
+test_vb_a_ai_answers_with_codes_of_the_order (test_bolsa_ia_77.BagReaderTests.test_vb_a_ai_answers_with_codes_of_the_order) ... ERROR
+test_vb_b_only_codes_of_the_order_once (test_bolsa_ia_77.BagReaderTests.test_vb_b_only_codes_of_the_order_once) ... ERROR
+test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor (test_bolsa_ia_77.BagReaderTests.test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor) ... ERROR
+test_vb_d_without_ai_the_local_detector_answers (test_bolsa_ia_77.BagReaderTests.test_vb_d_without_ai_the_local_detector_answers) ... ERROR
+test_vb_e_ai_down_falls_back_to_the_detector (test_bolsa_ia_77.BagReaderTests.test_vb_e_ai_down_falls_back_to_the_detector) ... ERROR
+test_vb_f_after_150_reviews_the_ai_is_not_called (test_bolsa_ia_77.BagReaderTests.test_vb_f_after_150_reviews_the_ai_is_not_called) ... ERROR
+test_vb_f_each_ai_review_counts (test_bolsa_ia_77.BagReaderTests.test_vb_f_each_ai_review_counts) ... ERROR
+test_vb_g_the_supplier_list_is_his_own_products (test_bolsa_ia_77.BagReaderTests.test_vb_g_the_supplier_list_is_his_own_products) ... ERROR
+test_vb_h_unknown_order (test_bolsa_ia_77.BagReaderTests.test_vb_h_unknown_order) ... ERROR
+test_vb_i_units_are_pieces_from_1_to_300 (test_bolsa_ia_77.BagReaderTests.test_vb_i_units_are_pieces_from_1_to_300) ... FAIL
+
+======================================================================
+ERROR: test_vb_a_ai_answers_with_codes_of_the_order (test_bolsa_ia_77.BagReaderTests.test_vb_a_ai_answers_with_codes_of_the_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 53, in test_vb_a_ai_answers_with_codes_of_the_order
+    self.assertEqual(body["fuente"], "ia")
+                     ~~~~^^^^^^^^^^
+KeyError: 'fuente'
+
+======================================================================
+ERROR: test_vb_b_only_codes_of_the_order_once (test_bolsa_ia_77.BagReaderTests.test_vb_b_only_codes_of_the_order_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 65, in test_vb_b_only_codes_of_the_order_once
+    self.assertEqual([(p["codigo"], p["cantidad"]) for p in body["productos"]], [("PAPA-BLANCA", 3)])
+                       ~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor (test_bolsa_ia_77.BagReaderTests.test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 72, in test_vb_c_the_ai_gets_the_order_list_and_the_photo_not_the_neighbor
+    user = falso.enviados[0]["messages"][1]["content"]
+           ~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_vb_d_without_ai_the_local_detector_answers (test_bolsa_ia_77.BagReaderTests.test_vb_d_without_ai_the_local_detector_answers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 84, in test_vb_d_without_ai_the_local_detector_answers
+    self.assertEqual(body["fuente"], "detector")
+                     ~~~~^^^^^^^^^^
+KeyError: 'fuente'
+
+======================================================================
+ERROR: test_vb_e_ai_down_falls_back_to_the_detector (test_bolsa_ia_77.BagReaderTests.test_vb_e_ai_down_falls_back_to_the_detector)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 92, in test_vb_e_ai_down_falls_back_to_the_detector
+    self.assertEqual(body["fuente"], "detector")
+                     ~~~~^^^^^^^^^^
+KeyError: 'fuente'
+
+======================================================================
+ERROR: test_vb_f_after_150_reviews_the_ai_is_not_called (test_bolsa_ia_77.BagReaderTests.test_vb_f_after_150_reviews_the_ai_is_not_called)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 102, in test_vb_f_after_150_reviews_the_ai_is_not_called
+    self.assertEqual(body["fuente"], "detector")
+                     ~~~~^^^^^^^^^^
+KeyError: 'fuente'
+
+======================================================================
+ERROR: test_vb_f_each_ai_review_counts (test_bolsa_ia_77.BagReaderTests.test_vb_f_each_ai_review_counts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 108, in test_vb_f_each_ai_review_counts
+    self.assertEqual(self.store.ia_usage[f"bolsa:{PACKER}:{today}"], 1)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'bolsa:armado-77:2026-09-16'
+
+======================================================================
+ERROR: test_vb_g_the_supplier_list_is_his_own_products (test_bolsa_ia_77.BagReaderTests.test_vb_g_the_supplier_list_is_his_own_products)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 115, in test_vb_g_the_supplier_list_is_his_own_products
+    self.assertEqual([p["codigo"] for p in body["productos"]], ["PAPA-AMARILLA"])
+                      ~^^^^^^^^^^
+KeyError: 'codigo'
+
+======================================================================
+ERROR: test_vb_h_unknown_order (test_bolsa_ia_77.BagReaderTests.test_vb_h_unknown_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 123, in test_vb_h_unknown_order
+    self.assertEqual(body["error"]["codigo"], "ORDER_NOT_FOUND")
+                     ~~~~^^^^^^^^^
+KeyError: 'error'
+
+======================================================================
+FAIL: test_vb_i_units_are_pieces_from_1_to_300 (test_bolsa_ia_77.BagReaderTests.test_vb_i_units_are_pieces_from_1_to_300)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/kalosroots/Documents/Yapa/api/tests/test_bolsa_ia_77.py", line 130, in test_vb_i_units_are_pieces_from_1_to_300
+    self.assertEqual([p["cantidad"] for p in body["productos"]], [1, 1, 300])
+AssertionError: Lists differ: [2] != [1, 1, 300]
+
+First differing element 0:
+2
+1
+
+Second list contains 2 additional elements.
+First extra element 1:
+1
+
+- [2]
++ [1, 1, 300]
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.030s
+
+FAILED (failures=1, errors=9)

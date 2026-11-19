@@ -49,8 +49,10 @@ PYTHONPATH=src python -m yapa_sdd.cli ciclo ejemplos/ciclo_demo.json
 - Iteraciones 71 a 74 (17/11/2026, Aaron): revisión por bolsa y baja de bolsas, stock del proveedor por cargas (`supplier_stock.py`), chat como conversación y recorrido por calles (`street_routing.py`, OSRM de demostración: no apto para producción). Specs reescritas el 18/11 con el formato de las demás.
 - Iteración 75: la antigua "64" de Aaron (`75-bolsas-con-selector.md`), renumerada el 18/11 porque repetía número y supuestos de la 64; su selector está retirado.
 - Iteración 76 (18/11/2026): la bolsa se guarda con la foto (S-331) y el detector se usa a pedido y filtrado por pedido, `docs/desarrollo/76-bolsa-con-un-toque-y-detector-a-pedido.md` (`fulfillment.review_bag`, `POST /api/admin/bolsas/revision`).
+- Iteración 77 (18/11/2026): la revisión de la bolsa la hace la IA con la lista del pedido y YOLO queda de respaldo, `docs/desarrollo/77-revision-de-bolsas-con-ia.md` (`bag_reader.py`; banco de fotos en `tools/banco_bolsas.py`).
+- Iteración 78 (18/11/2026): las fotos se leen primero con Bedrock de la cuenta estudiantil UTEC (`bedrock.py`: Converse con firma SigV4 propia, sin dependencias), `docs/desarrollo/78-fotos-con-bedrock.md`. Variables `YAPA_BEDROCK_*`, nunca `AWS_*`; las pruebas reemplazan el envío y no salen a internet.
 - Antes de numerar una iteración o un supuesto, mirar `main` actualizado: la 64 y S-327/S-328 se repitieron porque dos ramas tomaron el mismo número el mismo día.
-- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-374. **El siguiente libre es S-375.**
+- Supuestos usados: S-01..S-52, S-60..S-80, S-90..S-386. **El siguiente libre es S-387.**
 - **Decisiones urgentes pendientes del equipo** al inicio de `docs/desarrollo/supuestos-a-validar.md`. El margen ya se lee con los costos reales (iteración 58: Plin al 0 % y flete propio); la parte del ahorro es 25 % (iteración 57). El simulador (`python -m yapa_sdd.simulator 40`) da los números.
 - `close_cycle` es la forma operativa de liquidar (exige zonas entregadas o fallidas, suma los faltantes de compra y dañados, y retiene el 25 % del ahorro, S-301). `settle_cycle` es el cálculo puro que usan las pruebas y el simulador (0 % por defecto).
 - Desde la iteración 56 una zona no se entrega sin la compra real registrada (S-299); en las pruebas, `buy_all` de `test_settlement.py`.

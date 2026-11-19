@@ -9,10 +9,10 @@ Yapa usa IA en dos lugares: **dentro del producto** (lo que ve el usuario) y **e
 | Ruta del reparto | Ordena las paradas y las muestra en un mapa real | Vecino más cercano + 2-opt sobre las zonas (agrupamiento por edificio) | USD 0 (en el navegador) | `src/utils/deliveryRoute.ts`, `RoutePlanner.tsx` |
 | Predicción de demanda | Estima lo que pedirá cada zona para cotizar con el mayorista antes del cierre | Regresión lineal por mínimos cuadrados sobre 8 semanas | USD 0 (biblioteca estándar) | `api/src/yapa_sdd/forecast.py`, iteración 68 |
 | Asistente de compra | Responde estado del pedido, entrega, ahorro, precios y avance del grupo | Reglas sobre los datos del vecino; Groq solo para lo demás | USD 0 (nivel gratis, 10 preguntas con IA por vecino al día) | `assistant.py`, iteración 70 |
-| Cotización del proveedor | Lee la foto o el mensaje del proveedor y llena su lista | Visión de Groq (`qwen/qwen3.8-27b`), reglas sin IA para texto | USD 0 (nivel gratis, 20 lecturas al día) | `quote_reader.py`, iteración 69 |
+| Cotización del proveedor | Lee la foto o el mensaje del proveedor y llena su lista | Foto: Bedrock (Nova Pro) y Groq de respaldo; mensaje: Groq, con reglas sin IA si no responde | USD 0 (nivel gratis, 20 lecturas al día) | `quote_reader.py`, iteración 69 |
 | Arma mi canasta | Propone una canasta a partir de lo que escribe el vecino | Groq (`openai/gpt-oss-120b`) con el catálogo como contexto | USD 0 (10 al día) | `ia.py`, iteración 60 |
 | Ayuda para atención | Sugiere categoría y respuesta para reclamos e incidencias | Groq | USD 0 | `ia.py`, iteración 61 |
-| Revisión de bolsas por foto | Cuenta papa, cebolla, ajo y zanahoria en la foto | YOLOv8 Small entrenado con 4 clases | Servidor de 2 GB (USD 12 al mes) | `vision.py`, `docs/modelo-yolo/` |
+| Revisión de bolsas por foto | Dice qué productos del pedido se ven en la foto de la bolsa (o de la carga del proveedor) y cuántas piezas | Amazon Nova Pro en Bedrock (cuenta estudiantil) con la lista del pedido; Groq y YOLOv8 Small de 4 clases de respaldo | Créditos estudiantiles de AWS (~USD 0,002 por foto); 150 al día por cuenta | `bag_reader.py` y `bedrock.py` (iteraciones 77 y 78), `vision.py`, `docs/modelo-yolo/banco-18nov.md` |
 
 Principios que seguimos para que la IA sea útil y barata:
 

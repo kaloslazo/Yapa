@@ -48,6 +48,6 @@ export function SupplierStock({ cycle, candidates, onApply }: { cycle: string; c
         <span>{p.unidades} unidades visibles · {p.cantidad} {p.unidad} confirmados · {p.disponible} {p.unidad} vendibles</span>
       </li>)}</ul>
       : <p>Todavía no hay cargas confirmadas para esta semana.</p>}
-    <PhotoProductReview candidates={candidates} requireWeight scope="tu lista" title="Añadir una carga al stock" label="Confirmar y acumular stock" onConfirm={confirm} />
+    <PhotoProductReview candidates={candidates} requireWeight scope="tu lista" context={{ para: 'stock' }} title="Añadir una carga al stock" label="Confirmar y acumular stock" onConfirm={confirm} />
   </section>;
 }
