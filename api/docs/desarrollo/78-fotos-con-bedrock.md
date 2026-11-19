@@ -72,6 +72,7 @@ Solo cambia quién lee las fotos. Las reglas de la 69 (cotización) y de la 77 (
 | BR-05, S-384 | `bedrock._check_account` (STS una vez por clave) | `test_br_f_*` |
 | S-381 con la 77 | `bag_reader` sin cambios: usa `ask_json` | `test_br_h_*` |
 | S-386 | `ia._json_object` ya toma el objeto entre marcas de código | `test_ia` |
+| S-387, BR-I | `utils/photoResize.ts` (`photoForAI`: fondo blanco, JPEG, 1024 o 1600 px); `PhotoProductReview` y `QuoteReader` en `SupplierListEditor` | `photoForAI.test.ts` |
 
 Verificado contra AWS con la cuenta UTEC (no en CI): STS respondió 434415659695; Converse con Nova Pro respondió con la firma propia; Claude Haiku 4.5 devolvió "no se enviaron los datos de caso de uso de Anthropic". Revisado en el navegador con la demo y Bedrock: la bolsa del pedido 111 (camote, limón, limpiatodo y papa blanca en la foto) dio "Con IA" con camote ×4, limón ×2 y limpiatodo ×1; se le pasó la papa blanca.
 
@@ -80,3 +81,5 @@ Verificado contra AWS con la cuenta UTEC (no en CI): STS respondió 434415659695
 - `78-motor-rojo.txt`: las pruebas fallan antes del código.
 - `78-motor-verde.txt` y `78-web-verde.txt`: motor, TypeScript, web y build en verde.
 - `docs/modelo-yolo/banco-18nov.md`: Claude Haiku 4.5 por Bedrock en el banco de 46 fotos, con la cuenta UTEC.
+
+Revisado después del arreglo de S-387, con la clave del usuario `yapa-bedrock`: la foto del catálogo del camote (WebP con fondo transparente), que antes salía "papa amarilla", ahora da "Con IA" con camote ×4.
